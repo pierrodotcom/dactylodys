@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { parseTraceFile, replayTrace } from '../src/lib/keyboard/trace';
+import { linkedPaths, openPage } from './support';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const COLOR_SCHEMES = ['light', 'dark'] as const;
@@ -36,7 +37,7 @@ function firstRebuilt(page: Page) {
 
 test.describe('trace recording page', () => {
 	test('loads with its title, setup fields and prompts', async ({ page }) => {
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 
 		await expect(page).toHaveTitle(message('traces_title'));
 		await expect(
@@ -51,13 +52,13 @@ test.describe('trace recording page', () => {
 	});
 
 	test('is not linked from the home page', async ({ page }) => {
-		await page.goto('/');
+		await openPage(page, '/');
 
-		await expect(page.getByRole('link')).toHaveCount(0);
+		expect(await linkedPaths(page)).not.toContain(PAGE_URL);
 	});
 
 	test('shows what the normalizer rebuilds while typing in the first prompt', async ({ page }) => {
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 
 		await firstInput(page).click();
 		await page.keyboard.type('abc');
@@ -69,7 +70,7 @@ test.describe('trace recording page', () => {
 	});
 
 	test('reports a prompt as identical once the expected text is typed', async ({ page }) => {
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 
 		await firstInput(page).click();
 		await page.keyboard.type(FIRST_PROMPT_TEXT);
@@ -81,7 +82,7 @@ test.describe('trace recording page', () => {
 	});
 
 	test('can be driven with the keyboard alone, including restarting a prompt', async ({ page }) => {
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 
 		await firstInput(page).focus();
 		await page.keyboard.type('abc');
@@ -100,7 +101,7 @@ test.describe('trace recording page', () => {
 	});
 
 	test('applies Backspace to the rebuilt text', async ({ page }) => {
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 
 		await firstInput(page).click();
 		await page.keyboard.type('abcd');
@@ -110,7 +111,7 @@ test.describe('trace recording page', () => {
 	});
 
 	test('keeps the download disabled until something is typed', async ({ page }) => {
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 		const button = page.getByRole('button', { name: message('traces_download_button') });
 
 		await expect(button).toBeDisabled();
@@ -131,7 +132,7 @@ test.describe('trace recording page', () => {
 				outgoing.push(`${request.method()} ${request.url()}`);
 			}
 		});
-		await page.goto(PAGE_URL);
+		await openPage(page, PAGE_URL);
 		await page.getByLabel(message('traces_layout_label')).selectOption('fr-fr-azerty-pc');
 		await page.getByLabel(message('traces_keyboard_label')).fill('test keyboard');
 
@@ -164,7 +165,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 		test.use({ colorScheme });
 
 		test('has no axe violation for WCAG A and AA', async ({ page }) => {
-			await page.goto(PAGE_URL);
+			await openPage(page, PAGE_URL);
 			await page.evaluate(() => document.fonts.ready);
 
 			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
@@ -173,7 +174,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 		});
 
 		test('has no axe violation once a prompt is filled in', async ({ page }) => {
-			await page.goto(PAGE_URL);
+			await openPage(page, PAGE_URL);
 			await firstInput(page).click();
 			await page.keyboard.type('abc');
 			await expect(firstRebuilt(page)).toHaveText('abc');
