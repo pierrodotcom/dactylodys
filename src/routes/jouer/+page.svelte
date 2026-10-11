@@ -35,6 +35,7 @@
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
 	import { toGameSettings } from './game-settings';
 	import KeyboardCheck from './KeyboardCheck.svelte';
+	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
 	import LessonResult from './LessonResult.svelte';
 	import { nextLessonId } from './map';
@@ -90,10 +91,21 @@
 			store = createMemoryProfileStore();
 			memoryOnly = true;
 		}
-		go({ type: 'profiles-loaded' });
+		if (!(await resumeLastPlayer())) go({ type: 'profiles-loaded' });
 	});
 
 	onMount(() => () => sounds.dispose());
+
+	async function resumeLastPlayer(): Promise<boolean> {
+		const lastId = readLastPlayerId();
+		if (lastId === null) return false;
+		const last = profiles.find((item) => item.id === lastId);
+		if (!last) {
+			forgetLastPlayerId();
+			return false;
+		}
+		return enter(last);
+	}
 
 	$effect(() => {
 		applySettings(profile?.settings ?? defaultSettings('pc'), document.documentElement);
@@ -122,6 +134,7 @@
 			return false;
 		}
 		profile = chosen;
+		writeLastPlayerId(chosen.id);
 		go({ type: 'player-chosen', calibrated: chosen.calibrated });
 		return true;
 	}
@@ -258,6 +271,7 @@
 			codes={PLAY_RULES.keyboardCheckCodes}
 			onlayout={chooseKeyboardLayout}
 			ondone={finishKeyboardCheck}
+			onchangeplayer={changePlayer}
 		/>
 	{:else if screen.name === 'map'}
 		<WorldMap

@@ -28,6 +28,13 @@ describe('screen automaton', () => {
 		expect(screen).toEqual({ name: 'map' });
 	});
 
+	it('resumes the last player straight from the loading screen', () => {
+		expect(run([{ type: 'player-chosen', calibrated: true }])).toEqual({ name: 'map' });
+		expect(run([{ type: 'player-chosen', calibrated: false }])).toEqual({
+			name: 'keyboard-check'
+		});
+	});
+
 	it('goes back from the new player form to the list', () => {
 		const screen = run([
 			{ type: 'profiles-loaded' },
