@@ -1,3 +1,4 @@
+import type { SoundPlayer } from '../audio';
 import type { Exercise } from '../engine/progression/types';
 import type { ErrorPolicy, SessionMetrics } from '../engine/types';
 import type {
@@ -30,6 +31,8 @@ export interface GameProps {
 	readonly geometry: KeyboardGeometryDefinition;
 	readonly fingering: FingeringProfile;
 	readonly settings: GameSettings;
+	/** Shared by the whole play route and already bound to the sound setting of the profile. */
+	readonly sounds: SoundPlayer;
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
 }

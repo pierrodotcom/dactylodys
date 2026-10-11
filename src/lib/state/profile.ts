@@ -44,8 +44,9 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 const SCHEMA_VERSION = 1;
-const MIN_NAME_LENGTH = 1;
-const MAX_NAME_LENGTH = 20;
+/** Bounds of a nickname, in graphemes. */
+export const MIN_NAME_LENGTH = 1;
+export const MAX_NAME_LENGTH = 20;
 const MAX_ACCURACY = 100;
 const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
 
@@ -259,7 +260,10 @@ export function parseProfile(data: unknown): Profile {
 	const name = root['name'];
 	if (typeof name !== 'string') fail('profile.name', 'expected a string');
 	if (normalizeName(name) !== name) {
-		fail('profile.name', 'expected a trimmed NFC name of 1 to 20 characters');
+		fail(
+			'profile.name',
+			`expected a trimmed NFC name of ${MIN_NAME_LENGTH} to ${MAX_NAME_LENGTH} characters`
+		);
 	}
 	const createdAt = root['createdAt'];
 	if (!isTimestamp(createdAt)) fail('profile.createdAt', 'expected a timestamp');

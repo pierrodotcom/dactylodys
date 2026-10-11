@@ -4,6 +4,8 @@ import {
 	createProfile,
 	defaultSettings,
 	markCalibrated,
+	MAX_NAME_LENGTH,
+	MIN_NAME_LENGTH,
 	parseProfile,
 	renameProfile,
 	updateSettings,
@@ -92,6 +94,13 @@ describe('createProfile', () => {
 		const family = '\u{1F468}‍\u{1F469}‍\u{1F467}';
 		expect(sampleProfile(family.repeat(20)).name).toBe(family.repeat(20));
 		expect(() => sampleProfile(family.repeat(21))).toThrow(RangeError);
+	});
+
+	it('exports the nickname bounds it enforces', () => {
+		expect(sampleProfile('a'.repeat(MIN_NAME_LENGTH)).name).toHaveLength(MIN_NAME_LENGTH);
+		expect(sampleProfile('a'.repeat(MAX_NAME_LENGTH)).name).toHaveLength(MAX_NAME_LENGTH);
+		expect(() => sampleProfile('a'.repeat(MAX_NAME_LENGTH + 1))).toThrow(RangeError);
+		expect(() => sampleProfile('a'.repeat(MIN_NAME_LENGTH - 1))).toThrow(RangeError);
 	});
 
 	it('accepts a name of exactly 20 characters and rejects 21', () => {

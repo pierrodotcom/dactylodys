@@ -48,7 +48,11 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 
 	switch (screen.name) {
 		case 'loading':
-			return event.type === 'profiles-loaded' ? { name: 'players' } : screen;
+			if (event.type === 'profiles-loaded') return { name: 'players' };
+			if (event.type === 'player-chosen') {
+				return { name: event.calibrated ? 'map' : 'keyboard-check' };
+			}
+			return screen;
 		case 'players':
 			if (event.type === 'new-player') return { name: 'new-player' };
 			if (event.type === 'player-chosen') {

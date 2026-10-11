@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { linkedPaths, openPage } from './support';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const COLOR_SCHEMES = ['light', 'dark'] as const;
@@ -47,9 +48,8 @@ function hintPrefix(level: string): string {
 	return (messages[keys[level] ?? ''] ?? '').split('{key}')[0] ?? '';
 }
 
-/** Waits for the client-side code to be loaded, so that controls react as soon as they are used. */
-async function openGallery(page: Page) {
-	await page.goto(PAGE_URL, { waitUntil: 'networkidle' });
+function openGallery(page: Page) {
+	return openPage(page, PAGE_URL);
 }
 
 function control(page: Page, labelKey: string) {
@@ -100,9 +100,9 @@ test.describe('component gallery', () => {
 	});
 
 	test('is not linked from the home page', async ({ page }) => {
-		await page.goto('/');
+		await openPage(page, '/');
 
-		await expect(page.getByRole('link')).toHaveCount(0);
+		expect(await linkedPaths(page)).not.toContain(PAGE_URL);
 	});
 
 	test('keeps the keyboard decorative for screen readers', async ({ page }) => {

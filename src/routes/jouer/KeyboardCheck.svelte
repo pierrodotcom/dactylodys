@@ -20,9 +20,10 @@
 		/** Remembers the layout the child chose. */
 		onlayout: (layoutId: LayoutId) => Promise<void>;
 		ondone: () => void;
+		onchangeplayer: () => void;
 	}
 
-	let { layoutId, codes, onlayout, ondone }: Props = $props();
+	let { layoutId, codes, onlayout, ondone, onchangeplayer }: Props = $props();
 
 	const INPUT_ID = 'keyboard-check-input';
 
@@ -83,7 +84,10 @@
 		{#if loadFailed}
 			<p class="error" role="alert">{m.play_error_load()}</p>
 		{/if}
-		<Button onclick={chooseLayout}>{m.play_check_continue()}</Button>
+		<div class="actions">
+			<Button onclick={chooseLayout}>{m.play_check_continue()}</Button>
+			<Button variant="quiet" onclick={onchangeplayer}>{m.play_change_player()}</Button>
+		</div>
 	</ScreenFrame>
 {:else if stage === 'keys' && step !== undefined}
 	<ScreenFrame title={m.play_check_prompt({ key: step.label })} focusHeading={false}>
@@ -122,6 +126,13 @@
 	.error {
 		color: var(--dd-color-error-text);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--dd-space-md);
 	}
 
 	.tile-zone {

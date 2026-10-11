@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages.js';
-	import Button from '$lib/ui/components/Button.svelte';
+	import LinkButton from '$lib/ui/components/LinkButton.svelte';
 </script>
 
 <svelte:head>
@@ -12,7 +11,7 @@
 <main>
 	<h1>{m.home_title()}</h1>
 	<p>{m.home_tagline()}</p>
-	<Button size="lg" onclick={() => goto(resolve('/jouer'))}>{m.home_play()}</Button>
+	<LinkButton size="lg" href={resolve('/jouer')}>{m.home_play()}</LinkButton>
 </main>
 
 <style>

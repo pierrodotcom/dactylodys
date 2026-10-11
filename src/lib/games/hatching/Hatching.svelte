@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, tick, untrack } from 'svelte';
-	import { createSoundPlayer } from '$lib/audio';
 	import { createInputNormalizer } from '$lib/keyboard/input-adapter';
 	import type { RawInputEvent } from '$lib/keyboard/types';
 	import { m } from '$lib/paraglide/messages.js';
@@ -51,6 +50,7 @@
 		geometry,
 		fingering,
 		settings,
+		sounds,
 		onComplete,
 		onQuit
 	}: GameProps = $props();
@@ -63,7 +63,6 @@
 	let reported = false;
 
 	const normalizer = createInputNormalizer();
-	const player = createSoundPlayer({ isEnabled: () => settings.soundEnabled });
 
 	const phase = $derived(game.phase);
 	const paused = $derived(game.paused);
@@ -87,7 +86,7 @@
 		if (step.state === game) return;
 		const groupChanged = step.state.groupIndex !== game.groupIndex;
 		game = step.state;
-		for (const sound of step.sounds) player.play(sound);
+		for (const sound of step.sounds) sounds.play(sound);
 		if (groupChanged) field?.clear();
 		if (step.state.phase === 'complete' && !reported) {
 			reported = true;
@@ -96,6 +95,7 @@
 	}
 
 	function onRawEvent(event: RawInputEvent) {
+		if (event.capsLock !== undefined) capsLock = event.capsLock;
 		for (const keystroke of normalizer.push(event)) dispatch({ type: 'keystroke', keystroke });
 	}
 
@@ -107,14 +107,9 @@
 	}
 
 	function onWindowKeydown(event: KeyboardEvent) {
-		capsLock = event.getModifierState('CapsLock');
 		if (event.key !== 'Escape' || event.repeat) return;
 		if (paused) void resume();
 		else dispatch({ type: 'pause' });
-	}
-
-	function onWindowKeyup(event: KeyboardEvent) {
-		capsLock = event.getModifierState('CapsLock');
 	}
 
 	function keepFocus(event: MouseEvent) {
@@ -124,7 +119,6 @@
 
 	onMount(() => {
 		field?.focus();
-		return () => player.dispose();
 	});
 
 	$effect(() => {
@@ -143,7 +137,7 @@
 	});
 </script>
 
-<svelte:window onkeydown={onWindowKeydown} onkeyup={onWindowKeyup} onclick={keepFocus} />
+<svelte:window onkeydown={onWindowKeydown} onclick={keepFocus} />
 
 <div class="game" inert={paused} data-reduced-motion={settings.reducedMotion || undefined}>
 	<h1 class="dd-visually-hidden">{m.game_hatching_title()}</h1>

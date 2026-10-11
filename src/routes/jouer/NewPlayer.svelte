@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
+	import { MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '$lib/state/profile';
 	import Button from '$lib/ui/components/Button.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import { checkPlayerName } from './player';
@@ -24,7 +25,7 @@
 		error === 'empty'
 			? m.play_new_error_empty()
 			: error === 'invalid'
-				? m.play_new_error_invalid()
+				? m.play_new_error_invalid({ min: MIN_NAME_LENGTH, max: MAX_NAME_LENGTH })
 				: error === 'save'
 					? m.play_new_error_save()
 					: ''

@@ -17,9 +17,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 ## Prochaines actions
 
 1. **Test de J2 avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. Dette relevée en J2, à traiter au début de J3 : exporter les limites du pseudo ; ajouter Verr. Maj à `RawInputEvent` ; passer le lecteur de sons par `GameProps` ; déplacer le lien disposition → géométrie hors de la route ; faire du bouton « Jouer » un vrai lien (les specs e2e exigent aujourd'hui zéro lien sur l'accueil) ; le parcours n'affiche que le premier monde ; reprise directe du dernier profil au rechargement.
+2. Dette restante : le parcours n'affiche que le premier monde ; `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double (`player.ts` / `profile.ts`) ; le code i18n généré lit `localStorage` sans protection (un navigateur qui le bloque casserait l'appli).
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
-5. Diagnostiquer L-021 (premier chargement e2e parfois > 60 s en local).
 
 ## Grille d'observation pour le test J2
 
@@ -72,3 +71,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-11** — J1 : contrats figés (PR 2), puis 3 lots parallèles en worktrees (dispositions, capture, session) assemblés sans conflit. Leçons L-022 à L-026, ADR-015 et 016.
 - **2026-10-11** — Traces réelles Windows (Chrome 155, Firefox 157, clavier NuPhy Node 100) : 26 consignes rejouées, un défaut du normaliseur corrigé (L-027), disposition PC conforme sur toutes les touches frappées.
 - **2026-10-11** — Traces complémentaires (rangée de chiffres, tilde, accent grave) conformes. J2 : contrats (PR 5), 3 lots parallèles en worktrees puis un lot d'assemblage (jeu et écrans). Leçons L-031 à L-034.
+- **2026-10-11** — Dette de contrats de J2 soldée (Verr. Maj dans les événements bruts, sons passés au jeu, limites du pseudo, géométrie), reprise directe du dernier joueur, « Jouer » en vrai lien, ouverture hydratée dans toutes les specs e2e.

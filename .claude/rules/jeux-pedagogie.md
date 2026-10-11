@@ -56,7 +56,11 @@ Types : `src/lib/engine/progression/types.ts`, `src/lib/state/types.ts`, `src/li
 | `createProfile(input): Profile` / `defaultSettings(platform)` | `state/profile` | Identifiant, date et réglages injectés |
 | `createMemoryProfileStore()` / `createIndexedDbProfileStore()` | `state/stores` | Deux implémentations de `ProfileStore` |
 | `parseGeometry(data: unknown)` / `loadGeometry(id)` | `keyboard/geometry`, `keyboard/registry` | Forme physique du clavier |
+| `geometryIdFor(layout: LayoutDefinition): GeometryId` | `keyboard/registry` | Géométrie à dessiner pour une disposition ; la route ne choisit jamais |
+| `GameProps.sounds: SoundPlayer` | `games/types` | Lecteur de sons **unique**, créé par la route `/jouer` et lié au réglage du profil ; un jeu n'en crée pas |
 
 Données : `content/<langue>/progression/<slug>.json`, `layouts/geometry/<id>.json`.
+
+Un jeu lit l'état de Verr. Maj dans les `RawInputEvent` (`capsLock`) fournis par `keyboard-capture`, pas dans un écouteur `window` à lui.
 
 Un exercice est une suite de **groupes** courts ; le jeu ouvre une session par groupe et agrège les mesures. L'espace est une touche comme une autre, introduite par sa propre leçon.

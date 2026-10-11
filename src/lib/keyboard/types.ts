@@ -110,6 +110,8 @@ export interface RawInputEvent {
 	readonly metaKey?: boolean;
 	/** `getModifierState('AltGraph')`. */
 	readonly altGraph?: boolean;
+	/** `getModifierState('CapsLock')`; absent from traces recorded before it was captured. */
+	readonly capsLock?: boolean;
 	readonly inputType?: string;
 	readonly data?: string | null;
 }

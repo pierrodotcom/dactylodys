@@ -1,6 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../src/lib/state/profile';
+import { LAST_PLAYER_KEY } from '../src/routes/jouer/last-player';
+import { openPage, reloadPage } from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
@@ -88,20 +91,9 @@ function groupLabel(page: Page): Locator {
 	return page.locator('.target-text > .dd-visually-hidden').first();
 }
 
-/** SvelteKit adds its announcer once the client app has taken over the page. */
-async function waitForHydration(page: Page) {
-	await page.locator('#svelte-announcer').waitFor({ state: 'attached' });
-}
-
 async function openPlay(page: Page) {
-	await page.goto(PLAY_URL, { waitUntil: 'networkidle' });
-	await waitForHydration(page);
+	await openPage(page, PLAY_URL);
 	await expect(heading(page, message('play_players_title'))).toBeVisible();
-}
-
-async function reload(page: Page) {
-	await page.reload({ waitUntil: 'networkidle' });
-	await waitForHydration(page);
 }
 
 async function createPlayer(page: Page, name = PLAYER_NAME) {
@@ -209,9 +201,8 @@ test.describe('play route', () => {
 			}
 		});
 
-		await page.goto('/', { waitUntil: 'networkidle' });
-		await waitForHydration(page);
-		await button(page, message('home_play')).click();
+		await openPage(page, '/');
+		await page.getByRole('link', { name: message('home_play'), exact: true }).click();
 		await expect(page).toHaveURL(/\/jouer$/);
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
 		await expect(page.getByText(message('play_players_empty'))).toBeVisible();
@@ -414,10 +405,51 @@ test.describe('play route', () => {
 		await expect(page.getByRole('button', { name: SECOND.title })).toHaveCount(0);
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
 
-		await reload(page);
-		await page.getByRole('button', { name: PLAYER_NAME }).click();
+		await reloadPage(page);
 		await expect(heading(page, world.title)).toBeVisible();
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
+	});
+
+	test('plays its sounds through one audio context from one game to the next', async ({ page }) => {
+		await page.addInitScript(() => {
+			const created: unknown[] = [];
+			const param = { setValueAtTime() {}, linearRampToValueAtTime() {} };
+			class FakeAudioContext {
+				currentTime = 0;
+				state = 'running';
+				destination = {};
+				constructor() {
+					created.push(this);
+				}
+				createOscillator() {
+					return { type: '', frequency: param, connect() {}, start() {}, stop() {} };
+				}
+				createGain() {
+					return { gain: param, connect() {} };
+				}
+				resume() {
+					return Promise.resolve();
+				}
+				close() {
+					return Promise.resolve();
+				}
+			}
+			Object.assign(window, { AudioContext: FakeAudioContext, createdAudioContexts: created });
+		});
+		await reachMap(page);
+		await startLesson(page, FIRST);
+		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
+		await page.keyboard.press('Escape');
+		await button(page, message('game_hatching_quit')).click();
+		await expect(heading(page, world.title)).toBeVisible();
+		await startLesson(page, FIRST);
+		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
+		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
+
+		const count = await page.evaluate(
+			() => (window as unknown as { createdAudioContexts: unknown[] }).createdAudioContexts.length
+		);
+		expect(count).toBe(1);
 	});
 
 	test('moves on to the next egg at the next key', async ({ page }) => {
@@ -466,13 +498,86 @@ test.describe('play route', () => {
 		await reachResult(page);
 		await button(page, message('play_result_map')).click();
 
-		await reload(page);
+		await reloadPage(page);
+
+		await expect(heading(page, world.title)).toBeVisible();
+		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(3) })).toBeVisible();
+		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
+	});
+
+	test('resumes the last player on the map after a reload, and still lets another one in', async ({
+		page
+	}) => {
+		await reachMap(page);
+		await button(page, message('play_change_player')).click();
+		await button(page, message('play_new_player')).click();
+		await page.getByLabel(message('play_new_label')).fill('Zoé');
+		await button(page, message('play_new_submit')).click();
+		await checkKeyboard(page, 'same');
+
+		await reloadPage(page);
+
+		await expect(page.getByText(message('play_map_greeting', { name: 'Zoé' }))).toBeVisible();
+		await button(page, message('play_change_player')).click();
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await page.getByRole('button', { name: PLAYER_NAME }).click();
+		await expect(page.getByText(message('play_map_greeting', { name: PLAYER_NAME }))).toBeVisible();
+
+		await reloadPage(page);
+
+		await expect(page.getByText(message('play_map_greeting', { name: PLAYER_NAME }))).toBeVisible();
+	});
+
+	test('resumes on the keyboard check when the last player has not done it', async ({ page }) => {
+		await openPlay(page);
+		await createPlayer(page);
+
+		await reloadPage(page);
+
+		await expect(heading(page, message('play_check_title'))).toBeVisible();
+		await button(page, message('play_change_player')).click();
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await expect(page.getByRole('button', { name: PLAYER_NAME })).toBeVisible();
+	});
+
+	test('goes back to the choice of the player when the remembered one is gone', async ({
+		page
+	}) => {
+		await reachMap(page);
+		await page.evaluate(
+			([key, id]) => localStorage.setItem(key as string, id as string),
+			[LAST_PLAYER_KEY, 'a-profile-that-does-not-exist']
+		);
+
+		await reloadPage(page);
 
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
 		await page.getByRole('button', { name: PLAYER_NAME }).click();
 		await expect(heading(page, world.title)).toBeVisible();
-		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(3) })).toBeVisible();
-		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
+	});
+
+	test('works when the browser refuses to store anything locally', async ({ page }) => {
+		await page.addInitScript((key) => {
+			const real = window.localStorage;
+			const refuse = () => {
+				throw new DOMException('Access denied', 'SecurityError');
+			};
+			Object.defineProperty(window, 'localStorage', {
+				value: {
+					getItem: (name: string) => (name === key ? refuse() : real.getItem(name)),
+					setItem: (name: string, value: string) =>
+						name === key ? refuse() : real.setItem(name, value),
+					removeItem: (name: string) => (name === key ? refuse() : real.removeItem(name))
+				}
+			});
+		}, LAST_PLAYER_KEY);
+		await reachMap(page);
+
+		await reloadPage(page);
+
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await page.getByRole('button', { name: PLAYER_NAME }).click();
+		await expect(heading(page, world.title)).toBeVisible();
 	});
 
 	test('offers a second player on the same device', async ({ page }) => {
@@ -499,11 +604,13 @@ test.describe('play route', () => {
 		await expect(page.getByRole('alert')).toHaveText(message('play_new_error_empty'));
 		await expect(input).toHaveAttribute('aria-invalid', 'true');
 
-		await input.fill('a'.repeat(21));
+		await input.fill('a'.repeat(MAX_NAME_LENGTH + 1));
 		await button(page, message('play_new_submit')).click();
-		await expect(page.getByRole('alert')).toHaveText(message('play_new_error_invalid'));
+		await expect(page.getByRole('alert')).toHaveText(
+			message('play_new_error_invalid', { min: MIN_NAME_LENGTH, max: MAX_NAME_LENGTH })
+		);
 
-		await input.fill('a'.repeat(20));
+		await input.fill('a'.repeat(MAX_NAME_LENGTH));
 		await button(page, message('play_new_submit')).click();
 		await expect(heading(page, message('play_check_title'))).toBeVisible();
 	});
@@ -543,10 +650,7 @@ test.describe('play route', () => {
 		);
 		expect(await property('--dd-typing-size-current')).toBe(await property('--dd-typing-size-xl'));
 
-		await reload(page);
-		await expect(heading(page, message('play_players_title'))).toBeVisible();
-		await expect(root).not.toHaveAttribute('data-theme', /.+/);
-		await page.getByRole('button', { name: PLAYER_NAME }).click();
+		await reloadPage(page);
 		await expect(heading(page, world.title)).toBeVisible();
 		await expect(root).toHaveAttribute('data-theme', 'dark');
 		await expect(root).toHaveAttribute('data-text-scale', 'xl');
@@ -557,6 +661,13 @@ test.describe('play route', () => {
 		await expect(
 			radio(message('settings_scale_label'), message('settings_scale_xl'))
 		).toBeChecked();
+		await button(page, message('settings_back')).click();
+
+		await button(page, message('play_change_player')).click();
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await expect(root).not.toHaveAttribute('data-theme', /.+/);
+		await page.getByRole('button', { name: PLAYER_NAME }).click();
+		await expect(root).toHaveAttribute('data-theme', 'dark');
 	});
 
 	test('hides the on-screen keyboard when asked to', async ({ page }) => {
