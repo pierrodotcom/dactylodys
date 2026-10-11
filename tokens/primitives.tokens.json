@@ -1,0 +1,209 @@
+{
+	"color": {
+		"$type": "color",
+		"cream": {
+			"50": {
+				"$value": "#fffdf8"
+			},
+			"100": {
+				"$value": "#fbf5e9"
+			},
+			"200": {
+				"$value": "#f2e9d8"
+			},
+			"300": {
+				"$value": "#e4d7bd"
+			}
+		},
+		"brown": {
+			"50": {
+				"$value": "#f3ebdd"
+			},
+			"100": {
+				"$value": "#cfc4b0"
+			},
+			"400": {
+				"$value": "#9a8e7a"
+			},
+			"500": {
+				"$value": "#7a6d58"
+			},
+			"600": {
+				"$value": "#54483a"
+			},
+			"900": {
+				"$value": "#2a2118"
+			}
+		},
+		"charcoal": {
+			"600": {
+				"$value": "#3b342a"
+			},
+			"700": {
+				"$value": "#2a251e"
+			},
+			"800": {
+				"$value": "#1e1a15"
+			},
+			"900": {
+				"$value": "#16130f"
+			}
+		},
+		"teal": {
+			"300": {
+				"$value": "#6fd0d0"
+			},
+			"400": {
+				"$value": "#4fbdbd"
+			},
+			"600": {
+				"$value": "#0b6b6f"
+			},
+			"700": {
+				"$value": "#085558"
+			}
+		},
+		"indigo": {
+			"300": {
+				"$value": "#a3b6ff"
+			},
+			"600": {
+				"$value": "#3a3fd0"
+			}
+		},
+		"green": {
+			"100": {
+				"$value": "#e1f0d9"
+			},
+			"300": {
+				"$value": "#8fd59b"
+			},
+			"700": {
+				"$value": "#1e6b2e"
+			},
+			"900": {
+				"$value": "#1f3a22"
+			}
+		},
+		"red": {
+			"100": {
+				"$value": "#fbe0da"
+			},
+			"300": {
+				"$value": "#ff9c93"
+			},
+			"700": {
+				"$value": "#a3201b"
+			},
+			"900": {
+				"$value": "#45201c"
+			}
+		},
+		"shadow": {
+			"light": {
+				"$value": "#2a211826"
+			},
+			"dark": {
+				"$value": "#00000066"
+			}
+		}
+	},
+	"dimension": {
+		"4": {
+			"$value": "0.25rem"
+		},
+		"8": {
+			"$value": "0.5rem"
+		},
+		"12": {
+			"$value": "0.75rem"
+		},
+		"16": {
+			"$value": "1rem"
+		},
+		"24": {
+			"$value": "1.5rem"
+		},
+		"32": {
+			"$value": "2rem"
+		},
+		"48": {
+			"$value": "3rem"
+		},
+		"64": {
+			"$value": "4rem"
+		},
+		"$type": "dimension"
+	},
+	"font": {
+		"family": {
+			"$type": "fontFamily",
+			"atkinson": {
+				"$value": "'Atkinson Hyperlegible Next Variable', 'Atkinson Hyperlegible Next', system-ui, sans-serif"
+			},
+			"system-mono": {
+				"$value": "ui-monospace, 'Cascadia Mono', 'Consolas', 'Liberation Mono', monospace"
+			}
+		},
+		"weight": {
+			"400": {
+				"$value": 400
+			},
+			"500": {
+				"$value": 500
+			},
+			"700": {
+				"$value": 700
+			},
+			"$type": "fontWeight"
+		},
+		"size": {
+			"16": {
+				"$value": "1rem"
+			},
+			"20": {
+				"$value": "1.25rem"
+			},
+			"24": {
+				"$value": "1.5rem"
+			},
+			"30": {
+				"$value": "1.875rem"
+			},
+			"36": {
+				"$value": "2.25rem"
+			},
+			"48": {
+				"$value": "3rem"
+			},
+			"$type": "dimension"
+		}
+	},
+	"duration": {
+		"1": {
+			"$value": "1ms"
+		},
+		"150": {
+			"$value": "150ms"
+		},
+		"250": {
+			"$value": "250ms"
+		},
+		"500": {
+			"$value": "500ms"
+		},
+		"$type": "duration"
+	},
+	"easing": {
+		"$type": "cubicBezier",
+		"soft": {
+			"$value": [0.2, 0, 0, 1]
+		},
+		"out": {
+			"$value": [0, 0, 0, 1]
+		},
+		"in": {
+			"$value": [0.3, 0, 1, 1]
+		}
+	}
+}

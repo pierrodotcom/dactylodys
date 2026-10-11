@@ -1,0 +1,64 @@
+{
+	"color": {
+		"$type": "color",
+		"surface": {
+			"base": { "$value": "{color.charcoal.800}" },
+			"raised": { "$value": "{color.charcoal.700}" },
+			"sunken": { "$value": "{color.charcoal.900}" }
+		},
+		"text": {
+			"primary": { "$value": "{color.brown.50}" },
+			"secondary": { "$value": "{color.brown.100}" },
+			"on-accent": { "$value": "{color.charcoal.900}" }
+		},
+		"accent": {
+			"base": { "$value": "{color.teal.400}" },
+			"hover": { "$value": "{color.teal.300}" }
+		},
+		"border": {
+			"subtle": { "$value": "{color.charcoal.600}" },
+			"strong": { "$value": "{color.brown.400}" }
+		},
+		"focus": {
+			"ring": { "$value": "{color.indigo.300}" }
+		},
+		"success": {
+			"text": { "$value": "{color.green.300}" },
+			"surface": { "$value": "{color.green.900}" }
+		},
+		"error": {
+			"text": { "$value": "{color.red.300}" },
+			"surface": { "$value": "{color.red.900}" }
+		}
+	},
+	"shadow": {
+		"$type": "shadow",
+		"sm": {
+			"$value": {
+				"color": "{color.shadow.dark}",
+				"offsetX": "0",
+				"offsetY": "1px",
+				"blur": "2px",
+				"spread": "0"
+			}
+		},
+		"md": {
+			"$value": {
+				"color": "{color.shadow.dark}",
+				"offsetX": "0",
+				"offsetY": "4px",
+				"blur": "12px",
+				"spread": "0"
+			}
+		},
+		"lg": {
+			"$value": {
+				"color": "{color.shadow.dark}",
+				"offsetX": "0",
+				"offsetY": "12px",
+				"blur": "32px",
+				"spread": "0"
+			}
+		}
+	}
+}

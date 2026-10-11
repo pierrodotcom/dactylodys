@@ -13,3 +13,8 @@ playwright-report/
 Thumbs.db
 .claude/settings.local.json
 .claude/worktrees/
+.vite/
+
+# Generated
+src/lib/generated/
+src/lib/paraglide/

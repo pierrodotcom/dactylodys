@@ -19,7 +19,7 @@ Références : synthèse de recherche `reports/Dactylo ludique TDAH dysgraphie.m
 7. **Non genré et inclusif** : avatar créature, aucun choix de genre, thèmes mélangés.
 8. **Ce n'est pas un traitement** : aucune promesse médicale dans l'interface ni la documentation.
 
-## 3. Stack (cibles relevées le 2026-10-11, à confirmer au jalon J0)
+## 3. Stack (versions installées au jalon J0, épinglées dans `package.json`)
 
 | Domaine | Choix |
 |---|---|
@@ -35,14 +35,14 @@ Références : synthèse de recherche `reports/Dactylo ludique TDAH dysgraphie.m
 | CI / hébergement | GitHub Actions · GitHub Pages (Cloudflare Pages en repli) |
 | Licences | Code AGPL-3.0-or-later · contenus et visuels CC BY-SA 4.0 · dispositions clavier CC0 |
 
-**L'outillage est plus récent que les connaissances des modèles.** Avant d'utiliser une API de Svelte, SvelteKit, Vite, Vitest ou ESLint, lire la documentation de la **version installée** (`node_modules/<paquet>/` ou site officiel), pas sa mémoire.
+**Ne jamais installer `latest`** : SvelteKit 3, TypeScript 7 et adapter-static 4 sont exclus (ADR-005) ; toute installation précise la version. **L'outillage est plus récent que les connaissances des modèles.** Avant d'utiliser une API de Svelte, SvelteKit, Vite, Vitest ou ESLint, lire la documentation de la **version installée** (`node_modules/<paquet>/` ou site officiel), pas sa mémoire.
 
-## 4. Commandes (créées au jalon J0)
+## 4. Commandes
 
 | Commande | Rôle |
 |---|---|
 | `npm run dev` | Serveur de développement |
-| `npm run tokens` | Régénère variables CSS et module TS depuis `tokens/` |
+| `npm run generate` | Régénère tokens (CSS + TS) et messages i18n ; lancé automatiquement par les autres commandes |
 | `npm run check` | Types (svelte-check) |
 | `npm run lint` | ESLint + Stylelint + Prettier (vérification) |
 | `npm run test` | Tests unitaires et de propriétés |
@@ -119,7 +119,7 @@ Ne jamais déclarer « terminé » sans avoir exécuté la vérification et en d
 
 ## 10. Git
 
-- Commits conventionnels : `<type>(<portée>): <description en français>` avec `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `content`, `a11y`.
+- Commits conventionnels (vérifiés par commitlint) : `<type>(<portée>): <description en français>` avec `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `content`, `a11y`, `ci`, `perf`, `revert`.
 - Jamais de commit direct sur `main` après le jalon J0 : une branche par lot, une PR, CI verte, fusion par squash.
 - Petits commits cohérents. Pas de `--no-verify`, pas de `push --force` sur `main`.
 - Tout asset tiers est déclaré dans `static/ATTRIBUTIONS.md` (source, auteur, licence) **dans le même commit**.
@@ -132,6 +132,8 @@ La session principale est **chef d'orchestre** : elle découpe, délègue, véri
 - Chaque ordre de mission contient : objectif, fichiers autorisés, contrat d'interface, tests attendus, ce qui est déjà décidé, format de retour (≤ 15 lignes : fait / non fait / résultat de `verify` / leçons).
 - Le résultat d'un agent est vérifié (diff + `verify`) avant fusion ; son compte rendu n'est pas une preuve.
 - Seul le chef d'orchestre modifie `CLAUDE.md`, `.claude/` et `docs/DECISIONS.md`.
+- **Avant chaque jalon ou lot**, annoncer au porteur du projet le modèle et l'effort recommandés pour la session, et attendre qu'il ait pu en changer.
+- Le porteur valide les **résultats**, pas le code : comptes rendus en termes de comportement observable et de ce qu'il peut essayer lui-même.
 
 ## 12. Économie de tokens
 

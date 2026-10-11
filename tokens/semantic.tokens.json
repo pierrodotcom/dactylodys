@@ -1,0 +1,165 @@
+{
+	"color": {
+		"$type": "color",
+		"surface": {
+			"base": { "$value": "{color.cream.100}" },
+			"raised": { "$value": "{color.cream.50}" },
+			"sunken": { "$value": "{color.cream.200}" }
+		},
+		"text": {
+			"primary": { "$value": "{color.brown.900}" },
+			"secondary": { "$value": "{color.brown.600}" },
+			"on-accent": { "$value": "{color.cream.50}" }
+		},
+		"accent": {
+			"base": { "$value": "{color.teal.600}" },
+			"hover": { "$value": "{color.teal.700}" }
+		},
+		"border": {
+			"subtle": { "$value": "{color.cream.300}" },
+			"strong": { "$value": "{color.brown.500}" }
+		},
+		"focus": {
+			"ring": { "$value": "{color.indigo.600}" }
+		},
+		"success": {
+			"text": { "$value": "{color.green.700}" },
+			"surface": { "$value": "{color.green.100}" }
+		},
+		"error": {
+			"text": { "$value": "{color.red.700}" },
+			"surface": { "$value": "{color.red.100}" }
+		}
+	},
+	"font": {
+		"family": {
+			"$type": "fontFamily",
+			"base": { "$value": "{font.family.atkinson}" },
+			"mono": { "$value": "{font.family.system-mono}" }
+		},
+		"size": {
+			"$type": "dimension",
+			"sm": { "$value": "{font.size.16}" },
+			"base": { "$value": "{font.size.20}" },
+			"lg": { "$value": "{font.size.24}" },
+			"xl": { "$value": "{font.size.30}" },
+			"2xl": { "$value": "{font.size.36}" },
+			"3xl": { "$value": "{font.size.48}" }
+		},
+		"weight": {
+			"$type": "fontWeight",
+			"regular": { "$value": "{font.weight.400}" },
+			"medium": { "$value": "{font.weight.500}" },
+			"bold": { "$value": "{font.weight.700}" }
+		}
+	},
+	"line-height": {
+		"$type": "number",
+		"tight": { "$value": 1.2 },
+		"base": { "$value": 1.6 },
+		"relaxed": { "$value": 1.8 }
+	},
+	"letter-spacing": {
+		"$type": "dimension",
+		"base": { "$value": "0.02em" },
+		"wide": { "$value": "0.06em" }
+	},
+	"word-spacing": {
+		"$type": "dimension",
+		"base": { "$value": "0.08em" },
+		"wide": { "$value": "0.16em" }
+	},
+	"space": {
+		"$type": "dimension",
+		"xs": { "$value": "{dimension.4}" },
+		"sm": { "$value": "{dimension.8}" },
+		"md": { "$value": "{dimension.16}" },
+		"lg": { "$value": "{dimension.24}" },
+		"xl": { "$value": "{dimension.32}" },
+		"2xl": { "$value": "{dimension.48}" },
+		"3xl": { "$value": "{dimension.64}" }
+	},
+	"size": {
+		"$type": "dimension",
+		"touch-target-min": { "$value": "48px" },
+		"content-max": { "$value": "45rem" },
+		"viewport-full": { "$value": "100dvh" }
+	},
+	"radius": {
+		"$type": "dimension",
+		"sm": { "$value": "{dimension.4}" },
+		"md": { "$value": "{dimension.8}" },
+		"lg": { "$value": "{dimension.16}" },
+		"pill": { "$value": "9999px" }
+	},
+	"border-width": {
+		"$type": "dimension",
+		"thin": { "$value": "1px" },
+		"thick": { "$value": "2px" },
+		"focus": { "$value": "3px" }
+	},
+	"shadow": {
+		"$type": "shadow",
+		"sm": {
+			"$value": {
+				"color": "{color.shadow.light}",
+				"offsetX": "0",
+				"offsetY": "1px",
+				"blur": "2px",
+				"spread": "0"
+			}
+		},
+		"md": {
+			"$value": {
+				"color": "{color.shadow.light}",
+				"offsetX": "0",
+				"offsetY": "4px",
+				"blur": "12px",
+				"spread": "0"
+			}
+		},
+		"lg": {
+			"$value": {
+				"color": "{color.shadow.light}",
+				"offsetX": "0",
+				"offsetY": "12px",
+				"blur": "32px",
+				"spread": "0"
+			}
+		}
+	},
+	"opacity": {
+		"$type": "number",
+		"disabled": { "$value": 0.5 },
+		"overlay": { "$value": 0.6 }
+	},
+	"duration": {
+		"$type": "duration",
+		"instant": { "$value": "{duration.1}" },
+		"fast": { "$value": "{duration.150}" },
+		"base": { "$value": "{duration.250}" },
+		"slow": { "$value": "{duration.500}" }
+	},
+	"easing": {
+		"$type": "cubicBezier",
+		"standard": { "$value": "{easing.soft}" },
+		"enter": { "$value": "{easing.out}" },
+		"exit": { "$value": "{easing.in}" }
+	},
+	"z-index": {
+		"$type": "number",
+		"base": { "$value": 0 },
+		"raised": { "$value": 10 },
+		"sticky": { "$value": 100 },
+		"overlay": { "$value": 1000 },
+		"modal": { "$value": 1100 },
+		"toast": { "$value": 1200 }
+	},
+	"breakpoint": {
+		"$type": "dimension",
+		"sm": { "$value": "30rem" },
+		"md": { "$value": "48rem" },
+		"lg": { "$value": "64rem" },
+		"xl": { "$value": "80rem" }
+	}
+}

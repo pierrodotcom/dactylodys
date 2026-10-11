@@ -8,13 +8,16 @@ Une décision = un paragraphe : contexte, choix, conséquence. Une décision rem
 | 002 | 2026-10-11 | Première version : français + AZERTY France (PC et Mac) | Acceptée |
 | 003 | 2026-10-11 | Graphisme vectoriel plat + assets CC0, illustrations sur mesure ensuite | Acceptée |
 | 004 | 2026-10-11 | Code AGPL-3.0-or-later, contenus CC BY-SA 4.0, dispositions CC0 | Acceptée |
-| 005 | 2026-10-11 | Svelte 5 + SvelteKit 2.x statique, TypeScript 6, npm | Proposée |
-| 006 | 2026-10-11 | Rendu DOM/SVG/CSS + canvas natif, pas de moteur de jeu | Proposée |
-| 007 | 2026-10-11 | Frappe jugée sur le caractère produit ; disposition choisie et étalonnée | Proposée |
-| 008 | 2026-10-11 | Design tokens DTCG comme unique source visuelle | Proposée |
-| 009 | 2026-10-11 | Un jeu-cadre + mini-jeux courts sur un moteur unique | Proposée |
-| 010 | 2026-10-11 | Aucun classement, série, tirage aléatoire, notification, publicité ni traceur | Proposée |
-| 011 | 2026-10-11 | Voix pré-générées plutôt que synthèse du navigateur | Proposée |
+| 005 | 2026-10-11 | Svelte 5 + SvelteKit 2.x statique, TypeScript 6, npm | Acceptée |
+| 006 | 2026-10-11 | Rendu DOM/SVG/CSS + canvas natif, pas de moteur de jeu | Acceptée |
+| 007 | 2026-10-11 | Frappe jugée sur le caractère produit ; disposition choisie et étalonnée | Acceptée |
+| 008 | 2026-10-11 | Design tokens DTCG comme unique source visuelle | Acceptée |
+| 009 | 2026-10-11 | Un jeu-cadre + mini-jeux courts sur un moteur unique | Acceptée |
+| 010 | 2026-10-11 | Aucun classement, série, tirage aléatoire, notification, publicité ni traceur | Acceptée |
+| 011 | 2026-10-11 | Voix pré-générées plutôt que synthèse du navigateur | Acceptée |
+| 012 | 2026-10-11 | Doigté 10 doigts par défaut, profil de doigté adapté en option | Acceptée |
+
+Feuille de route et ADR 005 à 011 validés par le porteur du projet le 2026-10-11.
 
 ## 001 — Données locales d'abord
 Enfants mineurs, budget nul. Progression dans IndexedDB, profils multiples sur l'appareil, export/import par fichier. La couche de persistance est une interface (`ProfileStore`) pour pouvoir brancher une synchro facultative sans réécrire le jeu. Conséquence : aucune obligation de consentement parental tant que rien ne quitte l'appareil.
@@ -47,4 +50,13 @@ La recherche montre que le récit et la variété soutiennent mieux la motivatio
 Conforme aux référentiels pour mineurs (ICO, UNICEF RITEC, CNIL, lignes directrices DSA de juillet 2025). Détail dans `.claude/rules/jeux-pedagogie.md`.
 
 ## 011 — Voix
-La synthèse vocale des navigateurs est trop inégale (voix absentes ou en ligne selon les plateformes). Consignes pré-générées en fichiers audio, ou voix humaine enregistrée (question Q5).
+La synthèse vocale des navigateurs est trop inégale (voix absentes ou en ligne selon les plateformes). Consignes pré-générées en fichiers audio par synthèse (choix du porteur : plus simple au départ) ; une voix humaine pourra remplacer les fichiers plus tard sans toucher au code.
+
+## 012 — Doigté
+La recherche montre que la vitesse dépend d'un doigté constant et du regard libéré, pas du nombre de doigts, et les ergothérapeutes adaptent le doigté pour les enfants dyspraxiques. Le doigté est donc un profil en données, distinct de la disposition : 10 doigts par défaut, doigté réduit sélectionnable à l'étalonnage ou dans l'espace adulte.
+
+## 013 — Police d'interface (2026-10-11, acceptée)
+Atkinson Hyperlegible Next (licence OFL), auto-hébergée via `@fontsource-variable`. Aucune police n'a d'effet démontré sur la dyslexie ; celle-ci est retenue parce qu'elle distingue nettement les caractères proches (b/d/p/q, I/l/1, O/0), ce qui compte pour montrer quoi taper. La famille est un token : en changer ne touche aucun composant.
+
+## 014 — Vérification unique (2026-10-11, acceptée)
+`npm run verify` (script `tools/verify.js`) enchaîne génération, types, lint, tests, build et tests de bout en bout, à l'identique en local et en CI, et n'affiche le détail qu'en cas d'échec. Les fichiers générés (tokens, messages compilés) ne sont pas versionnés. Le déploiement GitHub Pages est écrit mais ne s'exécute que si le dépôt est public (question Q1).

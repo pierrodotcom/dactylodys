@@ -1,0 +1,59 @@
+@import '@fontsource-variable/atkinson-hyperlegible-next/wght.css';
+@import './lib/generated/tokens.css';
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	background-color: var(--dd-color-surface-base);
+	color: var(--dd-color-text-primary);
+}
+
+body {
+	margin: 0;
+	min-block-size: var(--dd-size-viewport-full);
+	font-family: var(--dd-font-family-base);
+	font-size: var(--dd-font-size-base);
+	font-weight: var(--dd-font-weight-regular);
+	line-height: var(--dd-line-height-base);
+	letter-spacing: var(--dd-letter-spacing-base);
+	word-spacing: var(--dd-word-spacing-base);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	font-weight: var(--dd-font-weight-bold);
+	line-height: var(--dd-line-height-tight);
+}
+
+p {
+	margin: 0;
+}
+
+:focus-visible {
+	outline-style: solid;
+	outline-width: var(--dd-border-width-focus);
+	outline-color: var(--dd-color-focus-ring);
+	outline-offset: var(--dd-space-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: var(--dd-duration-instant) !important;
+		animation-delay: var(--dd-duration-instant) !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: var(--dd-duration-instant) !important;
+		transition-delay: var(--dd-duration-instant) !important;
+		scroll-behavior: auto !important;
+	}
+}

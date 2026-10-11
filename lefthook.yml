@@ -1,0 +1,25 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: prettier
+      glob: '*.{js,ts,svelte,css,json,md,yml,yaml,html}'
+      run: npx --no-install prettier --check --ignore-unknown {staged_files}
+    - name: eslint
+      glob: '*.{js,ts,svelte}'
+      run: npx --no-install eslint {staged_files}
+    - name: stylelint
+      glob: '*.{css,svelte}'
+      run: npx --no-install stylelint {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: npx --no-install commitlint --edit {1}
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: check
+      run: npm run check
+    - name: test
+      run: npm run test
