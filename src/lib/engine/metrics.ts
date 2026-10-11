@@ -11,6 +11,77 @@ interface CharTally {
 	latencyCount: number;
 }
 
+interface CharMerge {
+	attempts: number;
+	errors: number;
+	latencySum: number;
+	latencyWeight: number;
+	latencyMean: number;
+	latencyEntries: number;
+}
+
+export function combineMetrics(list: readonly SessionMetrics[]): SessionMetrics {
+	let elapsedMs = 0;
+	let totalKeystrokes = 0;
+	let correctKeystrokes = 0;
+	const merges = new Map<string, CharMerge>();
+
+	for (const metrics of list) {
+		elapsedMs += metrics.elapsedMs;
+		totalKeystrokes += metrics.totalKeystrokes;
+		correctKeystrokes += metrics.correctKeystrokes;
+		for (const [char, stats] of Object.entries(metrics.perChar)) {
+			let merge = merges.get(char);
+			if (merge === undefined) {
+				merge = {
+					attempts: 0,
+					errors: 0,
+					latencySum: 0,
+					latencyWeight: 0,
+					latencyMean: 0,
+					latencyEntries: 0
+				};
+				merges.set(char, merge);
+			}
+			merge.attempts += stats.attempts;
+			merge.errors += stats.errors;
+			if (stats.meanLatencyMs !== null) {
+				const weight = stats.attempts - stats.errors;
+				merge.latencySum += stats.meanLatencyMs * weight;
+				merge.latencyWeight += weight;
+				merge.latencyMean += stats.meanLatencyMs;
+				merge.latencyEntries += 1;
+			}
+		}
+	}
+
+	const perChar: Record<string, CharStats> = {};
+	for (const [char, merge] of merges) {
+		let meanLatencyMs: number | null = null;
+		if (merge.latencyEntries > 0) {
+			meanLatencyMs =
+				merge.latencyWeight > 0
+					? merge.latencySum / merge.latencyWeight
+					: merge.latencyMean / merge.latencyEntries;
+		}
+		perChar[char] = { attempts: merge.attempts, errors: merge.errors, meanLatencyMs };
+	}
+
+	const correctCharsPerMinute =
+		elapsedMs === 0 ? 0 : correctKeystrokes / (elapsedMs / MS_PER_MINUTE);
+
+	return {
+		elapsedMs,
+		totalKeystrokes,
+		correctKeystrokes,
+		errorCount: totalKeystrokes - correctKeystrokes,
+		accuracy: computeAccuracy(correctKeystrokes, totalKeystrokes),
+		correctCharsPerMinute,
+		wordsPerMinute: correctCharsPerMinute / CHARS_PER_WORD,
+		perChar
+	};
+}
+
 export function computeMetrics(state: SessionState, now?: number): SessionMetrics {
 	const { records } = state;
 	const lastRecord = records[records.length - 1];
