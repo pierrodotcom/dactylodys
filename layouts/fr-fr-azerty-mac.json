@@ -1,0 +1,145 @@
+{
+	"schemaVersion": 1,
+	"id": "fr-fr-azerty-mac",
+	"locale": "fr-FR",
+	"platform": "mac",
+	"geometry": "iso",
+	"sources": [
+		{
+			"name": "Unicode CLDR 43, keyboards/osx/fr-t-k0-osx.xml",
+			"url": "https://github.com/unicode-org/cldr/blob/release-43/keyboards/osx/fr-t-k0-osx.xml",
+			"license": "Unicode-DFS-2016"
+		}
+	],
+	"keys": {
+		"Backquote": { "base": "<", "shift": ">", "altgr": "≤", "shiftAltgr": "≥" },
+		"Digit1": { "base": "&", "shift": "1", "altgr": "\uF8FF", "shiftAltgr": { "dead": "acute" } },
+		"Digit2": { "base": "é", "shift": "2", "altgr": "ë", "shiftAltgr": "„" },
+		"Digit3": { "base": "\"", "shift": "3", "altgr": "“", "shiftAltgr": "”" },
+		"Digit4": { "base": "'", "shift": "4", "altgr": "‘", "shiftAltgr": "’" },
+		"Digit5": { "base": "(", "shift": "5", "altgr": "{", "shiftAltgr": "[" },
+		"Digit6": { "base": "§", "shift": "6", "altgr": "¶", "shiftAltgr": "å" },
+		"Digit7": { "base": "è", "shift": "7", "altgr": "«", "shiftAltgr": "»" },
+		"Digit8": { "base": "!", "shift": "8", "altgr": "¡", "shiftAltgr": "Û" },
+		"Digit9": { "base": "ç", "shift": "9", "altgr": "Ç", "shiftAltgr": "Á" },
+		"Digit0": { "base": "à", "shift": "0", "altgr": "ø", "shiftAltgr": "Ø" },
+		"Minus": { "base": ")", "shift": "°", "altgr": "}", "shiftAltgr": "]" },
+		"Equal": { "base": "-", "shift": "_", "altgr": "—", "shiftAltgr": "–" },
+		"KeyQ": { "base": "a", "shift": "A", "altgr": "æ", "shiftAltgr": "Æ" },
+		"KeyW": { "base": "z", "shift": "Z", "altgr": "Â", "shiftAltgr": "Å" },
+		"KeyE": { "base": "e", "shift": "E", "altgr": "ê", "shiftAltgr": "Ê" },
+		"KeyR": { "base": "r", "shift": "R", "altgr": "®", "shiftAltgr": "‚" },
+		"KeyT": { "base": "t", "shift": "T", "altgr": "†", "shiftAltgr": "™" },
+		"KeyY": { "base": "y", "shift": "Y", "altgr": "Ú", "shiftAltgr": "Ÿ" },
+		"KeyU": { "base": "u", "shift": "U", "altgr": "º", "shiftAltgr": "ª" },
+		"KeyI": { "base": "i", "shift": "I", "altgr": "î", "shiftAltgr": "ï" },
+		"KeyO": { "base": "o", "shift": "O", "altgr": "œ", "shiftAltgr": "Œ" },
+		"KeyP": { "base": "p", "shift": "P", "altgr": "π", "shiftAltgr": "∏" },
+		"BracketLeft": {
+			"base": { "dead": "circumflex" },
+			"shift": { "dead": "diaeresis" },
+			"altgr": "ô",
+			"shiftAltgr": "Ô"
+		},
+		"BracketRight": { "base": "$", "shift": "*", "altgr": "€", "shiftAltgr": "¥" },
+		"KeyA": { "base": "q", "shift": "Q", "altgr": "‡", "shiftAltgr": "Ω" },
+		"KeyS": { "base": "s", "shift": "S", "altgr": "Ò", "shiftAltgr": "∑" },
+		"KeyD": { "base": "d", "shift": "D", "altgr": "∂", "shiftAltgr": "∆" },
+		"KeyF": { "base": "f", "shift": "F", "altgr": "ƒ", "shiftAltgr": "·" },
+		"KeyG": { "base": "g", "shift": "G", "altgr": "ﬁ", "shiftAltgr": "ﬂ" },
+		"KeyH": { "base": "h", "shift": "H", "altgr": "Ì", "shiftAltgr": "Î" },
+		"KeyJ": { "base": "j", "shift": "J", "altgr": "Ï", "shiftAltgr": "Í" },
+		"KeyK": { "base": "k", "shift": "K", "altgr": "È", "shiftAltgr": "Ë" },
+		"KeyL": { "base": "l", "shift": "L", "altgr": "¬", "shiftAltgr": "|" },
+		"Semicolon": { "base": "m", "shift": "M", "altgr": "µ", "shiftAltgr": "Ó" },
+		"Quote": { "base": "ù", "shift": "%", "altgr": "Ù", "shiftAltgr": "‰" },
+		"Backslash": { "base": { "dead": "grave" }, "shift": "£", "altgr": "@", "shiftAltgr": "#" },
+		"IntlBackslash": { "base": "@", "shift": "#", "altgr": "•", "shiftAltgr": "Ÿ" },
+		"KeyZ": { "base": "w", "shift": "W", "altgr": "‹", "shiftAltgr": "›" },
+		"KeyX": { "base": "x", "shift": "X", "altgr": "≈", "shiftAltgr": "⁄" },
+		"KeyC": { "base": "c", "shift": "C", "altgr": "©", "shiftAltgr": "¢" },
+		"KeyV": { "base": "v", "shift": "V", "altgr": "◊", "shiftAltgr": "√" },
+		"KeyB": { "base": "b", "shift": "B", "altgr": "ß", "shiftAltgr": "∫" },
+		"KeyN": { "base": "n", "shift": "N", "altgr": { "dead": "tilde" }, "shiftAltgr": "ı" },
+		"KeyM": { "base": ",", "shift": "?", "altgr": "∞", "shiftAltgr": "¿" },
+		"Comma": { "base": ";", "shift": ".", "altgr": "…", "shiftAltgr": "•" },
+		"Period": { "base": ":", "shift": "/", "altgr": "÷", "shiftAltgr": "\\" },
+		"Slash": { "base": "=", "shift": "+", "altgr": "≠", "shiftAltgr": "±" },
+		"Space": { "base": " ", "altgr": "\u00A0" }
+	},
+	"deadKeys": {
+		"circumflex": {
+			"standalone": "^",
+			"compositions": {
+				"a": "â",
+				"A": "Â",
+				"e": "ê",
+				"E": "Ê",
+				"i": "î",
+				"I": "Î",
+				"o": "ô",
+				"O": "Ô",
+				"u": "û",
+				"U": "Û"
+			}
+		},
+		"diaeresis": {
+			"standalone": "¨",
+			"compositions": {
+				"a": "ä",
+				"A": "Ä",
+				"e": "ë",
+				"E": "Ë",
+				"i": "ï",
+				"I": "Ï",
+				"o": "ö",
+				"O": "Ö",
+				"u": "ü",
+				"U": "Ü",
+				"y": "ÿ",
+				"Y": "Ÿ"
+			}
+		},
+		"grave": {
+			"standalone": "`",
+			"compositions": {
+				"a": "à",
+				"A": "À",
+				"e": "è",
+				"E": "È",
+				"i": "ì",
+				"I": "Ì",
+				"o": "ò",
+				"O": "Ò",
+				"u": "ù",
+				"U": "Ù"
+			}
+		},
+		"acute": {
+			"standalone": "´",
+			"compositions": {
+				"a": "á",
+				"A": "Á",
+				"e": "é",
+				"E": "É",
+				"i": "í",
+				"I": "Í",
+				"o": "ó",
+				"O": "Ó",
+				"u": "ú",
+				"U": "Ú"
+			}
+		},
+		"tilde": {
+			"standalone": "~",
+			"compositions": {
+				"a": "ã",
+				"A": "Ã",
+				"n": "ñ",
+				"N": "Ñ",
+				"o": "õ",
+				"O": "Õ"
+			}
+		}
+	}
+}

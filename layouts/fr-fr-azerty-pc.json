@@ -1,0 +1,124 @@
+{
+	"schemaVersion": 1,
+	"id": "fr-fr-azerty-pc",
+	"locale": "fr-FR",
+	"platform": "pc",
+	"geometry": "iso",
+	"sources": [
+		{
+			"name": "Unicode CLDR 43, keyboards/windows/fr-t-k0-windows.xml",
+			"url": "https://github.com/unicode-org/cldr/blob/release-43/keyboards/windows/fr-t-k0-windows.xml",
+			"license": "Unicode-DFS-2016"
+		}
+	],
+	"keys": {
+		"Backquote": { "base": "²" },
+		"Digit1": { "base": "&", "shift": "1" },
+		"Digit2": { "base": "é", "shift": "2", "altgr": { "dead": "tilde" } },
+		"Digit3": { "base": "\"", "shift": "3", "altgr": "#" },
+		"Digit4": { "base": "'", "shift": "4", "altgr": "{" },
+		"Digit5": { "base": "(", "shift": "5", "altgr": "[" },
+		"Digit6": { "base": "-", "shift": "6", "altgr": "|" },
+		"Digit7": { "base": "è", "shift": "7", "altgr": { "dead": "grave" } },
+		"Digit8": { "base": "_", "shift": "8", "altgr": "\\" },
+		"Digit9": { "base": "ç", "shift": "9", "altgr": "^" },
+		"Digit0": { "base": "à", "shift": "0", "altgr": "@" },
+		"Minus": { "base": ")", "shift": "°", "altgr": "]" },
+		"Equal": { "base": "=", "shift": "+", "altgr": "}" },
+		"KeyQ": { "base": "a", "shift": "A" },
+		"KeyW": { "base": "z", "shift": "Z" },
+		"KeyE": { "base": "e", "shift": "E", "altgr": "€" },
+		"KeyR": { "base": "r", "shift": "R" },
+		"KeyT": { "base": "t", "shift": "T" },
+		"KeyY": { "base": "y", "shift": "Y" },
+		"KeyU": { "base": "u", "shift": "U" },
+		"KeyI": { "base": "i", "shift": "I" },
+		"KeyO": { "base": "o", "shift": "O" },
+		"KeyP": { "base": "p", "shift": "P" },
+		"BracketLeft": { "base": { "dead": "circumflex" }, "shift": { "dead": "diaeresis" } },
+		"BracketRight": { "base": "$", "shift": "£", "altgr": "¤" },
+		"KeyA": { "base": "q", "shift": "Q" },
+		"KeyS": { "base": "s", "shift": "S" },
+		"KeyD": { "base": "d", "shift": "D" },
+		"KeyF": { "base": "f", "shift": "F" },
+		"KeyG": { "base": "g", "shift": "G" },
+		"KeyH": { "base": "h", "shift": "H" },
+		"KeyJ": { "base": "j", "shift": "J" },
+		"KeyK": { "base": "k", "shift": "K" },
+		"KeyL": { "base": "l", "shift": "L" },
+		"Semicolon": { "base": "m", "shift": "M" },
+		"Quote": { "base": "ù", "shift": "%" },
+		"Backslash": { "base": "*", "shift": "µ" },
+		"IntlBackslash": { "base": "<", "shift": ">" },
+		"KeyZ": { "base": "w", "shift": "W" },
+		"KeyX": { "base": "x", "shift": "X" },
+		"KeyC": { "base": "c", "shift": "C" },
+		"KeyV": { "base": "v", "shift": "V" },
+		"KeyB": { "base": "b", "shift": "B" },
+		"KeyN": { "base": "n", "shift": "N" },
+		"KeyM": { "base": ",", "shift": "?" },
+		"Comma": { "base": ";", "shift": "." },
+		"Period": { "base": ":", "shift": "/" },
+		"Slash": { "base": "!", "shift": "§" },
+		"Space": { "base": " " }
+	},
+	"deadKeys": {
+		"circumflex": {
+			"standalone": "^",
+			"compositions": {
+				"a": "â",
+				"A": "Â",
+				"e": "ê",
+				"E": "Ê",
+				"i": "î",
+				"I": "Î",
+				"o": "ô",
+				"O": "Ô",
+				"u": "û",
+				"U": "Û"
+			}
+		},
+		"diaeresis": {
+			"standalone": "¨",
+			"compositions": {
+				"a": "ä",
+				"A": "Ä",
+				"e": "ë",
+				"E": "Ë",
+				"i": "ï",
+				"I": "Ï",
+				"o": "ö",
+				"O": "Ö",
+				"u": "ü",
+				"U": "Ü",
+				"y": "ÿ"
+			}
+		},
+		"tilde": {
+			"standalone": "~",
+			"compositions": {
+				"a": "ã",
+				"A": "Ã",
+				"n": "ñ",
+				"N": "Ñ",
+				"o": "õ",
+				"O": "Õ"
+			}
+		},
+		"grave": {
+			"standalone": "`",
+			"compositions": {
+				"a": "à",
+				"A": "À",
+				"e": "è",
+				"E": "È",
+				"i": "ì",
+				"I": "Ì",
+				"o": "ò",
+				"O": "Ò",
+				"u": "ù",
+				"U": "Ù"
+			}
+		}
+	}
+}
