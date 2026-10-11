@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages.js';
+	import Button from '$lib/ui/components/Button.svelte';
 </script>
 
 <svelte:head>
@@ -9,6 +12,7 @@
 <main>
 	<h1>{m.home_title()}</h1>
 	<p>{m.home_tagline()}</p>
+	<Button size="lg" onclick={() => goto(resolve('/jouer'))}>{m.home_play()}</Button>
 </main>
 
 <style>
@@ -16,7 +20,7 @@
 		display: grid;
 		place-content: center;
 		justify-items: center;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-lg);
 		min-block-size: var(--dd-size-viewport-full);
 		padding: var(--dd-space-lg);
 		text-align: center;
