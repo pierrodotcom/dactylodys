@@ -12,6 +12,23 @@ const NON_TEXT_MIN = 3;
 type ContrastPair = { foreground: string; background: string; min: number };
 
 const SURFACES = ['color.surface.base', 'color.surface.raised', 'color.surface.sunken'];
+const TEXT_SURFACES = SURFACES.slice(0, 2);
+
+const FINGERS = [
+	'left-pinky',
+	'left-ring',
+	'left-middle',
+	'left-index',
+	'left-thumb',
+	'right-thumb',
+	'right-index',
+	'right-middle',
+	'right-ring',
+	'right-pinky'
+];
+const FINGER_COLORS = FINGERS.map((finger) => `color.finger.${finger}`);
+/** Smallest CIELAB distance between two finger colors, for normal vision and each color blindness. */
+const FINGER_MIN_DISTANCE = 12;
 
 const CONTRAST_PAIRS: ContrastPair[] = [
 	{ foreground: 'color.text.primary', background: 'color.surface.base', min: BODY_TEXT_MIN },
@@ -35,7 +52,35 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 		background,
 		min: NON_TEXT_MIN
 	})),
-	{ foreground: 'color.border.strong', background: 'color.surface.base', min: NON_TEXT_MIN }
+	{ foreground: 'color.border.strong', background: 'color.surface.base', min: NON_TEXT_MIN },
+	...FINGER_COLORS.map((background) => ({
+		foreground: 'color.key.text-on-finger',
+		background,
+		min: TEXT_MIN
+	})),
+	{ foreground: 'color.key.text', background: 'color.key.surface', min: TEXT_MIN },
+	{ foreground: 'color.key.border', background: 'color.surface.sunken', min: NON_TEXT_MIN },
+	...SURFACES.map((background) => ({
+		foreground: 'color.key.target-outline',
+		background,
+		min: NON_TEXT_MIN
+	})),
+	...SURFACES.map((background) => ({
+		foreground: 'color.oops.outline',
+		background,
+		min: NON_TEXT_MIN
+	})),
+	...TEXT_SURFACES.map((background) => ({
+		foreground: 'color.typing.done',
+		background,
+		min: TEXT_MIN
+	})),
+	...TEXT_SURFACES.map((background) => ({
+		foreground: 'color.typing.current-frame',
+		background,
+		min: NON_TEXT_MIN
+	})),
+	{ foreground: 'color.text.primary', background: 'color.typing.current-surface', min: TEXT_MIN }
 ];
 
 type Token = { value: unknown; type: string | undefined };
@@ -138,6 +183,63 @@ function contrastRatio(first: string, second: string): number {
 	return (lighter + 0.05) / (darker + 0.05);
 }
 
+type Matrix = readonly [
+	readonly [number, number, number],
+	readonly [number, number, number],
+	readonly [number, number, number]
+];
+
+/** Machado et al. (2009), severity 1, applied to linear RGB. */
+const VISIONS: Record<string, Matrix> = {
+	normal: [
+		[1, 0, 0],
+		[0, 1, 0],
+		[0, 0, 1]
+	],
+	protanopia: [
+		[0.152286, 1.052583, -0.204868],
+		[0.114503, 0.786281, 0.099216],
+		[-0.003882, -0.048116, 1.051998]
+	],
+	deuteranopia: [
+		[0.367322, 0.860646, -0.227968],
+		[0.280085, 0.672501, 0.047413],
+		[-0.01182, 0.04294, 0.968881]
+	],
+	tritanopia: [
+		[1.255528, -0.076749, -0.178779],
+		[-0.078411, 0.930809, 0.147602],
+		[0.004733, 0.691367, 0.3039]
+	]
+};
+
+function toLab(hex: string, matrix: Matrix): [number, number, number] {
+	const linear = parseHexColor(hex).map((channel) => {
+		const value = channel / 255;
+		return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+	});
+	const [red, green, blue] = matrix.map((row) =>
+		Math.min(
+			1,
+			Math.max(
+				0,
+				row.reduce((sum, factor, i) => sum + factor * (linear[i] ?? 0), 0)
+			)
+		)
+	);
+	const x = (0.4124 * (red ?? 0) + 0.3576 * (green ?? 0) + 0.1805 * (blue ?? 0)) / 0.95047;
+	const y = 0.2126 * (red ?? 0) + 0.7152 * (green ?? 0) + 0.0722 * (blue ?? 0);
+	const z = (0.0193 * (red ?? 0) + 0.1192 * (green ?? 0) + 0.9505 * (blue ?? 0)) / 1.08883;
+	const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+	return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+}
+
+function labDistance(first: string, second: string, matrix: Matrix): number {
+	const [l1, a1, b1] = toLab(first, matrix);
+	const [l2, a2, b2] = toLab(second, matrix);
+	return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
+}
+
 const primitives = loadTokens(PRIMITIVES_FILE);
 const semantic = loadTokens(SEMANTIC_FILE);
 const darkTheme = loadTokens(THEME_FILES.dark);
@@ -224,6 +326,32 @@ describe.each(themes)('theme $name', (theme) => {
 			.map(([name]) => name);
 		expect(changed).toEqual([]);
 	});
+});
+
+describe.each(contrastThemes)('finger colors in $name theme', ({ overrides }) => {
+	const colors = FINGER_COLORS.map((name) => themeColor(overrides, name));
+
+	it('defines one color per finger', () => {
+		expect(new Set(colors).size).toBe(FINGERS.length);
+	});
+
+	it.each(Object.entries(VISIONS))(
+		'keeps every pair of fingers distinguishable with %s vision',
+		(_vision, matrix) => {
+			const tooClose = colors.flatMap((first, i) =>
+				colors
+					.slice(i + 1)
+					.map((second, offset) => ({
+						pair: `${FINGERS[i]}/${FINGERS[i + 1 + offset]}`,
+						first,
+						second
+					}))
+					.filter(({ first: a, second: b }) => labDistance(a, b, matrix) < FINGER_MIN_DISTANCE)
+					.map(({ pair }) => pair)
+			);
+			expect(tooClose).toEqual([]);
+		}
+	);
 });
 
 describe.each(contrastThemes)('contrast in $name theme', ({ overrides }) => {

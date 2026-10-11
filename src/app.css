@@ -45,10 +45,46 @@ p {
 	outline-offset: var(--dd-space-xs);
 }
 
+.dd-visually-hidden {
+	position: absolute;
+	inline-size: var(--dd-size-visually-hidden);
+	block-size: var(--dd-size-visually-hidden);
+	margin: 0;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/*
+ * Settings written on <html> by the settings layer:
+ * data-text-scale="md|lg|xl", data-text-spacing="normal|wide|wider",
+ * data-motion="reduced|full" (absent = follow the system), data-theme="light|dark".
+ */
+:root[data-text-scale='lg'] {
+	--dd-typing-size-current: var(--dd-typing-size-lg);
+}
+
+:root[data-text-scale='xl'] {
+	--dd-typing-size-current: var(--dd-typing-size-xl);
+}
+
+:root[data-text-spacing='wide'] {
+	--dd-typing-letter-spacing-current: var(--dd-typing-letter-spacing-wide);
+	--dd-typing-word-spacing-current: var(--dd-typing-word-spacing-wide);
+}
+
+:root[data-text-spacing='wider'] {
+	--dd-typing-letter-spacing-current: var(--dd-typing-letter-spacing-wider);
+	--dd-typing-word-spacing-current: var(--dd-typing-word-spacing-wider);
+}
+
+/* data-motion="full" wins over the system setting, data-motion="reduced" over a system that allows motion. */
 @media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
+	:root:not([data-motion='full']) *,
+	:root:not([data-motion='full']) *::before,
+	:root:not([data-motion='full']) *::after {
 		animation-duration: var(--dd-duration-instant) !important;
 		animation-delay: var(--dd-duration-instant) !important;
 		animation-iteration-count: 1 !important;
@@ -56,4 +92,15 @@ p {
 		transition-delay: var(--dd-duration-instant) !important;
 		scroll-behavior: auto !important;
 	}
+}
+
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+	animation-duration: var(--dd-duration-instant) !important;
+	animation-delay: var(--dd-duration-instant) !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: var(--dd-duration-instant) !important;
+	transition-delay: var(--dd-duration-instant) !important;
+	scroll-behavior: auto !important;
 }
