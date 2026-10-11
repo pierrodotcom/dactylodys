@@ -1,4 +1,5 @@
 import { toGraphemes } from '../engine/graphemes';
+import { emptyProgress } from '../engine/progression/progress';
 import type {
 	CharProgress,
 	LessonProgress,
@@ -100,10 +101,6 @@ function cleanName(name: string): string {
 	return text;
 }
 
-function emptyProgressState(): ProgressState {
-	return { lessons: {}, chars: {} };
-}
-
 function isTimestamp(value: unknown): value is number {
 	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
@@ -118,7 +115,7 @@ export function createProfile(input: NewProfileInput): Profile {
 		createdAt: input.now,
 		calibrated: false,
 		settings: defaultSettings(input.platform),
-		progress: emptyProgressState()
+		progress: emptyProgress()
 	};
 }
 
