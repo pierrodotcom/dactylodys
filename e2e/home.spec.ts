@@ -20,6 +20,18 @@ test.describe('home page', () => {
 		await expect(page.getByText(messages.home_tagline ?? '')).toBeVisible();
 	});
 
+	test('opens the game from the big Play button', async ({ page }) => {
+		await page.goto('/', { waitUntil: 'networkidle' });
+		await page.locator('#svelte-announcer').waitFor({ state: 'attached' });
+
+		await page.getByRole('button', { name: messages.home_play, exact: true }).click();
+
+		await expect(page).toHaveURL(/\/jouer$/);
+		await expect(
+			page.getByRole('heading', { level: 1, name: messages.play_players_title })
+		).toBeVisible();
+	});
+
 	test('requests nothing from another origin', async ({ page, baseURL }) => {
 		const expectedOrigin = new URL(baseURL ?? '').origin;
 		const foreignRequests: string[] = [];
