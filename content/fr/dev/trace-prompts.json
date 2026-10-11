@@ -11,13 +11,13 @@
 			"id": "fr.trace-prompt.capitals",
 			"title": "Majuscules",
 			"text": "Lou Maya Quentin",
-			"instruction": "Tape ce texte avec les majuscules, comme d'habitude."
+			"instruction": "Tape ce texte en faisant les majuscules avec la touche Maj, pas avec Verr. Maj."
 		},
 		{
 			"id": "fr.trace-prompt.digits",
 			"title": "Chiffres",
 			"text": "0123456789",
-			"instruction": "Tape les chiffres de la rangée du haut, pas ceux du pavé numérique."
+			"instruction": "Utilise la rangée du haut (Maj + chiffre sur un clavier AZERTY). N'utilise pas le pavé numérique."
 		},
 		{
 			"id": "fr.trace-prompt.accents",
@@ -44,9 +44,15 @@
 			"instruction": "Appuie sur la touche morte ^ puis sur la barre d'espace. Recommence avec la touche morte du tréma ¨."
 		},
 		{
+			"id": "fr.trace-prompt.altgr-dead-keys",
+			"title": "Tilde et accent grave (touches mortes avec AltGr)",
+			"text": "~`",
+			"instruction": "Sur PC : AltGr+2 puis la barre d'espace, puis AltGr+7 puis la barre d'espace. Sur Mac : Option+N puis espace, puis la touche ` puis espace."
+		},
+		{
 			"id": "fr.trace-prompt.altgr-symbols",
 			"title": "Symboles avec AltGr",
-			"text": "@ # { } [ ] | \\ ~ €",
+			"text": "@ # { } [ ] |  €",
 			"instruction": "Tape chaque symbole avec sa combinaison de touches (AltGr ou Option selon ton clavier), puis un espace."
 		},
 		{

@@ -15,9 +15,16 @@ paths:
 - AltGr sous Windows = `ControlLeft` + `AltRight` : ne pas l'interpréter comme un raccourci Ctrl.
 - Playwright ne simule ni disposition non-US ni touche morte.
 
+## Confirmé par traces réelles (Windows 10/11, Chrome 155 et Firefox 157, AZERTY, 2026-10-11)
+
+- Aucun événement de composition. Chaque caractère produit arrive par `beforeinput` + `input` (`insertText`).
+- Touche morte `^`/`¨` : `keydown` avec `key: "Dead"`, rien d'inséré ; la frappe suivante porte le caractère composé dans `key` et dans `data`. Touche morte + Espace insère le signe seul (l'espace est consommé).
+- **Chrome annonce une fausse touche pour une touche morte AltGr** : AltGr+2 (tilde mort) donne `key: "é"` au lieu de `Dead`, sans insertion. Firefox annonce `Dead`. D'où la règle 1 : `key` ne sert jamais à déduire un caractère.
+- Les utilisateurs tapent les chiffres au pavé numérique (`Numpad0`…) et les majuscules avec Verr. Maj : le caractère reste juste, mais la touche physique n'est pas celle que montre l'aide visuelle.
+
 ## Règles
 
-1. La frappe est validée sur le **caractère produit** (`key`, `beforeinput`/`input`, fin de composition). `code` sert uniquement à savoir quelle touche physique allumer et quel doigt est attendu.
+1. La frappe est validée sur le **caractère produit**, lu uniquement dans `beforeinput`/`input` et la fin de composition, **jamais dans `key`**. `code` sert uniquement à savoir quelle touche physique allumer et quel doigt est attendu.
 2. Le moteur consomme des `NormalizedKeystroke`. Toute la complexité navigateur vit dans **un** normaliseur pur, `keyboard/input-adapter/` : il reçoit des `RawInputEvent` (copies en données simples des événements DOM) et n'accède jamais au DOM. Le branchement des écouteurs DOM est un adaptateur mince dans `src/lib/ui/keyboard-capture/`, qui ne contient aucune logique. C'est ce qui permet de rejouer les traces en Node.
 3. Une disposition est une donnée JSON : touche physique (`code`) → caractères par couche (base, Maj, AltGr, Maj+AltGr, touches mortes) → doigt assigné. Variantes PC et Mac séparées. Aucun `if (layout === 'azerty')` dans le code.
 4. L'assignation des doigts est un **profil de doigté** distinct de la disposition (10 doigts, doigté réduit) pour permettre les adaptations recommandées par les ergothérapeutes.
@@ -45,6 +52,6 @@ Types : `src/lib/keyboard/types.ts`, `src/lib/keyboard/layout-ids.ts`, `src/lib/
 | `applyKeystroke(state, keystroke): SessionStep` | `engine/session` | Réducteur pur |
 | `computeMetrics(state, now?): SessionMetrics` | `engine/metrics` | Précision, vitesse, statistiques par caractère |
 
-Données : `layouts/<id>.json`, `layouts/fingering/<id>.json`, `tests/traces/<layoutId>/<os>-<navigateur>-<slug>.json`.
+Données : `layouts/<id>.json`, `layouts/fingering/<id>.json`. Traces réelles : fichier téléchargé depuis `/dev/traces`, déposé **tel quel** dans `tests/traces/<layoutId>/` (nom `<layoutId>__<os>-<navigateur>__<date>.json`). Si le testeur n'a pas tapé exactement la consigne, `expectedText` est corrigé pour refléter ce qui a réellement été tapé, et le commit le dit.
 
 Sur AZERTY PC, `É` et `Ç` ne sont pas productibles sans Verr. Maj ; `È` et `À` ne le sont que par la touche morte AltGr+7 : `findUnproducible` signale les premiers, et les contenus pour débutants évitent toutes les majuscules accentuées. Le modèle n'a pas de couche Verr. Maj.
