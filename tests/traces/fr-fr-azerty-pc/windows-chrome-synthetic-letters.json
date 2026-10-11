@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "Ab é",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "Shift", "code": "ShiftLeft", "shiftKey": true },
+		{ "type": "keydown", "timestamp": 170, "key": "A", "code": "KeyQ", "shiftKey": true },
+		{ "type": "beforeinput", "timestamp": 171, "inputType": "insertText", "data": "A" },
+		{ "type": "input", "timestamp": 172, "inputType": "insertText", "data": "A" },
+		{ "type": "keyup", "timestamp": 232, "key": "A", "code": "KeyQ", "shiftKey": true },
+		{ "type": "keyup", "timestamp": 252, "key": "Shift", "code": "ShiftLeft" },
+		{ "type": "keydown", "timestamp": 277, "key": "b", "code": "KeyB" },
+		{ "type": "beforeinput", "timestamp": 278, "inputType": "insertText", "data": "b" },
+		{ "type": "input", "timestamp": 279, "inputType": "insertText", "data": "b" },
+		{ "type": "keyup", "timestamp": 339, "key": "b", "code": "KeyB" },
+		{ "type": "keydown", "timestamp": 364, "key": " ", "code": "Space" },
+		{ "type": "beforeinput", "timestamp": 365, "inputType": "insertText", "data": " " },
+		{ "type": "input", "timestamp": 366, "inputType": "insertText", "data": " " },
+		{ "type": "keyup", "timestamp": 426, "key": " ", "code": "Space" },
+		{ "type": "keydown", "timestamp": 451, "key": "é", "code": "Digit2" },
+		{ "type": "beforeinput", "timestamp": 452, "inputType": "insertText", "data": "é" },
+		{ "type": "input", "timestamp": 453, "inputType": "insertText", "data": "é" },
+		{ "type": "keyup", "timestamp": 513, "key": "é", "code": "Digit2" }
+	]
+}

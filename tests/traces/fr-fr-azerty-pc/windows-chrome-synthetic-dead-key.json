@@ -1,0 +1,27 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "êa",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "Dead", "code": "BracketLeft" },
+		{ "type": "keyup", "timestamp": 215, "key": "Dead", "code": "BracketLeft" },
+		{ "type": "keydown", "timestamp": 305, "key": "ê", "code": "KeyE" },
+		{ "type": "beforeinput", "timestamp": 306, "inputType": "insertText", "data": "ê" },
+		{ "type": "input", "timestamp": 307, "inputType": "insertText", "data": "ê" },
+		{ "type": "keyup", "timestamp": 367, "key": "ê", "code": "KeyE" },
+		{ "type": "keydown", "timestamp": 392, "key": "a", "code": "KeyQ" },
+		{ "type": "beforeinput", "timestamp": 393, "inputType": "insertText", "data": "a" },
+		{ "type": "input", "timestamp": 394, "inputType": "insertText", "data": "a" },
+		{ "type": "keyup", "timestamp": 454, "key": "a", "code": "KeyQ" }
+	]
+}
