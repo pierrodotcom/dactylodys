@@ -99,6 +99,64 @@
 				"$value": "#45201c"
 			}
 		},
+		"turquoise": {
+			"300": {
+				"$value": "#69f1e6"
+			}
+		},
+		"lavender": {
+			"300": {
+				"$value": "#debcfd"
+			}
+		},
+		"gold": {
+			"500": {
+				"$value": "#bfa147"
+			}
+		},
+		"clay": {
+			"400": {
+				"$value": "#c78760"
+			}
+		},
+		"sunflower": {
+			"300": {
+				"$value": "#f1d275"
+			}
+		},
+		"violet": {
+			"400": {
+				"$value": "#948be3"
+			}
+		},
+		"sage": {
+			"400": {
+				"$value": "#719f8f"
+			}
+		},
+		"mint": {
+			"200": {
+				"$value": "#bef0b2"
+			}
+		},
+		"ocean": {
+			"400": {
+				"$value": "#4ca2b1"
+			}
+		},
+		"jade": {
+			"300": {
+				"$value": "#82cda4"
+			}
+		},
+		"amber": {
+			"300": {
+				"$value": "#ffc27a"
+			},
+			"700": {
+				"$value": "#8a4b00"
+			}
+		},
 		"shadow": {
 			"light": {
 				"$value": "#2a211826"
@@ -175,6 +233,12 @@
 			},
 			"48": {
 				"$value": "3rem"
+			},
+			"64": {
+				"$value": "4rem"
+			},
+			"80": {
+				"$value": "5rem"
 			},
 			"$type": "dimension"
 		}
