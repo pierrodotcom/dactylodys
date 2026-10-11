@@ -2,7 +2,12 @@ import { parseFingeringProfile } from './fingering';
 import { parseGeometry } from './geometry';
 import { parseLayout } from './layout';
 import type { FingeringProfileId, GeometryId, LayoutId } from './layout-ids';
-import type { FingeringProfile, KeyboardGeometryDefinition, LayoutDefinition } from './types';
+import type {
+	FingeringProfile,
+	KeyboardGeometry,
+	KeyboardGeometryDefinition,
+	LayoutDefinition
+} from './types';
 
 type JsonLoader = () => Promise<{ default: unknown }>;
 
@@ -19,6 +24,11 @@ const GEOMETRY_LOADERS: Readonly<Record<GeometryId, JsonLoader>> = {
 	'iso-105': () => import('../../../layouts/geometry/iso-105.json')
 };
 
+/** Drawing to use for each physical shape; a shape without an entry is not drawable yet. */
+const GEOMETRY_ID_BY_SHAPE: Readonly<Partial<Record<KeyboardGeometry, GeometryId>>> = {
+	iso: 'iso-105'
+};
+
 function findLoader<Id extends string>(
 	loaders: Readonly<Record<Id, JsonLoader>>,
 	id: Id,
@@ -33,6 +43,15 @@ export async function loadLayout(id: LayoutId): Promise<LayoutDefinition> {
 	const layout = parseLayout(module.default);
 	if (layout.id !== id) throw new Error(`Layout file for ${id} declares id ${layout.id}`);
 	return layout;
+}
+
+/** Geometry to draw for a layout. Throws when its physical shape has no drawing. */
+export function geometryIdFor(layout: LayoutDefinition): GeometryId {
+	const id = Object.hasOwn(GEOMETRY_ID_BY_SHAPE, layout.geometry)
+		? GEOMETRY_ID_BY_SHAPE[layout.geometry]
+		: undefined;
+	if (id === undefined) throw new Error(`No keyboard drawing for the ${layout.geometry} geometry`);
+	return id;
 }
 
 export async function loadGeometry(id: GeometryId): Promise<KeyboardGeometryDefinition> {

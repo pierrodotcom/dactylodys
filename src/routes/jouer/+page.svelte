@@ -43,6 +43,7 @@
 	import PlayerSelect from './PlayerSelect.svelte';
 	import { PLAY_RULES } from './play-rules';
 	import SettingsPanel from './SettingsPanel.svelte';
+	import { createProfileSounds } from './sounds';
 	import { summarizeMetrics, type ResultSummary } from './summary';
 	import WorldMap from './WorldMap.svelte';
 
@@ -69,6 +70,7 @@
 	let saveState = $state<'idle' | 'saved' | 'error'>('idle');
 	let systemPrefersReduced = $state(false);
 
+	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
 
 	function go(event: FlowEvent) {
@@ -90,6 +92,8 @@
 		}
 		go({ type: 'profiles-loaded' });
 	});
+
+	onMount(() => () => sounds.dispose());
 
 	$effect(() => {
 		applySettings(profile?.settings ?? defaultSettings('pc'), document.documentElement);
@@ -292,6 +296,7 @@
 				geometry={assets.geometry}
 				fingering={assets.fingering}
 				settings={toGameSettings(profile.settings, systemPrefersReduced)}
+				{sounds}
 				onComplete={(outcome) => finishGame(lessonId, outcome)}
 				onQuit={quitGame}
 			/>

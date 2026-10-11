@@ -1,4 +1,6 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { createProfile, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '$lib/state/profile';
 import { checkPlayerName, platformFromUserAgent } from './player';
 
 describe('checkPlayerName', () => {
@@ -27,6 +29,40 @@ describe('checkPlayerName', () => {
 
 	it('refuses control characters', () => {
 		expect(checkPlayerName('Lé\u0007a')).toEqual({ ok: false, reason: 'invalid' });
+	});
+});
+
+function profileNameOrNull(raw: string): string | null {
+	try {
+		return createProfile({ id: 'probe', name: raw, now: 0, platform: 'pc' }).name;
+	} catch {
+		return null;
+	}
+}
+
+describe('checkPlayerName and the profile contract', () => {
+	it('uses the bounds exported by the profile contract', () => {
+		expect(checkPlayerName('a'.repeat(MIN_NAME_LENGTH)).ok).toBe(true);
+		expect(checkPlayerName('a'.repeat(MAX_NAME_LENGTH)).ok).toBe(true);
+		expect(checkPlayerName('a'.repeat(MAX_NAME_LENGTH + 1))).toEqual({
+			ok: false,
+			reason: 'invalid'
+		});
+	});
+
+	it('agrees with createProfile on any text', () => {
+		const samples = fc.oneof(
+			fc.string({ unit: 'binary', maxLength: MAX_NAME_LENGTH + 5 }),
+			fc.string({ unit: 'grapheme', maxLength: MAX_NAME_LENGTH + 5 }),
+			fc.constantFrom('', ' ', '\u0007', ' Lé́a ', ' ﻿', '\u0085')
+		);
+
+		fc.assert(
+			fc.property(samples, (raw) => {
+				const check = checkPlayerName(raw);
+				expect(check.ok ? check.name : null).toBe(profileNameOrNull(raw));
+			})
+		);
 	});
 });
 

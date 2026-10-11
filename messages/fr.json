@@ -144,7 +144,7 @@
 	"play_new_submit": "C'est moi !",
 	"play_new_cancel": "Retour",
 	"play_new_error_empty": "Il me faut un pseudo ! Écris au moins une lettre.",
-	"play_new_error_invalid": "Ton pseudo peut avoir de 1 à 20 caractères. Essaie un peu plus court !",
+	"play_new_error_invalid": "Ton pseudo peut avoir de {min} à {max} caractères. Essaie un peu plus court !",
 	"play_new_error_save": "Ton joueur n'a pas pu être créé sur cet appareil. Réessaie dans un instant.",
 	"play_check_title": "Vérifions ton clavier",
 	"play_check_layout_intro": "Choisis le clavier qui ressemble au tien. Le premier choix est souvent le bon.",

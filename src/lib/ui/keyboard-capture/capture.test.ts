@@ -47,9 +47,20 @@ describe('attachKeyboardCapture', () => {
 				ctrlKey: true,
 				altKey: true,
 				metaKey: false,
-				altGraph: true
+				altGraph: true,
+				capsLock: false
 			}
 		]);
+	});
+
+	it('copies the Caps Lock state of keydown and keyup events', () => {
+		const { received, dispatch } = setup();
+		const capsLockOn = { getModifierState: (key: string) => key === 'CapsLock' };
+
+		dispatch('keydown', { key: 'A', code: 'KeyQ', ...capsLockOn });
+		dispatch('keyup', { key: 'CapsLock', code: 'CapsLock' });
+
+		expect(received.map((event) => event.capsLock)).toEqual([true, false]);
 	});
 
 	it('copies input and composition events', () => {

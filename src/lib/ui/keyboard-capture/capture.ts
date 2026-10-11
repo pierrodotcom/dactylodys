@@ -53,7 +53,8 @@ export function copyKeyboardEvent(
 		ctrlKey: event.ctrlKey,
 		altKey: event.altKey,
 		metaKey: event.metaKey,
-		altGraph: event.getModifierState?.('AltGraph') ?? false
+		altGraph: event.getModifierState?.('AltGraph') ?? false,
+		capsLock: event.getModifierState?.('CapsLock') ?? false
 	};
 }
 

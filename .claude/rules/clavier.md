@@ -45,8 +45,9 @@ Types : `src/lib/keyboard/types.ts`, `src/lib/keyboard/layout-ids.ts`, `src/lib/
 | `findUnproducible(index: CharIndex, text: string): string[]` | `keyboard/layout` | Caractères du texte que la disposition ne produit pas |
 | `fingerForKey(profile, code): Finger \| null` | `keyboard/fingering` | Doigt attendu pour une touche physique |
 | `loadLayout(id: LayoutId): Promise<LayoutDefinition>` | `keyboard/registry` | Charge et valide une disposition de `layouts/` |
-| `createInputNormalizer(): InputNormalizer` | `keyboard/input-adapter` | `RawInputEvent` → `NormalizedKeystroke` |
-| `parseTrace(data: unknown): KeyboardTrace` | `keyboard/trace` | Valide une trace |
+| `createInputNormalizer(): InputNormalizer` | `keyboard/input-adapter` | `RawInputEvent` → `NormalizedKeystroke` (le normaliseur ignore `capsLock` : un jeu qui veut aider lit ce champ dans le flux brut) |
+| `geometryIdFor(layout: LayoutDefinition): GeometryId` | `keyboard/registry` | Géométrie à dessiner pour une disposition (table en données) ; lève une erreur si la forme physique n'a pas de dessin |
+| `parseTrace(data: unknown): KeyboardTrace` | `keyboard/trace` | Valide une trace ; `capsLock` (état Verr. Maj, `getModifierState('CapsLock')`) est un champ optionnel des événements, absent des traces enregistrées avant son ajout |
 | `replayTrace(trace): string` | `keyboard/trace` | Texte obtenu en rejouant la trace (retours arrière appliqués) |
 | `createSession(text, options?): SessionState` | `engine/session` | Découpe en graphèmes NFC |
 | `applyKeystroke(state, keystroke): SessionStep` | `engine/session` | Réducteur pur |

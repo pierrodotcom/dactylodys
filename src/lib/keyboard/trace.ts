@@ -41,7 +41,8 @@ const EVENT_BOOLEAN_KEYS = [
 	'ctrlKey',
 	'altKey',
 	'metaKey',
-	'altGraph'
+	'altGraph',
+	'capsLock'
 ] as const;
 const EVENT_KEYS: readonly string[] = [
 	'type',

@@ -51,11 +51,21 @@ describe('parseTrace', () => {
 			altKey: false,
 			metaKey: false,
 			altGraph: false,
+			capsLock: true,
 			inputType: 'insertText',
 			data: null
 		};
 
 		expect(parseTrace(withEvents([event])).events).toEqual([event]);
+	});
+
+	it('accepts events recorded before Caps Lock was captured', () => {
+		const event = { type: 'keydown', timestamp: 0, key: 'a', code: 'KeyQ', altGraph: false };
+
+		const [parsed] = parseTrace(withEvents([event])).events;
+
+		expect(parsed).toEqual(event);
+		expect(parsed).not.toHaveProperty('capsLock');
 	});
 
 	it.each([
@@ -116,6 +126,11 @@ describe('parseTrace', () => {
 			'a non-boolean flag',
 			withEvents([{ type: 'keyup', timestamp: 1, repeat: 1 }]),
 			/events\[0\]\.repeat: expected a boolean/
+		],
+		[
+			'a non-boolean Caps Lock state',
+			withEvents([{ type: 'keydown', timestamp: 1, capsLock: 'on' }]),
+			/events\[0\]\.capsLock: expected a boolean/
 		],
 		[
 			'an invalid data field',
