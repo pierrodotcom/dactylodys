@@ -17,10 +17,21 @@
 		target: KeyPress | null;
 		wrongCode: KeyCode | null;
 		showFingers: boolean;
+		/** Further keys to highlight like the target, e.g. the new keys of a lesson. */
+		marked?: readonly KeyCode[];
 	}
 
-	let { layout, geometry, fingering, target, wrongCode, showFingers }: Props = $props();
+	let {
+		layout,
+		geometry,
+		fingering,
+		target,
+		wrongCode,
+		showFingers,
+		marked = []
+	}: Props = $props();
 
+	const markedKeys = $derived(new Set(marked));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
 	const modifiers = $derived(new Set(target === null ? [] : modifierCodes(target, fingering)));
 	const rows = $derived(
@@ -52,7 +63,7 @@
 					data-code={key.code}
 					data-width={key.width}
 					data-finger={(showFingers && key.finger) || undefined}
-					data-target={target?.code === key.code || undefined}
+					data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
 					data-modifier={modifiers.has(key.code) || undefined}
 					data-wrong={wrongCode === key.code || undefined}
 				>

@@ -4,13 +4,14 @@
 
 	interface Props extends Omit<HTMLButtonAttributes, 'children' | 'class' | 'style'> {
 		variant?: 'primary' | 'secondary' | 'quiet';
+		size?: 'md' | 'lg';
 		children: Snippet;
 	}
 
-	let { variant = 'primary', type = 'button', children, ...rest }: Props = $props();
+	let { variant = 'primary', size = 'md', type = 'button', children, ...rest }: Props = $props();
 </script>
 
-<button {...rest} {type} data-variant={variant}>{@render children()}</button>
+<button {...rest} {type} data-variant={variant} data-size={size}>{@render children()}</button>
 
 <style>
 	button {
@@ -33,6 +34,12 @@
 		transition-property: background-color, border-color, scale;
 		transition-duration: var(--dd-duration-fast);
 		transition-timing-function: var(--dd-easing-standard);
+	}
+
+	button[data-size='lg'] {
+		min-block-size: calc(var(--dd-size-touch-target-min) * 1.5);
+		padding: var(--dd-space-md) var(--dd-space-2xl);
+		font-size: var(--dd-font-size-xl);
 	}
 
 	button[data-variant='primary'] {
