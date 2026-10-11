@@ -60,3 +60,9 @@ Atkinson Hyperlegible Next (licence OFL), auto-hébergée via `@fontsource-varia
 
 ## 014 — Vérification unique (2026-10-11, acceptée)
 `npm run verify` (script `tools/verify.js`) enchaîne génération, types, lint, tests, build et tests de bout en bout, à l'identique en local et en CI, et n'affiche le détail qu'en cas d'échec. Les fichiers générés (tokens, messages compilés) ne sont pas versionnés. Le déploiement GitHub Pages est écrit mais ne s'exécute que si le dépôt est public (question Q1).
+
+## 015 — Politique d'erreur par défaut (2026-10-11, acceptée)
+Deux politiques dans le moteur de session : `retry` (une mauvaise touche ne fait pas avancer ; il suffit de taper la bonne) et `backspace` (le mauvais caractère s'affiche et doit être effacé). `retry` est le défaut pour les débutants : pas de punition, pas de manipulation supplémentaire. `backspace` sert plus tard à enseigner la correction.
+
+## 016 — Source des dispositions AZERTY (2026-10-11, acceptée)
+Dispositions Windows et macOS reprises de Unicode CLDR 43 (`Unicode-DFS-2016`), seule source libre qui décrit les claviers réels de ces systèmes. Elles restent **à confirmer par des traces réelles** : codes `Backquote`/`IntlBackslash` des claviers Apple ISO, niveaux absents de CLDR.

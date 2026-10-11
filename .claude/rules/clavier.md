@@ -24,7 +24,7 @@ paths:
 5. Toute disposition ajoutée est livrée avec des **traces réelles** enregistrées sur matériel (navigateur × OS) dans `tests/traces/`, rejouées en test. L'outil d'enregistrement fait partie du projet.
 6. Le moteur est déterministe : horloge et générateur aléatoire injectés.
 7. Mesures : caractères corrects par minute et précision ; « mots par minute » = caractères corrects / 5. Ne jamais afficher une vitesse sans la précision.
-8. Sources de données autorisées pour les dispositions : Kalamine (MIT), CLDR (Unicode-3.0), XKB (MIT). **Interdit** : kbdlayout.info (pas de licence), fichiers de doigté de Tux Typing (QWERTY par défaut, faux en AZERTY).
+8. Sources de données autorisées pour les dispositions : Kalamine (MIT), CLDR (Unicode-3.0 ; `Unicode-DFS-2016` pour les versions ≤ 43, seules à contenir les dispositions Windows et macOS), XKB (MIT). **Interdit** : kbdlayout.info (pas de licence), fichiers de doigté de Tux Typing (QWERTY par défaut, faux en AZERTY).
 
 ## Contrats figés (J1) — ne pas modifier sans passer par le chef d'orchestre
 
@@ -47,4 +47,4 @@ Types : `src/lib/keyboard/types.ts`, `src/lib/keyboard/layout-ids.ts`, `src/lib/
 
 Données : `layouts/<id>.json`, `layouts/fingering/<id>.json`, `tests/traces/<layoutId>/<os>-<navigateur>-<slug>.json`.
 
-Sur AZERTY PC, les majuscules accentuées (`É`, `È`, `À`, `Ç`) ne sont pas productibles sans Verr. Maj : un contenu qui en contient doit être refusé par `findUnproducible` pour cette disposition.
+Sur AZERTY PC, `É` et `Ç` ne sont pas productibles sans Verr. Maj ; `È` et `À` ne le sont que par la touche morte AltGr+7 : `findUnproducible` signale les premiers, et les contenus pour débutants évitent toutes les majuscules accentuées. Le modèle n'a pas de couche Verr. Maj.

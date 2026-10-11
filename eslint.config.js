@@ -11,6 +11,7 @@ const BROWSER_GLOBALS = ['window', 'document', 'navigator'];
 
 export default defineConfig(
 	globalIgnores([
+		'.claude/',
 		'.svelte-kit/',
 		'build/',
 		'dist/',

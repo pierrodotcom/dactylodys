@@ -1,0 +1,46 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-mac",
+	"expectedText": "êï",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "macOS",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "Dead", "code": "BracketLeft" },
+		{ "type": "compositionstart", "timestamp": 146, "data": "" },
+		{ "type": "compositionupdate", "timestamp": 147, "data": "^" },
+		{
+			"type": "keyup",
+			"timestamp": 217,
+			"key": "Dead",
+			"code": "BracketLeft",
+			"isComposing": true
+		},
+		{ "type": "keydown", "timestamp": 307, "key": "Process", "code": "KeyE", "isComposing": true },
+		{ "type": "compositionupdate", "timestamp": 308, "data": "ê" },
+		{ "type": "compositionend", "timestamp": 309, "data": "ê" },
+		{ "type": "keyup", "timestamp": 369, "key": "e", "code": "KeyE", "isComposing": false },
+		{ "type": "keydown", "timestamp": 669, "key": "Dead", "code": "BracketLeft", "shiftKey": true },
+		{ "type": "compositionstart", "timestamp": 670, "data": "" },
+		{ "type": "compositionupdate", "timestamp": 671, "data": "¨" },
+		{
+			"type": "keyup",
+			"timestamp": 741,
+			"key": "Dead",
+			"code": "BracketLeft",
+			"isComposing": true,
+			"shiftKey": true
+		},
+		{ "type": "keydown", "timestamp": 831, "key": "Process", "code": "KeyI", "isComposing": true },
+		{ "type": "compositionupdate", "timestamp": 832, "data": "ï" },
+		{ "type": "compositionend", "timestamp": 833, "data": "ï" },
+		{ "type": "keyup", "timestamp": 893, "key": "i", "code": "KeyI" }
+	]
+}

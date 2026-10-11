@@ -1,0 +1,55 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "@",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{
+			"type": "keydown",
+			"timestamp": 145,
+			"key": "Control",
+			"code": "ControlLeft",
+			"ctrlKey": true
+		},
+		{
+			"type": "keydown",
+			"timestamp": 146,
+			"key": "AltGraph",
+			"code": "AltRight",
+			"ctrlKey": true,
+			"altKey": true,
+			"altGraph": true
+		},
+		{
+			"type": "keydown",
+			"timestamp": 206,
+			"key": "@",
+			"code": "Digit0",
+			"ctrlKey": true,
+			"altKey": true,
+			"altGraph": true
+		},
+		{ "type": "beforeinput", "timestamp": 207, "inputType": "insertText", "data": "@" },
+		{ "type": "input", "timestamp": 208, "inputType": "insertText", "data": "@" },
+		{
+			"type": "keyup",
+			"timestamp": 278,
+			"key": "@",
+			"code": "Digit0",
+			"ctrlKey": true,
+			"altKey": true,
+			"altGraph": true
+		},
+		{ "type": "keyup", "timestamp": 308, "key": "AltGraph", "code": "AltRight", "ctrlKey": true },
+		{ "type": "keyup", "timestamp": 309, "key": "Control", "code": "ControlLeft" }
+	]
+}

@@ -8,7 +8,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 |---|---|---|
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
-| J1 Moteur de frappe | En cours | Contrats figés ; lots parallèles A dispositions, B capture + enregistreur, C session |
+| J1 Moteur de frappe | Code livré, traces réelles à collecter | Reste : campagne de traces (Windows par le porteur ; Mac, Linux, Chromebook : Q7) puis ajustement du normaliseur |
 | J2 Tranche jouable | — | |
 | J3 Pédagogie complète | — | |
 | J4 Aventure | — | |
@@ -16,12 +16,19 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 ## Prochaines actions
 
-1. **J1 Moteur de frappe** (modèle recommandé : Opus pour figer les contrats, Sonnet pour l'exécution) :
-   - contrat des types (`NormalizedKeystroke`, `LayoutDefinition`, `FingeringProfile`) et schéma JSON des dispositions ;
-   - `fr-fr-azerty-pc` et `fr-fr-azerty-mac` depuis Kalamine/CLDR ;
-   - `keyboard/input-adapter` + page d'enregistrement de traces ;
-   - moteur de session (précision, vitesse, erreurs réparables) avec tests de propriétés ;
-   - campagne de traces réelles (Q7).
+1. **Campagne de traces** sur la page `/dev/traces` : le porteur enregistre Chrome, Edge et Firefox sous Windows ; fichiers déposés dans `tests/traces/fr-fr-azerty-pc/`. Le test de rejeu dit aussitôt si le normaliseur est juste.
+2. Corriger le normaliseur et les dispositions d'après les traces réelles ; remplacer les traces synthétiques.
+3. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : la page est en ligne, il suffit d'envoyer le lien.
+4. Diagnostiquer L-021 (premier chargement e2e parfois > 60 s en local).
+5. **J2 Tranche jouable** quand les traces Windows passent.
+
+## Livré au jalon J1 (code)
+
+- Dispositions `fr-fr-azerty-pc` et `fr-fr-azerty-mac` (CLDR 43), doigté dix doigts, index caractère → touches, détection des caractères non productibles.
+- Normaliseur d'entrée pur + adaptateur DOM mince ; format de trace, rejeu, 11 traces synthétiques.
+- Page d'enregistrement `/dev/traces` (13 consignes, téléchargement JSON, rien n'est envoyé).
+- Moteur de session (politiques `retry` et `backspace`) et mesures (précision, vitesse, statistiques par caractère).
+- 403 tests unitaires et de propriétés ; 44 tests de bout en bout (Chromium + WebKit en local).
 
 ## Livré au jalon J0
 
@@ -53,3 +60,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-11** — Cadrage : recherche en 6 axes, décisions ADR-001 à ADR-011, CLAUDE.md, règles `.claude/rules/`, feuille de route. Dépôt initialisé.
 - **2026-10-11** — J0 réalisé en 3 lots délégués (scaffold, tokens + i18n, tests + CI). Leçons L-011 à L-017, ADR-012 à 014.
 - **2026-10-11** — Dépôt recréé en public avec un historique sans adresse personnelle ; J0 fusionné et déployé.
+- **2026-10-11** — J1 : contrats figés (PR 2), puis 3 lots parallèles en worktrees (dispositions, capture, session) assemblés sans conflit. Leçons L-022 à L-026, ADR-015 et 016.

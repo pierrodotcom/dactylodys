@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "ac",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "a", "code": "KeyQ" },
+		{ "type": "beforeinput", "timestamp": 146, "inputType": "insertText", "data": "a" },
+		{ "type": "input", "timestamp": 147, "inputType": "insertText", "data": "a" },
+		{ "type": "keyup", "timestamp": 207, "key": "a", "code": "KeyQ" },
+		{ "type": "keydown", "timestamp": 232, "key": "b", "code": "KeyB" },
+		{ "type": "beforeinput", "timestamp": 233, "inputType": "insertText", "data": "b" },
+		{ "type": "input", "timestamp": 234, "inputType": "insertText", "data": "b" },
+		{ "type": "keyup", "timestamp": 294, "key": "b", "code": "KeyB" },
+		{ "type": "keydown", "timestamp": 494, "key": "Backspace", "code": "Backspace" },
+		{ "type": "beforeinput", "timestamp": 495, "inputType": "deleteContentBackward", "data": null },
+		{ "type": "input", "timestamp": 496, "inputType": "deleteContentBackward", "data": null },
+		{ "type": "keyup", "timestamp": 556, "key": "Backspace", "code": "Backspace" },
+		{ "type": "keydown", "timestamp": 581, "key": "c", "code": "KeyC" },
+		{ "type": "beforeinput", "timestamp": 582, "inputType": "insertText", "data": "c" },
+		{ "type": "input", "timestamp": 583, "inputType": "insertText", "data": "c" },
+		{ "type": "keyup", "timestamp": 643, "key": "c", "code": "KeyC" }
+	]
+}
