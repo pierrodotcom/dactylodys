@@ -18,10 +18,33 @@ paths:
 ## Règles
 
 1. La frappe est validée sur le **caractère produit** (`key`, `beforeinput`/`input`, fin de composition). `code` sert uniquement à savoir quelle touche physique allumer et quel doigt est attendu.
-2. Le moteur consomme un flux d'événements **normalisés** (`{ char, code, timestamp, modifiers }`). Toute la complexité navigateur vit dans un seul adaptateur, `keyboard/input-adapter`.
+2. Le moteur consomme des `NormalizedKeystroke`. Toute la complexité navigateur vit dans **un** normaliseur pur, `keyboard/input-adapter/` : il reçoit des `RawInputEvent` (copies en données simples des événements DOM) et n'accède jamais au DOM. Le branchement des écouteurs DOM est un adaptateur mince dans `src/lib/ui/keyboard-capture/`, qui ne contient aucune logique. C'est ce qui permet de rejouer les traces en Node.
 3. Une disposition est une donnée JSON : touche physique (`code`) → caractères par couche (base, Maj, AltGr, Maj+AltGr, touches mortes) → doigt assigné. Variantes PC et Mac séparées. Aucun `if (layout === 'azerty')` dans le code.
 4. L'assignation des doigts est un **profil de doigté** distinct de la disposition (10 doigts, doigté réduit) pour permettre les adaptations recommandées par les ergothérapeutes.
 5. Toute disposition ajoutée est livrée avec des **traces réelles** enregistrées sur matériel (navigateur × OS) dans `tests/traces/`, rejouées en test. L'outil d'enregistrement fait partie du projet.
 6. Le moteur est déterministe : horloge et générateur aléatoire injectés.
 7. Mesures : caractères corrects par minute et précision ; « mots par minute » = caractères corrects / 5. Ne jamais afficher une vitesse sans la précision.
 8. Sources de données autorisées pour les dispositions : Kalamine (MIT), CLDR (Unicode-3.0), XKB (MIT). **Interdit** : kbdlayout.info (pas de licence), fichiers de doigté de Tux Typing (QWERTY par défaut, faux en AZERTY).
+
+## Contrats figés (J1) — ne pas modifier sans passer par le chef d'orchestre
+
+Types : `src/lib/keyboard/types.ts`, `src/lib/keyboard/layout-ids.ts`, `src/lib/engine/types.ts`.
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `parseLayout(data: unknown): LayoutDefinition` | `keyboard/layout` | Valide une disposition, lève une erreur explicite |
+| `parseFingeringProfile(data: unknown): FingeringProfile` | `keyboard/fingering` | Idem pour un profil de doigté |
+| `buildCharIndex(layout): CharIndex` | `keyboard/layout` | Caractère → séquences de touches |
+| `findUnproducible(index: CharIndex, text: string): string[]` | `keyboard/layout` | Caractères du texte que la disposition ne produit pas |
+| `fingerForKey(profile, code): Finger \| null` | `keyboard/fingering` | Doigt attendu pour une touche physique |
+| `loadLayout(id: LayoutId): Promise<LayoutDefinition>` | `keyboard/registry` | Charge et valide une disposition de `layouts/` |
+| `createInputNormalizer(): InputNormalizer` | `keyboard/input-adapter` | `RawInputEvent` → `NormalizedKeystroke` |
+| `parseTrace(data: unknown): KeyboardTrace` | `keyboard/trace` | Valide une trace |
+| `replayTrace(trace): string` | `keyboard/trace` | Texte obtenu en rejouant la trace (retours arrière appliqués) |
+| `createSession(text, options?): SessionState` | `engine/session` | Découpe en graphèmes NFC |
+| `applyKeystroke(state, keystroke): SessionStep` | `engine/session` | Réducteur pur |
+| `computeMetrics(state, now?): SessionMetrics` | `engine/metrics` | Précision, vitesse, statistiques par caractère |
+
+Données : `layouts/<id>.json`, `layouts/fingering/<id>.json`, `tests/traces/<layoutId>/<os>-<navigateur>-<slug>.json`.
+
+Sur AZERTY PC, les majuscules accentuées (`É`, `È`, `À`, `Ç`) ne sont pas productibles sans Verr. Maj : un contenu qui en contient doit être refusé par `findUnproducible` pour cette disposition.

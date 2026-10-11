@@ -8,7 +8,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 |---|---|---|
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
-| J1 Moteur de frappe | — | |
+| J1 Moteur de frappe | En cours | Contrats figés ; lots parallèles A dispositions, B capture + enregistreur, C session |
 | J2 Tranche jouable | — | |
 | J3 Pédagogie complète | — | |
 | J4 Aventure | — | |
