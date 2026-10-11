@@ -51,6 +51,7 @@ const ALLOWED_KEYWORDS = [
 export default {
 	plugins: ['stylelint-declaration-strict-value'],
 	ignoreFiles: [
+		'.claude/**',
 		'src/lib/generated/**',
 		'src/lib/paraglide/**',
 		'build/**',

@@ -21,6 +21,7 @@
 		"prelint": "npm run -s generate",
 		"lint": "eslint . && stylelint \"**/*.{css,svelte}\" && prettier --check .",
 		"format": "prettier --write .",
+		"pretest": "svelte-kit sync",
 		"test": "vitest run",
 		"test:e2e": "npm run build && playwright test",
 		"verify": "node tools/verify.js",
