@@ -8,8 +8,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 |---|---|---|
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
-| J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) ; rangée de chiffres avec Maj et tilde/accent grave à réenregistrer |
-| J2 Tranche jouable | — | |
+| J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
+| J2 Tranche jouable | En cours | Contrats figés ; lots A progression, B profils et réglages, C composants et sons, puis D jeu et écrans |
 | J3 Pédagogie complète | — | |
 | J4 Aventure | — | |
 | J5 Version 1.0 | — | |
@@ -18,7 +18,6 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 1. **J2 Tranche jouable** (modèle : Opus pour le cadrage du mini-jeu et de l'étalonnage, Sonnet pour l'exécution).
 2. À prévoir dans J2, d'après les traces réelles : reconnaître le pavé numérique et Verr. Maj (le caractère est juste mais pas la touche attendue) et guider l'enfant sans le pénaliser.
-3. Le porteur réenregistre deux consignes après mise en ligne (chiffres de la rangée du haut ; tilde et accent grave) : fichiers à déposer dans `tests/traces/fr-fr-azerty-pc/`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 5. Diagnostiquer L-021 (premier chargement e2e parfois > 60 s en local).
 

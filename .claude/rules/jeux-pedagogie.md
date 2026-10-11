@@ -37,3 +37,26 @@ paths:
 ## Interdits
 
 Séries punitives · classements · loot boxes · monnaie achetable · notifications · lecture automatique enchaînée · publicité · fausse urgence · culpabilisation.
+
+## Contrats figés (J2) — ne pas modifier sans passer par le chef d'orchestre
+
+Types : `src/lib/engine/progression/types.ts`, `src/lib/state/types.ts`, `src/lib/games/types.ts`, géométrie dans `src/lib/keyboard/types.ts`.
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `parseProgression(data: unknown): ProgressionDefinition` | `engine/progression/definition` | Valide une progression |
+| `findLesson(progression, lessonId)` / `lessonIds(progression): string[]` | idem | Accès aux leçons, dans l'ordre |
+| `learnedChars(progression, lessonId): string[]` | idem | Caractères connus jusqu'à cette leçon incluse |
+| `generateExercise(progression, lessonId, rng): Exercise` | `engine/progression/exercise` | Groupes à taper, reproductibles |
+| `evaluateLesson(rules, metrics): LessonEvaluation` | `engine/progression/progress` | Étoiles et déblocage, sur la précision seule |
+| `applyLessonResult(progress, result): ProgressState` | idem | Met à jour la progression, sans mutation |
+| `isLessonUnlocked(progression, progress, lessonId): boolean` | idem | La première leçon est toujours ouverte |
+| `emptyProgress(): ProgressState` | idem | État initial |
+| `combineMetrics(list: readonly SessionMetrics[]): SessionMetrics` | `engine/metrics` | Agrège les groupes d'un exercice |
+| `createProfile(input): Profile` / `defaultSettings(platform)` | `state/profile` | Identifiant, date et réglages injectés |
+| `createMemoryProfileStore()` / `createIndexedDbProfileStore()` | `state/stores` | Deux implémentations de `ProfileStore` |
+| `parseGeometry(data: unknown)` / `loadGeometry(id)` | `keyboard/geometry`, `keyboard/registry` | Forme physique du clavier |
+
+Données : `content/<langue>/progression/<slug>.json`, `layouts/geometry/<id>.json`.
+
+Un exercice est une suite de **groupes** courts ; le jeu ouvre une session par groupe et agrège les mesures. L'espace est une touche comme une autre, introduite par sa propre leçon.
