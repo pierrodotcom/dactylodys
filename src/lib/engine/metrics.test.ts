@@ -1,9 +1,9 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { NormalizedKeystroke } from '../keyboard/types';
-import { computeMetrics } from './metrics';
+import { combineMetrics, computeMetrics } from './metrics';
 import { applyKeystroke, createSession } from './session';
-import type { ErrorPolicy, SessionState } from './types';
+import type { CharStats, ErrorPolicy, SessionMetrics, SessionState } from './types';
 
 function char(value: string, timestamp: number): NormalizedKeystroke {
 	return { kind: 'char', char: value, code: null, timestamp, composed: false };
@@ -208,6 +208,174 @@ describe('computeMetrics properties', () => {
 					);
 				}
 			)
+		);
+	});
+});
+
+function metricsOf(
+	correct: number,
+	errors: number,
+	elapsedMs: number,
+	perChar: Record<string, CharStats> = {}
+): SessionMetrics {
+	const total = correct + errors;
+	const correctCharsPerMinute = elapsedMs === 0 ? 0 : correct / (elapsedMs / 60_000);
+	return {
+		elapsedMs,
+		totalKeystrokes: total,
+		correctKeystrokes: correct,
+		errorCount: errors,
+		accuracy: total === 0 ? 100 : (correct / total) * 100,
+		correctCharsPerMinute,
+		wordsPerMinute: correctCharsPerMinute / 5,
+		perChar
+	};
+}
+
+describe('combineMetrics', () => {
+	it('returns null measures and a perfect accuracy for an empty list', () => {
+		expect(combineMetrics([])).toEqual({
+			elapsedMs: 0,
+			totalKeystrokes: 0,
+			correctKeystrokes: 0,
+			errorCount: 0,
+			accuracy: 100,
+			correctCharsPerMinute: 0,
+			wordsPerMinute: 0,
+			perChar: {}
+		});
+	});
+
+	it('returns the same measures for a single session', () => {
+		const state = play('abc', 'retry', [char('a', 1000), char('x', 1500), char('b', 2000)]);
+		const metrics = computeMetrics(state, 3000);
+		expect(combineMetrics([metrics])).toEqual(metrics);
+	});
+
+	it('sums durations and counters and recomputes accuracy and speed on the totals', () => {
+		const combined = combineMetrics([metricsOf(9, 1, 30_000), metricsOf(30, 10, 90_000)]);
+		expect(combined.elapsedMs).toBe(120_000);
+		expect(combined.totalKeystrokes).toBe(50);
+		expect(combined.correctKeystrokes).toBe(39);
+		expect(combined.errorCount).toBe(11);
+		expect(combined.accuracy).toBeCloseTo(78, 10);
+		expect(combined.correctCharsPerMinute).toBeCloseTo(19.5, 10);
+		expect(combined.wordsPerMinute).toBeCloseTo(3.9, 10);
+	});
+
+	it('does not average the accuracies of sessions of different sizes', () => {
+		const combined = combineMetrics([metricsOf(1, 0, 1000), metricsOf(0, 99, 1000)]);
+		expect(combined.accuracy).toBeCloseTo(1, 10);
+	});
+
+	it('merges the characters and weights latency by correct keystrokes', () => {
+		const first = metricsOf(0, 0, 1000, {
+			a: { attempts: 4, errors: 1, meanLatencyMs: 100 },
+			b: { attempts: 2, errors: 0, meanLatencyMs: null }
+		});
+		const second = metricsOf(0, 0, 1000, {
+			a: { attempts: 8, errors: 2, meanLatencyMs: 400 },
+			c: { attempts: 1, errors: 1, meanLatencyMs: null }
+		});
+		const { perChar } = combineMetrics([first, second]);
+		expect(perChar['a']).toEqual({
+			attempts: 12,
+			errors: 3,
+			meanLatencyMs: (100 * 3 + 400 * 6) / 9
+		});
+		expect(perChar['b']).toEqual({ attempts: 2, errors: 0, meanLatencyMs: null });
+		expect(perChar['c']).toEqual({ attempts: 1, errors: 1, meanLatencyMs: null });
+	});
+
+	it('ignores a missing measure when another session has one', () => {
+		const { perChar } = combineMetrics([
+			metricsOf(0, 0, 0, { a: { attempts: 3, errors: 0, meanLatencyMs: null } }),
+			metricsOf(0, 0, 0, { a: { attempts: 2, errors: 0, meanLatencyMs: 250 } })
+		]);
+		expect(perChar['a']).toEqual({ attempts: 5, errors: 0, meanLatencyMs: 250 });
+	});
+
+	it('does not modify its input', () => {
+		const list = [metricsOf(3, 1, 1000, { a: { attempts: 4, errors: 1, meanLatencyMs: 90 } })];
+		const snapshot = structuredClone(list);
+		combineMetrics(Object.freeze(list.map((item) => Object.freeze(item))));
+		expect(list).toEqual(snapshot);
+	});
+});
+
+describe('combineMetrics properties', () => {
+	const charStats = fc
+		.record({
+			attempts: fc.integer({ min: 0, max: 50 }),
+			errors: fc.nat({ max: 50 }),
+			meanLatencyMs: fc.option(fc.double({ min: 0, max: 5000, noNaN: true }), { nil: null })
+		})
+		.map(({ attempts, errors, meanLatencyMs }): CharStats => {
+			const clamped = Math.min(errors, attempts);
+			return { attempts, errors: clamped, meanLatencyMs };
+		});
+	const session = fc
+		.record({
+			correct: fc.nat({ max: 200 }),
+			errors: fc.nat({ max: 200 }),
+			elapsedMs: fc.nat({ max: 1_000_000 }),
+			perChar: fc.dictionary(fc.constantFrom('a', 'b', 'c', 'd'), charStats)
+		})
+		.map(({ correct, errors, elapsedMs, perChar }) =>
+			metricsOf(correct, errors, elapsedMs, perChar)
+		);
+
+	it('keeps every total of the sessions', () => {
+		fc.assert(
+			fc.property(fc.array(session, { maxLength: 8 }), (list) => {
+				const combined = combineMetrics(list);
+				const sum = (pick: (metrics: SessionMetrics) => number) =>
+					list.reduce((total, metrics) => total + pick(metrics), 0);
+				expect(combined.elapsedMs).toBe(sum((m) => m.elapsedMs));
+				expect(combined.totalKeystrokes).toBe(sum((m) => m.totalKeystrokes));
+				expect(combined.correctKeystrokes).toBe(sum((m) => m.correctKeystrokes));
+				expect(combined.errorCount).toBe(sum((m) => m.errorCount));
+				expect(combined.accuracy).toBeGreaterThanOrEqual(0);
+				expect(combined.accuracy).toBeLessThanOrEqual(100);
+				for (const char of ['a', 'b', 'c', 'd']) {
+					const stats = list.flatMap((m) => (m.perChar[char] ? [m.perChar[char]] : []));
+					const merged = combined.perChar[char];
+					expect(merged?.attempts ?? 0).toBe(stats.reduce((n, s) => n + s.attempts, 0));
+					expect(merged?.errors ?? 0).toBe(stats.reduce((n, s) => n + s.errors, 0));
+				}
+			})
+		);
+	});
+
+	it('keeps each mean latency between the smallest and the largest input', () => {
+		fc.assert(
+			fc.property(fc.array(session, { maxLength: 8 }), (list) => {
+				const combined = combineMetrics(list);
+				for (const [char, merged] of Object.entries(combined.perChar)) {
+					const latencies = list.flatMap((m) => {
+						const latency = m.perChar[char]?.meanLatencyMs;
+						return latency === null || latency === undefined ? [] : [latency];
+					});
+					if (latencies.length === 0) {
+						expect(merged.meanLatencyMs).toBeNull();
+					} else {
+						expect(merged.meanLatencyMs).toBeGreaterThanOrEqual(Math.min(...latencies) - 1e-9);
+						expect(merged.meanLatencyMs).toBeLessThanOrEqual(Math.max(...latencies) + 1e-9);
+					}
+				}
+			})
+		);
+	});
+
+	it('does not depend on the order of the sessions', () => {
+		fc.assert(
+			fc.property(fc.array(session, { maxLength: 6 }), (list) => {
+				const forward = combineMetrics(list);
+				const backward = combineMetrics([...list].reverse());
+				expect(backward.totalKeystrokes).toBe(forward.totalKeystrokes);
+				expect(backward.accuracy).toBeCloseTo(forward.accuracy, 9);
+				expect(backward.correctCharsPerMinute).toBeCloseTo(forward.correctCharsPerMinute, 9);
+			})
 		);
 	});
 });

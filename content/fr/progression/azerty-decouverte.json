@@ -1,0 +1,96 @@
+{
+	"schemaVersion": 1,
+	"id": "fr.progression.azerty-decouverte",
+	"locale": "fr-FR",
+	"layoutIds": ["fr-fr-azerty-pc", "fr-fr-azerty-mac"],
+	"rules": {
+		"unlockAccuracy": 80,
+		"starThresholds": [80, 90, 97],
+		"newCharWeight": 0.6
+	},
+	"worlds": [
+		{
+			"id": "fr.world.dinosaures",
+			"title": "Au pays des dinosaures",
+			"themeId": "dinos",
+			"lessons": [
+				{
+					"id": "fr.lesson.oeufs-f-j",
+					"title": "Les œufs de dinosaure",
+					"intro": "Pose tes deux index sur les touches F et J, celles qui ont un petit trait.",
+					"newChars": ["f", "j"],
+					"words": [],
+					"groupCount": 10,
+					"groupLength": [2, 4]
+				},
+				{
+					"id": "fr.lesson.saut-espace",
+					"title": "Le saut du diplodocus",
+					"intro": "Appuie avec un pouce sur la grande barre du bas : elle sépare les mots.",
+					"newChars": [" "],
+					"words": [],
+					"groupCount": 10,
+					"groupLength": [3, 4]
+				},
+				{
+					"id": "fr.lesson.nid-d-k",
+					"title": "Le nid du tricératops",
+					"intro": "Garde les index sur F et J, puis pose tes majeurs sur D à gauche et K à droite.",
+					"newChars": ["d", "k"],
+					"words": [],
+					"groupCount": 10,
+					"groupLength": [2, 4]
+				},
+				{
+					"id": "fr.lesson.mare-s-l",
+					"title": "La mare du stégosaure",
+					"intro": "Pose le doigt voisin de chaque majeur sur S à gauche et L à droite.",
+					"newChars": ["s", "l"],
+					"words": [],
+					"groupCount": 10,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.bras-q-m",
+					"title": "Les petits bras du T-rex",
+					"intro": "Tes petits doigts se posent sur Q à gauche et sur M à droite.",
+					"newChars": ["q", "m"],
+					"words": [],
+					"groupCount": 10,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.mots-e-i",
+					"title": "Les mots du raptor",
+					"intro": "Pour E et I, monte un peu tes majeurs sur la rangée du dessus, puis ramène-les à leur place.",
+					"newChars": ["e", "i"],
+					"words": [
+						"le",
+						"les",
+						"des",
+						"mes",
+						"ses",
+						"elle",
+						"elles",
+						"il",
+						"ils",
+						"fil",
+						"fils",
+						"sel",
+						"ski",
+						"miel",
+						"mime",
+						"midi",
+						"mille",
+						"lisse",
+						"elfe",
+						"lis",
+						"dis"
+					],
+					"groupCount": 10,
+					"groupLength": [3, 5]
+				}
+			]
+		}
+	]
+}
