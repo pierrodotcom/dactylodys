@@ -1,0 +1,102 @@
+<script lang="ts">
+	import type { LessonDefinition } from '$lib/engine/progression/types';
+	import { targetKeyPress } from '$lib/games/hatching/target';
+	import type { KeyPress } from '$lib/keyboard/types';
+	import { m } from '$lib/paraglide/messages.js';
+	import Button from '$lib/ui/components/Button.svelte';
+	import FingerHint from '$lib/ui/components/FingerHint.svelte';
+	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
+	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
+	import { focusOnMount } from '$lib/ui/focus';
+	import { isOne } from '$lib/ui/plural';
+	import type { KeyboardAssets } from './assets';
+
+	interface Props {
+		lesson: LessonDefinition;
+		number: number;
+		assets: KeyboardAssets;
+		onstart: () => void;
+		onback: () => void;
+	}
+
+	let { lesson, number, assets, onstart, onback }: Props = $props();
+
+	const presses = $derived(
+		lesson.newChars.flatMap((char) => {
+			const press = targetKeyPress(assets.charIndex, char);
+			return press === null ? [] : [{ char, press }];
+		})
+	);
+	const marked = $derived(presses.map((entry) => entry.press.code));
+	const noTarget: KeyPress | null = null;
+</script>
+
+<ScreenFrame title={lesson.title} focusHeading={false} wide>
+	<p class="number">{m.play_lesson_number({ number })}</p>
+	<p class="intro">{lesson.intro}</p>
+
+	<section class="keys" aria-labelledby="intro-keys-heading">
+		<h2 id="intro-keys-heading">
+			{isOne(presses.length) ? m.play_intro_keys_one() : m.play_intro_keys_other()}
+		</h2>
+		<KeyboardView
+			layout={assets.layout}
+			geometry={assets.geometry}
+			fingering={assets.fingering}
+			target={noTarget}
+			wrongCode={null}
+			showFingers={true}
+			{marked}
+		/>
+		<ul class="hints">
+			{#each presses as entry (entry.char)}
+				<li>
+					<FingerHint target={entry.press} layout={assets.layout} fingering={assets.fingering} />
+				</li>
+			{/each}
+		</ul>
+	</section>
+
+	<div class="actions">
+		<Button size="lg" {@attach focusOnMount} onclick={onstart}>{m.play_intro_start()}</Button>
+		<Button variant="quiet" onclick={onback}>{m.play_intro_back()}</Button>
+	</div>
+</ScreenFrame>
+
+<style>
+	.number {
+		color: var(--dd-color-text-secondary);
+		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.intro {
+		font-size: var(--dd-font-size-xl);
+	}
+
+	.keys {
+		display: grid;
+		gap: var(--dd-space-md);
+		justify-items: center;
+	}
+
+	.keys h2 {
+		font-size: var(--dd-font-size-lg);
+		color: var(--dd-color-text-secondary);
+	}
+
+	.hints {
+		display: grid;
+		gap: var(--dd-space-xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-md);
+	}
+</style>

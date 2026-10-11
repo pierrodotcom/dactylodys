@@ -29,6 +29,20 @@
 		"error": {
 			"text": { "$value": "{color.red.300}" },
 			"surface": { "$value": "{color.red.900}" }
+		},
+		"key": {
+			"surface": { "$value": "{color.charcoal.700}" },
+			"border": { "$value": "{color.brown.400}" },
+			"text": { "$value": "{color.brown.50}" },
+			"target-outline": { "$value": "{color.brown.50}" }
+		},
+		"oops": {
+			"outline": { "$value": "{color.amber.300}" }
+		},
+		"typing": {
+			"done": { "$value": "{color.brown.400}" },
+			"current-surface": { "$value": "{color.charcoal.700}" },
+			"current-frame": { "$value": "{color.teal.400}" }
 		}
 	},
 	"shadow": {
@@ -58,6 +72,16 @@
 				"offsetY": "12px",
 				"blur": "32px",
 				"spread": "0"
+			}
+		},
+		"inset": {
+			"$value": {
+				"color": "{color.shadow.dark}",
+				"offsetX": "0",
+				"offsetY": "2px",
+				"blur": "4px",
+				"spread": "0",
+				"inset": true
 			}
 		}
 	}

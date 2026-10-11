@@ -1,0 +1,275 @@
+import { toGraphemes } from '../engine/graphemes';
+import { emptyProgress } from '../engine/progression/progress';
+import type {
+	CharProgress,
+	LessonProgress,
+	ProgressState,
+	StarCount
+} from '../engine/progression/types';
+import {
+	FINGERING_PROFILE_IDS,
+	LAYOUT_IDS,
+	type FingeringProfileId,
+	type LayoutId
+} from '../keyboard/layout-ids';
+import type { LayoutPlatform } from '../keyboard/types';
+import type {
+	MotionPreference,
+	Profile,
+	Settings,
+	TextScale,
+	TextSpacing,
+	ThemePreference
+} from './types';
+
+const DEFAULT_LAYOUT_BY_PLATFORM: Readonly<Record<LayoutPlatform, LayoutId>> = {
+	pc: 'fr-fr-azerty-pc',
+	mac: 'fr-fr-azerty-mac'
+};
+const DEFAULT_FINGERING_PROFILE_ID: FingeringProfileId = 'ten-fingers-iso';
+const DEFAULT_SETTINGS_COMMON = {
+	fingeringProfileId: DEFAULT_FINGERING_PROFILE_ID,
+	soundEnabled: true,
+	theme: 'system',
+	motion: 'system',
+	textScale: 'md',
+	textSpacing: 'normal',
+	showKeyboard: true
+} as const satisfies Omit<Settings, 'layoutId'>;
+
+const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
+const MOTIONS = ['system', 'reduced', 'full'] as const satisfies readonly MotionPreference[];
+const TEXT_SCALES = ['md', 'lg', 'xl'] as const satisfies readonly TextScale[];
+const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly TextSpacing[];
+const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
+
+const SCHEMA_VERSION = 1;
+const MIN_NAME_LENGTH = 1;
+const MAX_NAME_LENGTH = 20;
+const MAX_ACCURACY = 100;
+const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
+
+const PROFILE_KEYS = [
+	'schemaVersion',
+	'id',
+	'name',
+	'createdAt',
+	'calibrated',
+	'settings',
+	'progress'
+] as const;
+const SETTINGS_KEYS = [
+	'layoutId',
+	'fingeringProfileId',
+	'soundEnabled',
+	'theme',
+	'motion',
+	'textScale',
+	'textSpacing',
+	'showKeyboard'
+] as const satisfies readonly (keyof Settings)[];
+const PROGRESS_KEYS = ['lessons', 'chars'] as const;
+const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
+const CHAR_PROGRESS_KEYS = ['attempts', 'errors'] as const;
+
+export interface NewProfileInput {
+	readonly id: string;
+	readonly name: string;
+	readonly now: number;
+	readonly platform: LayoutPlatform;
+}
+
+export function defaultSettings(platform: LayoutPlatform): Settings {
+	return { layoutId: DEFAULT_LAYOUT_BY_PLATFORM[platform], ...DEFAULT_SETTINGS_COMMON };
+}
+
+function normalizeName(name: string): string | null {
+	const text = name.normalize('NFC').trim().normalize('NFC');
+	const length = toGraphemes(text).length;
+	const valid =
+		length >= MIN_NAME_LENGTH && length <= MAX_NAME_LENGTH && !CONTROL_CHARACTER_PATTERN.test(text);
+	return valid ? text : null;
+}
+
+function cleanName(name: string): string {
+	const text = normalizeName(name);
+	if (text === null) {
+		throw new RangeError(
+			`name must have ${MIN_NAME_LENGTH} to ${MAX_NAME_LENGTH} characters and no control character`
+		);
+	}
+	return text;
+}
+
+function isTimestamp(value: unknown): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+export function createProfile(input: NewProfileInput): Profile {
+	if (input.id === '') throw new RangeError('id must not be empty');
+	if (!isTimestamp(input.now)) throw new RangeError('now must be a non-negative integer');
+	return {
+		schemaVersion: SCHEMA_VERSION,
+		id: input.id,
+		name: cleanName(input.name),
+		createdAt: input.now,
+		calibrated: false,
+		settings: defaultSettings(input.platform),
+		progress: emptyProgress()
+	};
+}
+
+export function renameProfile(profile: Profile, name: string): Profile {
+	return { ...profile, name: cleanName(name) };
+}
+
+export function updateSettings(profile: Profile, patch: Partial<Settings>): Profile {
+	const defined = Object.entries(patch).filter(([, value]) => value !== undefined);
+	const settings = parseSettings(
+		{ ...profile.settings, ...Object.fromEntries(defined) },
+		'settings'
+	);
+	return { ...profile, settings };
+}
+
+export function withProgress(profile: Profile, progress: ProgressState): Profile {
+	return { ...profile, progress };
+}
+
+export function markCalibrated(profile: Profile): Profile {
+	return { ...profile, calibrated: true };
+}
+
+function fail(path: string, message: string): never {
+	throw new Error(`${path}: ${message}`);
+}
+
+function expectRecord(value: unknown, path: string): Record<string, unknown> {
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+		fail(path, 'expected an object');
+	}
+	return value as Record<string, unknown>;
+}
+
+function expectExactKeys(record: Record<string, unknown>, keys: readonly string[], path: string) {
+	for (const name of Object.keys(record)) {
+		if (!keys.includes(name)) fail(`${path}.${name}`, 'unknown property');
+	}
+	for (const name of keys) {
+		if (!Object.hasOwn(record, name)) fail(`${path}.${name}`, 'missing property');
+	}
+}
+
+function expectBoolean(value: unknown, path: string): boolean {
+	if (typeof value !== 'boolean') fail(path, 'expected a boolean');
+	return value;
+}
+
+function expectOneOf<T extends string>(value: unknown, allowed: readonly T[], path: string): T {
+	const found = allowed.find((candidate) => candidate === value);
+	if (found === undefined) fail(path, `expected one of ${allowed.join(', ')}`);
+	return found;
+}
+
+function expectCount(value: unknown, path: string): number {
+	if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+		fail(path, 'expected a non-negative integer');
+	}
+	return value;
+}
+
+function parseSettings(data: unknown, path: string): Settings {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, SETTINGS_KEYS, path);
+	return {
+		layoutId: expectOneOf(record['layoutId'], LAYOUT_IDS, `${path}.layoutId`),
+		fingeringProfileId: expectOneOf(
+			record['fingeringProfileId'],
+			FINGERING_PROFILE_IDS,
+			`${path}.fingeringProfileId`
+		),
+		soundEnabled: expectBoolean(record['soundEnabled'], `${path}.soundEnabled`),
+		theme: expectOneOf(record['theme'], THEMES, `${path}.theme`),
+		motion: expectOneOf(record['motion'], MOTIONS, `${path}.motion`),
+		textScale: expectOneOf(record['textScale'], TEXT_SCALES, `${path}.textScale`),
+		textSpacing: expectOneOf(record['textSpacing'], TEXT_SPACINGS, `${path}.textSpacing`),
+		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`)
+	};
+}
+
+function parseLessonProgress(data: unknown, path: string): LessonProgress {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, LESSON_PROGRESS_KEYS, path);
+	const bestAccuracy = record['bestAccuracy'];
+	if (
+		typeof bestAccuracy !== 'number' ||
+		!Number.isFinite(bestAccuracy) ||
+		bestAccuracy < 0 ||
+		bestAccuracy > MAX_ACCURACY
+	) {
+		fail(`${path}.bestAccuracy`, `expected a number from 0 to ${MAX_ACCURACY}`);
+	}
+	const lastPlayedAt = record['lastPlayedAt'];
+	if (!isTimestamp(lastPlayedAt)) fail(`${path}.lastPlayedAt`, 'expected a timestamp');
+	const stars = STAR_COUNTS.find((count) => count === record['stars']);
+	if (stars === undefined) fail(`${path}.stars`, `expected one of ${STAR_COUNTS.join(', ')}`);
+	return {
+		bestAccuracy,
+		stars,
+		attempts: expectCount(record['attempts'], `${path}.attempts`),
+		lastPlayedAt
+	};
+}
+
+function parseCharProgress(data: unknown, path: string): CharProgress {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, CHAR_PROGRESS_KEYS, path);
+	return {
+		attempts: expectCount(record['attempts'], `${path}.attempts`),
+		errors: expectCount(record['errors'], `${path}.errors`)
+	};
+}
+
+function parseRecordOf<T>(
+	data: unknown,
+	path: string,
+	parseEntry: (value: unknown, entryPath: string) => T
+): Record<string, T> {
+	const record = expectRecord(data, path);
+	return Object.fromEntries(
+		Object.entries(record).map(([key, value]) => [key, parseEntry(value, `${path}.${key}`)])
+	);
+}
+
+function parseProgress(data: unknown, path: string): ProgressState {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, PROGRESS_KEYS, path);
+	return {
+		lessons: parseRecordOf(record['lessons'], `${path}.lessons`, parseLessonProgress),
+		chars: parseRecordOf(record['chars'], `${path}.chars`, parseCharProgress)
+	};
+}
+
+export function parseProfile(data: unknown): Profile {
+	const root = expectRecord(data, 'profile');
+	expectExactKeys(root, PROFILE_KEYS, 'profile');
+	if (root['schemaVersion'] !== SCHEMA_VERSION) fail('profile.schemaVersion', 'expected 1');
+	const id = root['id'];
+	if (typeof id !== 'string' || id === '') fail('profile.id', 'expected a non-empty string');
+	const name = root['name'];
+	if (typeof name !== 'string') fail('profile.name', 'expected a string');
+	if (normalizeName(name) !== name) {
+		fail('profile.name', 'expected a trimmed NFC name of 1 to 20 characters');
+	}
+	const createdAt = root['createdAt'];
+	if (!isTimestamp(createdAt)) fail('profile.createdAt', 'expected a timestamp');
+	return {
+		schemaVersion: SCHEMA_VERSION,
+		id,
+		name,
+		createdAt,
+		calibrated: expectBoolean(root['calibrated'], 'profile.calibrated'),
+		settings: parseSettings(root['settings'], 'profile.settings'),
+		progress: parseProgress(root['progress'], 'profile.progress')
+	};
+}

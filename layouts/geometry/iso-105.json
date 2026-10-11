@@ -1,0 +1,91 @@
+{
+	"schemaVersion": 1,
+	"id": "iso-105",
+	"geometry": "iso",
+	"rows": [
+		{
+			"offset": 0,
+			"keys": [
+				{ "code": "Backquote", "width": 1 },
+				{ "code": "Digit1", "width": 1 },
+				{ "code": "Digit2", "width": 1 },
+				{ "code": "Digit3", "width": 1 },
+				{ "code": "Digit4", "width": 1 },
+				{ "code": "Digit5", "width": 1 },
+				{ "code": "Digit6", "width": 1 },
+				{ "code": "Digit7", "width": 1 },
+				{ "code": "Digit8", "width": 1 },
+				{ "code": "Digit9", "width": 1 },
+				{ "code": "Digit0", "width": 1 },
+				{ "code": "Minus", "width": 1 },
+				{ "code": "Equal", "width": 1 },
+				{ "code": "Backspace", "width": 2 }
+			]
+		},
+		{
+			"offset": 0,
+			"keys": [
+				{ "code": "Tab", "width": 1.5 },
+				{ "code": "KeyQ", "width": 1 },
+				{ "code": "KeyW", "width": 1 },
+				{ "code": "KeyE", "width": 1 },
+				{ "code": "KeyR", "width": 1 },
+				{ "code": "KeyT", "width": 1 },
+				{ "code": "KeyY", "width": 1 },
+				{ "code": "KeyU", "width": 1 },
+				{ "code": "KeyI", "width": 1 },
+				{ "code": "KeyO", "width": 1 },
+				{ "code": "KeyP", "width": 1 },
+				{ "code": "BracketLeft", "width": 1 },
+				{ "code": "BracketRight", "width": 1 },
+				{ "code": "Enter", "width": 1.5 }
+			]
+		},
+		{
+			"offset": 0,
+			"keys": [
+				{ "code": "CapsLock", "width": 1.75 },
+				{ "code": "KeyA", "width": 1 },
+				{ "code": "KeyS", "width": 1 },
+				{ "code": "KeyD", "width": 1 },
+				{ "code": "KeyF", "width": 1 },
+				{ "code": "KeyG", "width": 1 },
+				{ "code": "KeyH", "width": 1 },
+				{ "code": "KeyJ", "width": 1 },
+				{ "code": "KeyK", "width": 1 },
+				{ "code": "KeyL", "width": 1 },
+				{ "code": "Semicolon", "width": 1 },
+				{ "code": "Quote", "width": 1 },
+				{ "code": "Backslash", "width": 1 }
+			]
+		},
+		{
+			"offset": 0,
+			"keys": [
+				{ "code": "ShiftLeft", "width": 1.25 },
+				{ "code": "IntlBackslash", "width": 1 },
+				{ "code": "KeyZ", "width": 1 },
+				{ "code": "KeyX", "width": 1 },
+				{ "code": "KeyC", "width": 1 },
+				{ "code": "KeyV", "width": 1 },
+				{ "code": "KeyB", "width": 1 },
+				{ "code": "KeyN", "width": 1 },
+				{ "code": "KeyM", "width": 1 },
+				{ "code": "Comma", "width": 1 },
+				{ "code": "Period", "width": 1 },
+				{ "code": "Slash", "width": 1 },
+				{ "code": "ShiftRight", "width": 2.75 }
+			]
+		},
+		{
+			"offset": 0,
+			"keys": [
+				{ "code": "ControlLeft", "width": 2 },
+				{ "code": "AltLeft", "width": 2 },
+				{ "code": "Space", "width": 7 },
+				{ "code": "AltRight", "width": 2 },
+				{ "code": "ControlRight", "width": 2 }
+			]
+		}
+	]
+}
