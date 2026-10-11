@@ -12,16 +12,9 @@ interface KeyContext {
 	readonly timestamp: number;
 }
 
-interface PendingChar extends KeyContext {
-	readonly char: string;
-	readonly composed: boolean;
-}
-
 interface State {
 	/** Last non-modifier key held down, until its keyup. */
 	lastKeydown: KeyContext | null;
-	/** Printable keydown waiting to see whether an input event follows. */
-	fallback: PendingChar | null;
 	/** `beforeinput` already handled: the matching `input` describes the same edit. */
 	expectedInputType: string | null;
 	/** Backspace or Enter already emitted from `keydown`; their input events are duplicates. */
@@ -39,7 +32,6 @@ interface State {
 function initialState(): State {
 	return {
 		lastKeydown: null,
-		fallback: null,
 		expectedInputType: null,
 		handledKey: null,
 		skipInputs: false,
@@ -59,7 +51,6 @@ function emitChars(
 	const context = state.lastKeydown;
 	const chars = toTypedGraphemes(text);
 	if (chars.length === 0) return [];
-	state.fallback = null;
 	state.deadPending = false;
 	state.orphan = context === null;
 	return chars.map((char) => ({
@@ -77,7 +68,6 @@ function emitKey(
 	eventTimestamp: number
 ): NormalizedKeystroke[] {
 	const context = state.lastKeydown;
-	state.fallback = null;
 	state.deadPending = false;
 	state.orphan = context === null;
 	return [
@@ -91,27 +81,11 @@ function emitKey(
 	];
 }
 
-function flushFallback(state: State): NormalizedKeystroke[] {
-	const pending = state.fallback;
-	state.fallback = null;
-	if (pending === null) return [];
-	const chars = toTypedGraphemes(pending.char);
-	state.deadPending = false;
-	return chars.map((char) => ({
-		kind: 'char',
-		char,
-		code: pending.code,
-		timestamp: pending.timestamp,
-		composed: pending.composed
-	}));
-}
-
 function onKeydown(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 	const keyClass = classifyKey(event);
 	if (keyClass === 'modifier') return [];
 
-	const out = flushFallback(state);
-	const orphan = state.orphan;
+	const out: NormalizedKeystroke[] = [];
 	state.orphan = false;
 	state.skipInputs = false;
 	state.handledKey = null;
@@ -153,16 +127,9 @@ function onKeydown(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 		}
 		case 'printable': {
 			state.lastKeydown = context;
-			if (repeat) {
-				state.skipInputs = true;
-				return out;
-			}
-			if (event.isComposing === true || state.inComposition || orphan) return out;
-			state.fallback = {
-				...context,
-				char: event.key ?? '',
-				composed: state.deadPending
-			};
+			// `key` is never trusted for the character: Chrome on Windows reports the
+			// unmodified key (`é`) for an AltGr dead key and produces no text.
+			if (repeat) state.skipInputs = true;
 			return out;
 		}
 		case 'ambiguous': {
@@ -181,12 +148,6 @@ function onKeyup(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 	if (classifyKey(event) === 'modifier') return [];
 
 	const code = event.code ? event.code : null;
-	const out: NormalizedKeystroke[] = [];
-	const fallback = state.fallback;
-	if (fallback !== null && (code === null || fallback.code === null || fallback.code === code)) {
-		out.push(...flushFallback(state));
-	}
-
 	const current = state.lastKeydown;
 	if (current === null || code === null || current.code === null || current.code === code) {
 		state.lastKeydown = null;
@@ -195,7 +156,7 @@ function onKeyup(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 		state.expectedInputType = null;
 		state.recentCommit = null;
 	}
-	return out;
+	return [];
 }
 
 function onTextInput(state: State, event: RawInputEvent, inputType: string): NormalizedKeystroke[] {
@@ -242,7 +203,6 @@ function onInput(
 
 function onCompositionStart(state: State): NormalizedKeystroke[] {
 	state.inComposition = true;
-	state.fallback = null;
 	state.recentCommit = null;
 	state.expectedInputType = null;
 	return [];
@@ -250,7 +210,6 @@ function onCompositionStart(state: State): NormalizedKeystroke[] {
 
 function onCompositionEnd(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 	state.inComposition = false;
-	state.fallback = null;
 	state.expectedInputType = null;
 	const data = event.data ?? '';
 	const out = emitChars(state, data, true, event.timestamp);

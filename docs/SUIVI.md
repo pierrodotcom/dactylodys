@@ -8,7 +8,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 |---|---|---|
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
-| J1 Moteur de frappe | Code livré, traces réelles à collecter | Reste : campagne de traces (Windows par le porteur ; Mac, Linux, Chromebook : Q7) puis ajustement du normaliseur |
+| J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) ; rangée de chiffres avec Maj et tilde/accent grave à réenregistrer |
 | J2 Tranche jouable | — | |
 | J3 Pédagogie complète | — | |
 | J4 Aventure | — | |
@@ -16,11 +16,11 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 ## Prochaines actions
 
-1. **Campagne de traces** sur la page `/dev/traces` : le porteur enregistre Chrome, Edge et Firefox sous Windows ; fichiers déposés dans `tests/traces/fr-fr-azerty-pc/`. Le test de rejeu dit aussitôt si le normaliseur est juste.
-2. Corriger le normaliseur et les dispositions d'après les traces réelles ; remplacer les traces synthétiques.
-3. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : la page est en ligne, il suffit d'envoyer le lien.
-4. Diagnostiquer L-021 (premier chargement e2e parfois > 60 s en local).
-5. **J2 Tranche jouable** quand les traces Windows passent.
+1. **J2 Tranche jouable** (modèle : Opus pour le cadrage du mini-jeu et de l'étalonnage, Sonnet pour l'exécution).
+2. À prévoir dans J2, d'après les traces réelles : reconnaître le pavé numérique et Verr. Maj (le caractère est juste mais pas la touche attendue) et guider l'enfant sans le pénaliser.
+3. Le porteur réenregistre deux consignes après mise en ligne (chiffres de la rangée du haut ; tilde et accent grave) : fichiers à déposer dans `tests/traces/fr-fr-azerty-pc/`.
+4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
+5. Diagnostiquer L-021 (premier chargement e2e parfois > 60 s en local).
 
 ## Livré au jalon J1 (code)
 
@@ -61,3 +61,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-11** — J0 réalisé en 3 lots délégués (scaffold, tokens + i18n, tests + CI). Leçons L-011 à L-017, ADR-012 à 014.
 - **2026-10-11** — Dépôt recréé en public avec un historique sans adresse personnelle ; J0 fusionné et déployé.
 - **2026-10-11** — J1 : contrats figés (PR 2), puis 3 lots parallèles en worktrees (dispositions, capture, session) assemblés sans conflit. Leçons L-022 à L-026, ADR-015 et 016.
+- **2026-10-11** — Traces réelles Windows (Chrome 155, Firefox 157, clavier NuPhy Node 100) : 26 consignes rejouées, un défaut du normaliseur corrigé (L-027), disposition PC conforme sur toutes les touches frappées.

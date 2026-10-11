@@ -152,19 +152,32 @@ describe('plain characters', () => {
 	});
 });
 
-describe('fallback to the key value', () => {
-	it('emits the key at keyup when no input event follows', () => {
+describe('a keydown alone never produces a character', () => {
+	it('emits nothing at keyup when no input event follows', () => {
 		const c = clock();
-		const result = run([c.keydown('a', 'KeyQ'), c.keyup('a', 'KeyQ')]);
 
-		expect(result.map((k) => [k.char, k.code, k.timestamp])).toEqual([['a', 'KeyQ', 1010]]);
+		expect(run([c.keydown('a', 'KeyQ'), c.keyup('a', 'KeyQ')])).toEqual([]);
 	});
 
-	it('emits the key when the next keydown arrives with no input in between', () => {
+	it('emits nothing when the next keydown arrives with no input in between', () => {
 		const c = clock();
-		const result = run([c.keydown('a', 'KeyQ'), c.keydown('b', 'KeyB')]);
 
-		expect(chars(result)).toBe('a');
+		expect(run([c.keydown('a', 'KeyQ'), c.keydown('b', 'KeyB')])).toEqual([]);
+	});
+
+	it('ignores the key Chrome on Windows reports for an AltGr dead key', () => {
+		const c = clock();
+		const altGr = { ctrlKey: true, altKey: true, altGraph: true };
+		const result = run([
+			c.keydown('é', 'Digit2', altGr),
+			c.keyup('é', 'Digit2', altGr),
+			c.keydown('~', 'Space'),
+			c.beforeinput('insertText', '~'),
+			c.input('insertText', '~'),
+			c.keyup(' ', 'Space')
+		]);
+
+		expect(result.map((k) => [k.char, k.code])).toEqual([['~', 'Space']]);
 	});
 
 	it('does not duplicate a character that an input event already delivered', () => {
@@ -483,13 +496,15 @@ describe('auto-repeat', () => {
 			c.keyup('a', 'KeyQ')
 		]);
 
-		expect(chars(result)).toBe('a');
+		expect(chars(result)).toBe('');
 	});
 
 	it('types normally again after the key was released', () => {
 		const c = clock();
 		const result = run([
 			c.keydown('a', 'KeyQ'),
+			c.beforeinput('insertText', 'a'),
+			c.input('insertText', 'a'),
 			c.keydown('a', 'KeyQ', { repeat: true }),
 			c.beforeinput('insertText', 'a'),
 			c.input('insertText', 'a'),

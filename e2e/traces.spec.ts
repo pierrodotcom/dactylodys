@@ -6,8 +6,13 @@ import { parseTraceFile, replayTrace } from '../src/lib/keyboard/trace';
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PAGE_URL = '/dev/traces';
-const FIRST_PROMPT_TEXT = 'la mer bleue';
 const FILE_NAME = /^fr-fr-azerty-pc__[a-z0-9-]+-[a-z0-9-]+__\d{4}-\d{2}-\d{2}\.json$/;
+
+const prompts: { prompts: { text: string }[] } = JSON.parse(
+	readFileSync(new URL('../content/fr/dev/trace-prompts.json', import.meta.url), 'utf8')
+);
+const PROMPT_COUNT = prompts.prompts.length;
+const FIRST_PROMPT_TEXT = prompts.prompts[0]?.text ?? '';
 
 const messages: Record<string, string> = JSON.parse(
 	readFileSync(new URL('../messages/fr.json', import.meta.url), 'utf8')
@@ -41,7 +46,7 @@ test.describe('trace recording page', () => {
 		await expect(page.getByLabel(message('traces_browser_label'), { exact: true })).not.toHaveValue(
 			''
 		);
-		await expect(page.getByRole('article')).toHaveCount(13);
+		await expect(page.getByRole('article')).toHaveCount(PROMPT_COUNT);
 		await expect(firstInput(page)).toBeVisible();
 	});
 
