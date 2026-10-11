@@ -9,17 +9,27 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
-| J2 Tranche jouable | En cours | Contrats figés ; lots A progression, B profils et réglages, C composants et sons, puis D jeu et écrans |
+| J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
 | J3 Pédagogie complète | — | |
 | J4 Aventure | — | |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
 
-1. **J2 Tranche jouable** (modèle : Opus pour le cadrage du mini-jeu et de l'étalonnage, Sonnet pour l'exécution).
-2. À prévoir dans J2, d'après les traces réelles : reconnaître le pavé numérique et Verr. Maj (le caractère est juste mais pas la touche attendue) et guider l'enfant sans le pénaliser.
+1. **Test de J2 avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
+2. Dette relevée en J2, à traiter au début de J3 : exporter les limites du pseudo ; ajouter Verr. Maj à `RawInputEvent` ; passer le lecteur de sons par `GameProps` ; déplacer le lien disposition → géométrie hors de la route ; faire du bouton « Jouer » un vrai lien (les specs e2e exigent aujourd'hui zéro lien sur l'accueil) ; le parcours n'affiche que le premier monde ; reprise directe du dernier profil au rechargement.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 5. Diagnostiquer L-021 (premier chargement e2e parfois > 60 s en local).
+
+## Grille d'observation pour le test J2
+
+À observer sans aider, pendant 10 minutes : l'enfant comprend-il seul quoi faire à chaque écran ? regarde-t-il le clavier à l'écran ou ses mains ? que fait-il après une erreur (s'énerve, réessaie, ne remarque pas) ? le délai d'une seconde entre deux œufs lui paraît-il long ? rit-il ou sourit-il, et à quel moment ? à quel moment décroche-t-il ? veut-il rejouer ? Noter aussi tout mot incompris et toute touche Tab, Entrée ou Verr. Maj pressée par accident.
+
+## Livré au jalon J2 (code)
+
+- Parcours `/jouer` : choix du joueur (pseudo, local), vérification du clavier, carte du monde des dinosaures (6 leçons), avant-leçon, mini-jeu « L'éclosion », bilan en étoiles sur la précision seule, pause proposée après 12 minutes de jeu, réglages (son, thème, animations, taille et espacement du texte, clavier visible, disposition).
+- Progression et contenu en données ; profils dans IndexedDB ; sons synthétisés ; clavier visuel avec couleur par doigt ; compagnon original.
+- 957 tests unitaires et de propriétés ; 134 tests de bout en bout (Chromium + WebKit en local).
 
 ## Livré au jalon J1 (code)
 
@@ -61,3 +71,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-11** — Dépôt recréé en public avec un historique sans adresse personnelle ; J0 fusionné et déployé.
 - **2026-10-11** — J1 : contrats figés (PR 2), puis 3 lots parallèles en worktrees (dispositions, capture, session) assemblés sans conflit. Leçons L-022 à L-026, ADR-015 et 016.
 - **2026-10-11** — Traces réelles Windows (Chrome 155, Firefox 157, clavier NuPhy Node 100) : 26 consignes rejouées, un défaut du normaliseur corrigé (L-027), disposition PC conforme sur toutes les touches frappées.
+- **2026-10-11** — Traces complémentaires (rangée de chiffres, tilde, accent grave) conformes. J2 : contrats (PR 5), 3 lots parallèles en worktrees puis un lot d'assemblage (jeu et écrans). Leçons L-031 à L-034.

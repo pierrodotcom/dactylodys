@@ -228,7 +228,7 @@
 	"play_result_note_0": "Chaque essai entraîne tes doigts.",
 	"play_result_note_1": "Tes doigts apprennent leur place.",
 	"play_result_note_2": "Tu as bien gardé tes doigts en place.",
-	"play_result_note_3": "Tes doigts sont restés bien en place, du début à la fin.",
+	"play_result_note_3": "Tu as tapé juste du début à la fin.",
 	"play_result_accuracy_one": "{correct} touche juste sur {total}",
 	"play_result_accuracy_other": "{correct} touches justes sur {total}",
 	"play_result_best": "Ta touche la mieux réussie : {key}",
