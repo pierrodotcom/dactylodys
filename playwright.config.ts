@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const HOST = '127.0.0.1';
-const PORT = 4173;
+const PORT = 4273;
 const IS_CI = Boolean(process.env.CI);
 
 export default defineConfig({

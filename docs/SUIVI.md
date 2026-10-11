@@ -7,7 +7,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Jalon | État | Note |
 |---|---|---|
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
-| J0 Fondations | En revue | PR `chore/j0-fondations` ; reste : CI verte, fusion, choix d'hébergement (Q1) |
+| J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | — | |
 | J2 Tranche jouable | — | |
 | J3 Pédagogie complète | — | |
@@ -16,9 +16,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 ## Prochaines actions
 
-1. Fusionner la PR du jalon J0 une fois la CI verte ; trancher Q1 pour activer la mise en ligne.
-2. Le porteur confirme sur son poste : `npx playwright test --project=firefox` (Firefox n'a pu être lancé que hors bac à sable).
-3. **J1 Moteur de frappe** (modèle recommandé : Opus pour figer les contrats, Sonnet pour l'exécution) :
+1. **J1 Moteur de frappe** (modèle recommandé : Opus pour figer les contrats, Sonnet pour l'exécution) :
    - contrat des types (`NormalizedKeystroke`, `LayoutDefinition`, `FingeringProfile`) et schéma JSON des dispositions ;
    - `fr-fr-azerty-pc` et `fr-fr-azerty-mac` depuis Kalamine/CLDR ;
    - `keyboard/input-adapter` + page d'enregistrement de traces ;
@@ -38,7 +36,6 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 | # | Question | Bloque |
 |---|---|---|
-| Q1 | Rendre le dépôt public ? (GitHub Pages n'est gratuit que pour un dépôt public ; sinon Cloudflare Pages) — recommandation donnée, décision attendue | Mise en ligne J0 |
 | Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
 
@@ -48,8 +45,11 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - Pas d'ergothérapeute pour l'instant : à chercher quand une version présentable existe (après J2-J3).
 - Le porteur développe un peu mais délègue le code : il valide les **résultats**. Comptes rendus orientés comportement observable, pas implémentation.
 - Voix : synthèse pré-générée (ADR-011). Doigté : 10 doigts + mode adapté (ADR-012).
+- Dépôt public, GitHub Pages (Q1). Adresse anonyme GitHub pour tous les commits ; le porteur a activé le blocage des pushs exposant son adresse.
+- Ports locaux dédiés : 5273 (dev) et 4273 (aperçu, tests) ; 5173 appartient à un autre projet du porteur.
 
 ## Journal
 
 - **2026-10-11** — Cadrage : recherche en 6 axes, décisions ADR-001 à ADR-011, CLAUDE.md, règles `.claude/rules/`, feuille de route. Dépôt initialisé.
 - **2026-10-11** — J0 réalisé en 3 lots délégués (scaffold, tokens + i18n, tests + CI). Leçons L-011 à L-017, ADR-012 à 014.
+- **2026-10-11** — Dépôt recréé en public avec un historique sans adresse personnelle ; J0 fusionné et déployé.
