@@ -66,3 +66,6 @@ Deux politiques dans le moteur de session : `retry` (une mauvaise touche ne fait
 
 ## 016 — Source des dispositions AZERTY (2026-10-11, acceptée)
 Dispositions Windows et macOS reprises de Unicode CLDR 43 (`Unicode-DFS-2016`), seule source libre qui décrit les claviers réels de ces systèmes. Elles restent **à confirmer par des traces réelles** : codes `Backquote`/`IntlBackslash` des claviers Apple ISO, niveaux absents de CLDR.
+
+## 017 — Périmètre de la tranche jouable J2 (2026-10-11, acceptée)
+Un parcours complet et court pour un premier test avec un enfant : accueil → profil (pseudo, local) → vérification du clavier → carte d'un monde (dinosaures) de 6 leçons (`f j`, espace, `d k`, `s l`, `q m`, `e i`) → mini-jeu « L'éclosion » → bilan en étoiles sur la précision seule → pause proposée. Un exercice est une suite de groupes courts, une session par groupe. Sons synthétisés (aucun fichier), pas encore de voix ni de musique. Export/import et installation hors-ligne restent en J5.

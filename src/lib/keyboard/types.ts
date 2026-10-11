@@ -65,6 +65,27 @@ export interface FingeringProfile {
 	readonly homeKeys: Readonly<Partial<Record<Finger, KeyCode>>>;
 }
 
+export interface GeometryKey {
+	readonly code: KeyCode;
+	/** Width in key units; a letter key is 1. */
+	readonly width: number;
+}
+
+export interface GeometryRow {
+	/** Horizontal offset of the first key, in key units. */
+	readonly offset: number;
+	readonly keys: readonly GeometryKey[];
+}
+
+/** Physical shape of a keyboard, used to draw it. Rows from top (digits) to bottom (space). */
+export interface KeyboardGeometryDefinition {
+	readonly schemaVersion: 1;
+	/** e.g. `iso-105`. */
+	readonly id: string;
+	readonly geometry: KeyboardGeometry;
+	readonly rows: readonly GeometryRow[];
+}
+
 export type RawInputEventType =
 	| 'keydown'
 	| 'keyup'
