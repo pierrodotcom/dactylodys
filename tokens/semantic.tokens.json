@@ -67,6 +67,24 @@
 		},
 		"star": {
 			"fill": { "$value": "{color.sunflower.300}" }
+		},
+		"egg": {
+			"shell": { "$value": "{color.mint.200}" },
+			"spot": { "$value": "{color.sage.400}" },
+			"inside": { "$value": "{color.cream.50}" },
+			"crack": { "$value": "{color.brown.900}" },
+			"line": { "$value": "{color.brown.900}" }
+		},
+		"baby": {
+			"a": { "$value": "{color.ocean.400}" },
+			"b": { "$value": "{color.clay.400}" },
+			"c": { "$value": "{color.sunflower.300}" },
+			"d": { "$value": "{color.lavender.300}" }
+		},
+		"bubble": {
+			"surface": { "$value": "{color.cream.50}" },
+			"text": { "$value": "{color.brown.900}" },
+			"border": { "$value": "{color.brown.900}" }
 		}
 	},
 	"typing": {
@@ -153,6 +171,11 @@
 		"key-gap": { "$value": "{dimension.4}" },
 		"key-home-mark": { "$value": "{dimension.16}" },
 		"companion": { "$value": "8rem" },
+		"egg": { "$value": "11rem" },
+		"egg-mini": { "$value": "2.25rem" },
+		"lesson-node": { "$value": "4rem" },
+		"panel-max": { "$value": "32rem" },
+		"bubble-tail": { "$value": "{dimension.16}" },
 		"star": { "$value": "2rem" },
 		"visually-hidden": { "$value": "1px" }
 	},
@@ -225,7 +248,9 @@
 		"instant": { "$value": "{duration.1}" },
 		"fast": { "$value": "{duration.150}" },
 		"base": { "$value": "{duration.250}" },
-		"slow": { "$value": "{duration.500}" }
+		"slow": { "$value": "{duration.500}" },
+		"celebration": { "$value": "{duration.1000}" },
+		"notice": { "$value": "{duration.1600}" }
 	},
 	"easing": {
 		"$type": "cubicBezier",
