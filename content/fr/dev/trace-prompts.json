@@ -1,0 +1,83 @@
+{
+	"schemaVersion": 1,
+	"prompts": [
+		{
+			"id": "fr.trace-prompt.simple-letters",
+			"title": "Lettres simples",
+			"text": "la mer bleue",
+			"instruction": "Tape ce texte, espaces comprises."
+		},
+		{
+			"id": "fr.trace-prompt.capitals",
+			"title": "Majuscules",
+			"text": "Lou Maya Quentin",
+			"instruction": "Tape ce texte avec les majuscules, comme d'habitude."
+		},
+		{
+			"id": "fr.trace-prompt.digits",
+			"title": "Chiffres",
+			"text": "0123456789",
+			"instruction": "Tape les chiffres de la rangée du haut, pas ceux du pavé numérique."
+		},
+		{
+			"id": "fr.trace-prompt.accents",
+			"title": "Lettres accentuées",
+			"text": "é è à ç ù",
+			"instruction": "Tape chaque lettre accentuée avec sa touche, puis un espace."
+		},
+		{
+			"id": "fr.trace-prompt.circumflex",
+			"title": "Accent circonflexe (touche morte)",
+			"text": "ê î ô û â",
+			"instruction": "Appuie sur la touche morte ^, relâche-la, puis tape la voyelle. Mets un espace entre les lettres."
+		},
+		{
+			"id": "fr.trace-prompt.diaeresis",
+			"title": "Tréma (touche morte)",
+			"text": "ë ï ü",
+			"instruction": "Appuie sur la touche morte du tréma ¨, relâche-la, puis tape la voyelle. Mets un espace entre les lettres."
+		},
+		{
+			"id": "fr.trace-prompt.dead-key-space",
+			"title": "Touche morte puis espace",
+			"text": "^¨",
+			"instruction": "Appuie sur la touche morte ^ puis sur la barre d'espace. Recommence avec la touche morte du tréma ¨."
+		},
+		{
+			"id": "fr.trace-prompt.altgr-symbols",
+			"title": "Symboles avec AltGr",
+			"text": "@ # { } [ ] | \\ ~ €",
+			"instruction": "Tape chaque symbole avec sa combinaison de touches (AltGr ou Option selon ton clavier), puis un espace."
+		},
+		{
+			"id": "fr.trace-prompt.punctuation",
+			"title": "Ponctuation",
+			"text": "? ! : ; , .",
+			"instruction": "Tape chaque signe, puis un espace."
+		},
+		{
+			"id": "fr.trace-prompt.apostrophe",
+			"title": "Apostrophe",
+			"text": "l'ami d'Anna",
+			"instruction": "Tape ce texte avec l'apostrophe droite du clavier."
+		},
+		{
+			"id": "fr.trace-prompt.sentence",
+			"title": "Phrase complète",
+			"text": "Le petit chat a bu son lait, puis il s'est endormi.",
+			"instruction": "Tape la phrase en entier, à ton rythme."
+		},
+		{
+			"id": "fr.trace-prompt.backspace",
+			"title": "Retour arrière",
+			"text": "chat",
+			"instruction": "Tape « chaz », appuie sur Retour arrière, puis termine en tapant « t »."
+		},
+		{
+			"id": "fr.trace-prompt.enter",
+			"title": "Entrée",
+			"text": "un\ndeux",
+			"instruction": "Tape « un », appuie sur Entrée, puis tape « deux »."
+		}
+	]
+}
