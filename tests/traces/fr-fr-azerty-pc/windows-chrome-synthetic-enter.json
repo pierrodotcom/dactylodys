@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "a\nb",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "a", "code": "KeyQ" },
+		{ "type": "beforeinput", "timestamp": 146, "inputType": "insertText", "data": "a" },
+		{ "type": "input", "timestamp": 147, "inputType": "insertText", "data": "a" },
+		{ "type": "keyup", "timestamp": 207, "key": "a", "code": "KeyQ" },
+		{ "type": "keydown", "timestamp": 407, "key": "Enter", "code": "Enter" },
+		{ "type": "beforeinput", "timestamp": 408, "inputType": "insertLineBreak", "data": null },
+		{ "type": "input", "timestamp": 409, "inputType": "insertLineBreak", "data": null },
+		{ "type": "keyup", "timestamp": 469, "key": "Enter", "code": "Enter" },
+		{ "type": "keydown", "timestamp": 494, "key": "b", "code": "KeyB" },
+		{ "type": "beforeinput", "timestamp": 495, "inputType": "insertText", "data": "b" },
+		{ "type": "input", "timestamp": 496, "inputType": "insertText", "data": "b" },
+		{ "type": "keyup", "timestamp": 556, "key": "b", "code": "KeyB" }
+	]
+}

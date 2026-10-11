@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-mac",
+	"expectedText": "^",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "macOS",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "Dead", "code": "BracketLeft" },
+		{ "type": "compositionstart", "timestamp": 146, "data": "" },
+		{ "type": "compositionupdate", "timestamp": 147, "data": "^" },
+		{
+			"type": "keyup",
+			"timestamp": 217,
+			"key": "Dead",
+			"code": "BracketLeft",
+			"isComposing": true
+		},
+		{ "type": "keydown", "timestamp": 307, "key": " ", "code": "Space", "isComposing": true },
+		{ "type": "compositionend", "timestamp": 308, "data": "^" },
+		{ "type": "keyup", "timestamp": 368, "key": " ", "code": "Space" }
+	]
+}

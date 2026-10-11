@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "a",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "keydown", "timestamp": 145, "key": "a", "code": "KeyQ" },
+		{ "type": "beforeinput", "timestamp": 146, "inputType": "insertText", "data": "a" },
+		{ "type": "input", "timestamp": 147, "inputType": "insertText", "data": "a" },
+		{ "type": "keyup", "timestamp": 207, "key": "a", "code": "KeyQ" },
+		{
+			"type": "keydown",
+			"timestamp": 507,
+			"key": "Control",
+			"code": "ControlLeft",
+			"ctrlKey": true
+		},
+		{ "type": "keydown", "timestamp": 587, "key": "v", "code": "KeyV", "ctrlKey": true },
+		{ "type": "beforeinput", "timestamp": 588, "inputType": "insertFromPaste", "data": null },
+		{ "type": "keyup", "timestamp": 678, "key": "v", "code": "KeyV", "ctrlKey": true },
+		{ "type": "keyup", "timestamp": 698, "key": "Control", "code": "ControlLeft" }
+	]
+}

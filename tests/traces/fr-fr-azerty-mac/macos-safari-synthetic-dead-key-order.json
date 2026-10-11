@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-mac",
+	"expectedText": "ê",
+	"environment": {
+		"browser": "Safari",
+		"browserVersion": "synthetic",
+		"os": "macOS",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, event order after WebKit bug 165004",
+		"recordedAt": "2026-10-11"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "compositionstart", "timestamp": 121, "data": "" },
+		{ "type": "compositionupdate", "timestamp": 122, "data": "^" },
+		{
+			"type": "input",
+			"timestamp": 123,
+			"inputType": "insertCompositionText",
+			"data": "^",
+			"isComposing": true
+		},
+		{
+			"type": "keydown",
+			"timestamp": 125,
+			"key": "Unidentified",
+			"code": "BracketLeft",
+			"isComposing": true
+		},
+		{
+			"type": "keyup",
+			"timestamp": 195,
+			"key": "Unidentified",
+			"code": "BracketLeft",
+			"isComposing": true
+		},
+		{ "type": "compositionupdate", "timestamp": 275, "data": "ê" },
+		{ "type": "compositionend", "timestamp": 276, "data": "ê" },
+		{
+			"type": "keydown",
+			"timestamp": 278,
+			"key": "Unidentified",
+			"code": "KeyE",
+			"isComposing": false
+		},
+		{ "type": "keyup", "timestamp": 338, "key": "e", "code": "KeyE" }
+	]
+}
