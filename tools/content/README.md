@@ -48,3 +48,7 @@ La relecture humaine (cases à cocher de `docs/relecture/`) se reporte dans ces 
 ## Niveaux de phrases
 
 Niveau 1 : mots très simples et phrases courtes ; niveau 3 : phrases plus longues ou vocabulaire plus riche.
+
+## Page de relecture
+
+`node tools/content/build-review-page.js` régénère `docs/relecture/relecture.html`, une page autonome (aucune ressource externe) où une personne répond Oui ou Non à chaque mot et à chaque phrase, puis enregistre ses réponses dans un fichier JSON à déposer dans `docs/relecture/`.
