@@ -51,6 +51,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 | # | Question | Bloque |
 |---|---|---|
+| Q8 | Valider ADR-018 (ordre des touches) et ADR-019 (mots par thèmes, avec relecture humaine des listes) | J3 |
+| Q9 | Confirmer la licence de Lexique auprès de ses auteurs : le fichier dit CC BY-SA, la page d'accueil du site pointe vers une licence non commerciale | Publication des listes de mots |
 | Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
 
@@ -72,3 +74,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-11** — Traces réelles Windows (Chrome 155, Firefox 157, clavier NuPhy Node 100) : 26 consignes rejouées, un défaut du normaliseur corrigé (L-027), disposition PC conforme sur toutes les touches frappées.
 - **2026-10-11** — Traces complémentaires (rangée de chiffres, tilde, accent grave) conformes. J2 : contrats (PR 5), 3 lots parallèles en worktrees puis un lot d'assemblage (jeu et écrans). Leçons L-031 à L-034.
 - **2026-10-11** — Dette de contrats de J2 soldée (Verr. Maj dans les événements bruts, sons passés au jeu, limites du pseudo, géométrie), reprise directe du dernier joueur, « Jouer » en vrai lien, ouverture hydratée dans toutes les specs e2e.
+- **2026-10-12** — Recherche complémentaire : ordre des touches et regroupement thématique des mots (notes dans `research_notes/Ordre des touches et mots thématiques/`). ADR-018 et 019 proposés ; jalon « J6 bis Adaptation à l'âge » ajouté à la feuille de route.
