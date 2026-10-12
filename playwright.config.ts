@@ -3,6 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 const HOST = '127.0.0.1';
 const PORT = 4273;
 const IS_CI = Boolean(process.env.CI);
+// axe audits the DOM and computed styles, which do not depend on the engine: one browser is enough.
+const ACCESSIBILITY_AUDIT = /axe/i;
 
 export default defineConfig({
 	testDir: 'e2e',
@@ -18,8 +20,8 @@ export default defineConfig({
 	},
 	projects: [
 		{ name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-		{ name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-		{ name: 'webkit', use: { ...devices['Desktop Safari'] } }
+		{ name: 'firefox', grepInvert: ACCESSIBILITY_AUDIT, use: { ...devices['Desktop Firefox'] } },
+		{ name: 'webkit', grepInvert: ACCESSIBILITY_AUDIT, use: { ...devices['Desktop Safari'] } }
 	],
 	webServer: {
 		command: `npm run preview -- --host ${HOST} --port ${PORT} --strictPort`,

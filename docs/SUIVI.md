@@ -10,19 +10,30 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
-| J3 Pédagogie complète | En cours | Contrats figés ; lots A moteur et progression, B banques de mots et de phrases, C mini-jeux et carte, puis D assemblage |
+| J3 Pédagogie complète | Code livré, relecture humaine des mots et phrases à faire | 5 mondes, 23 leçons, 929 mots, 150 phrases, 3 mini-jeux |
 | J4 Aventure | — | |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
 
-1. **Test de J2 avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. Dette restante : le parcours n'affiche que le premier monde ; `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double (`player.ts` / `profile.ts`) ; le code i18n généré lit `localStorage` sans protection (un navigateur qui le bloque casserait l'appli).
+1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
+2. **Relecture humaine** des mots et des phrases : `docs/relecture/mots-fr.md` et `docs/relecture/phrases-fr.md` (cocher = garder, barrer = retirer). Tant qu'elle n'est pas faite, les entrées restent `review: "agent"`.
+3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
+4. Dette de J3 : le moteur ne favorise les nouveaux caractères que dans les mots, donc le point et les signes de ponctuation sont peu pratiqués dans les phrases ; les textes d'introduction disent « le doigt de la bague » alors que l'aide à l'écran dit « annulaire » ; la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le parcours ne reprend pas encore le dernier jeu choisi d'une visite à l'autre.
+5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double ; le code i18n généré lit `localStorage` sans protection.
+6. **J4 Aventure** : compagnon personnalisable, compétences, trophées, récit, voix, course contre son propre fantôme.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
 ## Grille d'observation pour le test J2
 
 À observer sans aider, pendant 10 minutes : l'enfant comprend-il seul quoi faire à chaque écran ? regarde-t-il le clavier à l'écran ou ses mains ? que fait-il après une erreur (s'énerve, réessaie, ne remarque pas) ? le délai d'une seconde entre deux œufs lui paraît-il long ? rit-il ou sourit-il, et à quel moment ? à quel moment décroche-t-il ? veut-il rejouer ? Noter aussi tout mot incompris et toute touche Tab, Entrée ou Verr. Maj pressée par accident.
+
+## Livré au jalon J3 (code)
+
+- Progression complète en données, dans l'ordre de l'ADR-018 : 5 mondes (dinosaures, cuisine, animaux, espace, véhicules), 23 leçons, de `f j` aux trémas, majuscules et ponctuation comprises. Vrais mots dès la 5ᵉ leçon, phrases dès la 6ᵉ.
+- Banque de 929 mots (11 thèmes, 3 niveaux) issue de Lexique et du Wiktionnaire par une chaîne reproductible (`tools/content/`), et 150 phrases originales ; tout est relu par un agent, rien encore par une personne.
+- Exercices mêlant suites, mots et phrases, avec davantage de pratique sur les caractères que l'enfant rate et une préférence pour le thème du monde.
+- Trois mini-jeux sur un socle commun (« L'éclosion », « Décollage », « La recette farfelue »), choix du jeu par l'enfant, carte de tous les mondes, page d'essai `/dev/jeux`.
 
 ## Livré au jalon J2 (code)
 
@@ -74,3 +85,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-11** — Traces complémentaires (rangée de chiffres, tilde, accent grave) conformes. J2 : contrats (PR 5), 3 lots parallèles en worktrees puis un lot d'assemblage (jeu et écrans). Leçons L-031 à L-034.
 - **2026-10-11** — Dette de contrats de J2 soldée (Verr. Maj dans les événements bruts, sons passés au jeu, limites du pseudo, géométrie), reprise directe du dernier joueur, « Jouer » en vrai lien, ouverture hydratée dans toutes les specs e2e.
 - **2026-10-12** — Recherche complémentaire : ordre des touches et regroupement thématique des mots (notes dans `research_notes/Ordre des touches et mots thématiques/`). ADR-018 et 019 proposés ; jalon « J6 bis Adaptation à l'âge » ajouté à la feuille de route.
+- **2026-10-12** — ADR-018 et 019 acceptés. J3 : contrats, 3 lots parallèles (moteur et progression, banques, mini-jeux) puis un lot de branchement. Audits axe limités à Chromium. Leçons L-035 à L-039, ADR-020.
