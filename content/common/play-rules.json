@@ -1,5 +1,6 @@
 {
 	"schemaVersion": 1,
 	"breakAfterMinutes": 12,
+	"maxWordLevel": 3,
 	"keyboardCheckCodes": ["KeyQ", "KeyW", "Semicolon"]
 }

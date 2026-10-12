@@ -1,3 +1,4 @@
+import type { WordLevel } from '$lib/engine/progression/types';
 import type { KeyCode } from '$lib/keyboard/types';
 import rulesData from '../../../content/common/play-rules.json';
 
@@ -5,6 +6,8 @@ import rulesData from '../../../content/common/play-rules.json';
 export interface PlayRules {
 	/** Cumulated play time after which a break is suggested. */
 	readonly breakAfterMinutes: number;
+	/** Highest level of the words and phrases of the banks that an exercise may use. */
+	readonly maxWordLevel: WordLevel;
 	/**
 	 * Physical keys the child is asked to press to check the keyboard. They are chosen
 	 * where the layouts the game supports differ from other common ones (A, Z and M on AZERTY).
@@ -13,6 +16,7 @@ export interface PlayRules {
 }
 
 const KEY_CODE_PATTERN = /^[A-Z][A-Za-z0-9]*$/;
+const WORD_LEVELS: readonly WordLevel[] = [1, 2, 3];
 
 function fail(path: string, message: string): never {
 	throw new Error(`${path}: ${message}`);
@@ -25,7 +29,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function parsePlayRules(data: unknown): PlayRules {
 	if (!isRecord(data)) fail('playRules', 'expected an object');
 	for (const name of Object.keys(data)) {
-		if (!['schemaVersion', 'breakAfterMinutes', 'keyboardCheckCodes'].includes(name)) {
+		if (
+			!['schemaVersion', 'breakAfterMinutes', 'maxWordLevel', 'keyboardCheckCodes'].includes(name)
+		) {
 			fail(`playRules.${name}`, 'unknown property');
 		}
 	}
@@ -34,6 +40,11 @@ export function parsePlayRules(data: unknown): PlayRules {
 	const minutes = data['breakAfterMinutes'];
 	if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) {
 		fail('playRules.breakAfterMinutes', 'expected a positive number');
+	}
+
+	const maxWordLevel = WORD_LEVELS.find((level) => level === data['maxWordLevel']);
+	if (maxWordLevel === undefined) {
+		fail('playRules.maxWordLevel', `expected one of ${WORD_LEVELS.join(', ')}`);
 	}
 
 	const rawCodes = data['keyboardCheckCodes'];
@@ -48,7 +59,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 		codes.push(code);
 	});
 
-	return { breakAfterMinutes: minutes, keyboardCheckCodes: codes };
+	return { breakAfterMinutes: minutes, maxWordLevel, keyboardCheckCodes: codes };
 }
 
 export const PLAY_RULES: PlayRules = parsePlayRules(rulesData);

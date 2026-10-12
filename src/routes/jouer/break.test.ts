@@ -8,7 +8,7 @@ import {
 } from './break';
 import type { PlayRules } from './play-rules';
 
-const RULES: PlayRules = { breakAfterMinutes: 12, keyboardCheckCodes: ['KeyQ'] };
+const RULES: PlayRules = { breakAfterMinutes: 12, maxWordLevel: 3, keyboardCheckCodes: ['KeyQ'] };
 const MINUTE = 60_000;
 
 describe('play clock', () => {

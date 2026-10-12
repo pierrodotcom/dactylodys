@@ -22,6 +22,7 @@
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { loadKeyboardAssets, type KeyboardAssets } from './assets';
+	import { loadBanks, type LoadedBanks } from './banks';
 	import BreakScreen from './BreakScreen.svelte';
 	import {
 		createPlayClock,
@@ -211,19 +212,27 @@
 	}
 
 	async function beginGame(lessonId: string, event: FlowEvent) {
-		if (!progression) return;
+		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
 		const definition = world ? selectedGame(world, chosenGames) : undefined;
-		if (!definition) return;
+		if (!world || !definition) return;
+		let banks: LoadedBanks;
 		try {
-			ActiveGame = (await definition.load()).default;
+			const [module, loaded] = await Promise.all([definition.load(), loadBanks(progression)]);
+			ActiveGame = module.default;
+			banks = loaded;
 		} catch {
 			gameLoadFailed = true;
 			if (event.type === 'replay') go({ type: 'back-to-map' });
 			return;
 		}
 		gameLoadFailed = false;
-		exercise = generateExercise(progression, lessonId, Math.random);
+		exercise = generateExercise(progression, lessonId, Math.random, {
+			...banks,
+			progress: profile.progress,
+			themeId: world.themeId,
+			maxLevel: PLAY_RULES.maxWordLevel
+		});
 		playClock = startPlaying(playClock, now());
 		go(event);
 	}
