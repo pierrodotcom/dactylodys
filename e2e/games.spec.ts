@@ -144,15 +144,31 @@ interface PlayOptions {
 	until?: number;
 }
 
+/**
+ * The reward lasts about a second: the group done and the bubble are checked together, in the page,
+ * because a slow browser would let several round trips go by and miss both.
+ */
+async function expectRewardShown(page: Page, bubble: string) {
+	await page.waitForFunction(
+		([text, doneSource]) => {
+			const label = document.querySelector('.target-text > .dd-visually-hidden');
+			return (
+				document.querySelector('.bubble')?.textContent?.trim() === text &&
+				new RegExp(doneSource, 's').test(label?.textContent ?? '')
+			);
+		},
+		[bubble, GROUP_DONE.source] as const
+	);
+}
+
 /** Types the groups from `from` on, checking the rewards on the way. */
 async function typeGroups(page: Page, game: Game, options: PlayOptions = {}) {
 	for (let index = options.from ?? 0; index < (options.until ?? GROUPS.length); index++) {
 		const group = await currentGroup(page);
 		expect(group).toBe(GROUPS[index]);
 		await page.keyboard.type(group);
-		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+		await expectRewardShown(page, message(`${game.bubblePrefix}${index + 1}`));
 		await expect(page.getByRole('img', { name: progressLabel(game, index + 1) })).toBeVisible();
-		await expect(page.locator('.bubble')).toHaveText(message(`${game.bubblePrefix}${index + 1}`));
 		if (index < GROUPS.length - 1 && options.skipDelay) await page.keyboard.press(SKIP_KEY);
 	}
 }
