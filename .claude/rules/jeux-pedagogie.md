@@ -64,3 +64,17 @@ Données : `content/<langue>/progression/<slug>.json`, `layouts/geometry/<id>.js
 Un jeu lit l'état de Verr. Maj dans les `RawInputEvent` (`capsLock`) fournis par `keyboard-capture`, pas dans un écouteur `window` à lui.
 
 Un exercice est une suite de **groupes** courts ; le jeu ouvre une session par groupe et agrège les mesures. L'espace est une touche comme une autre, introduite par sa propre leçon.
+
+## Contrats figés (J3)
+
+Ajouts dans `engine/progression/types.ts` : `ExerciseMix`, `LessonUnlock`, `WordBank`, `PhraseBank`, `ExerciseContext`, règles `weakCharBoost` et `themeBoost`, champs de leçon `mix`, `unlocks`, `targetLength`, champ de monde `gameIds`. Dans `games/types.ts` : `GameDefinition`.
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `generateExercise(progression, lessonId, rng, context?)` | `engine/progression/exercise` | Mélange suites, mots et phrases selon `mix` ; s'arrête à `targetLength` ou `groupCount` |
+| `parseWordBank(data)` / `parsePhraseBank(data)` | `engine/progression/banks` | Valident les banques |
+| `usableWords(bank, learned, options?)` / `usablePhrases(bank, learned, options?)` | idem | Entrées écrites uniquement avec les caractères connus, filtrées par niveau |
+| `learnedChars(progression, lessonId)` | `engine/progression/definition` | Inclut les capitales des lettres non accentuées dès qu'une leçon porte `unlocks: ["uppercase"]` |
+| `GAMES` / `findGame(id)` | `games/registry` | Liste des mini-jeux |
+
+Données : `content/<langue>/words/<slug>.json`, `content/<langue>/phrases/<slug>.json`. Un mot ou une phrase `review: "agent"` est jouable pendant le développement ; seuls les `"human"` le seront à partir de la version 1.0.

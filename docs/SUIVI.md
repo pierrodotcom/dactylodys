@@ -10,7 +10,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
-| J3 Pédagogie complète | — | |
+| J3 Pédagogie complète | En cours | Contrats figés ; lots A moteur et progression, B banques de mots et de phrases, C mini-jeux et carte, puis D assemblage |
 | J4 Aventure | — | |
 | J5 Version 1.0 | — | |
 
@@ -51,7 +51,6 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 | # | Question | Bloque |
 |---|---|---|
-| Q8 | Valider ADR-018 (ordre des touches) et ADR-019 (mots par thèmes, avec relecture humaine des listes) | J3 |
 | Q9 | Confirmer la licence de Lexique auprès de ses auteurs : le fichier dit CC BY-SA, la page d'accueil du site pointe vers une licence non commerciale | Publication des listes de mots |
 | Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
