@@ -748,7 +748,11 @@ test.describe('play route', () => {
 		await reachMap(page);
 		await startLesson(page, FIRST);
 		await page.keyboard.type(await currentGroup(page));
-		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+		await expect(
+			page.getByRole('img', {
+				name: plural('game_hatching_progress', 1, { hatched: 1, total: FIRST.groupCount })
+			})
+		).toBeVisible();
 		expect(pageErrors).toEqual([]);
 	});
 
