@@ -39,6 +39,9 @@
 		"oops": {
 			"outline": { "$value": "{color.amber.300}" }
 		},
+		"drawing": {
+			"line": { "$value": "{color.brown.50}" }
+		},
 		"typing": {
 			"done": { "$value": "{color.brown.400}" },
 			"current-surface": { "$value": "{color.charcoal.700}" },

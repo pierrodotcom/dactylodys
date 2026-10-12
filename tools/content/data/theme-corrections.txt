@@ -1,0 +1,137 @@
+# word | corrections: -theme removes a theme, +theme (or theme) adds one
+# Fixes the theme of words whose Wiktionary category belongs to another sense or another theme.
+agneau | -cuisine
+ail | -nature
+amande | -nature
+ananas | -nature
+araignée | -cuisine
+ardoise | -cuisine
+asperge | -nature
+autruche | -cuisine
+baguette | -vehicules -maison
+baleine | -vehicules
+ballon | -vehicules -maison
+banane | -nature
+barbecue | -maison
+bateau | -cuisine
+bébé | -animaux
+bille | -vehicules
+bonbon | -animaux
+bouche | -cuisine
+bourdon | -cuisine -nature
+cafetière | -maison
+caillou | -espace
+canard | -cuisine
+cannelle | -nature
+capsule | -cuisine -nature
+carotte | -nature
+casserole | -maison
+chaise | -vehicules
+chat | -sport
+chaton | -nature
+cheminée | -dinos -cuisine
+cheval | -cuisine -vehicules
+chèvre | -cuisine
+chevreuil | -cuisine
+chou | -nature
+citron | -animaux -nature
+citrouille | -nature
+cochon | -cuisine
+colle | -cuisine
+colombe | -cuisine
+comète | -sport
+compas | -maison
+coq | -cuisine -vehicules
+corne | -cuisine
+coucou | -nature
+course | -vehicules
+couscous | -animaux
+crabe | -cuisine
+crapaud | -vehicules -maison
+crayon | -maison
+crocodile | -vehicules -maison
+croissant | -animaux
+dragon | -vehicules
+éclair | -nature
+épice | -nature
+escargot | -cuisine
+feuille | -cuisine -animaux
+figue | -nature
+filet | -cuisine
+fleur | -cuisine
+fraise | -nature
+framboise | -nature
+gelée | -nature
+girafe | -cuisine -maison
+jambe | -cuisine
+kaki | -nature
+laitue | -nature
+langue | -cuisine -animaux
+lapin | -cuisine
+légume | -nature
+lièvre | -cuisine
+loup | -maison -sport
+lumière | -cuisine
+lunaire | -nature
+main | -maison -sport
+maïs | -nature
+marteau | -animaux
+mayonnaise | -nature
+médaille | -animaux
+melon | -nature
+menthe | -nature
+mousse | -cuisine -vehicules
+moutarde | -nature
+mouton | -cuisine -maison
+mur | -vehicules -sport
+navette | -cuisine -maison -nature
+nez | -cuisine
+noisette | -nature
+noix | -nature
+oie | -cuisine
+oignon | -nature
+olive | -nature
+oreille | -cuisine
+panne | -nature
+papillon | -vehicules
+pastèque | -nature
+patte | -vehicules
+pêche | -sport
+persil | -nature
+pied | -cuisine
+piment | -nature
+poire | -maison
+pois | -nature
+poivre | -nature
+pomme | -nature
+poule | -cuisine
+poulet | -animaux
+prune | -nature
+raisin | -nature
+raquette | -cuisine -nature
+requin | -cuisine
+riz | -nature
+rocher | -cuisine -animaux
+rouleau | -maison
+sanglier | -cuisine
+saucisse | -nature
+scie | -animaux
+sel | -nature
+souris | -cuisine
+stylo | -maison
+tableau | -vehicules
+tabouret | -nature
+tête | -cuisine
+thé | -nature
+thym | -nature
+tiroir | -vehicules
+tomate | -nature -sport
+toupie | -vehicules -maison
+trèfle | -cuisine
+truite | -cuisine
+vague | -sport
+vanille | -nature
+veau | -cuisine
+vent | -vehicules
+vinaigre | -nature
+voilier | -animaux

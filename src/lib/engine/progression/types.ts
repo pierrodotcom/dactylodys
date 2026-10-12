@@ -13,7 +13,21 @@ export interface ProgressionRules {
 	readonly starThresholds: readonly [number, number, number];
 	/** Share (0 to 1) of the characters of a generated group taken from the lesson's new characters. */
 	readonly newCharWeight: number;
+	/** How much more often a character the child gets wrong is practised; 0 disables it. */
+	readonly weakCharBoost: number;
+	/** How much more often a word of the current world's theme is picked; 0 disables it. */
+	readonly themeBoost: number;
 }
+
+/** Relative weights of the three kinds of groups in an exercise; at least one is positive. */
+export interface ExerciseMix {
+	readonly drills: number;
+	readonly words: number;
+	readonly phrases: number;
+}
+
+/** `uppercase`: from this lesson on, the capital of every learned unaccented letter is known. */
+export type LessonUnlock = 'uppercase';
 
 export interface LessonDefinition {
 	/** `<language>.lesson.<slug>`. */
@@ -23,10 +37,14 @@ export interface LessonDefinition {
 	readonly intro: string;
 	/** Graphemes introduced by this lesson; a space is `" "`. */
 	readonly newChars: readonly string[];
-	/** Real words or syllables typable with the characters learned so far; may be empty. */
+	/** Hand-picked words typable with the characters learned so far; may be empty. */
 	readonly words: readonly string[];
-	/** Number of groups in one exercise. */
+	readonly mix: ExerciseMix;
+	readonly unlocks: readonly LessonUnlock[];
+	/** Maximum number of groups in one exercise. */
 	readonly groupCount: number;
+	/** Approximate number of graphemes in one exercise; generation stops once it is reached. */
+	readonly targetLength: number;
 	/** Minimum and maximum number of graphemes in a generated group. */
 	readonly groupLength: readonly [number, number];
 }
@@ -35,8 +53,10 @@ export interface WorldDefinition {
 	/** `<language>.world.<slug>`. */
 	readonly id: string;
 	readonly title: string;
-	/** Visual theme of the world, a key of the design tokens. */
+	/** Theme of the world: visual identity and preferred vocabulary. */
 	readonly themeId: string;
+	/** Mini-games offered in this world; the first one is the default. */
+	readonly gameIds: readonly string[];
 	readonly lessons: readonly LessonDefinition[];
 }
 
@@ -49,6 +69,69 @@ export interface ProgressionDefinition {
 	readonly layoutIds: readonly string[];
 	readonly rules: ProgressionRules;
 	readonly worlds: readonly WorldDefinition[];
+}
+
+export type WordLevel = 1 | 2 | 3;
+
+/** `agent`: screened automatically and by an AI reviewer; `human`: validated by a person. */
+export type ReviewStatus = 'agent' | 'human';
+
+export interface WordEntry {
+	/** Lowercase NFC. */
+	readonly text: string;
+	readonly themes: readonly string[];
+	/** 1: very common and short, for the youngest; 3: for the oldest. */
+	readonly level: WordLevel;
+	readonly review: ReviewStatus;
+}
+
+export interface BankSource {
+	readonly name: string;
+	readonly url: string;
+	readonly license: string;
+}
+
+export interface ThemeDefinition {
+	readonly id: string;
+	readonly title: string;
+}
+
+export interface WordBank {
+	readonly schemaVersion: 1;
+	/** `<language>.words.<slug>`. */
+	readonly id: string;
+	readonly locale: string;
+	readonly sources: readonly BankSource[];
+	readonly themes: readonly ThemeDefinition[];
+	readonly words: readonly WordEntry[];
+}
+
+export interface PhraseEntry {
+	/** A short sentence, NFC, with its capital letters and punctuation. */
+	readonly text: string;
+	readonly themes: readonly string[];
+	readonly level: WordLevel;
+	readonly review: ReviewStatus;
+}
+
+export interface PhraseBank {
+	readonly schemaVersion: 1;
+	/** `<language>.phrases.<slug>`. */
+	readonly id: string;
+	readonly locale: string;
+	readonly phrases: readonly PhraseEntry[];
+}
+
+/** Everything optional that shapes an exercise for one child at one moment. */
+export interface ExerciseContext {
+	readonly words?: WordBank;
+	readonly phrases?: PhraseBank;
+	/** Enables practising weak characters more often. */
+	readonly progress?: ProgressState;
+	/** Highest word and phrase level allowed; defaults to 3. */
+	readonly maxLevel?: WordLevel;
+	/** Theme of the current world. */
+	readonly themeId?: string;
 }
 
 /** What a mini-game receives: short targets typed one after the other. */

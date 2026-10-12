@@ -13,12 +13,19 @@ const BASE: Raw = {
 	id: 'fr.progression.test',
 	locale: 'fr-FR',
 	layoutIds: ['fr-fr-azerty-pc'],
-	rules: { unlockAccuracy: 80, starThresholds: [80, 90, 97], newCharWeight: 0.6 },
+	rules: {
+		unlockAccuracy: 80,
+		starThresholds: [80, 90, 97],
+		newCharWeight: 0.6,
+		weakCharBoost: 2,
+		themeBoost: 2
+	},
 	worlds: [
 		{
 			id: 'fr.world.one',
 			title: 'One',
 			themeId: 'dinos',
+			gameIds: ['hatching'],
 			lessons: [
 				{
 					id: 'fr.lesson.a',
@@ -26,7 +33,10 @@ const BASE: Raw = {
 					intro: 'Intro A.',
 					newChars: ['f', 'j'],
 					words: [],
+					mix: { drills: 1, words: 1, phrases: 0 },
+					unlocks: [],
 					groupCount: 5,
+					targetLength: 20,
 					groupLength: [2, 4]
 				},
 				{
@@ -35,7 +45,10 @@ const BASE: Raw = {
 					intro: 'Intro B.',
 					newChars: ['e', ' '],
 					words: ['fe'],
+					mix: { drills: 1, words: 1, phrases: 0 },
+					unlocks: [],
 					groupCount: 5,
+					targetLength: 20,
 					groupLength: [3, 5]
 				}
 			]
@@ -44,6 +57,7 @@ const BASE: Raw = {
 			id: 'fr.world.two',
 			title: 'Two',
 			themeId: 'dinos',
+			gameIds: ['hatching'],
 			lessons: [
 				{
 					id: 'fr.lesson.c',
@@ -51,7 +65,10 @@ const BASE: Raw = {
 					intro: 'Intro C.',
 					newChars: ['d'],
 					words: [],
+					mix: { drills: 1, words: 1, phrases: 0 },
+					unlocks: [],
 					groupCount: 5,
+					targetLength: 20,
 					groupLength: [2, 4]
 				}
 			]
@@ -94,6 +111,26 @@ describe('parseProgression', () => {
 
 	it('accepts words made of characters introduced by the same lesson', () => {
 		expect(() => parseProgression(clone(BASE))).not.toThrow();
+	});
+
+	it('accepts a word made of capitals once capitals are unlocked', () => {
+		const parsed = parseProgression(
+			variant((raw) => {
+				lessonOf(raw, 1, 0)['unlocks'] = ['uppercase'];
+				lessonOf(raw, 1, 0)['words'] = ['Fed'];
+			})
+		);
+		expect(parsed.worlds[1]?.lessons[0]?.words).toEqual(['Fed']);
+	});
+
+	it('rejects a capital in a word before capitals are unlocked', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					lessonOf(raw, 1, 0)['words'] = ['Fed'];
+				})
+			)
+		).toThrow(/"F".*not learned/);
 	});
 
 	it('accepts a lesson without new characters once something is known', () => {
@@ -322,6 +359,109 @@ describe('parseProgression', () => {
 			/lessons\[0\]\.groupLength/
 		],
 		[
+			'negative weak character boost',
+			(raw) => (raw.rules['weakCharBoost'] = -1),
+			/progression\.rules\.weakCharBoost/
+		],
+		[
+			'missing weak character boost',
+			(raw) => delete raw.rules['weakCharBoost'],
+			/progression\.rules\.weakCharBoost/
+		],
+		[
+			'theme boost that is not a number',
+			(raw) => (raw.rules['themeBoost'] = '2'),
+			/progression\.rules\.themeBoost/
+		],
+		[
+			'negative theme boost',
+			(raw) => (raw.rules['themeBoost'] = -0.5),
+			/progression\.rules\.themeBoost/
+		],
+		[
+			'mix without phrases',
+			(raw) => (lessonOf(raw, 0, 0)['mix'] = { drills: 1, words: 1 }),
+			/lessons\[0\]\.mix\.phrases/
+		],
+		[
+			'mix with a negative weight',
+			(raw) => (lessonOf(raw, 0, 0)['mix'] = { drills: -1, words: 1, phrases: 0 }),
+			/lessons\[0\]\.mix\.drills/
+		],
+		[
+			'mix with only zero weights',
+			(raw) => (lessonOf(raw, 0, 0)['mix'] = { drills: 0, words: 0, phrases: 0 }),
+			/lessons\[0\]\.mix.*positive/
+		],
+		[
+			'mix with an unknown kind',
+			(raw) => (lessonOf(raw, 0, 0)['mix'] = { drills: 1, words: 1, phrases: 0, songs: 1 }),
+			/lessons\[0\]\.mix\.songs: unknown property/
+		],
+		[
+			'unknown unlock',
+			(raw) => (lessonOf(raw, 0, 0)['unlocks'] = ['digits']),
+			/lessons\[0\]\.unlocks\[0\]/
+		],
+		[
+			'duplicate unlock',
+			(raw) => (lessonOf(raw, 0, 0)['unlocks'] = ['uppercase', 'uppercase']),
+			/lessons\[0\]\.unlocks\[1\].*duplicate/
+		],
+		[
+			'unlocks that are not a list',
+			(raw) => (lessonOf(raw, 0, 0)['unlocks'] = 'uppercase'),
+			/lessons\[0\]\.unlocks/
+		],
+		[
+			'target length of zero',
+			(raw) => (lessonOf(raw, 0, 0)['targetLength'] = 0),
+			/lessons\[0\]\.targetLength/
+		],
+		[
+			'fractional target length',
+			(raw) => (lessonOf(raw, 0, 0)['targetLength'] = 10.5),
+			/lessons\[0\]\.targetLength/
+		],
+		[
+			'missing target length',
+			(raw) => delete lessonOf(raw, 0, 0)['targetLength'],
+			/lessons\[0\]\.targetLength/
+		],
+		['no game in a world', (raw) => (raw.worlds[0]!['gameIds'] = []), /worlds\[0\]\.gameIds/],
+		['missing game list', (raw) => delete raw.worlds[0]!['gameIds'], /worlds\[0\]\.gameIds/],
+		[
+			'game id with a capital letter',
+			(raw) => (raw.worlds[0]!['gameIds'] = ['Hatching']),
+			/worlds\[0\]\.gameIds\[0\]/
+		],
+		[
+			'game id with an underscore',
+			(raw) => (raw.worlds[0]!['gameIds'] = ['space_rocket']),
+			/worlds\[0\]\.gameIds\[0\]/
+		],
+		[
+			'duplicate game id',
+			(raw) => (raw.worlds[0]!['gameIds'] = ['hatching', 'hatching']),
+			/worlds\[0\]\.gameIds\[1\].*duplicate/
+		],
+		[
+			'more new characters than the longest group',
+			(raw) => {
+				lessonOf(raw, 1, 0)['newChars'] = ['d', 'k', 's', 'l', 'q'];
+				lessonOf(raw, 1, 0)['groupLength'] = [2, 4];
+			},
+			/worlds\[1\]\.lessons\[0\]\.groupLength.*new characters/
+		],
+		[
+			'a capital introduced as a new character once capitals are unlocked',
+			(raw) => {
+				lessonOf(raw, 0, 1)['unlocks'] = ['uppercase'];
+				lessonOf(raw, 1, 0)['newChars'] = ['F'];
+			},
+			/worlds\[1\]\.lessons\[0\]\.newChars\[0\].*already introduced/
+		],
+		[
 			'no typable character at all',
 			(raw) => {
 				lessonOf(raw, 0, 0)['newChars'] = [];
@@ -377,5 +517,51 @@ describe('lesson accessors', () => {
 
 	it('refuses to compute the characters of an unknown lesson', () => {
 		expect(() => learnedChars(progression, 'fr.lesson.zzz')).toThrow(RangeError);
+	});
+
+	describe('with capitals', () => {
+		const withCapitals = parseProgression(
+			variant((raw) => {
+				lessonOf(raw, 0, 1)['newChars'] = ['é', ' '];
+				lessonOf(raw, 0, 1)['words'] = [];
+				lessonOf(raw, 1, 0)['newChars'] = [];
+				lessonOf(raw, 1, 0)['unlocks'] = ['uppercase'];
+				raw.worlds[1]!.lessons.push({
+					id: 'fr.lesson.d',
+					title: 'D',
+					intro: 'Intro D.',
+					newChars: ['e', ',', '.'],
+					words: [],
+					mix: { drills: 1, words: 0, phrases: 0 },
+					unlocks: [],
+					groupCount: 5,
+					targetLength: 20,
+					groupLength: [3, 5]
+				});
+			})
+		);
+
+		it('does not add capitals before the unlocking lesson', () => {
+			expect(learnedChars(withCapitals, 'fr.lesson.b')).toEqual(['f', 'j', 'é', ' ']);
+		});
+
+		it('adds the capital of every unaccented letter from the unlocking lesson on', () => {
+			expect(learnedChars(withCapitals, 'fr.lesson.c')).toEqual(['f', 'j', 'é', ' ', 'F', 'J']);
+		});
+
+		it('also capitalizes the letters learned afterwards but never accented letters or symbols', () => {
+			expect(learnedChars(withCapitals, 'fr.lesson.d')).toEqual([
+				'f',
+				'j',
+				'é',
+				' ',
+				'e',
+				',',
+				'.',
+				'F',
+				'J',
+				'E'
+			]);
+		});
 	});
 });

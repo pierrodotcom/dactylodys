@@ -36,3 +36,9 @@ export interface GameProps {
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
 }
+
+/** A mini-game as the play flow sees it. Its title and description live in the messages, keyed by `id`. */
+export interface GameDefinition {
+	readonly id: string;
+	readonly load: () => Promise<{ default: import('svelte').Component<GameProps> }>;
+}

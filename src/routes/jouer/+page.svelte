@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Component } from 'svelte';
 	import {
 		evaluateLesson,
 		applyLessonResult,
@@ -7,9 +7,8 @@
 	} from '$lib/engine/progression/progress';
 	import { findLesson, lessonIds } from '$lib/engine/progression/definition';
 	import { generateExercise } from '$lib/engine/progression/exercise';
-	import type { Exercise, StarCount } from '$lib/engine/progression/types';
-	import { Hatching } from '$lib/games/hatching';
-	import type { GameOutcome } from '$lib/games/types';
+	import type { Exercise, ProgressionDefinition, StarCount } from '$lib/engine/progression/types';
+	import type { GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import { applySettings } from '$lib/state/apply-settings';
@@ -23,6 +22,7 @@
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { loadKeyboardAssets, type KeyboardAssets } from './assets';
+	import { loadBanks, settleWithin, type LoadedBanks } from './banks';
 	import BreakScreen from './BreakScreen.svelte';
 	import {
 		createPlayClock,
@@ -33,12 +33,19 @@
 	} from './break';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
+	import {
+		gameOptions,
+		NO_CHOSEN_GAMES,
+		rememberGame,
+		selectedGame,
+		type ChosenGames
+	} from './game-choice';
 	import { toGameSettings } from './game-settings';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
 	import LessonResult from './LessonResult.svelte';
-	import { nextLessonId } from './map';
+	import { nextLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
 	import { platformFromUserAgent } from './player';
 	import PlayerSelect from './PlayerSelect.svelte';
@@ -70,9 +77,27 @@
 	let loadFailed = $state(false);
 	let saveState = $state<'idle' | 'saved' | 'error'>('idle');
 	let systemPrefersReduced = $state(false);
+	let chosenGames = $state.raw<ChosenGames>(NO_CHOSEN_GAMES);
+	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
+	let gameLoadFailed = $state(false);
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
+
+	let banksRequest: { progression: ProgressionDefinition; ready: Promise<LoadedBanks> } | null =
+		null;
+
+	/** Starts loading the banks of the progression once; they are awaited only when a game starts. */
+	function requestBanks(source: ProgressionDefinition): Promise<LoadedBanks> {
+		if (banksRequest?.progression !== source) {
+			banksRequest = { progression: source, ready: loadBanks(source) };
+		}
+		return banksRequest.ready;
+	}
+
+	$effect(() => {
+		if (progression) void requestBanks(progression);
+	});
 
 	function go(event: FlowEvent) {
 		screen = transition(screen, event);
@@ -153,6 +178,7 @@
 	function changePlayer() {
 		profile = null;
 		assets = null;
+		chosenGames = NO_CHOSEN_GAMES;
 		saveState = 'idle';
 		go({ type: 'change-player' });
 	}
@@ -187,6 +213,7 @@
 
 	function openLesson(lessonId: string) {
 		if (!profile || !progression) return;
+		gameLoadFailed = false;
 		go({
 			type: 'open-lesson',
 			lessonId,
@@ -194,9 +221,36 @@
 		});
 	}
 
-	function beginGame(lessonId: string, event: FlowEvent) {
-		if (!progression) return;
-		exercise = generateExercise(progression, lessonId, Math.random);
+	function chooseGame(worldId: string, gameId: string) {
+		gameLoadFailed = false;
+		chosenGames = rememberGame(chosenGames, worldId, gameId);
+	}
+
+	async function beginGame(lessonId: string, event: FlowEvent) {
+		if (!profile || !progression) return;
+		const world = worldOfLesson(progression, lessonId);
+		const definition = world ? selectedGame(world, chosenGames) : undefined;
+		if (!world || !definition) return;
+		let banks: LoadedBanks;
+		try {
+			const [module, loaded] = await Promise.all([
+				definition.load(),
+				settleWithin(requestBanks(progression), PLAY_RULES.bankLoadTimeoutMs, {})
+			]);
+			ActiveGame = module.default;
+			banks = loaded;
+		} catch {
+			gameLoadFailed = true;
+			if (event.type === 'replay') go({ type: 'back-to-map' });
+			return;
+		}
+		gameLoadFailed = false;
+		exercise = generateExercise(progression, lessonId, Math.random, {
+			...banks,
+			progress: profile.progress,
+			themeId: world.themeId,
+			maxLevel: PLAY_RULES.maxWordLevel
+		});
 		playClock = startPlaying(playClock, now());
 		go(event);
 	}
@@ -291,19 +345,24 @@
 	{:else if screen.name === 'intro'}
 		{@const lesson = findLesson(progression, screen.lessonId)}
 		{@const lessonId = screen.lessonId}
-		{#if lesson}
+		{@const world = worldOfLesson(progression, lessonId)}
+		{#if lesson && world}
 			<LessonIntro
 				{lesson}
 				number={lessonIds(progression).indexOf(lessonId) + 1}
 				{assets}
+				games={gameOptions(world)}
+				gameId={selectedGame(world, chosenGames)?.id ?? ''}
+				loadFailed={gameLoadFailed}
+				onchoose={(gameId) => chooseGame(world.id, gameId)}
 				onstart={() => beginGame(lessonId, { type: 'start' })}
 				onback={() => go({ type: 'back-to-map' })}
 			/>
 		{/if}
 	{:else if screen.name === 'game'}
 		{@const lessonId = screen.lessonId}
-		{#if exercise}
-			<Hatching
+		{#if exercise && ActiveGame}
+			<ActiveGame
 				{exercise}
 				layout={assets.layout}
 				charIndex={assets.charIndex}

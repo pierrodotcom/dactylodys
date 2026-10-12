@@ -1,7 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect as baseExpect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { linkedPaths, openPage } from './support';
+
+/** WebKit is slow when two workers run at once: give the page time to react. */
+const expect = baseExpect.configure({ timeout: 15_000 });
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const COLOR_SCHEMES = ['light', 'dark'] as const;

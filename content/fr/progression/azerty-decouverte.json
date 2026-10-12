@@ -6,13 +6,16 @@
 	"rules": {
 		"unlockAccuracy": 80,
 		"starThresholds": [80, 90, 97],
-		"newCharWeight": 0.6
+		"newCharWeight": 0.6,
+		"weakCharBoost": 2,
+		"themeBoost": 2
 	},
 	"worlds": [
 		{
 			"id": "fr.world.dinosaures",
 			"title": "Au pays des dinosaures",
 			"themeId": "dinos",
+			"gameIds": ["hatching"],
 			"lessons": [
 				{
 					"id": "fr.lesson.oeufs-f-j",
@@ -20,7 +23,14 @@
 					"intro": "Pose tes deux index sur les touches F et J, celles qui ont un petit trait.",
 					"newChars": ["f", "j"],
 					"words": [],
-					"groupCount": 10,
+					"mix": {
+						"drills": 1,
+						"words": 0,
+						"phrases": 0
+					},
+					"unlocks": [],
+					"groupCount": 12,
+					"targetLength": 24,
 					"groupLength": [2, 4]
 				},
 				{
@@ -29,7 +39,14 @@
 					"intro": "Appuie avec un pouce sur la grande barre du bas : elle sépare les mots.",
 					"newChars": [" "],
 					"words": [],
-					"groupCount": 10,
+					"mix": {
+						"drills": 1,
+						"words": 0,
+						"phrases": 0
+					},
+					"unlocks": [],
+					"groupCount": 12,
+					"targetLength": 24,
 					"groupLength": [3, 4]
 				},
 				{
@@ -38,25 +55,30 @@
 					"intro": "Garde les index sur F et J, puis pose tes majeurs sur D à gauche et K à droite.",
 					"newChars": ["d", "k"],
 					"words": [],
-					"groupCount": 10,
+					"mix": {
+						"drills": 1,
+						"words": 0,
+						"phrases": 0
+					},
+					"unlocks": [],
+					"groupCount": 12,
+					"targetLength": 24,
 					"groupLength": [2, 4]
 				},
 				{
 					"id": "fr.lesson.mare-s-l",
 					"title": "La mare du stégosaure",
-					"intro": "Pose le doigt voisin de chaque majeur sur S à gauche et L à droite.",
+					"intro": "Pose le doigt de la bague de chaque main : S à gauche et L à droite.",
 					"newChars": ["s", "l"],
 					"words": [],
-					"groupCount": 10,
-					"groupLength": [3, 5]
-				},
-				{
-					"id": "fr.lesson.bras-q-m",
-					"title": "Les petits bras du T-rex",
-					"intro": "Tes petits doigts se posent sur Q à gauche et sur M à droite.",
-					"newChars": ["q", "m"],
-					"words": [],
-					"groupCount": 10,
+					"mix": {
+						"drills": 1,
+						"words": 0,
+						"phrases": 0
+					},
+					"unlocks": [],
+					"groupCount": 12,
+					"targetLength": 24,
 					"groupLength": [3, 5]
 				},
 				{
@@ -65,29 +87,388 @@
 					"intro": "Pour E et I, monte un peu tes majeurs sur la rangée du dessus, puis ramène-les à leur place.",
 					"newChars": ["e", "i"],
 					"words": [
+						"je",
+						"de",
+						"il",
 						"le",
 						"les",
 						"des",
-						"mes",
+						"se",
 						"ses",
+						"si",
 						"elle",
 						"elles",
-						"il",
 						"ils",
 						"fil",
 						"fils",
 						"sel",
 						"ski",
-						"miel",
-						"mime",
-						"midi",
-						"mille",
-						"lisse",
-						"elfe",
 						"lis",
-						"dis"
+						"dis",
+						"elfe",
+						"lisse"
 					],
-					"groupCount": 10,
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 0
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.rugissement-r-u",
+					"title": "Le rugissement du T-rex",
+					"intro": "Pour R et U, monte tes index sur la rangée du dessus, puis ramène-les sur F et J.",
+					"newChars": ["r", "u"],
+					"words": [
+						"je",
+						"de",
+						"il",
+						"le",
+						"les",
+						"des",
+						"ses",
+						"elle",
+						"ils",
+						"fil",
+						"sel",
+						"ski",
+						"lis",
+						"dis",
+						"sur",
+						"dur",
+						"rue",
+						"rues",
+						"ruse",
+						"jure",
+						"lire",
+						"rire",
+						"dire",
+						"ride",
+						"jus",
+						"lui",
+						"leur",
+						"fleur",
+						"lieu",
+						"seul",
+						"fier",
+						"luire"
+					],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 0
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				}
+			]
+		},
+		{
+			"id": "fr.world.cuisine",
+			"title": "La cuisine des gourmands",
+			"themeId": "cuisine",
+			"gameIds": ["recipe", "hatching"],
+			"lessons": [
+				{
+					"id": "fr.lesson.tartine-t-n",
+					"title": "La tartine toquée",
+					"intro": "Ton index gauche monte jusqu'à T et ton index droit descend jusqu'à N, puis ils reviennent sur F et J.",
+					"newChars": ["t", "n"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.gateau-a-o",
+					"title": "Le gâteau farfelu",
+					"intro": "Ton petit doigt gauche monte sur A, le doigt de la bague droit monte sur O, puis ils reviennent.",
+					"newChars": ["a", "o"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.bras-q-m",
+					"title": "La quiche qui rigole",
+					"intro": "Tes deux petits doigts se posent sur Q à gauche et sur M à droite.",
+					"newChars": ["q", "m"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.casserole-c-p",
+					"title": "La casserole qui chante",
+					"intro": "Ton majeur gauche descend sur C et ton petit doigt droit monte sur P, puis ils reviennent.",
+					"newChars": ["c", "p"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.epices-accent-apostrophe",
+					"title": "Les épices surprises",
+					"intro": "Sur la rangée des chiffres, le doigt de la bague gauche tape É et ton index gauche tape l'apostrophe.",
+					"newChars": ["é", "'"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 20,
+					"targetLength": 60,
+					"groupLength": [3, 5]
+				}
+			]
+		},
+		{
+			"id": "fr.world.animaux",
+			"title": "Le zoo des drôles d'animaux",
+			"themeId": "animaux",
+			"gameIds": ["hatching", "recipe"],
+			"lessons": [
+				{
+					"id": "fr.lesson.girafe-g-h",
+					"title": "La girafe au long cou",
+					"intro": "Étire ton index gauche vers G et ton index droit vers H, au milieu du clavier.",
+					"newChars": ["g", "h"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 2
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.vache-v-b",
+					"title": "Le bal de la vache",
+					"intro": "Ton index gauche descend sur V et B, juste au-dessus de la grande barre.",
+					"newChars": ["v", "b"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 2
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.yak-y-x",
+					"title": "Le yak mystère",
+					"intro": "Ton index droit monte sur Y et le doigt de la bague gauche descend sur X.",
+					"newChars": ["y", "x"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 2
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.zebre-z-w",
+					"title": "Le zèbre à rayures",
+					"intro": "Le doigt de la bague gauche monte sur Z et ton petit doigt gauche descend sur W.",
+					"newChars": ["z", "w"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 3,
+						"phrases": 2
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				}
+			]
+		},
+		{
+			"id": "fr.world.espace",
+			"title": "Cap sur les étoiles",
+			"themeId": "espace",
+			"gameIds": ["rocket", "recipe", "hatching"],
+			"lessons": [
+				{
+					"id": "fr.lesson.lune-accents-graves",
+					"title": "Le café de la Lune",
+					"intro": "Sur la rangée des chiffres, ton index droit tape È et ton petit doigt droit tape À.",
+					"newChars": ["è", "à"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.comete-cedille-u-grave",
+					"title": "La comète pressée",
+					"intro": "Monte le doigt de la bague droit sur Ç, et ton petit doigt droit tape Ù, à droite de M.",
+					"newChars": ["ç", "ù"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.grandes-majuscules",
+					"title": "Les géantes de la galaxie",
+					"intro": "Pour une majuscule, tiens Maj avec le petit doigt de l'autre main, puis tape la lettre.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": ["uppercase"],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.virgule-point",
+					"title": "Pause sur la planète Virgule",
+					"intro": "Ton index droit tape la virgule, à droite de N, et pour le point tu tiens Maj sur la touche juste à côté.",
+					"newChars": [",", "."],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				}
+			]
+		},
+		{
+			"id": "fr.world.vehicules",
+			"title": "Le grand circuit des bolides",
+			"themeId": "vehicules",
+			"gameIds": ["rocket", "hatching", "recipe"],
+			"lessons": [
+				{
+					"id": "fr.lesson.klaxon-question-exclamation",
+					"title": "Le klaxon rigolo",
+					"intro": "Le point d'interrogation se tape avec Maj sur la touche de la virgule, le point d'exclamation tout à droite.",
+					"newChars": ["?", "!"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.tiret-deux-points",
+					"title": "Le train aux wagons accrochés",
+					"intro": "Ton index droit monte au tiret, sur la rangée des chiffres, et le doigt de la bague droit descend aux deux-points.",
+					"newChars": ["-", ":"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.chapeau-circonflexe",
+					"title": "Le chapeau du pilote",
+					"intro": "Tape d'abord la touche morte ^, à droite de P, puis la voyelle : elle apparaît avec son chapeau.",
+					"newChars": ["ê", "â", "î", "ô", "û"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.trema",
+					"title": "Le camion aux deux yeux",
+					"intro": "Tiens Maj, tape la touche morte à droite de P, puis la voyelle : elle apparaît avec deux points.",
+					"newChars": ["ë", "ï", "ü"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
 					"groupLength": [3, 5]
 				}
 			]

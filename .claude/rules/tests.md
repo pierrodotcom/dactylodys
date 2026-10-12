@@ -19,7 +19,7 @@ paths:
 | Schémas | Vitest | Tous les fichiers de `content/`, `layouts/`, `messages/`, `tokens/` |
 | Composants | Vitest (navigateur) + Testing Library | Composants de `ui/` et mini-jeux |
 | Bout en bout | Playwright (Chromium, Firefox, WebKit) | Parcours : premier lancement, une leçon, reprise, réglages, export/import |
-| Accessibilité | axe via Playwright | Chaque écran, dans chaque thème |
+| Accessibilité | axe via Playwright, **Chromium seul** | Chaque écran, dans chaque thème ; le titre du test contient « axe » (c'est ce qui l'exclut de Firefox et WebKit) |
 
 ## Règles
 

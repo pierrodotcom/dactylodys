@@ -16,7 +16,9 @@ import type {
 const RULES: ProgressionRules = {
 	unlockAccuracy: 80,
 	starThresholds: [80, 90, 97],
-	newCharWeight: 0.6
+	newCharWeight: 0.6,
+	weakCharBoost: 2,
+	themeBoost: 2
 };
 
 const PROGRESSION: ProgressionDefinition = parseProgression({
@@ -24,12 +26,13 @@ const PROGRESSION: ProgressionDefinition = parseProgression({
 	id: 'fr.progression.test',
 	locale: 'fr-FR',
 	layoutIds: ['fr-fr-azerty-pc'],
-	rules: { unlockAccuracy: 80, starThresholds: [80, 90, 97], newCharWeight: 0.6 },
+	rules: RULES,
 	worlds: [
 		{
 			id: 'fr.world.one',
 			title: 'One',
 			themeId: 'dinos',
+			gameIds: ['hatching'],
 			lessons: [
 				{
 					id: 'fr.lesson.a',
@@ -37,7 +40,10 @@ const PROGRESSION: ProgressionDefinition = parseProgression({
 					intro: 'Intro.',
 					newChars: ['f', 'j'],
 					words: [],
+					mix: { drills: 1, words: 0, phrases: 0 },
+					unlocks: [],
 					groupCount: 5,
+					targetLength: 20,
 					groupLength: [2, 4]
 				},
 				{
@@ -46,7 +52,10 @@ const PROGRESSION: ProgressionDefinition = parseProgression({
 					intro: 'Intro.',
 					newChars: ['d', 'k'],
 					words: [],
+					mix: { drills: 1, words: 0, phrases: 0 },
+					unlocks: [],
 					groupCount: 5,
+					targetLength: 20,
 					groupLength: [2, 4]
 				}
 			]
@@ -55,6 +64,7 @@ const PROGRESSION: ProgressionDefinition = parseProgression({
 			id: 'fr.world.two',
 			title: 'Two',
 			themeId: 'dinos',
+			gameIds: ['hatching'],
 			lessons: [
 				{
 					id: 'fr.lesson.c',
@@ -62,7 +72,10 @@ const PROGRESSION: ProgressionDefinition = parseProgression({
 					intro: 'Intro.',
 					newChars: ['s', 'l'],
 					words: [],
+					mix: { drills: 1, words: 0, phrases: 0 },
+					unlocks: [],
 					groupCount: 5,
+					targetLength: 20,
 					groupLength: [2, 4]
 				}
 			]
@@ -122,7 +135,9 @@ describe('evaluateLesson', () => {
 		const rules: ProgressionRules = {
 			unlockAccuracy: 50,
 			starThresholds: [60, 70, 80],
-			newCharWeight: 0.6
+			newCharWeight: 0.6,
+			weakCharBoost: 0,
+			themeBoost: 0
 		};
 		expect(evaluateLesson(rules, metricsWith({ accuracy: 55 }))).toEqual({
 			stars: 0,

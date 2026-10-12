@@ -1,9 +1,27 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { toGraphemes } from '../src/lib/engine/graphemes';
+import {
+	parsePhraseBank,
+	parseWordBank,
+	usablePhrases,
+	usableWords
+} from '../src/lib/engine/progression/banks';
+import { learnedChars, parseProgression } from '../src/lib/engine/progression/definition';
+import { generateExercise } from '../src/lib/engine/progression/exercise';
+import { seededRng } from '../src/lib/engine/progression/test-support';
+import type { ExerciseContext, StarCount } from '../src/lib/engine/progression/types';
 import { MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../src/lib/state/profile';
+import type { Profile } from '../src/lib/state/types';
 import { LAST_PLAYER_KEY } from '../src/routes/jouer/last-player';
-import { openPage, reloadPage } from './support';
+import {
+	advancedProfile,
+	installProfile,
+	loadMessages,
+	openPage,
+	readJson,
+	reloadPage
+} from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
@@ -15,61 +33,78 @@ const PLAYER_NAME = 'Mini';
 const PRESS_BUDGET = 60;
 /** A letter that no lesson of the first world asks for. */
 const WRONG_KEY = 'x';
-/** Enter is ignored while typing, and moves on to the next egg while the baby dino is out. */
+/** Enter is ignored while typing, and moves on to the next group while the reward is on screen. */
 const SKIP_KEY = 'Enter';
 /** Enough mistakes to lose at least one star whatever the length of the exercise. */
 const FEW_MISTAKES = 5;
 /** Enough mistakes to stay under the accuracy that opens the next lesson. */
 const MANY_MISTAKES = 15;
+/** Time given to a reward to give way to the next group or to the result. */
+const STEP_TIMEOUT = 15_000;
+const LAST_SEED = 500;
+const PASSED_STARS: StarCount = 3;
+const TOTAL_TOKEN = 'TOTALTOKEN';
+/** The lessons of the first version of the progression, whose profiles must still open. */
+const LEGACY_LESSON_STARS: Readonly<Record<string, StarCount>> = {
+	'fr.lesson.oeufs-f-j': 3,
+	'fr.lesson.saut-espace': 2,
+	'fr.lesson.nid-d-k': 3,
+	'fr.lesson.mare-s-l': 1,
+	'fr.lesson.bras-q-m': 2,
+	'fr.lesson.mots-e-i': 3
+};
 
 interface Lesson {
 	id: string;
 	title: string;
 	intro: string;
 	newChars: string[];
-	groupCount: number;
+	words: string[];
+	unlocks: string[];
 }
 
-function readJson<T>(path: string): T {
-	return JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')) as T;
+interface World {
+	id: string;
+	title: string;
+	themeId: string;
+	gameIds: string[];
+	lessons: Lesson[];
 }
 
-const messages = readJson<Record<string, string>>('messages/fr.json');
-const progression = readJson<{ worlds: { title: string; lessons: Lesson[] }[] }>(
+const { message, plural, templateRegex } = loadMessages();
+const progressionData = readJson<{ worlds: World[] }>(
 	'content/fr/progression/azerty-decouverte.json'
 );
-const playRules = readJson<{ breakAfterMinutes: number; keyboardCheckCodes: string[] }>(
-	'content/common/play-rules.json'
-);
+const progression = parseProgression(progressionData);
+const wordBank = parseWordBank(readJson('content/fr/words/base.json'));
+const phraseBank = parsePhraseBank(readJson('content/fr/phrases/base.json'));
+const playRules = readJson<{
+	breakAfterMinutes: number;
+	maxWordLevel: 1 | 2 | 3;
+	keyboardCheckCodes: string[];
+}>('content/common/play-rules.json');
 const azerty = readJson<{ keys: Record<string, { base?: string }> }>(
 	'layouts/fr-fr-azerty-pc.json'
 );
 
-const world = progression.worlds[0] ?? { title: '', lessons: [] };
+const worlds = progressionData.worlds;
+const allLessons = worlds.flatMap((item) => item.lessons);
+const world = worlds[0] ?? { id: '', title: '', themeId: '', gameIds: [], lessons: [] };
 const [FIRST, SECOND] = world.lessons as [Lesson, Lesson];
+const FIRST_GAME = world.gameIds[0] ?? '';
+const NEXT_WORLD = worlds[1] ?? world;
+const [NEXT_FIRST, NEXT_SECOND, NEXT_THIRD] = NEXT_WORLD.lessons as [Lesson, Lesson, Lesson];
+const [DEFAULT_GAME = '', OTHER_GAME = ''] = NEXT_WORLD.gameIds;
+const RECIPE = 'recipe';
+const ROCKET = 'rocket';
 const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => {
 	const letter = azerty.keys[code]?.base ?? '';
 	return { code, letter, label: letter.toLocaleUpperCase('fr') };
 });
 
-function message(key: string, params: Record<string, string | number> = {}): string {
-	const template = messages[key] ?? key;
-	return template.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? ''));
-}
-
-function plural(key: string, count: number, params: Record<string, string | number> = {}): string {
-	const form = new Intl.PluralRules('fr').select(count) === 'one' ? 'one' : 'other';
-	return message(`${key}_${form}`, { count, ...params });
-}
-
-function templateRegex(key: string): RegExp {
-	const escaped = (messages[key] ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	const pattern = escaped.replace('\\{text\\}', '(?<text>.*)').replace('\\{char\\}', '.*');
-	return new RegExp(`^${pattern}$`, 's');
-}
-
 const GROUP_LABEL = templateRegex('ui_target_text_label');
 const GROUP_DONE = templateRegex('ui_target_text_done');
+const CAPITAL_SENTENCE = /^\p{Lu}.*[.?!]$/u;
 
 function stars(count: number): string {
 	return plural('ui_stars', count, { total: 3 });
@@ -89,6 +124,89 @@ function lessonRow(page: Page, lesson: Lesson) {
 
 function groupLabel(page: Page): Locator {
 	return page.locator('.target-text > .dd-visually-hidden').first();
+}
+
+function gameTitle(gameId: string): string {
+	return message(`game_${gameId}_title`);
+}
+
+/** The name of the picture of the progress of a game, with the total of groups captured. */
+function progressPattern(gameId: string, done: number): RegExp {
+	const text = plural(`game_${gameId}_progress`, done, {
+		hatched: done,
+		reached: done,
+		done,
+		total: TOTAL_TOKEN
+	});
+	const escaped = text
+		.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+		.replace(TOTAL_TOKEN, '(?<total>\\d+)');
+	return new RegExp(`^${escaped}$`);
+}
+
+function progressPicture(page: Page, gameId: string, done: number): Locator {
+	return page.getByRole('img', { name: progressPattern(gameId, done) });
+}
+
+/** How many groups the exercise of the game on screen holds. */
+async function groupTotal(page: Page, gameId: string): Promise<number> {
+	const picture = progressPicture(page, gameId, 0);
+	await expect(picture).toBeVisible();
+	const label = (await picture.getAttribute('aria-label')) ?? '';
+	return Number(progressPattern(gameId, 0).exec(label)?.groups?.['total']);
+}
+
+/** The lessons up to and including `lessonId`, as already passed. */
+function passedThrough(lessonId: string): Record<string, StarCount> {
+	const position = allLessons.findIndex((lesson) => lesson.id === lessonId);
+	if (position < 0) throw new Error(`Unknown lesson: ${lessonId}`);
+	return Object.fromEntries(
+		allLessons.slice(0, position + 1).map((lesson) => [lesson.id, PASSED_STARS])
+	);
+}
+
+function lastLessonOf(item: World): Lesson {
+	const last = item.lessons[item.lessons.length - 1];
+	if (!last) throw new Error(`The world ${item.id} has no lesson`);
+	return last;
+}
+
+function lessonAfter(lessonId: string): Lesson {
+	const next = allLessons[allLessons.findIndex((lesson) => lesson.id === lessonId) + 1];
+	if (!next) throw new Error(`No lesson after ${lessonId}`);
+	return next;
+}
+
+function worldOf(lessonId: string): World {
+	const found = worlds.find((item) => item.lessons.some((lesson) => lesson.id === lessonId));
+	if (!found) throw new Error(`No world for ${lessonId}`);
+	return found;
+}
+
+function profileAfter(lessonId: string, name = PLAYER_NAME): Profile {
+	return advancedProfile({ name, passed: passedThrough(lessonId) });
+}
+
+/** What the child can meet in an exercise of the lesson: its own words, and the banks' entries. */
+function typableEntries(lesson: Lesson) {
+	const learned = learnedChars(progression, lesson.id);
+	const options = { maxLevel: playRules.maxWordLevel };
+	const bankWords = usableWords(wordBank, learned, options).map((entry) => entry.text);
+	return {
+		learned: new Set(learned),
+		bankWords: new Set(bankWords),
+		words: new Set([...lesson.words, ...bankWords]),
+		phrases: new Set(usablePhrases(phraseBank, learned, options).map((entry) => entry.text))
+	};
+}
+
+/** The first seed whose exercise holds a sentence with a capital and a final punctuation mark. */
+function exerciseWithCapitalSentence(lessonId: string, context: ExerciseContext) {
+	for (let seed = 1; seed <= LAST_SEED; seed++) {
+		const exercise = generateExercise(progression, lessonId, seededRng(seed), context);
+		if (exercise.groups.some((group) => CAPITAL_SENTENCE.test(group))) return { seed, exercise };
+	}
+	throw new Error(`No exercise of ${lessonId} holds a capital sentence within ${LAST_SEED} seeds`);
 }
 
 async function openPlay(page: Page) {
@@ -113,7 +231,7 @@ async function checkKeyboard(page: Page, kind: 'different' | 'same') {
 	const outcome = kind === 'same' ? 'play_check_ok_title' : 'play_check_diff_title';
 	await expect(heading(page, message(outcome))).toBeVisible();
 	await button(page, message('play_check_continue')).click();
-	await expect(heading(page, world.title)).toBeVisible();
+	await expect(heading(page, message('play_map_title'))).toBeVisible();
 }
 
 async function reachMap(page: Page) {
@@ -122,9 +240,22 @@ async function reachMap(page: Page) {
 	await checkKeyboard(page, 'different');
 }
 
-async function startLesson(page: Page, lesson: Lesson) {
+/** Arrives on the map as a child whose profile was installed beforehand. */
+async function reachMapAs(page: Page, profile: Profile) {
+	await openPlay(page);
+	await installProfile(page, profile);
+	await reloadPage(page);
+	await page.getByRole('button', { name: profile.name }).click();
+	await expect(heading(page, message('play_map_title'))).toBeVisible();
+}
+
+async function openIntro(page: Page, lesson: Lesson) {
 	await page.getByRole('button', { name: lesson.title }).click();
 	await expect(heading(page, lesson.title)).toBeVisible();
+}
+
+async function startLesson(page: Page, lesson: Lesson) {
+	await openIntro(page, lesson);
 	await button(page, message('play_intro_start')).click();
 	await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 }
@@ -137,34 +268,60 @@ async function currentGroup(page: Page): Promise<string> {
 }
 
 interface PlayOptions {
-	/** Press a key while the baby dino is out, which moves on without waiting. */
+	/** Press a key while the reward is on screen, which moves on without waiting. */
 	skipDelay?: boolean;
-	onGroupDone?: (index: number) => Promise<void>;
+	/** Index of the group on screen. */
+	start?: number;
+	onGroupDone?: (index: number, group: string) => Promise<void>;
 }
 
-/** Types the groups shown on screen from `start` on. Returns how many characters were expected. */
-async function typeFrom(page: Page, lesson: Lesson, start: number, options: PlayOptions = {}) {
-	let typed = 0;
-	for (let index = start; index < lesson.groupCount; index++) {
+interface Played {
+	groups: string[];
+	typed: number;
+}
+
+function finaleButton(page: Page) {
+	return button(page, message('game_shared_finale_continue'));
+}
+
+/** Waits until the next group is on screen or the exercise is over. */
+async function nextStep(page: Page): Promise<'group' | 'over'> {
+	const found: { step?: 'group' | 'over' } = {};
+	await expect(async () => {
+		const ended =
+			(await button(page, message('play_result_map')).isVisible()) ||
+			(await finaleButton(page).isVisible());
+		if (ended) {
+			found.step = 'over';
+		} else if ((await groupLabel(page).allTextContents()).some((text) => GROUP_LABEL.test(text))) {
+			found.step = 'group';
+		}
+		expect(found.step).toBeDefined();
+	}).toPass({ timeout: STEP_TIMEOUT });
+	return found.step ?? 'over';
+}
+
+/** Types every group, from the one on screen, until the result. */
+async function typeToResult(page: Page, options: PlayOptions = {}): Promise<Played> {
+	const played: Played = { groups: [], typed: 0 };
+	for (let index = options.start ?? 0; ; index++) {
 		const group = await currentGroup(page);
 		await page.keyboard.type(group);
-		typed += [...group].length;
-		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-		await options.onGroupDone?.(index);
-		if (index < lesson.groupCount - 1 && options.skipDelay) await page.keyboard.press(SKIP_KEY);
+		played.groups.push(group);
+		played.typed += toGraphemes(group).length;
+		await options.onGroupDone?.(index, group);
+		if (options.skipDelay) await page.keyboard.press(SKIP_KEY);
+		if ((await nextStep(page)) === 'over') break;
 	}
-	return typed;
-}
-
-function typeAllGroups(page: Page, lesson: Lesson, options: PlayOptions = {}) {
-	return typeFrom(page, lesson, 0, options);
+	if (await finaleButton(page).isVisible()) await finaleButton(page).click();
+	await expect(button(page, message('play_result_map'))).toBeVisible();
+	return played;
 }
 
 async function reachResult(page: Page) {
 	await reachMap(page);
 	await startLesson(page, FIRST);
-	await typeAllGroups(page, FIRST, { skipDelay: true });
-	await expect(button(page, message('play_result_map'))).toBeVisible();
+	await typeToResult(page, { skipDelay: true });
 }
 
 async function expectNoAxeViolation(page: Page) {
@@ -212,10 +369,12 @@ test.describe('play route', () => {
 		await checkKeyboard(page, 'different');
 
 		await expect(page.getByText(message('play_map_greeting', { name: PLAYER_NAME }))).toBeVisible();
-		await expect(page.getByRole('list', { name: message('play_map_lessons_label') })).toBeVisible();
-		await expect(page.getByRole('listitem')).toHaveCount(world.lessons.length);
+		for (const item of worlds) {
+			await expect(page.getByRole('list', { name: item.title })).toBeVisible();
+		}
+		await expect(page.getByRole('listitem')).toHaveCount(allLessons.length);
 		await expect(page.getByRole('button', { name: FIRST.title })).toBeVisible();
-		for (const lesson of world.lessons.slice(1)) {
+		for (const lesson of allLessons.slice(1)) {
 			await expect(page.getByRole('button', { name: lesson.title })).toHaveCount(0);
 			await expect(lessonRow(page, lesson)).toContainText(message('play_lesson_locked'));
 		}
@@ -232,28 +391,20 @@ test.describe('play route', () => {
 			})
 		).toBeVisible();
 		await expect(page.locator('[data-target]')).toHaveCount(FIRST.newChars.length);
+		await expect(page.getByRole('radio')).toHaveCount(0);
 		await expect(button(page, message('play_intro_start'))).toBeFocused();
 		await page.keyboard.press('Enter');
 
-		await expect(
-			page.getByRole('img', {
-				name: plural('game_hatching_progress', 0, { hatched: 0, total: FIRST.groupCount })
-			})
-		).toBeVisible();
-		const typed = await typeAllGroups(page, FIRST, {
+		const total = await groupTotal(page, FIRST_GAME);
+		const { typed } = await typeToResult(page, {
 			onGroupDone: async (index) => {
 				const hatched = index + 1;
-				await expect(
-					page.getByRole('img', {
-						name: plural('game_hatching_progress', hatched, {
-							hatched,
-							total: FIRST.groupCount
-						})
-					})
-				).toBeVisible();
-				if (index < 3) {
-					await expect(page.locator('.bubble')).toHaveText(message(`game_hatching_cry_${hatched}`));
+				if (hatched <= 3 && hatched < total) {
+					await expect(page.locator('.bubble')).toHaveText(
+						message(`game_${FIRST_GAME}_cry_${hatched}`)
+					);
 				}
+				await expect(progressPicture(page, FIRST_GAME, hatched)).toBeVisible();
 			}
 		});
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
@@ -307,14 +458,14 @@ test.describe('play route', () => {
 		await expect(button(page, message('play_check_continue'))).toBeFocused();
 		await page.keyboard.press('Enter');
 
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await activateByTab(page, page.getByRole('button', { name: FIRST.title }));
 		await expect(button(page, message('play_intro_start'))).toBeFocused();
 		await page.keyboard.press('Enter');
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(page.locator('#hatching-input')).toBeFocused();
+		await expect(page.locator('#game-input')).toBeFocused();
 
-		await typeAllGroups(page, FIRST, { skipDelay: true });
+		await typeToResult(page, { skipDelay: true });
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
 		await activateByTab(page, button(page, message('play_result_map')));
 		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
@@ -347,7 +498,7 @@ test.describe('play route', () => {
 		await page.keyboard.type(group);
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 		await page.keyboard.press(SKIP_KEY);
-		await typeFrom(page, FIRST, 1, { skipDelay: true });
+		await typeToResult(page, { skipDelay: true, start: 1 });
 
 		await expect(button(page, message('play_result_map'))).toBeVisible();
 		await expect(heading(page, message('play_result_headline_3'))).toHaveCount(0);
@@ -364,7 +515,7 @@ test.describe('play route', () => {
 		for (let mistake = 0; mistake < MANY_MISTAKES; mistake++) {
 			await page.keyboard.press(WRONG_KEY);
 		}
-		await typeAllGroups(page, FIRST, { skipDelay: true });
+		await typeToResult(page, { skipDelay: true });
 
 		await expect(page.getByText(message('play_result_retry'))).toBeVisible();
 		await expect(button(page, message('play_result_next'))).toHaveCount(0);
@@ -383,30 +534,30 @@ test.describe('play route', () => {
 
 		await page.keyboard.press('Escape');
 
-		const dialog = page.getByRole('dialog', { name: message('game_hatching_pause_title') });
+		const dialog = page.getByRole('dialog', { name: message('game_shared_pause_title') });
 		await expect(dialog).toBeVisible();
-		await expect(button(page, message('game_hatching_resume'))).toBeFocused();
+		await expect(button(page, message('game_shared_resume'))).toBeFocused();
 		await page.keyboard.press('Escape');
 		await expect(dialog).toHaveCount(0);
-		await expect(page.locator('#hatching-input')).toBeFocused();
+		await expect(page.locator('#game-input')).toBeFocused();
 		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
 
-		await button(page, message('game_hatching_pause')).click();
+		await button(page, message('game_shared_pause')).click();
 		await expect(dialog).toBeVisible();
-		await button(page, message('game_hatching_resume')).click();
+		await button(page, message('game_shared_resume')).click();
 		await expect(dialog).toHaveCount(0);
 		await page.keyboard.type(group.slice(first.length));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 
 		await page.keyboard.press('Escape');
-		await button(page, message('game_hatching_quit')).click();
+		await button(page, message('game_shared_quit')).click();
 
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(page.getByRole('button', { name: SECOND.title })).toHaveCount(0);
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
 
 		await reloadPage(page);
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
 	});
 
@@ -440,8 +591,8 @@ test.describe('play route', () => {
 		await startLesson(page, FIRST);
 		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
 		await page.keyboard.press('Escape');
-		await button(page, message('game_hatching_quit')).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await button(page, message('game_shared_quit')).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await startLesson(page, FIRST);
 		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
 		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
@@ -470,7 +621,7 @@ test.describe('play route', () => {
 		await reachMap(page);
 		await startLesson(page, FIRST);
 		await currentGroup(page);
-		const field = page.locator('#hatching-input');
+		const field = page.locator('#game-input');
 
 		await field.evaluate((element) => {
 			element.dispatchEvent(
@@ -482,14 +633,14 @@ test.describe('play route', () => {
 				})
 			);
 		});
-		await expect(page.getByText(message('game_hatching_caps_lock'))).toBeVisible();
+		await expect(page.getByText(message('game_shared_caps_lock'))).toBeVisible();
 
 		await field.evaluate((element) => {
 			element.dispatchEvent(
 				new KeyboardEvent('keyup', { key: 'CapsLock', code: 'CapsLock', bubbles: true })
 			);
 		});
-		await expect(page.getByText(message('game_hatching_caps_lock'))).toHaveCount(0);
+		await expect(page.getByText(message('game_shared_caps_lock'))).toHaveCount(0);
 	});
 
 	test('keeps the profile and its stars after a reload, without checking the keyboard again', async ({
@@ -500,7 +651,7 @@ test.describe('play route', () => {
 
 		await reloadPage(page);
 
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(3) })).toBeVisible();
 		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
 	});
@@ -553,7 +704,7 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
 		await page.getByRole('button', { name: PLAYER_NAME }).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 	});
 
 	test('works when the browser refuses to store anything locally', async ({ page }) => {
@@ -577,7 +728,7 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
 		await page.getByRole('button', { name: PLAYER_NAME }).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 	});
 
 	test('offers a second player on the same device', async ({ page }) => {
@@ -651,7 +802,7 @@ test.describe('play route', () => {
 		expect(await property('--dd-typing-size-current')).toBe(await property('--dd-typing-size-xl'));
 
 		await reloadPage(page);
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(root).toHaveAttribute('data-theme', 'dark');
 		await expect(root).toHaveAttribute('data-text-scale', 'xl');
 		await button(page, message('play_settings_open')).click();
@@ -696,7 +847,7 @@ test.describe('play route', () => {
 		await page.keyboard.type((await currentGroup(page)).slice(1));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 		await page.keyboard.press(SKIP_KEY);
-		await typeFrom(page, FIRST, 1, { skipDelay: true });
+		await typeToResult(page, { skipDelay: true, start: 1 });
 
 		await expect(page.getByText(message('play_break_suggest'), { exact: true })).toBeVisible();
 		await expect(page.getByText(message('play_break_suggest_detail'))).toBeVisible();
@@ -707,12 +858,191 @@ test.describe('play route', () => {
 		await button(page, message('play_break_button')).click();
 		await expect(heading(page, message('play_break_title'))).toBeVisible();
 		await button(page, message('play_break_return')).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 
 		await startLesson(page, FIRST);
-		await typeAllGroups(page, FIRST, { skipDelay: true });
+		await typeToResult(page, { skipDelay: true });
 		await expect(button(page, message('play_result_map'))).toBeVisible();
 		await expect(page.getByText(message('play_break_suggest'))).toHaveCount(0);
+	});
+
+	test('opens the second world once the first is done, and lets the child choose its game', async ({
+		page
+	}) => {
+		await reachMapAs(page, profileAfter(lastLessonOf(world).id));
+
+		for (const item of worlds) {
+			await expect(page.getByRole('heading', { level: 2, name: item.title })).toBeVisible();
+		}
+		await expect(page.getByText(message('play_world_current'))).toHaveCount(1);
+		await expect(
+			page.getByRole('region', { name: NEXT_WORLD.title }).getByText(message('play_world_current'))
+		).toBeVisible();
+		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(3) })).toBeVisible();
+		await expect(page.getByRole('button', { name: NEXT_FIRST.title })).toBeVisible();
+		await expect(page.getByRole('button', { name: NEXT_SECOND.title })).toHaveCount(0);
+		await expect(lessonRow(page, NEXT_SECOND)).toContainText(message('play_lesson_locked'));
+
+		await openIntro(page, NEXT_FIRST);
+		const radio = (gameId: string) => page.getByRole('radio', { name: gameTitle(gameId) });
+		await expect(
+			page.getByRole('group', { name: message('play_game_choice_legend') })
+		).toBeVisible();
+		await expect(page.getByRole('radio')).toHaveCount(NEXT_WORLD.gameIds.length);
+		for (const gameId of NEXT_WORLD.gameIds) await expect(radio(gameId)).toBeVisible();
+		await expect(radio(DEFAULT_GAME)).toBeChecked();
+
+		await radio(DEFAULT_GAME).focus();
+		await page.keyboard.press('ArrowDown');
+		await expect(radio(OTHER_GAME)).toBeChecked();
+		await expect(radio(DEFAULT_GAME)).not.toBeChecked();
+		await activateByTab(page, button(page, message('play_intro_start')));
+
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
+		await expect(progressPicture(page, DEFAULT_GAME, 0)).toHaveCount(0);
+	});
+
+	test('puts real words of the banks in the groups of a lesson that asks for words', async ({
+		page
+	}) => {
+		const entries = typableEntries(NEXT_FIRST);
+		await reachMapAs(page, profileAfter(lastLessonOf(world).id));
+		await startLesson(page, NEXT_FIRST);
+
+		const { groups } = await typeToResult(page, { skipDelay: true });
+
+		expect(groups.some((group) => entries.bankWords.has(group))).toBe(true);
+		expect(groups.some((group) => entries.words.has(group) || entries.phrases.has(group))).toBe(
+			true
+		);
+		for (const group of groups) {
+			for (const char of toGraphemes(group)) expect(entries.learned.has(char), group).toBe(true);
+		}
+	});
+
+	test('plays a whole lesson of the second world with the recipe, up to the result', async ({
+		page
+	}) => {
+		await reachMapAs(page, profileAfter(NEXT_FIRST.id));
+		await openIntro(page, NEXT_SECOND);
+		await page.getByRole('radio', { name: gameTitle(RECIPE) }).check();
+		await button(page, message('play_intro_start')).click();
+		await expect(progressPicture(page, RECIPE, 0)).toBeVisible();
+
+		const { typed } = await typeToResult(page, { skipDelay: true });
+
+		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
+		await expect(
+			page.getByText(plural('play_result_accuracy', typed, { correct: typed, total: typed }))
+		).toBeVisible();
+		await button(page, message('play_result_map')).click();
+		await expect(lessonRow(page, NEXT_SECOND).getByRole('img', { name: stars(3) })).toBeVisible();
+		await expect(page.getByRole('button', { name: NEXT_THIRD.title })).toBeVisible();
+	});
+
+	test('plays a lesson of the fourth world with the rocket and types a capital sentence', async ({
+		page
+	}) => {
+		const uppercase = allLessons.find((lesson) => lesson.unlocks.includes('uppercase'));
+		if (!uppercase) throw new Error('No lesson unlocks the capitals');
+		const lesson = lessonAfter(uppercase.id);
+		const profile = profileAfter(uppercase.id);
+		const entries = typableEntries(lesson);
+		const { seed, exercise } = exerciseWithCapitalSentence(lesson.id, {
+			words: wordBank,
+			phrases: phraseBank,
+			progress: profile.progress,
+			themeId: worldOf(lesson.id).themeId,
+			maxLevel: playRules.maxWordLevel
+		});
+		await reachMapAs(page, profile);
+		await openIntro(page, lesson);
+		await page.getByRole('radio', { name: gameTitle(ROCKET) }).check();
+		await page.evaluate(
+			([source, value]) => {
+				Math.random = new Function(`return (${source})`)()(value);
+			},
+			[seededRng.toString(), seed] as const
+		);
+		await button(page, message('play_intro_start')).click();
+		await expect(progressPicture(page, ROCKET, 0)).toBeVisible();
+
+		const { groups } = await typeToResult(page, { skipDelay: true });
+
+		expect(groups).toEqual(exercise.groups);
+		expect(groups.some((group) => CAPITAL_SENTENCE.test(group) && entries.phrases.has(group))).toBe(
+			true
+		);
+		await expect(button(page, message('play_result_map'))).toBeVisible();
+	});
+
+	test('plays without the word bank when it cannot be loaded, and says so in the console', async ({
+		page
+	}) => {
+		const errors: string[] = [];
+		page.on('console', (entry) => {
+			if (entry.type() === 'error') errors.push(entry.text());
+		});
+		await page.route('**/_app/immutable/**/*.js', async (route) => {
+			const response = await route.fetch();
+			const body = await response.text();
+			if (body.includes(wordBank.id)) await route.abort();
+			else await route.fulfill({ response, body });
+		});
+		await reachMapAs(page, profileAfter(lastLessonOf(world).id));
+
+		await startLesson(page, NEXT_FIRST);
+		await page.keyboard.type(await currentGroup(page));
+
+		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+		expect(errors.filter((text) => text.includes('word bank'))).toHaveLength(1);
+		expect(errors.filter((text) => text.includes('phrase bank'))).toHaveLength(0);
+	});
+
+	test('opens a profile that only knows the first lessons and finds its stars', async ({
+		page
+	}) => {
+		const failures: string[] = [];
+		page.on('pageerror', (error) => failures.push(error.message));
+		await reachMapAs(page, advancedProfile({ name: PLAYER_NAME, passed: LEGACY_LESSON_STARS }));
+
+		await expect(page.getByRole('alert')).toHaveCount(0);
+		for (const [index, lesson] of allLessons.entries()) {
+			const earlier = allLessons[index - 1];
+			const open = index === 0 || (earlier !== undefined && earlier.id in LEGACY_LESSON_STARS);
+			const row = lessonRow(page, lesson);
+			const legacyStars = LEGACY_LESSON_STARS[lesson.id];
+			if (!open) {
+				await expect(page.getByRole('button', { name: lesson.title })).toHaveCount(0);
+				await expect(row).toContainText(message('play_lesson_locked'));
+			} else if (legacyStars !== undefined) {
+				await expect(row.getByRole('img', { name: stars(legacyStars) })).toBeVisible();
+				await expect(row).toContainText(message('play_lesson_done'));
+			} else {
+				await expect(page.getByRole('button', { name: lesson.title })).toBeVisible();
+				await expect(row).toContainText(message('play_lesson_current'));
+			}
+		}
+		expect(failures).toEqual([]);
+	});
+
+	test('shows the stars of an old lesson again once the new lessons before it are passed', async ({
+		page
+	}) => {
+		const old = allLessons.filter((lesson) => lesson.id in LEGACY_LESSON_STARS);
+		const last = old[old.length - 1];
+		if (!last) throw new Error('No lesson of the first version is left');
+		const insertedBefore = allLessons[allLessons.indexOf(last) - 1];
+		if (!insertedBefore) throw new Error('The last old lesson has no lesson before it');
+		const passed = { ...passedThrough(insertedBefore.id), ...LEGACY_LESSON_STARS };
+		await reachMapAs(page, advancedProfile({ name: PLAYER_NAME, passed }));
+
+		for (const [id, count] of Object.entries(LEGACY_LESSON_STARS)) {
+			const lesson = allLessons.find((item) => item.id === id);
+			if (!lesson) throw new Error(`Unknown lesson: ${id}`);
+			await expect(lessonRow(page, lesson).getByRole('img', { name: stars(count) })).toBeVisible();
+		}
 	});
 });
 
@@ -746,7 +1076,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expectNoAxeViolation(page);
 			await button(page, message('play_check_continue')).click();
 
-			await expect(heading(page, world.title)).toBeVisible();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
 			await expectNoAxeViolation(page);
 
 			await button(page, message('play_settings_open')).click();
@@ -756,6 +1086,22 @@ for (const colorScheme of COLOR_SCHEMES) {
 
 			await page.getByRole('button', { name: FIRST.title }).click();
 			await expect(heading(page, FIRST.title)).toBeVisible();
+			await expectNoAxeViolation(page);
+		});
+
+		test('has no axe violation on the map of all the worlds and on the choice of the game', async ({
+			page
+		}) => {
+			test.slow();
+			await reachMapAs(page, profileAfter(lastLessonOf(world).id));
+			await expect(
+				page.getByRole('heading', { level: 2, name: worlds[worlds.length - 1]?.title })
+			).toBeVisible();
+			await expect(page.getByRole('list')).toHaveCount(worlds.length);
+			await expectNoAxeViolation(page);
+
+			await openIntro(page, NEXT_FIRST);
+			await expect(page.getByRole('radio')).toHaveCount(NEXT_WORLD.gameIds.length);
 			await expectNoAxeViolation(page);
 		});
 
@@ -777,10 +1123,10 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await page.keyboard.press('Escape');
 			await expect(page.getByRole('dialog')).toBeVisible();
 			await expectNoAxeViolation(page);
-			await button(page, message('game_hatching_resume')).click();
+			await button(page, message('game_shared_resume')).click();
 
-			await typeFrom(page, FIRST, 1, { skipDelay: true });
-			await expect(button(page, message('play_result_map'))).toBeVisible();
+			await page.keyboard.press(SKIP_KEY);
+			await typeToResult(page, { skipDelay: true, start: 1 });
 			await expectNoAxeViolation(page);
 		});
 
@@ -792,7 +1138,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await reachMap(page);
 			await startLesson(page, FIRST);
 			await page.clock.fastForward(`${playRules.breakAfterMinutes + 1}:00`);
-			await typeAllGroups(page, FIRST, { skipDelay: true });
+			await typeToResult(page, { skipDelay: true });
 
 			await expect(button(page, message('play_break_button'))).toBeVisible();
 			await expectNoAxeViolation(page);
