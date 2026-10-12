@@ -1,0 +1,278 @@
+{
+	"output": {
+		"wordBankId": "fr.words.base",
+		"phraseBankId": "fr.phrases.base",
+		"locale": "fr-FR",
+		"wordsFile": "content/fr/words/base.json",
+		"phrasesFile": "content/fr/phrases/base.json",
+		"wordReviewDoc": "docs/relecture/mots-fr.md",
+		"phraseReviewDoc": "docs/relecture/phrases-fr.md"
+	},
+	"sources": {
+		"lexique": {
+			"archiveUrl": "http://www.lexique.org/databases/Lexique383/Lexique383.zip",
+			"archiveName": "Lexique383.zip",
+			"tableName": "Lexique383.tsv"
+		},
+		"wiktionary": {
+			"apiUrl": "https://fr.wiktionary.org/w/api.php",
+			"subcategoryDepth": 1,
+			"requestDelayMs": 1500
+		}
+	},
+	"candidates": {
+		"pattern": "^[a-zàâçéèêëîïôùûü]+$",
+		"minLetters": 2,
+		"maxLetters": 10,
+		"partsOfSpeech": ["NOM", "ADJ", "VER", "ADV"],
+		"themed": {
+			"minFreq": 1.5,
+			"minKnown": 95,
+			"minLetters": 3
+		},
+		"general": {
+			"minFreq": 40,
+			"minKnown": 98,
+			"minLetters": 2,
+			"maxLetters": 9
+		},
+		"unknownKnownIsTrueFromFreq": 5
+	},
+	"levels": {
+		"freqBands": [
+			{
+				"minFreq": 20,
+				"points": 0
+			},
+			{
+				"minFreq": 5,
+				"points": 1
+			},
+			{
+				"minFreq": 1.5,
+				"points": 2
+			},
+			{
+				"minFreq": 0,
+				"points": 3
+			}
+		],
+		"knownBands": [
+			{
+				"minKnown": 98,
+				"points": 0
+			},
+			{
+				"minKnown": 93,
+				"points": 1
+			},
+			{
+				"minKnown": 0,
+				"points": 2
+			}
+		],
+		"lengthBands": [
+			{
+				"maxLetters": 5,
+				"points": 0
+			},
+			{
+				"maxLetters": 7,
+				"points": 1
+			},
+			{
+				"maxLetters": 99,
+				"points": 2
+			}
+		],
+		"level1MaxPoints": 1,
+		"level2MaxPoints": 3
+	},
+	"themes": [
+		{
+			"id": "dinos",
+			"title": "Dinosaures",
+			"categories": ["Dinosaures en français", "Lexique en français de la volcanologie"]
+		},
+		{
+			"id": "cuisine",
+			"title": "Cuisine",
+			"categories": [
+				"Lexique en français de la cuisine",
+				"Fruits en français",
+				"Légumes en français",
+				"Aliments en français",
+				"Boissons en français",
+				"Desserts en français",
+				"Pâtisseries en français",
+				"Fromages en français",
+				"Ustensiles de cuisine en français"
+			]
+		},
+		{
+			"id": "animaux",
+			"title": "Animaux",
+			"categories": [
+				"Animaux en français",
+				"Mammifères en français",
+				"Oiseaux en français",
+				"Poissons en français",
+				"Insectes en français",
+				"Reptiles en français",
+				"Amphibiens en français"
+			]
+		},
+		{
+			"id": "espace",
+			"title": "Espace",
+			"categories": ["Planètes en français", "Constellations en français"]
+		},
+		{
+			"id": "vehicules",
+			"title": "Véhicules",
+			"categories": [
+				"Véhicules en français",
+				"Bateaux en français",
+				"Lexique en français du transport",
+				"Lexique en français du chemin de fer"
+			]
+		},
+		{
+			"id": "maison",
+			"title": "Maison",
+			"categories": ["Meubles en français", "Outils en français"]
+		},
+		{
+			"id": "nature",
+			"title": "Nature",
+			"categories": [
+				"Arbres en français",
+				"Fleurs en français",
+				"Plantes en français",
+				"Lexique en français de la météorologie"
+			]
+		},
+		{
+			"id": "sport",
+			"title": "Sport et jeux",
+			"categories": [
+				"Sports en français",
+				"Jeux en français",
+				"Jouets en français",
+				"Lexique en français du football"
+			]
+		},
+		{
+			"id": "corps",
+			"title": "Le corps",
+			"categories": []
+		},
+		{
+			"id": "ecole",
+			"title": "L'école",
+			"categories": []
+		},
+		{
+			"id": "general",
+			"title": "Mots de tous les jours",
+			"categories": [],
+			"implicit": true
+		}
+	],
+	"exclusionGroups": [
+		{
+			"id": "vulgaire",
+			"auto": true,
+			"categories": ["Termes vulgaires en français"]
+		},
+		{
+			"id": "insulte",
+			"auto": true,
+			"categories": ["Insultes en français", "Insultes en français québécois"]
+		},
+		{
+			"id": "sexualite",
+			"auto": true,
+			"categories": [
+				"Lexique en français de la sexualité",
+				"Lexique en français de la pornographie"
+			]
+		},
+		{
+			"id": "drogue",
+			"auto": true,
+			"categories": [
+				"Lexique en français de la drogue",
+				"Drogues en français",
+				"Lexique en français du tabac"
+			]
+		},
+		{
+			"id": "armes",
+			"auto": false,
+			"categories": ["Armes en français"]
+		},
+		{
+			"id": "mort",
+			"auto": false,
+			"categories": ["Lexique en français de la mort"]
+		},
+		{
+			"id": "pejoratif",
+			"auto": false,
+			"categories": ["Termes péjoratifs en français"]
+		},
+		{
+			"id": "maladie",
+			"auto": false,
+			"categories": ["Maladies en français", "Lexique en français de la pathologie"]
+		},
+		{
+			"id": "religion",
+			"auto": false,
+			"categories": [
+				"Lexique en français de la religion",
+				"Lexique en français du christianisme",
+				"Lexique en français du judaïsme"
+			]
+		},
+		{
+			"id": "politique",
+			"auto": false,
+			"categories": ["Lexique en français de la politique"]
+		},
+		{
+			"id": "justice",
+			"auto": false,
+			"categories": [
+				"Lexique en français de la justice",
+				"Lexique en français de la police",
+				"Lexique en français de la prison"
+			]
+		},
+		{
+			"id": "violence",
+			"auto": false,
+			"categories": [
+				"Lexique en français de la chasse",
+				"Lexique en français de la tauromachie",
+				"Lexique en français de la psychiatrie"
+			]
+		},
+		{
+			"id": "argot",
+			"auto": false,
+			"categories": ["Termes argotiques en français"]
+		},
+		{
+			"id": "prenom",
+			"auto": false,
+			"categories": ["Prénoms en français", "Noms de famille en français"]
+		},
+		{
+			"id": "medecine",
+			"auto": false,
+			"categories": ["Lexique en français de la médecine"]
+		}
+	]
+}

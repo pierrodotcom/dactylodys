@@ -1,0 +1,160 @@
+# level | themes (comma separated, may be empty) | text
+# Original sentences. Each one is typable with the characters learned up to its own step (see check.js).
+# Palier 1 : f j d k s l e i r u (sans t ni n)
+1 | nature | je lis des lis
+1 | cuisine | le sel se dresse sur le fil
+1 | nature | elle dilue le jus de fleurs
+1 | | elle se rue sur le jus
+1 | nature | il sue des fleurs
+1 | | le fer file sur le fil
+1 | | le fer se dresse sur les elfes
+1 | | elle dresse les elfes sur le fil
+1 | cuisine | jeudi le sel ruisselle sur les lis
+1 | nature | le jus jure des fleurs
+1 | nature | elle lui dilue des fleurs sur le sel
+1 | nature | le jus de fleurs lui ruisselle dessus
+1 | nature | jeudi le lis se dresse sur le fil
+# Palier 2 : t n
+1 | cuisine | le sel fuit le lit
+1 | | le jus ruisselle sur le lit
+1 | nature | le lit sue du jus de fleurs
+1 | | elle lui dit je fuis le jus
+1 | | des elfes jurent sur le sel
+1 | | le fil file sur le lit
+1 | | un lutin tisse un tutu
+1 | | le tutu du lutin est inutile
+1 | cuisine | un fruit se tient sur un nid
+1 | | il tire le fil et le tissu fuit
+1 | cuisine | le futur lutin refuse le fruit
+1 | | le lutin tend un fil dur
+1 | | une tuile tient sur un fil
+1 | | tu es un intrus dit le nid
+1 | cuisine | le lutin ruse le fruit lui dit tuile
+1 | | le lit des lutins est dur
+1 | | un nid de lutins sur le fer
+1 | cuisine | le fruit sent le sel
+1 | | le lutin lit le titre du fruit
+# Palier 3 : a o
+1 | animaux | le dindon dort dans la salade
+1 | animaux | la tortue danse sur le toit
+1 | animaux | le renard ronfle dans un tonneau
+1 | animaux | une souris danse sur un tutu
+1 | dinos | un dinosaure sort de la salade
+1 | espace | la lune sort et le soleil ronfle
+1 | animaux | une loutre tord un radis
+1 | animaux | un ours fait la sieste dans la fondue
+1 | animaux | le taureau lit le journal
+1 | animaux | le rat dort sur un ananas
+1 | cuisine | les nouilles dorent au soleil
+1 | animaux | le lion tond un radis
+# Palier 4 : q m c p
+2 | animaux | le crocodile joue de la trompette
+2 | animaux | un perroquet apprend le piano
+2 | vehicules | la marmotte conduit un camion de pommes
+2 | animaux | le canard perd une pantoufle
+2 | animaux | le poulpe tricote trois pantalons
+2 | | le pirate a perdu sa casserole
+2 | vehicules | la souris conduit le tracteur
+2 | animaux | une taupe fait la course en pantoufles
+2 | animaux | le moustique joue de la clarinette
+2 | animaux | un cloporte sort de la marmite
+2 | vehicules | un papillon prend le train
+2 | animaux | la limonade coule de la trompette
+2 | | le capitaine ronfle sur son tapis
+# Palier 5 : é et apostrophe
+2 | animaux | l'ours a écrasé la tarte
+2 | animaux | le crocodile a croqué la pantoufle
+2 | animaux | l'écureuil conduit un camion de poires
+2 | | la fée a cassé sa trompette
+2 | animaux | le canard a sauté dans la marmite
+2 | animaux | j'ai croisé un crocodile dans mon café
+2 | animaux | la souris a coupé la musique
+2 | | le pirate a dessiné une pantoufle
+2 | animaux | c'est le poulpe qui a tricoté
+2 | animaux | un cloporte a sauté dans mon café
+2 | espace | l'ours a écrit une carte pour la lune
+2 | animaux | la marmotte a pris un ticket
+2 | espace | l'étoile a sauté dans la marmite
+2 | animaux | mon canari a cassé le piano
+2 | | j'ai perdu mes pantoufles au piano
+2 | animaux | le taureau a dansé sur une tarte
+2 | cuisine | j'adore les tartines de purée
+# Palier 6 : alphabet complet en minuscules
+2 | animaux | le zèbre a mis un pyjama à rayures
+3 | animaux | la girafe cherche un chapeau à sa taille
+2 | animaux | le yéti prend un bain moussant
+2 | animaux | le hibou a oublié ses lunettes
+2 | animaux | le dragon éternue des bulles
+2 | animaux | le hérisson gonfle des ballons
+2 | | où est passé mon sandwich
+3 | animaux | le dragon a mis un caleçon à pois
+2 | animaux | la grenouille joue du xylophone
+3 | vehicules | un wagon plein de yaourts passe
+3 | vehicules | le vélo du hibou fait un bruit bizarre
+2 | animaux | la baleine a pris le bus
+3 | vehicules | le singe invente un avion en carton
+3 | animaux | le chat range ses chaussettes dans le four
+2 | animaux | l'éléphant a perdu sa trompette
+3 | animaux | le cheval fait du hula hoop
+3 | cuisine | la sorcière a un balai en chocolat
+3 | | le robot a mangé tous les boutons
+3 | | mon hamster construit une pyramide
+3 | animaux | le crocodile a des chaussettes violettes
+3 | espace | la fusée décolle avec un yaourt
+3 | vehicules | la tortue a gagné la course de vélo
+3 | animaux | le poisson a le hoquet à chaque bulle
+# Palier 7 : majuscules et ponctuation
+1 | animaux | Le chat a mis ses lunettes.
+1 | | Où est ma chaussette?
+1 | dinos | Le dragon a faim!
+1 | vehicules | Qui a pris mon vélo?
+1 | animaux | Le zèbre rit tout seul.
+2 | espace | La fusée a un rhume.
+2 | animaux | Mon poisson sait jouer du piano.
+1 | animaux | Le singe fait du vélo!
+2 | animaux | Un hérisson dans la baignoire!
+1 | animaux | La girafe a le hoquet.
+3 | animaux | Qui a mis un crocodile dans mon cartable?
+3 | animaux | Quand il pleut, le dragon ouvre un parapluie.
+2 | dinos | Le tricératops a oublié son parapluie.
+2 | animaux | Le hibou range ses chaussettes par couleur.
+2 | cuisine | Mon sandwich a pris la fuite!
+3 | animaux | Hier, le poulpe a tricoté huit chaussettes.
+1 | animaux | Le lapin joue au football.
+2 | espace | L'astronaute a perdu sa pantoufle sur la lune.
+2 | dinos | Le diplodocus passe sous la porte!
+3 | | Combien de chaussettes a mangé la machine?
+2 | cuisine | La soupe a pris un bain de soleil.
+1 | animaux | Le poisson rit sous l'eau.
+3 | animaux | Pourquoi le zèbre porte-t-il un pyjama?
+2 | vehicules | Le camion a un hoquet!
+2 | animaux | La tortue a gagné la course, quelle surprise!
+2 | | Mon chapeau a disparu dans le frigo.
+3 | animaux | Le canard a avalé un xylophone, quel boucan!
+2 | espace | Une planète a éternué sur ma fusée.
+2 | animaux | Le yéti cherche ses lunettes.
+2 | vehicules | Mon vélo parle avec un accent bizarre.
+3 | animaux | Un cochon fait du parachute avec une crêpe.
+2 | cuisine | La pizza a peur du four.
+1 | animaux | Le chien ronfle comme un tracteur.
+3 | cuisine | Le gâteau a sauté par la fenêtre.
+2 | animaux | Un escargot gagne le marathon!
+3 | animaux | Le crocodile a enfin des dents propres!
+2 | | Le robot a rangé le salon au frigo.
+# Palier 8 : circonflexes et trémas
+2 | cuisine | Le dragon fait un gâteau pour la forêt.
+3 | animaux | Une souris dîne sur une île de fromage.
+3 | cuisine | Une crêpe s'est enfuie par la fenêtre!
+3 | animaux | Le hérisson organise une fête sur une île.
+2 | animaux | Mon âne mange mon chapeau de paille.
+3 | cuisine | Le robot pâtissier a brûlé les crêpes.
+2 | cuisine | Le maïs chante sous la pluie.
+3 | animaux | Le crocodile naïf a avalé une ancre.
+2 | vehicules | Le canoë du pirate fait des bulles.
+2 | | Où est ma pâte à modeler?
+3 | cuisine | Ce poêle chante, le gâteau danse!
+3 | animaux | La vache a une voix aiguë.
+2 | espace | Le dinosaure a dîné sur la lune.
+2 | | Une tête de chou prend le bateau.
+2 | animaux | Le canard dîne avec un chapeau.
+2 | animaux | Le castor range sa bûche dans le frigo.

@@ -18,3 +18,6 @@ Thumbs.db
 # Generated
 src/lib/generated/
 src/lib/paraglide/
+
+# Content tooling: downloaded sources and reports, never versioned
+tools/content/.cache/
