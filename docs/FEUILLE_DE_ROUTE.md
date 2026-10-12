@@ -30,7 +30,7 @@ Fondée sur la synthèse de recherche `reports/Dactylo ludique TDAH dysgraphie.m
 ## 3. Méthode pédagogique
 
 1. **Étalonnage** au premier lancement : disposition du clavier, doigté (10 doigts ou adapté), réglages sensoriels, lettres du prénom en premier (pratique d'ergothérapeutes).
-2. **Ordre des touches natif AZERTY et français** : rangée de repos, puis lettres par fréquence en français, accents fréquents tôt, puis majuscules, ponctuation, chiffres. L'ordre est une donnée, ajustable après tests.
+2. **Ordre des touches natif AZERTY et français** : ancrage sur `f j` et la rangée de repos, mais voyelles très tôt pour taper de vrais mots (la rangée de repos AZERTY n'a aucune voyelle) ; puis lettres par fréquence en français, accents fréquents tôt, majuscules, ponctuation, chiffres. Aucune étude ne compare des ordres chez l'enfant : l'ordre est une donnée, ajustable après tests (voir `research_notes/Ordre des touches et mots thématiques/`).
 3. **Syllabes → mots fréquents → phrases drôles → petits textes utiles** (un message, une recette, une légende).
 4. **Passage sur la précision et la régularité**, jamais sur la vitesse.
 5. **Révision espacée** des touches fragiles, mêlée aux nouveautés.
@@ -67,6 +67,7 @@ Chaque jalon se termine par `npm run verify` vert, une démonstration déployée
 | **J4 Aventure** | Carte des mondes, compagnon et personnalisation, compétences, trophées, récit, humour, sons et voix | Deux semaines d'usage réel sans lassitude signalée |
 | **J5 Version 1.0** | Espace adulte, export/import, mode hors-ligne installable, audit d'accessibilité, documentation | Ouverture publique |
 | **J6 Ouverture** | Anglais + QWERTY, AZERTY belge, QWERTZ suisse, canadien, BÉPO ; quêtes d'informatique ; traduction communautaire | Une disposition s'ajoute sans toucher au code |
+| **J6 bis Adaptation à l'âge** | Tranche d'âge choisie au profil (8-9 ans, 10-12 ans) : vocabulaire, longueur et complexité des textes, rythme, puis thèmes et graphismes plus détaillés pour les plus grands. Préparé dès J3 : chaque mot porte un niveau. | Un enfant de 12 ans ne trouve pas le jeu « bébé », un enfant de 8 ans n'est pas noyé |
 | **J7 Extensions** | Synchro facultative, illustrations sur mesure, défis coopératifs, partenariats ergothérapeutes et associations | Selon retours |
 
 ## 6. Risques principaux
