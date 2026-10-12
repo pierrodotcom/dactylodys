@@ -122,6 +122,8 @@ Ne jamais déclarer « terminé » sans avoir exécuté la vérification et en d
 - Commits conventionnels (vérifiés par commitlint) : `<type>(<portée>): <description en français>` avec `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `content`, `a11y`, `ci`, `perf`, `revert`.
 - Jamais de commit direct sur `main` après le jalon J0 : une branche par lot, une PR, CI verte, fusion par squash.
 - Petits commits cohérents. Pas de `--no-verify`, pas de `push --force` sur `main`.
+- **Décisions du porteur (2026-10-11)** : le chef d'orchestre active l'Auto-fix sur chaque PR et la fusionne lui-même dès que la CI est verte. La CI (3 navigateurs, Linux) fait foi : en local, Firefox ne démarre pas dans le bac à sable des agents et WebKit expire quand le poste est chargé.
+- Les agents ne peuvent pas réécrire l'historique git : si c'est nécessaire, donner la commande au porteur.
 - Tout asset tiers est déclaré dans `static/ATTRIBUTIONS.md` (source, auteur, licence) **dans le même commit**.
 
 ## 11. Orchestration multi-agents
@@ -134,6 +136,7 @@ La session principale est **chef d'orchestre** : elle découpe, délègue, véri
 - Seul le chef d'orchestre modifie `CLAUDE.md`, `.claude/` et `docs/DECISIONS.md`.
 - **Avant chaque jalon ou lot**, annoncer au porteur du projet le modèle et l'effort recommandés pour la session, et attendre qu'il ait pu en changer.
 - Le porteur valide les **résultats**, pas le code : comptes rendus en termes de comportement observable et de ce qu'il peut essayer lui-même.
+- **Reprise dans une nouvelle session** : lire `docs/SUIVI.md` (état, prochaines actions, attentes côté porteur), puis les règles de `.claude/rules/` du domaine touché. Rien d'utile ne doit rester seulement dans une conversation : toute décision va dans `docs/DECISIONS.md`, toute erreur dans `docs/LECONS.md`.
 
 ## 12. Économie de tokens
 
