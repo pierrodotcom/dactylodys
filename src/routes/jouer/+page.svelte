@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Component } from 'svelte';
 	import {
 		evaluateLesson,
 		applyLessonResult,
@@ -8,8 +8,7 @@
 	import { findLesson, lessonIds } from '$lib/engine/progression/definition';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import type { Exercise, StarCount } from '$lib/engine/progression/types';
-	import { Hatching } from '$lib/games/hatching';
-	import type { GameOutcome } from '$lib/games/types';
+	import type { GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import { applySettings } from '$lib/state/apply-settings';
@@ -33,12 +32,19 @@
 	} from './break';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
+	import {
+		gameOptions,
+		NO_CHOSEN_GAMES,
+		rememberGame,
+		selectedGame,
+		type ChosenGames
+	} from './game-choice';
 	import { toGameSettings } from './game-settings';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
 	import LessonResult from './LessonResult.svelte';
-	import { nextLessonId } from './map';
+	import { nextLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
 	import { platformFromUserAgent } from './player';
 	import PlayerSelect from './PlayerSelect.svelte';
@@ -70,6 +76,9 @@
 	let loadFailed = $state(false);
 	let saveState = $state<'idle' | 'saved' | 'error'>('idle');
 	let systemPrefersReduced = $state(false);
+	let chosenGames = $state.raw<ChosenGames>(NO_CHOSEN_GAMES);
+	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
+	let gameLoadFailed = $state(false);
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
@@ -153,6 +162,7 @@
 	function changePlayer() {
 		profile = null;
 		assets = null;
+		chosenGames = NO_CHOSEN_GAMES;
 		saveState = 'idle';
 		go({ type: 'change-player' });
 	}
@@ -187,6 +197,7 @@
 
 	function openLesson(lessonId: string) {
 		if (!profile || !progression) return;
+		gameLoadFailed = false;
 		go({
 			type: 'open-lesson',
 			lessonId,
@@ -194,8 +205,24 @@
 		});
 	}
 
-	function beginGame(lessonId: string, event: FlowEvent) {
+	function chooseGame(worldId: string, gameId: string) {
+		gameLoadFailed = false;
+		chosenGames = rememberGame(chosenGames, worldId, gameId);
+	}
+
+	async function beginGame(lessonId: string, event: FlowEvent) {
 		if (!progression) return;
+		const world = worldOfLesson(progression, lessonId);
+		const definition = world ? selectedGame(world, chosenGames) : undefined;
+		if (!definition) return;
+		try {
+			ActiveGame = (await definition.load()).default;
+		} catch {
+			gameLoadFailed = true;
+			if (event.type === 'replay') go({ type: 'back-to-map' });
+			return;
+		}
+		gameLoadFailed = false;
 		exercise = generateExercise(progression, lessonId, Math.random);
 		playClock = startPlaying(playClock, now());
 		go(event);
@@ -291,19 +318,24 @@
 	{:else if screen.name === 'intro'}
 		{@const lesson = findLesson(progression, screen.lessonId)}
 		{@const lessonId = screen.lessonId}
-		{#if lesson}
+		{@const world = worldOfLesson(progression, lessonId)}
+		{#if lesson && world}
 			<LessonIntro
 				{lesson}
 				number={lessonIds(progression).indexOf(lessonId) + 1}
 				{assets}
+				games={gameOptions(world)}
+				gameId={selectedGame(world, chosenGames)?.id ?? ''}
+				loadFailed={gameLoadFailed}
+				onchoose={(gameId) => chooseGame(world.id, gameId)}
 				onstart={() => beginGame(lessonId, { type: 'start' })}
 				onback={() => go({ type: 'back-to-map' })}
 			/>
 		{/if}
 	{:else if screen.name === 'game'}
 		{@const lessonId = screen.lessonId}
-		{#if exercise}
-			<Hatching
+		{#if exercise && ActiveGame}
+			<ActiveGame
 				{exercise}
 				layout={assets.layout}
 				charIndex={assets.charIndex}

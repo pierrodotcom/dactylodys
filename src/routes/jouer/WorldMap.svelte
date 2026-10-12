@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { lessonIds } from '$lib/engine/progression/definition';
 	import type { ProgressionDefinition } from '$lib/engine/progression/types';
 	import type { Profile } from '$lib/state/types';
 	import { m } from '$lib/paraglide/messages.js';
@@ -7,7 +6,8 @@
 	import Companion from '$lib/ui/components/Companion.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import Stars from '$lib/ui/components/Stars.svelte';
-	import { lessonStars, lessonStatus } from './map';
+	import { centerInView } from '$lib/ui/focus';
+	import { layoutMap } from './map';
 
 	interface Props {
 		profile: Profile;
@@ -19,50 +19,64 @@
 
 	let { profile, progression, onopen, onsettings, onchangeplayer }: Props = $props();
 
-	const world = $derived(progression.worlds[0]);
-	const numbers = $derived(lessonIds(progression));
+	const layout = $derived(layoutMap(progression, profile.progress));
 </script>
 
-{#if world}
-	<ScreenFrame title={world.title}>
+{#if layout.worlds.length > 0}
+	<ScreenFrame title={m.play_map_title()}>
 		<div class="hero">
 			<Companion mood="idle" />
 			<p class="greeting">{m.play_map_greeting({ name: profile.name })}</p>
 		</div>
 
-		<ol class="path" aria-label={m.play_map_lessons_label()}>
-			{#each world.lessons as lesson, index (lesson.id)}
-				{@const status = lessonStatus(progression, profile.progress, lesson.id)}
-				{@const stars = lessonStars(profile.progress, lesson.id)}
-				{@const number = numbers.indexOf(lesson.id) + 1}
-				<li class="stop" data-status={status} data-side={index % 2}>
-					{#if status === 'locked'}
-						<div class="node">
-							<svg class="lock" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-								<path d="M7 11V8a5 5 0 0 1 10 0v3" />
-								<rect x="4.5" y="11" width="15" height="10" rx="2" />
-							</svg>
-							<span class="info">
-								<span class="number">{m.play_lesson_number({ number })}</span>
-								<span class="name">{lesson.title}</span>
-								<span class="state">{m.play_lesson_locked()}</span>
-							</span>
-						</div>
-					{:else}
-						<button type="button" class="node" onclick={() => onopen(lesson.id)}>
-							<span class="info">
-								<span class="number">{m.play_lesson_number({ number })}</span>
-								<span class="name">{lesson.title}</span>
-								<span class="state">
-									{status === 'done' ? m.play_lesson_done() : m.play_lesson_current()}
-								</span>
-							</span>
-							<Stars count={stars} />
-						</button>
-					{/if}
-				</li>
-			{/each}
-		</ol>
+		{#each layout.worlds as world (world.id)}
+			<section
+				class="world"
+				data-current={world.current || undefined}
+				aria-labelledby="world-{world.id}"
+			>
+				<h2 id="world-{world.id}">{world.title}</h2>
+				{#if world.current}
+					<p class="current-badge">{m.play_world_current()}</p>
+				{/if}
+
+				<ol class="path" aria-labelledby="world-{world.id}">
+					{#each world.lessons as lesson (lesson.id)}
+						<li
+							class="stop"
+							data-status={lesson.status}
+							data-side={lesson.side}
+							{@attach lesson.id === layout.focusId ? centerInView : undefined}
+						>
+							{#if lesson.status === 'locked'}
+								<div class="node">
+									<svg class="lock" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+										<path d="M7 11V8a5 5 0 0 1 10 0v3" />
+										<rect x="4.5" y="11" width="15" height="10" rx="2" />
+									</svg>
+									<span class="info">
+										<span class="number">{m.play_lesson_number({ number: lesson.number })}</span>
+										<span class="name">{lesson.title}</span>
+										<span class="state">{m.play_lesson_locked()}</span>
+									</span>
+								</div>
+							{:else}
+								<button type="button" class="node" onclick={() => onopen(lesson.id)}>
+									<span class="info">
+										<span class="number">{m.play_lesson_number({ number: lesson.number })}</span>
+										<span class="name">{lesson.title}</span>
+										<span class="state">
+											{lesson.status === 'done' ? m.play_lesson_done() : m.play_lesson_current()}
+										</span>
+									</span>
+									<Stars count={lesson.stars} />
+								</button>
+							{/if}
+						</li>
+					{/each}
+				</ol>
+			</section>
+		{/each}
 
 		<div class="actions">
 			<Button variant="secondary" onclick={onsettings}>{m.play_settings_open()}</Button>
@@ -86,6 +100,38 @@
 
 	.greeting {
 		font-size: var(--dd-font-size-xl);
+		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.world {
+		display: grid;
+		gap: var(--dd-space-md);
+		justify-items: center;
+		inline-size: 100%;
+		padding: var(--dd-space-lg);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-border-subtle);
+		border-radius: var(--dd-radius-lg);
+	}
+
+	.world[data-current] {
+		border-color: var(--dd-color-accent-base);
+		border-width: var(--dd-border-width-target);
+		background-color: var(--dd-color-surface-raised);
+		box-shadow: var(--dd-shadow-md);
+	}
+
+	.world h2 {
+		font-size: var(--dd-font-size-2xl);
+	}
+
+	.current-badge {
+		padding: var(--dd-space-xs) var(--dd-space-md);
+		border-radius: var(--dd-radius-pill);
+		background-color: var(--dd-color-accent-base);
+		color: var(--dd-color-text-on-accent);
+		font-size: var(--dd-font-size-sm);
 		font-weight: var(--dd-font-weight-bold);
 	}
 

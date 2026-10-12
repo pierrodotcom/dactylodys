@@ -1,25 +1,34 @@
 <script lang="ts">
 	import type { LessonDefinition } from '$lib/engine/progression/types';
-	import { targetKeyPress } from '$lib/games/hatching/target';
+	import { targetKeyPress } from '$lib/games/shared/target';
 	import type { KeyPress } from '$lib/keyboard/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
+	import CardChoice from '$lib/ui/components/CardChoice.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import { focusOnMount } from '$lib/ui/focus';
 	import { isOne } from '$lib/ui/plural';
 	import type { KeyboardAssets } from './assets';
+	import type { GameOption } from './game-choice';
 
 	interface Props {
 		lesson: LessonDefinition;
 		number: number;
 		assets: KeyboardAssets;
+		/** The games of the world; the child chooses when there are several. */
+		games: readonly GameOption[];
+		gameId: string;
+		/** The chosen game could not be loaded. */
+		loadFailed: boolean;
+		onchoose: (gameId: string) => void;
 		onstart: () => void;
 		onback: () => void;
 	}
 
-	let { lesson, number, assets, onstart, onback }: Props = $props();
+	let { lesson, number, assets, games, gameId, loadFailed, onchoose, onstart, onback }: Props =
+		$props();
 
 	const presses = $derived(
 		lesson.newChars.flatMap((char) => {
@@ -57,6 +66,20 @@
 		</ul>
 	</section>
 
+	{#if games.length > 1}
+		<CardChoice
+			legend={m.play_game_choice_legend()}
+			name="game"
+			options={games}
+			value={gameId}
+			onchange={onchoose}
+		/>
+	{/if}
+
+	{#if loadFailed}
+		<p class="problem" role="alert">{m.play_game_load_error()}</p>
+	{/if}
+
 	<div class="actions">
 		<Button size="lg" {@attach focusOnMount} onclick={onstart}>{m.play_intro_start()}</Button>
 		<Button variant="quiet" onclick={onback}>{m.play_intro_back()}</Button>
@@ -90,6 +113,15 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
+	}
+
+	.problem {
+		padding: var(--dd-space-sm) var(--dd-space-md);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-oops-outline);
+		border-radius: var(--dd-radius-md);
+		font-weight: var(--dd-font-weight-bold);
 	}
 
 	.actions {
