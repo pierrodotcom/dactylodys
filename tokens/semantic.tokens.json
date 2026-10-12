@@ -85,6 +85,45 @@
 			"surface": { "$value": "{color.cream.50}" },
 			"text": { "$value": "{color.brown.900}" },
 			"border": { "$value": "{color.brown.900}" }
+		},
+		"drawing": {
+			"line": { "$value": "{color.brown.900}" },
+			"ink": { "$value": "{color.brown.900}" }
+		},
+		"sky": {
+			"base": { "$value": "{color.navy.800}" },
+			"line": { "$value": "{color.cream.50}" },
+			"star": { "$value": "{color.cream.50}" }
+		},
+		"astre": {
+			"a": { "$value": "{color.ocean.400}" },
+			"b": { "$value": "{color.clay.400}" },
+			"c": { "$value": "{color.sunflower.300}" },
+			"d": { "$value": "{color.lavender.300}" },
+			"dim": { "$value": "{color.slate.600}" }
+		},
+		"rocket": {
+			"body": { "$value": "{color.cream.50}" },
+			"fin": { "$value": "{color.clay.400}" },
+			"window": { "$value": "{color.ocean.400}" },
+			"flame-outer": { "$value": "{color.amber.300}" },
+			"flame-inner": { "$value": "{color.sunflower.300}" },
+			"smoke": { "$value": "{color.cream.200}" }
+		},
+		"food": {
+			"a": { "$value": "{color.amber.300}" },
+			"b": { "$value": "{color.red.300}" },
+			"c": { "$value": "{color.sunflower.300}" },
+			"d": { "$value": "{color.jade.300}" },
+			"e": { "$value": "{color.ocean.400}" },
+			"f": { "$value": "{color.lavender.300}" }
+		},
+		"pot": {
+			"body": { "$value": "{color.slate.600}" },
+			"inside": { "$value": "{color.brown.900}" },
+			"soup": { "$value": "{color.clay.400}" },
+			"bubble": { "$value": "{color.cream.50}" },
+			"steam": { "$value": "{color.slate.300}" }
 		}
 	},
 	"typing": {
@@ -173,6 +212,11 @@
 		"companion": { "$value": "8rem" },
 		"egg": { "$value": "11rem" },
 		"egg-mini": { "$value": "2.25rem" },
+		"astre-mini": { "$value": "2.25rem" },
+		"ingredient-mini": { "$value": "2.25rem" },
+		"scene-max": { "$value": "26rem" },
+		"text-zone-min": { "$value": "28rem" },
+		"choice-card-min": { "$value": "14rem" },
 		"lesson-node": { "$value": "4rem" },
 		"panel-max": { "$value": "32rem" },
 		"bubble-tail": { "$value": "{dimension.16}" },
