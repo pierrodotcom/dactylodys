@@ -1,0 +1,8 @@
+# words (separated by spaces)  # why
+# Words that a Wiktionary exclusion category flags because of one slang sense only, while the common sense is harmless.
+animal ascenseur baleine banane bête biche biberon boire bonhomme botte boule brouette bougie cage cerise
+chaleur chat chauffeur chocolat ciseau citrouille clown concombre cornichon corsaire coupé cuillère cyclone
+envoyer escalope escargot faire feu flûte four frégate frisé galopin genre glisser gourde grenouille gris
+gros guitare hérisson loup macaroni marmotte marron melon mettre mignon ours panier patate perroquet
+placard plan poil position pot poussière punaise rat rose royal sale sauter sauvage serpent thon tirer
+tonnerre vache vanille végétarien vieux vipère zèbre
