@@ -7,7 +7,7 @@
 	} from '$lib/engine/progression/progress';
 	import { findLesson, lessonIds } from '$lib/engine/progression/definition';
 	import { generateExercise } from '$lib/engine/progression/exercise';
-	import type { Exercise, StarCount } from '$lib/engine/progression/types';
+	import type { Exercise, ProgressionDefinition, StarCount } from '$lib/engine/progression/types';
 	import type { GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
@@ -22,7 +22,7 @@
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { loadKeyboardAssets, type KeyboardAssets } from './assets';
-	import { loadBanks, type LoadedBanks } from './banks';
+	import { loadBanks, settleWithin, type LoadedBanks } from './banks';
 	import BreakScreen from './BreakScreen.svelte';
 	import {
 		createPlayClock,
@@ -83,6 +83,21 @@
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
+
+	let banksRequest: { progression: ProgressionDefinition; ready: Promise<LoadedBanks> } | null =
+		null;
+
+	/** Starts loading the banks of the progression once; they are awaited only when a game starts. */
+	function requestBanks(source: ProgressionDefinition): Promise<LoadedBanks> {
+		if (banksRequest?.progression !== source) {
+			banksRequest = { progression: source, ready: loadBanks(source) };
+		}
+		return banksRequest.ready;
+	}
+
+	$effect(() => {
+		if (progression) void requestBanks(progression);
+	});
 
 	function go(event: FlowEvent) {
 		screen = transition(screen, event);
@@ -218,7 +233,10 @@
 		if (!world || !definition) return;
 		let banks: LoadedBanks;
 		try {
-			const [module, loaded] = await Promise.all([definition.load(), loadBanks(progression)]);
+			const [module, loaded] = await Promise.all([
+				definition.load(),
+				settleWithin(requestBanks(progression), PLAY_RULES.bankLoadTimeoutMs, {})
+			]);
 			ActiveGame = module.default;
 			banks = loaded;
 		} catch {

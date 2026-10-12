@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { loadBanks, type BankSources } from './banks';
+import { loadBanks, settleWithin, type BankSources } from './banks';
 
 const FRENCH = { locale: 'fr-FR' };
 
@@ -67,5 +67,28 @@ describe('loadBanks', () => {
 
 		expect(spy).toHaveBeenCalledTimes(1);
 		spy.mockRestore();
+	});
+});
+
+describe('settleWithin', () => {
+	it('gives the result when it comes in time', async () => {
+		const report = vi.fn();
+
+		const value = await settleWithin(Promise.resolve('banks'), 1_000, 'none', report);
+
+		expect(value).toBe('banks');
+		expect(report).not.toHaveBeenCalled();
+	});
+
+	it('gives the fallback and reports it when the result never comes', async () => {
+		vi.useFakeTimers();
+		const report = vi.fn();
+		const pending = settleWithin(new Promise<string>(() => undefined), 1_000, 'none', report);
+
+		await vi.advanceTimersByTimeAsync(1_000);
+
+		expect(await pending).toBe('none');
+		expect(report).toHaveBeenCalledTimes(1);
+		vi.useRealTimers();
 	});
 });

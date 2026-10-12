@@ -2,5 +2,6 @@
 	"schemaVersion": 1,
 	"breakAfterMinutes": 12,
 	"maxWordLevel": 3,
+	"bankLoadTimeoutMs": 3000,
 	"keyboardCheckCodes": ["KeyQ", "KeyW", "Semicolon"]
 }

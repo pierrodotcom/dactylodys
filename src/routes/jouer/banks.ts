@@ -59,3 +59,22 @@ export async function loadBanks(
 		...(phrases === undefined ? {} : { phrases })
 	};
 }
+
+/** The result of `pending`, or `fallback` once `timeoutMs` has gone by without it. */
+export function settleWithin<T>(
+	pending: Promise<T>,
+	timeoutMs: number,
+	fallback: T,
+	report: BankReporter = reportToConsole
+): Promise<T> {
+	return new Promise((resolve) => {
+		const timer = setTimeout(() => {
+			report('The banks are too slow to load, playing without them', timeoutMs);
+			resolve(fallback);
+		}, timeoutMs);
+		void pending.then((value) => {
+			clearTimeout(timer);
+			resolve(value);
+		});
+	});
+}

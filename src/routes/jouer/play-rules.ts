@@ -8,6 +8,8 @@ export interface PlayRules {
 	readonly breakAfterMinutes: number;
 	/** Highest level of the words and phrases of the banks that an exercise may use. */
 	readonly maxWordLevel: WordLevel;
+	/** Longest wait for the banks when a game starts; after that the child plays without them. */
+	readonly bankLoadTimeoutMs: number;
 	/**
 	 * Physical keys the child is asked to press to check the keyboard. They are chosen
 	 * where the layouts the game supports differ from other common ones (A, Z and M on AZERTY).
@@ -30,7 +32,13 @@ export function parsePlayRules(data: unknown): PlayRules {
 	if (!isRecord(data)) fail('playRules', 'expected an object');
 	for (const name of Object.keys(data)) {
 		if (
-			!['schemaVersion', 'breakAfterMinutes', 'maxWordLevel', 'keyboardCheckCodes'].includes(name)
+			![
+				'schemaVersion',
+				'breakAfterMinutes',
+				'maxWordLevel',
+				'bankLoadTimeoutMs',
+				'keyboardCheckCodes'
+			].includes(name)
 		) {
 			fail(`playRules.${name}`, 'unknown property');
 		}
@@ -47,6 +55,15 @@ export function parsePlayRules(data: unknown): PlayRules {
 		fail('playRules.maxWordLevel', `expected one of ${WORD_LEVELS.join(', ')}`);
 	}
 
+	const bankLoadTimeoutMs = data['bankLoadTimeoutMs'];
+	if (
+		typeof bankLoadTimeoutMs !== 'number' ||
+		!Number.isFinite(bankLoadTimeoutMs) ||
+		bankLoadTimeoutMs <= 0
+	) {
+		fail('playRules.bankLoadTimeoutMs', 'expected a positive number');
+	}
+
 	const rawCodes = data['keyboardCheckCodes'];
 	if (!Array.isArray(rawCodes) || rawCodes.length === 0) {
 		fail('playRules.keyboardCheckCodes', 'expected a non-empty array');
@@ -59,7 +76,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 		codes.push(code);
 	});
 
-	return { breakAfterMinutes: minutes, maxWordLevel, keyboardCheckCodes: codes };
+	return { breakAfterMinutes: minutes, maxWordLevel, bankLoadTimeoutMs, keyboardCheckCodes: codes };
 }
 
 export const PLAY_RULES: PlayRules = parsePlayRules(rulesData);
