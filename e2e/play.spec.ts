@@ -113,7 +113,7 @@ async function checkKeyboard(page: Page, kind: 'different' | 'same') {
 	const outcome = kind === 'same' ? 'play_check_ok_title' : 'play_check_diff_title';
 	await expect(heading(page, message(outcome))).toBeVisible();
 	await button(page, message('play_check_continue')).click();
-	await expect(heading(page, world.title)).toBeVisible();
+	await expect(heading(page, message('play_map_title'))).toBeVisible();
 }
 
 async function reachMap(page: Page) {
@@ -212,7 +212,7 @@ test.describe('play route', () => {
 		await checkKeyboard(page, 'different');
 
 		await expect(page.getByText(message('play_map_greeting', { name: PLAYER_NAME }))).toBeVisible();
-		await expect(page.getByRole('list', { name: message('play_map_lessons_label') })).toBeVisible();
+		await expect(page.getByRole('list', { name: world.title })).toBeVisible();
 		await expect(page.getByRole('listitem')).toHaveCount(world.lessons.length);
 		await expect(page.getByRole('button', { name: FIRST.title })).toBeVisible();
 		for (const lesson of world.lessons.slice(1)) {
@@ -307,12 +307,12 @@ test.describe('play route', () => {
 		await expect(button(page, message('play_check_continue'))).toBeFocused();
 		await page.keyboard.press('Enter');
 
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await activateByTab(page, page.getByRole('button', { name: FIRST.title }));
 		await expect(button(page, message('play_intro_start'))).toBeFocused();
 		await page.keyboard.press('Enter');
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(page.locator('#hatching-input')).toBeFocused();
+		await expect(page.locator('#game-input')).toBeFocused();
 
 		await typeAllGroups(page, FIRST, { skipDelay: true });
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
@@ -383,30 +383,30 @@ test.describe('play route', () => {
 
 		await page.keyboard.press('Escape');
 
-		const dialog = page.getByRole('dialog', { name: message('game_hatching_pause_title') });
+		const dialog = page.getByRole('dialog', { name: message('game_shared_pause_title') });
 		await expect(dialog).toBeVisible();
-		await expect(button(page, message('game_hatching_resume'))).toBeFocused();
+		await expect(button(page, message('game_shared_resume'))).toBeFocused();
 		await page.keyboard.press('Escape');
 		await expect(dialog).toHaveCount(0);
-		await expect(page.locator('#hatching-input')).toBeFocused();
+		await expect(page.locator('#game-input')).toBeFocused();
 		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
 
-		await button(page, message('game_hatching_pause')).click();
+		await button(page, message('game_shared_pause')).click();
 		await expect(dialog).toBeVisible();
-		await button(page, message('game_hatching_resume')).click();
+		await button(page, message('game_shared_resume')).click();
 		await expect(dialog).toHaveCount(0);
 		await page.keyboard.type(group.slice(first.length));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 
 		await page.keyboard.press('Escape');
-		await button(page, message('game_hatching_quit')).click();
+		await button(page, message('game_shared_quit')).click();
 
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(page.getByRole('button', { name: SECOND.title })).toHaveCount(0);
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
 
 		await reloadPage(page);
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
 	});
 
@@ -440,8 +440,8 @@ test.describe('play route', () => {
 		await startLesson(page, FIRST);
 		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
 		await page.keyboard.press('Escape');
-		await button(page, message('game_hatching_quit')).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await button(page, message('game_shared_quit')).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await startLesson(page, FIRST);
 		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
 		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
@@ -470,7 +470,7 @@ test.describe('play route', () => {
 		await reachMap(page);
 		await startLesson(page, FIRST);
 		await currentGroup(page);
-		const field = page.locator('#hatching-input');
+		const field = page.locator('#game-input');
 
 		await field.evaluate((element) => {
 			element.dispatchEvent(
@@ -482,14 +482,14 @@ test.describe('play route', () => {
 				})
 			);
 		});
-		await expect(page.getByText(message('game_hatching_caps_lock'))).toBeVisible();
+		await expect(page.getByText(message('game_shared_caps_lock'))).toBeVisible();
 
 		await field.evaluate((element) => {
 			element.dispatchEvent(
 				new KeyboardEvent('keyup', { key: 'CapsLock', code: 'CapsLock', bubbles: true })
 			);
 		});
-		await expect(page.getByText(message('game_hatching_caps_lock'))).toHaveCount(0);
+		await expect(page.getByText(message('game_shared_caps_lock'))).toHaveCount(0);
 	});
 
 	test('keeps the profile and its stars after a reload, without checking the keyboard again', async ({
@@ -500,7 +500,7 @@ test.describe('play route', () => {
 
 		await reloadPage(page);
 
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(3) })).toBeVisible();
 		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
 	});
@@ -553,7 +553,7 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
 		await page.getByRole('button', { name: PLAYER_NAME }).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 	});
 
 	test('works when the browser refuses to store anything locally', async ({ page }) => {
@@ -577,7 +577,7 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
 		await page.getByRole('button', { name: PLAYER_NAME }).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 	});
 
 	test('offers a second player on the same device', async ({ page }) => {
@@ -651,7 +651,7 @@ test.describe('play route', () => {
 		expect(await property('--dd-typing-size-current')).toBe(await property('--dd-typing-size-xl'));
 
 		await reloadPage(page);
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(root).toHaveAttribute('data-theme', 'dark');
 		await expect(root).toHaveAttribute('data-text-scale', 'xl');
 		await button(page, message('play_settings_open')).click();
@@ -707,7 +707,7 @@ test.describe('play route', () => {
 		await button(page, message('play_break_button')).click();
 		await expect(heading(page, message('play_break_title'))).toBeVisible();
 		await button(page, message('play_break_return')).click();
-		await expect(heading(page, world.title)).toBeVisible();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 
 		await startLesson(page, FIRST);
 		await typeAllGroups(page, FIRST, { skipDelay: true });
@@ -746,7 +746,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expectNoAxeViolation(page);
 			await button(page, message('play_check_continue')).click();
 
-			await expect(heading(page, world.title)).toBeVisible();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
 			await expectNoAxeViolation(page);
 
 			await button(page, message('play_settings_open')).click();
@@ -777,7 +777,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await page.keyboard.press('Escape');
 			await expect(page.getByRole('dialog')).toBeVisible();
 			await expectNoAxeViolation(page);
-			await button(page, message('game_hatching_resume')).click();
+			await button(page, message('game_shared_resume')).click();
 
 			await typeFrom(page, FIRST, 1, { skipDelay: true });
 			await expect(button(page, message('play_result_map'))).toBeVisible();

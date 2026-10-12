@@ -6,52 +6,66 @@ import type { KeyCode, NormalizedKeystroke } from '../../keyboard/types';
 
 const LINE_BREAK = '\n';
 
-export type HatchingMood = 'idle' | 'happy' | 'oops' | 'cheer';
+export type GameMood = 'idle' | 'happy' | 'oops' | 'cheer';
 
 /**
- * `typing`: the egg of the current group is being typed.
- * `hatched`: the group is done, the baby dino is out and the next egg is on its way.
- * `complete`: the last baby has been celebrated; the game reports its outcome.
+ * `typing`: the group is being typed.
+ * `celebrating`: the group is done and the game shows its reward before the next group.
+ * `finale`: the last reward is over and the game shows its final picture, until the child goes on.
+ * `complete`: nothing is left; the game reports its outcome.
  */
-export type HatchingPhase = 'typing' | 'hatched' | 'complete';
+export type GamePhase = 'typing' | 'celebrating' | 'finale' | 'complete';
 
-export interface HatchingState {
+export interface GameState {
 	readonly groups: readonly string[];
 	readonly errorPolicy: ErrorPolicy;
+	/** Whether the game keeps a final picture after the last reward. */
+	readonly hasFinale: boolean;
 	readonly groupIndex: number;
 	readonly session: SessionState;
 	/** Metrics of the groups already typed, in order. */
 	readonly finished: readonly SessionMetrics[];
-	readonly phase: HatchingPhase;
+	readonly phase: GamePhase;
 	readonly paused: boolean;
 	/** Index in the current group of the character that was mistyped, `null` when there is none. */
 	readonly errorIndex: number | null;
 	/** Physical key of the last mistake, shown on the keyboard until the next good key. */
 	readonly wrongCode: KeyCode | null;
-	readonly mood: HatchingMood;
+	readonly mood: GameMood;
 }
 
-export type HatchingAction =
+export type GameAction =
 	| { readonly type: 'keystroke'; readonly keystroke: NormalizedKeystroke }
-	/** The time given to the baby dino is over. */
+	/** The time given to the reward is over. */
 	| { readonly type: 'advance' }
 	/** The moment after a mistake is over. */
 	| { readonly type: 'calm' }
 	| { readonly type: 'pause' }
-	| { readonly type: 'resume' };
+	| { readonly type: 'resume' }
+	/** The child is done with the final picture. */
+	| { readonly type: 'finish' };
 
-export interface HatchingStep {
-	readonly state: HatchingState;
+export interface GameStep {
+	readonly state: GameState;
 	/** Sounds to play, in order. */
 	readonly sounds: readonly SoundId[];
 }
 
-export function createHatching(groups: readonly string[], errorPolicy: ErrorPolicy): HatchingState {
+export interface GameOptions {
+	readonly finale?: boolean;
+}
+
+export function createGame(
+	groups: readonly string[],
+	errorPolicy: ErrorPolicy,
+	options: GameOptions = {}
+): GameState {
 	const first = groups[0];
 	if (first === undefined) throw new RangeError('An exercise needs at least one group');
 	return {
 		groups,
 		errorPolicy,
+		hasFinale: options.finale ?? false,
 		groupIndex: 0,
 		session: createSession(first, { errorPolicy }),
 		finished: [],
@@ -63,17 +77,19 @@ export function createHatching(groups: readonly string[], errorPolicy: ErrorPoli
 	};
 }
 
-function unchanged(state: HatchingState): HatchingStep {
+function unchanged(state: GameState): GameStep {
 	return { state, sounds: [] };
 }
 
-function isLastGroup(state: HatchingState): boolean {
+function isLastGroup(state: GameState): boolean {
 	return state.groupIndex === state.groups.length - 1;
 }
 
-function advance(state: HatchingState): HatchingStep {
-	if (state.phase !== 'hatched') return unchanged(state);
-	if (isLastGroup(state)) return { state: { ...state, phase: 'complete' }, sounds: [] };
+function advance(state: GameState): GameStep {
+	if (state.phase !== 'celebrating') return unchanged(state);
+	if (isLastGroup(state)) {
+		return { state: { ...state, phase: state.hasFinale ? 'finale' : 'complete' }, sounds: [] };
+	}
 	const groupIndex = state.groupIndex + 1;
 	const next = state.groups[groupIndex] as string;
 	return {
@@ -90,8 +106,8 @@ function advance(state: HatchingState): HatchingStep {
 	};
 }
 
-function type(state: HatchingState, keystroke: NormalizedKeystroke): HatchingStep {
-	if (state.phase === 'hatched') return advance(state);
+function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
+	if (state.phase === 'celebrating') return advance(state);
 	if (state.phase !== 'typing') return unchanged(state);
 
 	// Enter is a habit at the end of a word, not a mistake, unless the text asks for a line break.
@@ -101,7 +117,7 @@ function type(state: HatchingState, keystroke: NormalizedKeystroke): HatchingSte
 	const step = applyKeystroke(state.session, keystroke);
 	if (step.events.length === 0) return unchanged(state);
 
-	let next: HatchingState = { ...state, session: step.state };
+	let next: GameState = { ...state, session: step.state };
 	const sounds: SoundId[] = [];
 	for (const event of step.events) {
 		if (event.type === 'error') {
@@ -122,7 +138,7 @@ function type(state: HatchingState, keystroke: NormalizedKeystroke): HatchingSte
 			next = {
 				...next,
 				finished: [...next.finished, computeMetrics(step.state)],
-				phase: 'hatched',
+				phase: 'celebrating',
 				errorIndex: null,
 				wrongCode: null,
 				mood: last ? 'cheer' : 'happy'
@@ -132,7 +148,7 @@ function type(state: HatchingState, keystroke: NormalizedKeystroke): HatchingSte
 	return { state: next, sounds };
 }
 
-export function reduce(state: HatchingState, action: HatchingAction): HatchingStep {
+export function reduce(state: GameState, action: GameAction): GameStep {
 	switch (action.type) {
 		case 'keystroke':
 			return state.paused ? unchanged(state) : type(state, action.keystroke);
@@ -143,26 +159,24 @@ export function reduce(state: HatchingState, action: HatchingAction): HatchingSt
 				? { state: { ...state, mood: 'idle' }, sounds: [] }
 				: unchanged(state);
 		case 'pause':
-			return state.paused || state.phase === 'complete'
+			return state.paused || state.phase === 'finale' || state.phase === 'complete'
 				? unchanged(state)
 				: { state: { ...state, paused: true }, sounds: [] };
 		case 'resume':
 			return state.paused ? { state: { ...state, paused: false }, sounds: [] } : unchanged(state);
+		case 'finish':
+			return state.phase === 'finale'
+				? { state: { ...state, phase: 'complete' }, sounds: [] }
+				: unchanged(state);
 	}
 }
 
-/** Number of eggs that have hatched so far. */
-export function hatchedCount(state: HatchingState): number {
+/** Number of groups whose reward has been earned so far. */
+export function completedCount(state: GameState): number {
 	return state.phase === 'typing' ? state.groupIndex : state.groupIndex + 1;
 }
 
-/** Cracks to draw on the egg being typed: more as the group advances, at least one after a first good key. */
-export function crackStage(position: number, length: number, stageCount: number): number {
-	if (length <= 0 || position <= 0) return 0;
-	return Math.min(stageCount, Math.ceil((stageCount * position) / length));
-}
-
 /** Metrics of the whole exercise, once every group has been typed. */
-export function exerciseMetrics(state: HatchingState): SessionMetrics {
+export function exerciseMetrics(state: GameState): SessionMetrics {
 	return combineMetrics(state.finished);
 }
