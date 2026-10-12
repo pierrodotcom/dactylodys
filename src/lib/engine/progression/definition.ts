@@ -1,6 +1,8 @@
 import { toGraphemes } from '../graphemes';
 import type {
+	ExerciseMix,
 	LessonDefinition,
+	LessonUnlock,
 	ProgressionDefinition,
 	ProgressionRules,
 	WorldDefinition
@@ -8,11 +10,20 @@ import type {
 
 const SPACE = ' ';
 const SLUG = '[a-z0-9]+(?:-[a-z0-9]+)*';
+const SLUG_PATTERN = new RegExp(`^${SLUG}$`);
 const LAYOUT_ID_PATTERN = /^[a-z]{2,3}-[a-z]{2}-[a-z0-9]+-[a-z]+$/;
 const CONTROL_PATTERN = /\p{Cc}/u;
+const PLAIN_LETTER_PATTERN = /^[a-z]$/;
 const MAX_PERCENT = 100;
 const MIN_SPACE_GROUP_LENGTH = 3;
 const MAX_IDENTICAL_IN_A_ROW = 2;
+const KNOWN_UNLOCKS: readonly LessonUnlock[] = ['uppercase'];
+const MIX_KEYS = ['drills', 'words', 'phrases'] as const;
+
+interface Introduced {
+	readonly chars: Set<string>;
+	uppercase: boolean;
+}
 
 function fail(path: string, message: string): never {
 	throw new Error(`${path}: ${message}`);
@@ -49,6 +60,12 @@ function expectPercent(value: unknown, path: string): number {
 	return number;
 }
 
+function expectNonNegative(value: unknown, path: string): number {
+	const number = expectNumber(value, path);
+	if (number < 0) fail(path, 'expected a number of at least 0');
+	return number;
+}
+
 function expectInteger(value: unknown, path: string): number {
 	const number = expectNumber(value, path);
 	if (!Number.isInteger(number)) fail(path, 'expected an integer');
@@ -71,6 +88,12 @@ function expectId(value: unknown, type: string, language: string | null, path: s
 	return id;
 }
 
+function expectSlug(value: unknown, path: string): string {
+	const slug = expectString(value, path);
+	if (!SLUG_PATTERN.test(slug)) fail(path, 'expected lowercase words separated by hyphens');
+	return slug;
+}
+
 function expectGrapheme(value: unknown, path: string): string {
 	if (typeof value !== 'string' || value === '') fail(path, 'expected a non-empty string');
 	const text = value.normalize('NFC');
@@ -79,9 +102,27 @@ function expectGrapheme(value: unknown, path: string): string {
 	return text;
 }
 
+function capitalsOf(chars: Iterable<string>): string[] {
+	const capitals = new Set<string>();
+	for (const char of chars) {
+		if (PLAIN_LETTER_PATTERN.test(char)) capitals.add(char.toUpperCase());
+	}
+	return [...capitals];
+}
+
+function knownChars(introduced: Introduced): Set<string> {
+	const known = new Set(introduced.chars);
+	if (introduced.uppercase) for (const capital of capitalsOf(known)) known.add(capital);
+	return known;
+}
+
 function parseRules(value: unknown, path: string): ProgressionRules {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['unlockAccuracy', 'starThresholds', 'newCharWeight'], path);
+	rejectUnknown(
+		record,
+		['unlockAccuracy', 'starThresholds', 'newCharWeight', 'weakCharBoost', 'themeBoost'],
+		path
+	);
 	const unlockAccuracy = expectPercent(record['unlockAccuracy'], `${path}.unlockAccuracy`);
 	const rawThresholds = expectArray(record['starThresholds'], `${path}.starThresholds`);
 	if (rawThresholds.length !== 3) fail(`${path}.starThresholds`, 'expected exactly 3 thresholds');
@@ -101,8 +142,31 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
-		newCharWeight
+		newCharWeight,
+		weakCharBoost: expectNonNegative(record['weakCharBoost'], `${path}.weakCharBoost`),
+		themeBoost: expectNonNegative(record['themeBoost'], `${path}.themeBoost`)
 	};
+}
+
+function parseMix(value: unknown, path: string): ExerciseMix {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, MIX_KEYS, path);
+	const [drills, words, phrases] = MIX_KEYS.map((key) =>
+		expectNonNegative(record[key], `${path}.${key}`)
+	) as [number, number, number];
+	if (drills + words + phrases <= 0) fail(path, 'expected at least one positive weight');
+	return { drills, words, phrases };
+}
+
+function parseUnlocks(value: unknown, path: string): LessonUnlock[] {
+	const unlocks: LessonUnlock[] = [];
+	expectArray(value, path).forEach((raw, i) => {
+		const unlock = KNOWN_UNLOCKS.find((known) => known === raw);
+		if (unlock === undefined) fail(`${path}[${i}]`, `expected one of: ${KNOWN_UNLOCKS.join(', ')}`);
+		if (unlocks.includes(unlock)) fail(`${path}[${i}]`, `duplicate unlock "${unlock}"`);
+		unlocks.push(unlock);
+	});
+	return unlocks;
 }
 
 function parseWord(value: unknown, known: ReadonlySet<string>, path: string): string {
@@ -130,7 +194,6 @@ function parseWord(value: unknown, known: ReadonlySet<string>, path: string): st
 function checkGeneratable(
 	lesson: LessonDefinition,
 	learned: ReadonlySet<string>,
-	groupCount: number,
 	path: string
 ): void {
 	const [min, max] = lesson.groupLength;
@@ -139,7 +202,7 @@ function checkGeneratable(
 	if (typable < 2 && max > MAX_IDENTICAL_IN_A_ROW) {
 		fail(`${path}.groupLength`, 'a single known character cannot fill groups longer than 2');
 	}
-	if (typable < 2 && groupCount > 1 && min === max && lesson.words.length === 0) {
+	if (typable < 2 && lesson.groupCount > 1 && min === max && lesson.words.length === 0) {
 		fail(`${path}.groupCount`, 'not enough variety to avoid identical consecutive groups');
 	}
 	if (lesson.newChars.includes(SPACE) && min < MIN_SPACE_GROUP_LENGTH) {
@@ -148,14 +211,17 @@ function checkGeneratable(
 			`a lesson that introduces the space needs groups of at least ${MIN_SPACE_GROUP_LENGTH}`
 		);
 	}
-	if (lesson.newChars.length > groupCount) {
+	if (lesson.newChars.length > lesson.groupCount) {
 		fail(`${path}.groupCount`, 'expected at least one group per new character');
+	}
+	if (lesson.newChars.length > max) {
+		fail(`${path}.groupLength`, 'expected groups long enough to hold all the new characters');
 	}
 }
 
 function parseLesson(
 	value: unknown,
-	introduced: Set<string>,
+	introduced: Introduced,
 	lessonIds: Set<string>,
 	language: string,
 	path: string
@@ -163,7 +229,18 @@ function parseLesson(
 	const record = expectRecord(value, path);
 	rejectUnknown(
 		record,
-		['id', 'title', 'intro', 'newChars', 'words', 'groupCount', 'groupLength'],
+		[
+			'id',
+			'title',
+			'intro',
+			'newChars',
+			'words',
+			'mix',
+			'unlocks',
+			'groupCount',
+			'targetLength',
+			'groupLength'
+		],
 		path
 	);
 	const id = expectId(record['id'], 'lesson', language, `${path}.id`);
@@ -174,15 +251,21 @@ function parseLesson(
 
 	const newChars = expectArray(record['newChars'], `${path}.newChars`).map((raw, i) => {
 		const char = expectGrapheme(raw, `${path}.newChars[${i}]`);
-		if (introduced.has(char)) {
+		if (knownChars(introduced).has(char)) {
 			fail(`${path}.newChars[${i}]`, `character "${char}" is already introduced`);
 		}
-		introduced.add(char);
+		introduced.chars.add(char);
 		return char;
 	});
 
+	const mix = parseMix(record['mix'], `${path}.mix`);
+	const unlocks = parseUnlocks(record['unlocks'], `${path}.unlocks`);
+	if (unlocks.includes('uppercase')) introduced.uppercase = true;
+
 	const groupCount = expectInteger(record['groupCount'], `${path}.groupCount`);
 	if (groupCount < 1) fail(`${path}.groupCount`, 'expected at least 1');
+	const targetLength = expectInteger(record['targetLength'], `${path}.targetLength`);
+	if (targetLength < 1) fail(`${path}.targetLength`, 'expected at least 1');
 	const rawLength = expectArray(record['groupLength'], `${path}.groupLength`);
 	if (rawLength.length !== 2) fail(`${path}.groupLength`, 'expected [min, max]');
 	const min = expectInteger(rawLength[0], `${path}.groupLength[0]`);
@@ -190,9 +273,10 @@ function parseLesson(
 	if (min < 1) fail(`${path}.groupLength[0]`, 'expected at least 1');
 	if (max < min) fail(`${path}.groupLength[1]`, 'expected a value not below the minimum');
 
+	const known = knownChars(introduced);
 	const words: string[] = [];
 	expectArray(record['words'], `${path}.words`).forEach((raw, i) => {
-		const word = parseWord(raw, introduced, `${path}.words[${i}]`);
+		const word = parseWord(raw, known, `${path}.words[${i}]`);
 		if (words.includes(word)) fail(`${path}.words[${i}]`, `duplicate word "${word}"`);
 		words.push(word);
 	});
@@ -203,32 +287,46 @@ function parseLesson(
 		intro,
 		newChars,
 		words,
+		mix,
+		unlocks,
 		groupCount,
+		targetLength,
 		groupLength: [min, max]
 	};
-	checkGeneratable(lesson, introduced, groupCount, path);
+	checkGeneratable(lesson, known, path);
 	return lesson;
 }
 
 function parseWorld(
 	value: unknown,
-	introduced: Set<string>,
+	introduced: Introduced,
 	lessonIds: Set<string>,
 	worldIds: Set<string>,
 	language: string,
 	path: string
 ): WorldDefinition {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['id', 'title', 'themeId', 'lessons'], path);
+	rejectUnknown(record, ['id', 'title', 'themeId', 'gameIds', 'lessons'], path);
 	const id = expectId(record['id'], 'world', language, `${path}.id`);
 	if (worldIds.has(id)) fail(`${path}.id`, `duplicate world id "${id}"`);
 	worldIds.add(id);
+
+	const rawGames = expectArray(record['gameIds'], `${path}.gameIds`);
+	if (rawGames.length === 0) fail(`${path}.gameIds`, 'expected at least one game');
+	const gameIds: string[] = [];
+	rawGames.forEach((raw, i) => {
+		const gameId = expectSlug(raw, `${path}.gameIds[${i}]`);
+		if (gameIds.includes(gameId)) fail(`${path}.gameIds[${i}]`, `duplicate game id "${gameId}"`);
+		gameIds.push(gameId);
+	});
+
 	const rawLessons = expectArray(record['lessons'], `${path}.lessons`);
 	if (rawLessons.length === 0) fail(`${path}.lessons`, 'expected at least one lesson');
 	return {
 		id,
 		title: expectString(record['title'], `${path}.title`),
 		themeId: expectString(record['themeId'], `${path}.themeId`),
+		gameIds,
 		lessons: rawLessons.map((lesson, i) =>
 			parseLesson(lesson, introduced, lessonIds, language, `${path}.lessons[${i}]`)
 		)
@@ -269,7 +367,7 @@ export function parseProgression(data: unknown): ProgressionDefinition {
 
 	const rawWorlds = expectArray(root['worlds'], 'progression.worlds');
 	if (rawWorlds.length === 0) fail('progression.worlds', 'expected at least one world');
-	const introduced = new Set<string>();
+	const introduced: Introduced = { chars: new Set<string>(), uppercase: false };
 	const lessonIdSet = new Set<string>();
 	const worldIdSet = new Set<string>();
 	const worlds = rawWorlds.map((world, i) =>
@@ -296,10 +394,16 @@ export function findLesson(
 
 export function learnedChars(progression: ProgressionDefinition, lessonId: string): string[] {
 	const learned: string[] = [];
+	let uppercase = false;
 	for (const world of progression.worlds) {
 		for (const lesson of world.lessons) {
 			learned.push(...lesson.newChars);
-			if (lesson.id === lessonId) return learned;
+			if (lesson.unlocks.includes('uppercase')) uppercase = true;
+			if (lesson.id === lessonId) {
+				if (!uppercase) return learned;
+				const present = new Set(learned);
+				return [...learned, ...capitalsOf(learned).filter((capital) => !present.has(capital))];
+			}
 		}
 	}
 	throw new RangeError(`Unknown lesson: ${lessonId}`);

@@ -1,28 +1,61 @@
 import { toGraphemes } from '../graphemes';
+import { usablePhrases, usableWords } from './banks';
 import { findLesson, learnedChars } from './definition';
-import type { Exercise, LessonDefinition, ProgressionDefinition, Rng } from './types';
+import type {
+	Exercise,
+	ExerciseContext,
+	ExerciseMix,
+	LessonDefinition,
+	ProgressionDefinition,
+	Rng
+} from './types';
 
 const SPACE = ' ';
-const WORD_SHARE = 0.5;
 const MAX_ATTEMPTS = 64;
 const RELAXED_AFTER_ATTEMPT = 16;
 const MAX_IDENTICAL_IN_A_ROW = 2;
+const CAPITAL_PATTERN = /^[A-Z]$/;
 
-interface GroupContext {
+type Genre = 'drill' | 'word' | 'phrase';
+
+interface Item {
+	readonly text: string;
+	readonly graphemes: readonly string[];
+	readonly weight: number;
+}
+
+interface Reserve {
+	readonly items: readonly Item[];
+	readonly used: Set<string>;
+}
+
+interface Candidate {
+	readonly text: string;
+	readonly reserve?: Reserve;
+}
+
+interface Settings {
 	readonly lesson: LessonDefinition;
 	readonly fresh: readonly string[];
 	readonly known: readonly string[];
-	readonly weight: number;
+	readonly newCharWeight: number;
+	readonly weakCharBoost: number;
+	readonly errorRate: (char: string) => number;
 	readonly rng: Rng;
-}
-
-function pick<T>(items: readonly T[], rng: Rng): T {
-	const index = Math.min(items.length - 1, Math.floor(rng() * items.length));
-	return items[index] as T;
 }
 
 function between(min: number, max: number, rng: Rng): number {
 	return min + Math.min(max - min, Math.floor(rng() * (max - min + 1)));
+}
+
+function pickWeighted<T>(items: readonly T[], weights: readonly number[], rng: Rng): T {
+	const total = weights.reduce((sum, weight) => sum + weight, 0);
+	let remaining = rng() * total;
+	for (let i = 0; i < items.length; i++) {
+		remaining -= weights[i] as number;
+		if (remaining < 0) return items[i] as T;
+	}
+	return items[items.length - 1] as T;
 }
 
 function isAllowed(sequence: readonly string[], char: string, length: number): boolean {
@@ -40,86 +73,219 @@ function isAllowed(sequence: readonly string[], char: string, length: number): b
 function pickChar(
 	sequence: readonly string[],
 	length: number,
-	context: GroupContext,
+	settings: Settings,
 	relaxed: boolean
-) {
-	const { fresh, known, weight, rng } = context;
+): string {
+	const { fresh, known, newCharWeight, weakCharBoost, errorRate, rng } = settings;
 	const allowed = (pool: readonly string[]) =>
 		pool.filter((char) => isAllowed(sequence, char, length));
 	const pools = relaxed
 		? [allowed([...fresh, ...known])]
-		: rng() < weight
+		: rng() < newCharWeight
 			? [allowed(fresh), allowed(known)]
 			: [allowed(known), allowed(fresh)];
 	const pool = pools.find((candidate) => candidate.length > 0);
 	if (pool === undefined) {
-		throw new Error(`Lesson ${context.lesson.id}: no character can be placed in a group`);
+		throw new Error(`Lesson ${settings.lesson.id}: no character can be placed in a group`);
 	}
-	return pick(pool, rng);
+	return pickWeighted(
+		pool,
+		pool.map((char) => 1 + weakCharBoost * errorRate(char)),
+		rng
+	);
 }
 
-function buildSequence(
-	length: number,
-	forced: string | undefined,
-	context: GroupContext,
-	relaxed: boolean
-): string {
-	const sequence: string[] = [];
-	while (sequence.length < length) {
-		sequence.push(pickChar(sequence, length, context, relaxed));
-	}
-	if (forced !== undefined && !sequence.includes(forced)) {
-		const first = forced === SPACE ? 1 : 0;
-		const last = forced === SPACE ? length - 2 : length - 1;
-		sequence[between(first, last, context.rng)] = forced;
-	}
-	return sequence.join('');
+function isValidSequence(sequence: readonly string[]): boolean {
+	return sequence.every((char, index) => {
+		if (char === SPACE) {
+			return index > 0 && index < sequence.length - 1 && sequence[index - 1] !== SPACE;
+		}
+		return !(
+			index >= MAX_IDENTICAL_IN_A_ROW &&
+			sequence[index - 1] === char &&
+			sequence[index - 2] === char
+		);
+	});
 }
 
-function buildGroup(forced: string | undefined, context: GroupContext, relaxed: boolean): string {
-	const { lesson, rng } = context;
-	const wantsWord = lesson.words.length > 0 && rng() < WORD_SHARE;
-	if (wantsWord && forced === undefined) return pick(lesson.words, rng);
+function placeForced(
+	natural: readonly string[],
+	forced: readonly string[],
+	rng: Rng
+): string[] | undefined {
+	const sequence = [...natural];
+	const reserved = new Set<number>();
+	for (const char of forced) {
+		const index = sequence.indexOf(char);
+		if (index >= 0) reserved.add(index);
+	}
+	const absent = forced.filter((char) => !sequence.includes(char));
+	absent.sort((a, b) => Number(b === SPACE) - Number(a === SPACE));
+	for (const char of absent) {
+		const slots = sequence
+			.map((_, index) => index)
+			.filter(
+				(index) =>
+					!reserved.has(index) && (char !== SPACE || (index > 0 && index < sequence.length - 1))
+			);
+		if (slots.length === 0) return undefined;
+		const slot = slots[between(0, slots.length - 1, rng)] as number;
+		sequence[slot] = char;
+		reserved.add(slot);
+	}
+	return isValidSequence(sequence) ? sequence : undefined;
+}
+
+function buildDrill(forced: readonly string[], settings: Settings, relaxed: boolean): Candidate {
+	const { lesson, rng } = settings;
 	const [min, max] = lesson.groupLength;
-	return buildSequence(between(min, max, rng), forced, context, relaxed);
+	for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+		const length = Math.max(between(min, max, rng), forced.length);
+		const natural: string[] = [];
+		while (natural.length < length) {
+			natural.push(pickChar(natural, length, settings, relaxed));
+		}
+		const sequence = forced.length === 0 ? natural : placeForced(natural, forced, rng);
+		if (sequence !== undefined) return { text: sequence.join('') };
+	}
+	throw new Error(`Lesson ${lesson.id}: cannot place the new characters in a group`);
+}
+
+function remaining(reserve: Reserve): readonly Item[] {
+	const unused = reserve.items.filter((item) => !reserve.used.has(item.text));
+	if (unused.length > 0) return unused;
+	reserve.used.clear();
+	return reserve.items;
+}
+
+function buildEntry(reserve: Reserve, preferred: readonly string[], settings: Settings): Candidate {
+	const { newCharWeight, rng } = settings;
+	let pool = remaining(reserve);
+	if (preferred.length > 0) {
+		const matching = pool.filter((item) => item.graphemes.some((char) => preferred.includes(char)));
+		if (matching.length > 0 && rng() < newCharWeight) pool = matching;
+	}
+	const item = pickWeighted(
+		pool,
+		pool.map((candidate) => candidate.weight),
+		rng
+	);
+	return { text: item.text, reserve };
+}
+
+function chooseGenre(mix: ExerciseMix, hasWords: boolean, hasPhrases: boolean, rng: Rng): Genre {
+	const weights: [Genre, number][] = [
+		['drill', mix.drills],
+		['word', hasWords ? mix.words : 0],
+		['phrase', hasPhrases ? mix.phrases : 0]
+	];
+	const available = weights.filter(([, weight]) => weight > 0);
+	if (available.length === 0) return 'drill';
+	return pickWeighted(
+		available.map(([genre]) => genre),
+		available.map(([, weight]) => weight),
+		rng
+	);
+}
+
+function capitalsIn(chars: readonly string[]): string[] {
+	return chars.filter((char) => CAPITAL_PATTERN.test(char));
 }
 
 export function generateExercise(
 	progression: ProgressionDefinition,
 	lessonId: string,
-	rng: Rng
+	rng: Rng,
+	context: ExerciseContext = {}
 ): Exercise {
 	const lesson = findLesson(progression, lessonId);
 	if (lesson === undefined) throw new RangeError(`Unknown lesson: ${lessonId}`);
 
-	const fresh = lesson.newChars;
-	const known = learnedChars(progression, lessonId).filter((char) => !fresh.includes(char));
-	const context: GroupContext = {
+	const learned = learnedChars(progression, lessonId);
+	const { newCharWeight, weakCharBoost, themeBoost } = progression.rules;
+	const chars = context.progress?.chars ?? {};
+	const errorRate = (char: string): number => {
+		const stat = chars[char];
+		if (stat === undefined || stat.attempts <= 0) return 0;
+		return Math.min(1, Math.max(0, stat.errors / stat.attempts));
+	};
+
+	const fresh = [
+		...lesson.newChars,
+		...(lesson.unlocks.includes('uppercase') ? capitalsIn(learned) : [])
+	];
+	const settings: Settings = {
 		lesson,
 		fresh,
-		known,
-		weight: progression.rules.newCharWeight,
+		known: learned.filter((char) => !fresh.includes(char)),
+		newCharWeight,
+		weakCharBoost,
+		errorRate,
 		rng
 	};
 
+	const toItem = (text: string, themes: readonly string[]): Item => {
+		const graphemes = toGraphemes(text);
+		const themeFactor =
+			1 + (context.themeId !== undefined && themes.includes(context.themeId) ? themeBoost : 0);
+		const weakFactor = 1 + weakCharBoost * Math.max(0, ...graphemes.map(errorRate));
+		return { text, graphemes, weight: themeFactor * weakFactor };
+	};
+
+	const options = { maxLevel: context.maxLevel };
+	const wordItems = new Map<string, Item>();
+	for (const word of lesson.words) wordItems.set(word, toItem(word, []));
+	if (context.words !== undefined) {
+		for (const entry of usableWords(context.words, learned, options)) {
+			wordItems.set(entry.text, toItem(entry.text, entry.themes));
+		}
+	}
+	const phraseItems = (
+		context.phrases === undefined ? [] : usablePhrases(context.phrases, learned, options)
+	).map((entry) => toItem(entry.text, entry.themes));
+	const words: Reserve = { items: [...wordItems.values()], used: new Set() };
+	const phrases: Reserve = { items: phraseItems, used: new Set() };
+
 	const groups: string[] = [];
 	const covered = new Set<string>();
-	for (let index = 0; index < lesson.groupCount; index++) {
-		const missing = fresh.filter((char) => !covered.has(char));
-		const groupsAfter = lesson.groupCount - 1 - index;
-		const forced = missing.length > groupsAfter ? missing[0] : undefined;
-		const previous = groups[index - 1];
+	let total = 0;
 
-		let group = buildGroup(forced, context, false);
-		for (let attempt = 1; group === previous && attempt < MAX_ATTEMPTS; attempt++) {
-			group = buildGroup(forced, context, attempt >= RELAXED_AFTER_ATTEMPT);
+	while (groups.length < lesson.groupCount && total < lesson.targetLength) {
+		const missing = lesson.newChars.filter((char) => !covered.has(char));
+		const previous = groups[groups.length - 1];
+		let accepted: Candidate | undefined;
+
+		for (let attempt = 0; attempt < MAX_ATTEMPTS && accepted === undefined; attempt++) {
+			const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
+			const genre = relaxed
+				? 'drill'
+				: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
+			let candidate =
+				genre === 'drill'
+					? buildDrill([], settings, relaxed)
+					: buildEntry(
+							genre === 'word' ? words : phrases,
+							genre === 'word' ? lesson.newChars : [],
+							settings
+						);
+
+			const present = toGraphemes(candidate.text);
+			const stops =
+				groups.length + 1 >= lesson.groupCount || total + present.length >= lesson.targetLength;
+			if (stops && missing.some((char) => !present.includes(char))) {
+				candidate = buildDrill(missing, settings, relaxed);
+			}
+			if (candidate.text !== previous) accepted = candidate;
 		}
-		if (group === previous) {
+		if (accepted === undefined) {
 			throw new Error(`Lesson ${lessonId}: cannot build two different consecutive groups`);
 		}
 
-		groups.push(group);
-		for (const grapheme of toGraphemes(group)) covered.add(grapheme);
+		accepted.reserve?.used.add(accepted.text);
+		groups.push(accepted.text);
+		const graphemes = toGraphemes(accepted.text);
+		total += graphemes.length;
+		for (const grapheme of graphemes) covered.add(grapheme);
 	}
 	return { lessonId, groups };
 }
