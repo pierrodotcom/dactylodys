@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { onMount, type Component } from 'svelte';
-	import {
-		evaluateLesson,
-		applyLessonResult,
-		isLessonUnlocked
-	} from '$lib/engine/progression/progress';
+	import { isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, lessonIds } from '$lib/engine/progression/definition';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import type { Exercise, ProgressionDefinition, StarCount } from '$lib/engine/progression/types';
@@ -17,7 +13,7 @@
 		defaultSettings,
 		markCalibrated,
 		updateSettings,
-		withProgress
+		withLastGame
 	} from '$lib/state/profile';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
@@ -33,17 +29,12 @@
 	} from './break';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
-	import {
-		gameOptions,
-		NO_CHOSEN_GAMES,
-		rememberGame,
-		selectedGame,
-		type ChosenGames
-	} from './game-choice';
+	import { gameOptions, selectedGame } from './game-choice';
 	import { toGameSettings } from './game-settings';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
+	import { recordLessonOutcome } from './lesson-outcome';
 	import LessonResult from './LessonResult.svelte';
 	import { nextLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
@@ -77,7 +68,6 @@
 	let loadFailed = $state(false);
 	let saveState = $state<'idle' | 'saved' | 'error'>('idle');
 	let systemPrefersReduced = $state(false);
-	let chosenGames = $state.raw<ChosenGames>(NO_CHOSEN_GAMES);
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let gameLoadFailed = $state(false);
 
@@ -178,7 +168,6 @@
 	function changePlayer() {
 		profile = null;
 		assets = null;
-		chosenGames = NO_CHOSEN_GAMES;
 		saveState = 'idle';
 		go({ type: 'change-player' });
 	}
@@ -221,15 +210,16 @@
 		});
 	}
 
+	/** The choice is kept in the profile, so that the child finds the same game at the next visit. */
 	function chooseGame(worldId: string, gameId: string) {
 		gameLoadFailed = false;
-		chosenGames = rememberGame(chosenGames, worldId, gameId);
+		if (profile) void commit(withLastGame(profile, worldId, gameId));
 	}
 
 	async function beginGame(lessonId: string, event: FlowEvent) {
 		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
-		const definition = world ? selectedGame(world, chosenGames) : undefined;
+		const definition = world ? selectedGame(world, profile.lastGameByWorld) : undefined;
 		if (!world || !definition) return;
 		let banks: LoadedBanks;
 		try {
@@ -263,14 +253,14 @@
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
 		playClock = stopPlaying(playClock, now());
-		const evaluation = evaluateLesson(progression.rules, outcome.metrics);
-		const progress = applyLessonResult(profile.progress, {
+		const { profile: next, evaluation } = recordLessonOutcome(
+			profile,
+			progression.rules,
 			lessonId,
-			metrics: outcome.metrics,
-			evaluation,
-			completedAt: Date.now()
-		});
-		const next = withProgress(profile, progress);
+			outcome,
+			Date.now()
+		);
+		const progress = next.progress;
 		const followingId = nextLessonId(progression, lessonId);
 		const hasOpenNext =
 			followingId !== null && isLessonUnlocked(progression, progress, followingId);
@@ -352,7 +342,7 @@
 				number={lessonIds(progression).indexOf(lessonId) + 1}
 				{assets}
 				games={gameOptions(world)}
-				gameId={selectedGame(world, chosenGames)?.id ?? ''}
+				gameId={selectedGame(world, profile.lastGameByWorld)?.id ?? ''}
 				loadFailed={gameLoadFailed}
 				onchoose={(gameId) => chooseGame(world.id, gameId)}
 				onstart={() => beginGame(lessonId, { type: 'start' })}

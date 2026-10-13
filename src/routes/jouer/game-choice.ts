@@ -15,20 +15,14 @@ export interface GameOption {
 	readonly description: string;
 }
 
-/** The game last chosen in each world during this visit, by world identifier. */
+/** The game last chosen in each world, by world identifier: `Profile.lastGameByWorld`. */
 export type ChosenGames = Readonly<Record<string, string>>;
-
-export const NO_CHOSEN_GAMES: ChosenGames = {};
 
 /** The game to play in a world: the one chosen last time in it, else the first one it offers. */
 export function selectedGame(world: WorldGames, choices: ChosenGames): GameDefinition | undefined {
 	const games = gamesForWorld(world);
 	const remembered = Object.hasOwn(choices, world.id) ? choices[world.id] : undefined;
 	return games.find((game) => game.id === remembered) ?? games[0];
-}
-
-export function rememberGame(choices: ChosenGames, worldId: string, gameId: string): ChosenGames {
-	return { ...choices, [worldId]: gameId };
 }
 
 /** The games of a world, ready to be shown in the choice. */

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import type { ProgressState, StarCount } from '../src/lib/engine/progression/types';
 import { createProfile, markCalibrated, withProgress } from '../src/lib/state/profile';
 import { createIndexedDbProfileStore } from '../src/lib/state/stores';
+import { asVersion1 } from '../src/lib/state/test-support';
 import type { Profile } from '../src/lib/state/types';
 
 /** SvelteKit adds its announcer once the client app has taken over the page. */
@@ -150,12 +151,31 @@ async function snapshotOfRealStore(profile: Profile): Promise<DatabaseSnapshot> 
 	}
 }
 
+/** `version-1`: the record as the first version of the app stored it, before any migration. */
+export type StoredFormat = 'current' | 'version-1';
+
+function inFormat(snapshot: DatabaseSnapshot, profile: Profile, format: StoredFormat) {
+	if (format === 'current') return snapshot;
+	const isThisProfile = (record: unknown) => (record as { id?: unknown }).id === profile.id;
+	return {
+		...snapshot,
+		stores: snapshot.stores.map((store) => ({
+			...store,
+			records: store.records.map((record) => (isThisProfile(record) ? asVersion1(profile) : record))
+		}))
+	};
+}
+
 /**
  * Writes a profile straight into the IndexedDB database of the app, in its real format. The page
  * must already be on the app: reload it afterwards so that the app reads the profile.
  */
-export async function installProfile(page: Page, profile: Profile): Promise<void> {
-	const snapshot = await snapshotOfRealStore(profile);
+export async function installProfile(
+	page: Page,
+	profile: Profile,
+	format: StoredFormat = 'current'
+): Promise<void> {
+	const snapshot = inFormat(await snapshotOfRealStore(profile), profile, format);
 	await page.evaluate(async (database) => {
 		const opened = await new Promise<IDBDatabase>((resolve, reject) => {
 			const request = indexedDB.open(database.name, database.version);
@@ -180,4 +200,33 @@ export async function installProfile(page: Page, profile: Profile): Promise<void
 		});
 		opened.close();
 	}, snapshot);
+}
+
+/** The record the app holds for this profile, as it is stored; `undefined` when there is none. */
+export async function storedRecord(
+	page: Page,
+	profile: Profile
+): Promise<Record<string, unknown> | undefined> {
+	const snapshot = await snapshotOfRealStore(profile);
+	const holder = snapshot.stores.find((store) => store.records.length > 0);
+	if (!holder) throw new Error('The profile store did not write the profile anywhere');
+	return page.evaluate(
+		async ({ databaseName, storeName, id }) => {
+			const opened = await new Promise<IDBDatabase>((resolve, reject) => {
+				const request = indexedDB.open(databaseName);
+				request.onsuccess = () => resolve(request.result);
+				request.onerror = () => reject(request.error);
+			});
+			try {
+				return await new Promise<Record<string, unknown> | undefined>((resolve, reject) => {
+					const request = opened.transaction(storeName, 'readonly').objectStore(storeName).get(id);
+					request.onsuccess = () => resolve(request.result as Record<string, unknown> | undefined);
+					request.onerror = () => reject(request.error);
+				});
+			} finally {
+				opened.close();
+			}
+		},
+		{ databaseName: snapshot.name, storeName: holder.name, id: profile.id }
+	);
 }

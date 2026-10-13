@@ -7,6 +7,7 @@ const VALID = {
 	breakAfterMinutes: 12,
 	maxWordLevel: 3,
 	bankLoadTimeoutMs: 3000,
+	ghostPaceFactor: 0.9,
 	keyboardCheckCodes: ['KeyQ', 'KeyW']
 };
 
@@ -23,8 +24,14 @@ describe('parsePlayRules', () => {
 			breakAfterMinutes: 12,
 			maxWordLevel: 3,
 			bankLoadTimeoutMs: 3000,
+			ghostPaceFactor: 0.9,
 			keyboardCheckCodes: ['KeyQ', 'KeyW']
 		});
+	});
+
+	it('lets the ghost run at the pace of the child, but never faster', () => {
+		expect(parsePlayRules({ ...VALID, ghostPaceFactor: 1 }).ghostPaceFactor).toBe(1);
+		expect(PLAY_RULES.ghostPaceFactor).toBeLessThanOrEqual(1);
 	});
 
 	it.each([
@@ -37,6 +44,10 @@ describe('parsePlayRules', () => {
 		['no level', { ...VALID, maxWordLevel: undefined }],
 		['no wait for the banks', { ...VALID, bankLoadTimeoutMs: 0 }],
 		['a wait that is not a number', { ...VALID, bankLoadTimeoutMs: '3000' }],
+		['a ghost that does not move', { ...VALID, ghostPaceFactor: 0 }],
+		['a ghost faster than the child was', { ...VALID, ghostPaceFactor: 1.1 }],
+		['a ghost pace that is not a number', { ...VALID, ghostPaceFactor: '0.9' }],
+		['no ghost pace', { ...VALID, ghostPaceFactor: undefined }],
 		['no key to check', { ...VALID, keyboardCheckCodes: [] }],
 		['an invalid key code', { ...VALID, keyboardCheckCodes: ['q'] }],
 		['a duplicated key code', { ...VALID, keyboardCheckCodes: ['KeyQ', 'KeyQ'] }]
