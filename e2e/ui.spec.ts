@@ -88,6 +88,7 @@ test.describe('component gallery', () => {
 		for (const heading of [
 			'dev_ui_controls_heading',
 			'dev_ui_buttons_heading',
+			'dev_ui_listen_heading',
 			'dev_ui_target_text_heading',
 			'dev_ui_keyboard_heading',
 			'dev_ui_finger_hint_heading',
@@ -288,13 +289,76 @@ test.describe('component gallery', () => {
 		await openGallery(page);
 		const buttons = page.locator('main button');
 		const count = await buttons.count();
-		expect(count).toBe(6);
+		expect(count).toBe(8);
 
 		for (let index = 0; index < count; index++) {
 			const box = await buttons.nth(index).boundingBox();
 			expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
 			expect(box?.width ?? 0).toBeGreaterThanOrEqual(48);
 		}
+	});
+});
+
+test.describe('listen button', () => {
+	function listenRow(page: Page, index: number) {
+		return page.getByTestId('listen-available').nth(index);
+	}
+
+	function listenButton(page: Page, index: number) {
+		return listenRow(page, index).getByRole('button');
+	}
+
+	test('shows a button for a text that has a recording, and nothing for one that has none', async ({
+		page
+	}) => {
+		await openGallery(page);
+
+		await expect(page.getByTestId('listen-available')).toHaveCount(2);
+		await expect(listenButton(page, 0)).toHaveAccessibleName(message('ui_listen_start'));
+		await expect(listenRow(page, 0).getByRole('status')).toHaveText('');
+		await expect(page.getByTestId('listen-missing')).toContainText(
+			message('dev_ui_listen_sample_missing')
+		);
+		await expect(page.getByTestId('listen-missing').getByRole('button')).toHaveCount(0);
+		await expect(page.getByTestId('listen-missing').getByRole('status')).toHaveCount(0);
+	});
+
+	test('starts with the keyboard, announces that it is playing, and stops on a second press', async ({
+		page
+	}) => {
+		await openGallery(page);
+
+		await listenButton(page, 0).focus();
+		await page.keyboard.press('Enter');
+
+		await expect(listenButton(page, 0)).toHaveAccessibleName(message('ui_listen_stop'));
+		await expect(listenButton(page, 0)).toHaveAttribute('data-playing', 'true');
+		await expect(listenRow(page, 0).getByRole('status')).toHaveText(message('ui_listen_playing'));
+		await expect(listenButton(page, 0)).toBeFocused();
+
+		await page.keyboard.press('Space');
+
+		await expect(listenButton(page, 0)).toHaveAccessibleName(message('ui_listen_start'));
+		await expect(listenButton(page, 0)).toHaveAttribute('data-playing', 'false');
+		await expect(listenRow(page, 0).getByRole('status')).toHaveText('');
+		await expect(listenButton(page, 0)).toBeFocused();
+	});
+
+	test('stops the text being said when another one is listened to', async ({ page }) => {
+		await openGallery(page);
+		await listenButton(page, 0).focus();
+		await page.keyboard.press('Enter');
+		await expect(listenButton(page, 0)).toHaveAttribute('data-playing', 'true');
+
+		await listenButton(page, 1).focus();
+		await page.keyboard.press('Enter');
+
+		await expect(listenButton(page, 1)).toHaveAttribute('data-playing', 'true');
+		await expect(listenButton(page, 0)).toHaveAttribute('data-playing', 'false');
+		await expect(listenRow(page, 0).getByRole('status')).toHaveText('');
+		await expect(
+			page.getByRole('status').filter({ hasText: message('ui_listen_playing') })
+		).toHaveCount(1);
 	});
 });
 
@@ -361,6 +425,19 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await exerciseStates(page);
 
 			await expectNoViolation(page);
+		});
+
+		test('has no axe violation while a listen button is playing', async ({ page }) => {
+			await openGallery(page);
+			await page.getByTestId('listen-available').first().getByRole('button').click();
+			await expect(
+				page.getByRole('status').filter({ hasText: message('ui_listen_playing') })
+			).toHaveCount(1);
+			await page.evaluate(() => document.fonts.ready);
+
+			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+
+			expect(results.violations).toEqual([]);
 		});
 
 		test('has no axe violation with the theme forced on the page root', async ({ page }) => {
