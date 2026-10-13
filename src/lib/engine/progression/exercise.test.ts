@@ -672,6 +672,82 @@ describe('generateExercise', () => {
 			expect(share(withE, 400)).toBeLessThan(0.75);
 		});
 
+		describe('a lesson that asks for words', () => {
+			const base = [
+				lesson('fj', ['f', 'j']),
+				lesson('space', [SPACE]),
+				lesson('dk', ['d', 'k']),
+				lesson('sl', ['s', 'l']),
+				lesson('ei', ['e', 'i']),
+				lesson('ru', ['r', 'u'])
+			];
+			const longPhrases = parsePhraseBank({
+				schemaVersion: 1,
+				id: 'fr.phrases.long-check',
+				locale: 'fr-FR',
+				phrases: [
+					'elle relie les fils de fer',
+					'je fuis le feu le jeudi',
+					'il file sur ses skis lisses',
+					'je lis les feuilles de elle'
+				].map((text) => ({ text, themes: [], level: 1, review: 'agent' }))
+			});
+			const hasWord = (exercise: Exercise, words: readonly string[]) =>
+				exercise.groups.some((group) => words.includes(group));
+
+			it('always holds a word, even when two phrases would fill it', () => {
+				const words = ['fil', 'sel', 'ski', 'dis'];
+				const progression = progressionOf([
+					...base,
+					lesson('mostly-phrases', [], {
+						words,
+						mix: { drills: 1, words: 1, phrases: 20 },
+						groupCount: 8,
+						targetLength: 40
+					})
+				]);
+				for (let seed = 0; seed < 300; seed++) {
+					const exercise = generate(progression, 'fr.lesson.mostly-phrases', seed, {
+						phrases: longPhrases
+					});
+					expect(hasWord(exercise, words), exercise.groups.join(' | ')).toBe(true);
+				}
+			});
+
+			it('holds a word after the warm-up of its new characters', () => {
+				const words = ['tes', 'net', 'lent', 'dent'];
+				const progression = progressionOf(
+					[
+						...base,
+						lesson('tn', ['t', 'n'], {
+							words,
+							mix: { drills: 1, words: 1, phrases: 20 },
+							groupCount: 12,
+							targetLength: 50
+						})
+					],
+					{ newCharMinCount: 4 }
+				);
+				for (let seed = 0; seed < 300; seed++) {
+					const exercise = generate(progression, 'fr.lesson.tn', seed, { phrases: longPhrases });
+					expect(hasWord(exercise, words), exercise.groups.join(' | ')).toBe(true);
+				}
+			});
+
+			it('asks for no word when the mix has none', () => {
+				const progression = progressionOf([
+					...base,
+					lesson('no-words', [], { words: ['fil', 'sel'], mix: PHRASES_ONLY, groupCount: 3 })
+				]);
+				for (let seed = 0; seed < 50; seed++) {
+					const exercise = generate(progression, 'fr.lesson.no-words', seed, {
+						phrases: longPhrases
+					});
+					expect(hasWord(exercise, ['fil', 'sel'])).toBe(false);
+				}
+			});
+		});
+
 		describe('phrases with the new characters', () => {
 			const phrases = (texts: string[]): PhraseBank =>
 				parsePhraseBank({

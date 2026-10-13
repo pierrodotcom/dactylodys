@@ -244,6 +244,9 @@ export function generateExercise(
 	const words: Reserve = { items: [...wordItems.values()], used: new Set() };
 	const phrases: Reserve = { items: phraseItems, used: new Set() };
 
+	// A lesson that asks for words gives at least one, even when long phrases would fill it.
+	let owesWord = lesson.mix.words > 0 && words.items.length > 0;
+
 	const buildMixed = (
 		missing: readonly string[],
 		groupIndex: number,
@@ -264,8 +267,11 @@ export function generateExercise(
 		const present = toGraphemes(candidate.text);
 		const stops =
 			groupIndex + 1 >= lesson.groupCount || length + present.length >= lesson.targetLength;
-		return stops && missing.some((char) => !present.includes(char))
-			? buildDrill(missing, settings, relaxed)
+		if (stops && missing.some((char) => !present.includes(char))) {
+			return buildDrill(missing, settings, relaxed);
+		}
+		return stops && owesWord && candidate.reserve !== words
+			? buildEntry(words, lesson.newChars, settings)
 			: candidate;
 	};
 
@@ -294,6 +300,7 @@ export function generateExercise(
 		}
 
 		accepted.reserve?.used.add(accepted.text);
+		if (accepted.reserve === words) owesWord = false;
 		groups.push(accepted.text);
 		const graphemes = toGraphemes(accepted.text);
 		total += graphemes.length;
