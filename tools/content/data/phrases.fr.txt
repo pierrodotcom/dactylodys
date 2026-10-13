@@ -103,6 +103,13 @@
 3 | espace | la fusée décolle avec un yaourt
 3 | vehicules | la tortue a gagné la course de vélo
 3 | animaux | le poisson a le hoquet à chaque bulle
+1 | dinos | je sais où dort le dragon
+2 | animaux | le chat sait où est le fromage
+2 | cuisine | dis où tu caches le chocolat
+2 | animaux | voilà où habite le hibou
+3 | espace | le robot cherche où poser sa fusée
+2 | animaux | devine où le lapin range ses carottes
+2 | espace | la lune sait où va la comète
 # Palier 7 : majuscules et ponctuation
 1 | animaux | Le chat a mis ses lunettes.
 1 | | Où est ma chaussette?
@@ -141,6 +148,44 @@
 2 | animaux | Un escargot gagne le marathon!
 3 | animaux | Le crocodile a enfin des dents propres!
 2 | | Le robot a rangé le salon au frigo.
+2 | espace | Sur la lune, le robot plante des carottes.
+2 | espace | La fusée tousse, puis elle repart.
+3 | espace | Dans ma fusée, je range une vache.
+2 | espace | Ce matin, une comète a pris le bus.
+2 | espace | Le robot porte un chapeau, une cravate.
+1 | animaux | Le chat dort, le chien ronfle.
+2 | cuisine | Dans ma soupe, il y a un bouton.
+3 | espace | La nuit, les planètes jouent aux billes.
+2 | dinos | Petit ou grand, le dinosaure adore les bulles.
+2 | espace | Sur ma planète, la pluie sent la fraise.
+1 | | Un, deux, trois, je saute.
+3 | vehicules | Le lundi, le tracteur va au cinéma.
+1 | vehicules | Qui conduit le bus?
+2 | vehicules | Le train a perdu ses roues!
+3 | vehicules | Attention, la trottinette a mangé du piment!
+2 | vehicules | Oh, mon vélo sait nager!
+2 | vehicules | Où va ce bateau à roulettes?
+3 | vehicules | Un tracteur dans la baignoire, quel bazar!
+2 | espace | Qui a rangé la lune dans le placard?
+1 | animaux | Tu as vu ce lapin bleu?
+2 | vehicules | Mon sous-marin a peur de l'eau.
+2 | vehicules | Le chasse-neige part en vacances au soleil.
+2 | vehicules | Mon garage: un vélo, une girafe.
+3 | vehicules | La pilote annonce: on atterrit sur un nuage.
+2 | vehicules | Menu du camion: des frites à la fraise.
+2 | animaux | La chauve-souris joue à cache-cache.
+2 | nature | Un arc-en-ciel est tombé dans mon bol.
+3 | cuisine | Recette du jour: une tarte aux chaussettes.
+2 | vehicules | Dis-moi, ton vélo sait-il voler?
+3 | vehicules | Règle du bus: on chante à chaque virage.
+2 | cuisine | Mon grille-pain raconte des blagues.
+3 | espace | Message de la fusée: le pilote dort!
+2 | | Devinette: qui a des roues et un pyjama?
+2 | vehicules | Le cerf-volant a pris le train.
+3 | vehicules | On a tout réparé: le klaxon, le sandwich.
+1 | | Voici mon plan: une sieste.
+2 | animaux | Peut-on promener un poisson rouge?
+2 | maison | Cet après-midi, le canapé fait du sport.
 # Palier 8 : circonflexes et trémas
 2 | cuisine | Le dragon fait un gâteau pour la forêt.
 3 | animaux | Une souris dîne sur une île de fromage.

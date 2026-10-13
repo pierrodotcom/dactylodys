@@ -375,6 +375,33 @@
 			"level": 3,
 			"review": "human"
 		},
+		{ "text": "je sais où dort le dragon", "themes": ["dinos"], "level": 1, "review": "agent" },
+		{
+			"text": "le chat sait où est le fromage",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "dis où tu caches le chocolat",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "voilà où habite le hibou", "themes": ["animaux"], "level": 2, "review": "agent" },
+		{
+			"text": "le robot cherche où poser sa fusée",
+			"themes": ["espace"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "devine où le lapin range ses carottes",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "la lune sait où va la comète", "themes": ["espace"], "level": 2, "review": "agent" },
 		{ "text": "Le chat a mis ses lunettes.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{ "text": "Où est ma chaussette?", "themes": [], "level": 1, "review": "human" },
 		{ "text": "Le dragon a faim!", "themes": ["dinos"], "level": 1, "review": "human" },
@@ -527,6 +554,209 @@
 			"review": "human"
 		},
 		{ "text": "Le robot a rangé le salon au frigo.", "themes": [], "level": 2, "review": "human" },
+		{
+			"text": "Sur la lune, le robot plante des carottes.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "La fusée tousse, puis elle repart.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Dans ma fusée, je range une vache.",
+			"themes": ["espace"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Ce matin, une comète a pris le bus.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le robot porte un chapeau, une cravate.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le chat dort, le chien ronfle.",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"text": "Dans ma soupe, il y a un bouton.",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "La nuit, les planètes jouent aux billes.",
+			"themes": ["espace"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Petit ou grand, le dinosaure adore les bulles.",
+			"themes": ["dinos"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Sur ma planète, la pluie sent la fraise.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "Un, deux, trois, je saute.", "themes": [], "level": 1, "review": "agent" },
+		{
+			"text": "Le lundi, le tracteur va au cinéma.",
+			"themes": ["vehicules"],
+			"level": 3,
+			"review": "agent"
+		},
+		{ "text": "Qui conduit le bus?", "themes": ["vehicules"], "level": 1, "review": "agent" },
+		{
+			"text": "Le train a perdu ses roues!",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Attention, la trottinette a mangé du piment!",
+			"themes": ["vehicules"],
+			"level": 3,
+			"review": "agent"
+		},
+		{ "text": "Oh, mon vélo sait nager!", "themes": ["vehicules"], "level": 2, "review": "agent" },
+		{
+			"text": "Où va ce bateau à roulettes?",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Un tracteur dans la baignoire, quel bazar!",
+			"themes": ["vehicules"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Qui a rangé la lune dans le placard?",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "Tu as vu ce lapin bleu?", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{
+			"text": "Mon sous-marin a peur de l'eau.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le chasse-neige part en vacances au soleil.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Mon garage: un vélo, une girafe.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "La pilote annonce: on atterrit sur un nuage.",
+			"themes": ["vehicules"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Menu du camion: des frites à la fraise.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "La chauve-souris joue à cache-cache.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Un arc-en-ciel est tombé dans mon bol.",
+			"themes": ["nature"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Recette du jour: une tarte aux chaussettes.",
+			"themes": ["cuisine"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Dis-moi, ton vélo sait-il voler?",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Règle du bus: on chante à chaque virage.",
+			"themes": ["vehicules"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Mon grille-pain raconte des blagues.",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Message de la fusée: le pilote dort!",
+			"themes": ["espace"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Devinette: qui a des roues et un pyjama?",
+			"themes": [],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le cerf-volant a pris le train.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "On a tout réparé: le klaxon, le sandwich.",
+			"themes": ["vehicules"],
+			"level": 3,
+			"review": "agent"
+		},
+		{ "text": "Voici mon plan: une sieste.", "themes": [], "level": 1, "review": "agent" },
+		{
+			"text": "Peut-on promener un poisson rouge?",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Cet après-midi, le canapé fait du sport.",
+			"themes": ["maison"],
+			"level": 2,
+			"review": "agent"
+		},
 		{
 			"text": "Le dragon fait un gâteau pour la forêt.",
 			"themes": ["cuisine"],
