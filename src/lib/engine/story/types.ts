@@ -1,17 +1,19 @@
 /*
- * Contract of the story (J4, ADR-022). Types only: the functions below are written by the
- * "story" work package, in this folder, against these types.
+ * Contract of the story (J4, ADR-022). Types only; the functions live next to this file:
  *
- *   parseStory(data: unknown): StoryDefinition
- *   storyMoment(story, progression, before: ProgressState | null, after: ProgressState,
- *               lessonId: string): readonly StoryMoment[]
+ *   parseStory(data: unknown): StoryDefinition                                  (definition.ts)
+ *   validateStory(story, progression): string[]                                 (definition.ts)
+ *   storyBeforeLesson(story, progression, progress, lessonId): StoryMoment[]    (moments.ts)
+ *   storyAfterLesson(story, progression, before, after, lessonId): StoryMoment[] (moments.ts)
  *
  * The story moves on because the child types, and for no other reason. Which text to show is
- * therefore deduced from the progress before and after a play (`before` is `null` when there is
- * no earlier state to compare with): no "already seen" flag is stored, so a profile older than
- * the story, or one that lost nothing but its settings, tells the same story.
+ * therefore deduced from the progress before and after a play: no "already seen" flag is stored,
+ * so a profile older than the story, or one that lost nothing but its settings, tells the same
+ * story.
  *
- * Texts are shown between two exercises, never while typing.
+ * Texts are shown between two exercises, never while typing: the opening of a world before its
+ * first lesson is played, the line of a lesson (then the ending of its world, when it was the
+ * last one) after the lesson is passed.
  */
 
 export interface StoryLessonLine {
