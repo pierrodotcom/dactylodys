@@ -1,8 +1,10 @@
 import type { SoundId } from '../../audio/sounds';
+import { pacePoints } from '../../engine/ghost/ghost';
 import { combineMetrics, computeMetrics } from '../../engine/metrics';
 import { applyKeystroke, createSession } from '../../engine/session';
 import type { ErrorPolicy, SessionMetrics, SessionState } from '../../engine/types';
 import type { KeyCode, NormalizedKeystroke } from '../../keyboard/types';
+import type { GameOutcome } from '../types';
 
 const LINE_BREAK = '\n';
 
@@ -179,4 +181,9 @@ export function completedCount(state: GameState): number {
 /** Metrics of the whole exercise, once every group has been typed. */
 export function exerciseMetrics(state: GameState): SessionMetrics {
 	return combineMetrics(state.finished);
+}
+
+/** What a game reports once every group has been typed. */
+export function exerciseOutcome(state: GameState): GameOutcome {
+	return { metrics: exerciseMetrics(state), pace: pacePoints(state.finished) };
 }

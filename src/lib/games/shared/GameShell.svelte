@@ -13,7 +13,7 @@
 	import { readDurationToken } from './duration';
 	import {
 		createGame,
-		exerciseMetrics,
+		exerciseOutcome,
 		reduce,
 		type GameAction,
 		type GameState
@@ -96,7 +96,7 @@
 		if (groupChanged) field?.clear();
 		if (step.state.phase === 'complete' && !reported) {
 			reported = true;
-			onComplete({ metrics: exerciseMetrics(step.state) });
+			onComplete(exerciseOutcome(step.state));
 		}
 	}
 
