@@ -49,7 +49,7 @@ Types : `src/lib/engine/progression/types.ts`, `src/lib/state/types.ts`, `src/li
 | `learnedChars(progression, lessonId): string[]` | idem | Caractères connus jusqu'à cette leçon incluse |
 | `generateExercise(progression, lessonId, rng): Exercise` | `engine/progression/exercise` | Groupes à taper, reproductibles |
 | `evaluateLesson(rules, metrics): LessonEvaluation` | `engine/progression/progress` | Étoiles et déblocage, sur la précision seule |
-| `applyLessonResult(progress, result): ProgressState` | idem | Met à jour la progression, sans mutation |
+| `applyLessonResult(progress, result, rules): ProgressState` | idem | Met à jour la progression, sans mutation ; ne garde par caractère que les parties récentes (`rules.recentCharWindow`) |
 | `isLessonUnlocked(progression, progress, lessonId): boolean` | idem | La première leçon est toujours ouverte |
 | `emptyProgress(): ProgressState` | idem | État initial |
 | `combineMetrics(list: readonly SessionMetrics[]): SessionMetrics` | `engine/metrics` | Agrège les groupes d'un exercice |
@@ -85,7 +85,7 @@ Le contrat réel d'un mini-jeu est un composant Svelte `Component<GameProps>` (i
 
 Règle de progression `newCharMinCount` (`engine/progression/types.ts`, ADR-024) : chaque caractère nouveau d'une leçon est demandé au moins ce nombre de fois, par des suites d'échauffement en tête d'exercice ; 0 désactive. Le parseur refuse une progression où ce minimum dépasse `groupCount`.
 
-Profil version 2 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
+Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
 
 | Fonction | Module | Rôle |
 |---|---|---|
@@ -95,7 +95,8 @@ Profil version 2 (`state/types.ts`) : `companion` (choix de l'enfant : nom, coul
 | `toGhostRun(points, recordedAt)` / `ghostProgress(run, elapsedMs, paceFactor)` / `parseGhostRun(data)` | `engine/ghost/ghost` | Allure d'une partie ; part de l'exercice accomplie par le fantôme, dans [0, 1] |
 | `GameOutcome.pace` / `GameProps.ghost?` | `games/types` | Allure rendue par tout jeu (un point par groupe) ; fantôme facultatif reçu par un jeu |
 | `isLessonPassed(rules, progress, lessonId)` | `engine/progression/progress` | Seule définition de « leçon réussie » ; ne pas la recopier |
+| `recentCharStats(progress, char)` / `recentErrorRate(progress, char)` | `engine/progression/progress` | Résultats d'une touche sur ses parties récentes seulement (ADR-025) : c'est ce que lisent la révision des touches fragiles et les récompenses de maîtrise, jamais le cumul à vie |
 
 Types seuls, à implémenter par les lots suivants sans les modifier : `engine/rewards/types.ts` (`RewardCondition`, `RewardDefinition`, `RewardCatalogue`, `CompanionChoice`, `CompanionLook`), `engine/story/types.ts` (`StoryDefinition`), `audio/voice-types.ts` (`VoiceManifest`, `VoicePlayer`). Les signatures attendues sont en tête de chaque fichier. Aucune condition de récompense ne porte sur le temps, les jours, le nombre de parties ou la vitesse.
 
-À savoir : le temps « actif » d'une partie est la somme des durées de groupes, de la première à la dernière frappe de chaque groupe (le fantôme avance sur cette horloge) ; `ProgressState.chars` est cumulé à vie, sans fenêtre récente ; `voiceKey` doit être synchrone.
+À savoir : le temps « actif » d'une partie est la somme des durées de groupes, de la première à la dernière frappe de chaque groupe (le fantôme avance sur cette horloge) ; `ProgressState.chars[c]` porte le cumul à vie (`attempts`, `errors`) et les parties récentes (`recent`) ; `voiceKey` doit être synchrone. Une version de profil déjà fusionnée dans `main` est en ligne : on ne modifie plus son étape de migration, on en ajoute une.

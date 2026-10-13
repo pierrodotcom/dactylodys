@@ -4,7 +4,7 @@ Cocher `[x]` = garder la phrase. Barrer (`~~phrase~~`) = retirer la phrase du je
 Pour corriger un thème ou une formulation, écrire la correction à la suite : `→ correction`.
 Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les décisions dans `tools/content/data/`.
 
-## Dinosaures (6)
+## Dinosaures (7)
 
 ### Niveau 1 (3)
 
@@ -18,7 +18,11 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le diplodocus passe sous la porte !
 - [ ] Petit ou grand, le dinosaure adore les bulles.
 
-## Cuisine (23)
+### Niveau 3 (1)
+
+- [ ] Le dragon a brûlé le dîner du pilote.
+
+## Cuisine (27)
 
 ### Niveau 1 (8)
 
@@ -31,7 +35,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] le fruit sent le sel
 - [ ] les nouilles dorent au soleil
 
-### Niveau 2 (9)
+### Niveau 2 (13)
 
 - [ ] j'adore les tartines de purée
 - [ ] dis où tu caches le chocolat
@@ -42,6 +46,10 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Mon grille-pain raconte des blagues.
 - [ ] Le dragon fait un gâteau pour la forêt.
 - [ ] Le maïs chante sous la pluie.
+- [ ] Mon goûter a pris le train !
+- [ ] La tomate est mûre, le camion aussi.
+- [ ] Le caïman adore le maïs grillé.
+- [ ] Du maïs dans le moteur, quelle idée !
 
 ### Niveau 3 (6)
 
@@ -52,7 +60,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le robot pâtissier a brûlé les crêpes.
 - [ ] Ce poêle chante, le gâteau danse !
 
-## Animaux (76)
+## Animaux (78)
 
 ### Niveau 1 (18)
 
@@ -119,7 +127,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le canard dîne avec un chapeau.
 - [ ] Le castor range sa bûche dans le frigo.
 
-### Niveau 3 (17)
+### Niveau 3 (19)
 
 - [ ] la girafe cherche un chapeau à sa taille
 - [ ] le dragon a mis un caleçon à pois
@@ -138,6 +146,8 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le hérisson organise une fête sur une île.
 - [ ] Le crocodile naïf a avalé une ancre.
 - [ ] La vache a une voix aiguë.
+- [ ] Un drôle de hibou pilote la fusée.
+- [ ] Un caïman naïf attend le bus.
 
 ## Espace (19)
 
@@ -169,14 +179,15 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] La nuit, les planètes jouent aux billes.
 - [ ] Message de la fusée : le pilote dort !
 
-## Véhicules (27)
+## Véhicules (37)
 
-### Niveau 1 (2)
+### Niveau 1 (3)
 
 - [ ] Qui a pris mon vélo ?
 - [ ] Qui conduit le bus ?
+- [ ] Le train dîne à la gare.
 
-### Niveau 2 (15)
+### Niveau 2 (24)
 
 - [ ] la marmotte conduit un camion de pommes
 - [ ] la souris conduit le tracteur
@@ -193,6 +204,15 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Dis-moi, ton vélo sait-il voler ?
 - [ ] Le cerf-volant a pris le train.
 - [ ] Le canoë du pirate fait des bulles.
+- [ ] Le fantôme conduit le bus de nuit.
+- [ ] Bientôt, mon vélo aura des ailes.
+- [ ] Le pilote joue de la flûte.
+- [ ] Le tracteur roule à côté du fantôme.
+- [ ] Le bus est sûr de savoir voler.
+- [ ] Une chaîne de vélo en spaghettis !
+- [ ] Cet hôtel flotte sur un bateau.
+- [ ] Mon canoë a des roues carrées.
+- [ ] Le canoë file sur la route.
 
 ### Niveau 3 (10)
 
@@ -207,13 +227,18 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Règle du bus : on chante à chaque virage.
 - [ ] On a tout réparé : le klaxon, le sandwich.
 
-## Maison (1)
+## Maison (3)
 
-### Niveau 2 (1)
+### Niveau 2 (2)
 
 - [ ] Cet après-midi, le canapé fait du sport.
+- [ ] Qui a mis une boîte sur le toit ?
 
-## Nature (9)
+### Niveau 3 (1)
+
+- [ ] La mosaïque du garage a fondu.
+
+## Nature (11)
 
 ### Niveau 1 (8)
 
@@ -226,9 +251,11 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] jeudi le lis se dresse sur le fil
 - [ ] le lit sue du jus de fleurs
 
-### Niveau 2 (1)
+### Niveau 2 (3)
 
 - [ ] Un arc-en-ciel est tombé dans mon bol.
+- [ ] Sur mon île, les vélos poussent.
+- [ ] Le maïs pousse sur le toit du bus.
 
 ## Sans thème particulier (34)
 

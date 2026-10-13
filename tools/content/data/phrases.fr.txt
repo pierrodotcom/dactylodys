@@ -203,3 +203,24 @@
 2 | | Une tête de chou prend le bateau.
 2 | animaux | Le canard dîne avec un chapeau.
 2 | animaux | Le castor range sa bûche dans le frigo.
+2 | vehicules | Le fantôme conduit le bus de nuit.
+2 | cuisine | Mon goûter a pris le train !
+2 | vehicules | Bientôt, mon vélo aura des ailes.
+3 | animaux | Un drôle de hibou pilote la fusée.
+2 | vehicules | Le pilote joue de la flûte.
+2 | maison | Qui a mis une boîte sur le toit ?
+2 | vehicules | Le tracteur roule à côté du fantôme.
+2 | cuisine | La tomate est mûre, le camion aussi.
+2 | vehicules | Le bus est sûr de savoir voler.
+2 | nature | Sur mon île, les vélos poussent.
+1 | vehicules | Le train dîne à la gare.
+3 | dinos | Le dragon a brûlé le dîner du pilote.
+2 | vehicules | Une chaîne de vélo en spaghettis !
+2 | vehicules | Cet hôtel flotte sur un bateau.
+2 | cuisine | Le caïman adore le maïs grillé.
+2 | vehicules | Mon canoë a des roues carrées.
+3 | animaux | Un caïman naïf attend le bus.
+2 | cuisine | Du maïs dans le moteur, quelle idée !
+2 | vehicules | Le canoë file sur la route.
+3 | maison | La mosaïque du garage a fondu.
+2 | nature | Le maïs pousse sur le toit du bus.
