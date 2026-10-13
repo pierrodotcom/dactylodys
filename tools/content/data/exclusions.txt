@@ -13,3 +13,6 @@
 [homographe-gênant] queue
 [moqueur-age] gros vieux ridicule
 [violence-armes] couteau
+toast | relecture-humaine
+lis | relecture-humaine
+divan | relecture-humaine

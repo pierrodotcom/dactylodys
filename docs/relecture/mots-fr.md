@@ -96,7 +96,6 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] sucre
 - [ ] tarte
 - [ ] thé
-- [ ] toast
 - [ ] verre
 - [ ] viande
 
@@ -452,7 +451,6 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] chaise
 - [ ] chambre
 - [ ] clé
-- [ ] divan
 - [ ] douche
 - [ ] échelle
 - [ ] garage
@@ -533,7 +531,6 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] île
 - [ ] iris
 - [ ] lac
-- [ ] lis
 - [ ] mer
 - [ ] neige
 - [ ] océan

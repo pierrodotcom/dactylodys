@@ -181,12 +181,13 @@ function run() {
 }
 
 function buildBank(result) {
+	const validated = new Set(readLines(join(DATA_DIR, 'validated-words.txt')));
 	const words = [...result.kept.values()]
 		.map(({ entry, themes, level }) => ({
 			text: entry.text,
 			themes: THEME_IDS.filter((id) => themes.includes(id)),
 			level,
-			review: 'agent'
+			review: validated.has(entry.text) ? 'human' : 'agent'
 		}))
 		.sort((a, b) => a.text.localeCompare(b.text, 'fr'));
 	const used = new Set(words.flatMap((word) => word.themes));
