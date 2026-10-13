@@ -275,7 +275,7 @@ const body = `<div class="wrap">
 	<div class="filters">
 		<label>Afficher <select id="list"><option value="words">les mots</option><option value="phrases">les phrases</option></select></label>
 		<label>Thème <select id="theme"></select></label>
-		<label><input type="checkbox" id="pending" /> seulement ce qui reste</label>
+		<label>Réponses <select id="shown"><option value="">toutes</option><option value="pending">ce qui reste</option><option value="yes">les Oui</option><option value="no">les Non</option></select></label>
 		${fileControls}
 	</div>
 	<main id="rows"></main>
@@ -330,7 +330,7 @@ const script = `<script>
 	const rows = document.getElementById('rows');
 	const listSelect = document.getElementById('list');
 	const themeSelect = document.getElementById('theme');
-	const pendingOnly = document.getElementById('pending');
+	const shown = document.getElementById('shown');
 	const count = document.getElementById('count');
 	const status = document.getElementById('status');
 
@@ -365,7 +365,11 @@ const script = `<script>
 		return data[kind].filter((item) => {
 			if (theme === '-' && item.themes.length > 0) return false;
 			if (theme && theme !== '-' && !item.themes.includes(theme)) return false;
-			return !pendingOnly.checked || answerOf(kind, item)?.keep === undefined;
+			const keep = answerOf(kind, item)?.keep;
+			if (shown.value === 'pending') return keep === undefined;
+			if (shown.value === 'yes') return keep === true;
+			if (shown.value === 'no') return keep === false;
+			return true;
 		});
 	};
 
@@ -471,7 +475,7 @@ const script = `<script>
 		event.preventDefault();
 	});
 
-	for (const control of [listSelect, themeSelect, pendingOnly]) control.addEventListener('change', render);
+	for (const control of [listSelect, themeSelect, shown]) control.addEventListener('change', render);
 
 ${fileScript}	async function wireDatabase() {
 		const db = (await window.claude?.use?.('db')) ?? null;
@@ -481,7 +485,9 @@ ${fileScript}	async function wireDatabase() {
 		}
 		const queues = {};
 		let waiting = 0;
+		const merged = {};
 		persist = (kind, item) => {
+			writeLocal();
 			const ref = db.collection(kind).doc(item.id);
 			waiting += 1;
 			setStatus('Enregistrement…');
@@ -514,7 +520,17 @@ ${fileScript}	async function wireDatabase() {
 							if (typeof note === 'string' && note) answer.note = note;
 							next[text] = answer;
 						}
+						const local = answers[kind];
 						answers[kind] = next;
+						if (!merged[kind]) {
+							merged[kind] = true;
+							for (const item of data[kind]) {
+								if (!local[item.text] || next[item.text]) continue;
+								answers[kind][item.text] = local[item.text];
+								persist(kind, item);
+							}
+						}
+						writeLocal();
 						if (kind === listSelect.value) repaint();
 						if (waiting === 0) setStatus('Tout est enregistré en ligne.');
 					},
@@ -528,6 +544,7 @@ ${fileScript}	async function wireDatabase() {
 		wireFiles();
 		render();
 	} else {
+		readLocal();
 		setStatus('Chargement de tes réponses…');
 		render();
 		wireDatabase();

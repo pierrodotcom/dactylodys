@@ -224,7 +224,7 @@
 	<div class="filters">
 		<label>Afficher <select id="list"><option value="words">les mots</option><option value="phrases">les phrases</option></select></label>
 		<label>Thème <select id="theme"></select></label>
-		<label><input type="checkbox" id="pending" /> seulement ce qui reste</label>
+		<label>Réponses <select id="shown"><option value="">toutes</option><option value="pending">ce qui reste</option><option value="yes">les Oui</option><option value="no">les Non</option></select></label>
 		<button type="button" id="export">Enregistrer mes réponses dans un fichier</button>
 			<button type="button" id="import">Reprendre depuis un fichier</button>
 			<input type="file" id="file" accept="application/json" hidden />
@@ -241,7 +241,7 @@
 	const rows = document.getElementById('rows');
 	const listSelect = document.getElementById('list');
 	const themeSelect = document.getElementById('theme');
-	const pendingOnly = document.getElementById('pending');
+	const shown = document.getElementById('shown');
 	const count = document.getElementById('count');
 	const status = document.getElementById('status');
 
@@ -276,7 +276,11 @@
 		return data[kind].filter((item) => {
 			if (theme === '-' && item.themes.length > 0) return false;
 			if (theme && theme !== '-' && !item.themes.includes(theme)) return false;
-			return !pendingOnly.checked || answerOf(kind, item)?.keep === undefined;
+			const keep = answerOf(kind, item)?.keep;
+			if (shown.value === 'pending') return keep === undefined;
+			if (shown.value === 'yes') return keep === true;
+			if (shown.value === 'no') return keep === false;
+			return true;
 		});
 	};
 
@@ -382,7 +386,7 @@
 		event.preventDefault();
 	});
 
-	for (const control of [listSelect, themeSelect, pendingOnly]) control.addEventListener('change', render);
+	for (const control of [listSelect, themeSelect, shown]) control.addEventListener('change', render);
 
 	function wireFiles() {
 		document.getElementById('export').addEventListener('click', () => {
@@ -426,7 +430,9 @@
 		}
 		const queues = {};
 		let waiting = 0;
+		const merged = {};
 		persist = (kind, item) => {
+			writeLocal();
 			const ref = db.collection(kind).doc(item.id);
 			waiting += 1;
 			setStatus('Enregistrement…');
@@ -459,7 +465,17 @@
 							if (typeof note === 'string' && note) answer.note = note;
 							next[text] = answer;
 						}
+						const local = answers[kind];
 						answers[kind] = next;
+						if (!merged[kind]) {
+							merged[kind] = true;
+							for (const item of data[kind]) {
+								if (!local[item.text] || next[item.text]) continue;
+								answers[kind][item.text] = local[item.text];
+								persist(kind, item);
+							}
+						}
+						writeLocal();
 						if (kind === listSelect.value) repaint();
 						if (waiting === 0) setStatus('Tout est enregistré en ligne.');
 					},
@@ -473,6 +489,7 @@
 		wireFiles();
 		render();
 	} else {
+		readLocal();
 		setStatus('Chargement de tes réponses…');
 		render();
 		wireDatabase();
