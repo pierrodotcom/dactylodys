@@ -115,4 +115,30 @@ describe('progression and banks together', () => {
 			}
 		}
 	);
+
+	it.each(
+		entries
+			.filter(({ lesson }) => lesson.newChars.length > 0)
+			.map(({ world, lesson }) => [lesson.id, world.themeId, lesson.newChars] as const)
+	)(
+		`%s asks each new character at least the minimum number of times over ${SEED_COUNT} seeds`,
+		(lessonId, themeId, newChars) => {
+			for (let seed = 1; seed <= SEED_COUNT; seed++) {
+				const exercise = generateExercise(progression, lessonId, seededRng(seed), {
+					words,
+					phrases,
+					progress: emptyProgress(),
+					themeId,
+					maxLevel: PLAY_RULES.maxWordLevel
+				});
+				const asked = exercise.groups.flatMap((group) => toGraphemes(group));
+				for (const char of newChars) {
+					const count = asked.filter((grapheme) => grapheme === char).length;
+					expect(count, `${lessonId} seed ${seed}: "${char}"`).toBeGreaterThanOrEqual(
+						progression.rules.newCharMinCount
+					);
+				}
+			}
+		}
+	);
 });
