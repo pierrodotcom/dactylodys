@@ -44,9 +44,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le dragon fait un gâteau pour la forêt.
 - [ ] Le maïs chante sous la pluie.
 - [ ] Mon goûter a pris le train !
-- [ ] La tomate est mûre, le camion aussi.
 - [ ] Le caïman adore le maïs grillé.
 - [ ] Du maïs dans le moteur, quelle idée !
+- [ ] La tomate est mûre, je la mange.
 
 ### Niveau 3 (6)
 
@@ -130,9 +130,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] la girafe cherche un chapeau à sa taille
 - [ ] le dragon a mis un caleçon à pois
 - [ ] le chat range ses chaussettes dans le four
-- [ ] le cheval fait du hula hoop
 - [ ] le crocodile a des chaussettes violettes
 - [ ] le poisson a le hoquet à chaque bulle
+- [ ] le cheval fait de la balançoire
 - [ ] Qui a mis un crocodile dans mon cartable ?
 - [ ] Quand il pleut, le dragon ouvre un parapluie.
 - [ ] Hier, le poulpe a tricoté huit chaussettes.
@@ -198,10 +198,10 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Où va ce bateau à roulettes ?
 - [ ] Mon sous-marin a peur de l'eau.
 - [ ] Le chasse-neige part en vacances au soleil.
-- [ ] Mon garage : un vélo, une girafe.
 - [ ] Menu du camion : des frites à la fraise.
 - [ ] Dis-moi, ton vélo sait-il voler ?
 - [ ] Le cerf-volant a pris le train.
+- [ ] Voici mon garage : il est plein de vélos.
 - [ ] Le canoë du pirate fait des bulles.
 - [ ] Le fantôme conduit le bus de nuit.
 - [ ] Bientôt, mon vélo aura des ailes.
@@ -215,10 +215,10 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 ### Niveau 3 (10)
 
-- [ ] un wagon plein de yaourts passe
 - [ ] le vélo du hibou fait un bruit bizarre
 - [ ] le singe invente un avion en carton
 - [ ] la tortue a gagné la course de vélo
+- [ ] le wagon transporte des yaourts
 - [ ] Le lundi, le tracteur va au cinéma.
 - [ ] Attention, la trottinette a mangé du piment !
 - [ ] Un tracteur dans la baignoire, quel bazar !
@@ -237,11 +237,10 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 - [ ] La mosaïque du garage a fondu.
 
-## Nature (7)
+## Nature (6)
 
-### Niveau 1 (4)
+### Niveau 1 (3)
 
-- [ ] elle serre les fleurs
 - [ ] je lis les feuilles
 - [ ] tu dessines un nid et des fruits
 - [ ] je te tends une fleur
@@ -302,8 +301,8 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] j'ai perdu mes pantoufles au piano
 - [ ] où est passé mon sandwich
 - [ ] Mon chapeau a disparu dans le frigo.
-- [ ] Le robot a rangé le salon au frigo.
 - [ ] Devinette : qui a des roues et un pyjama ?
+- [ ] Le robot a rangé ses chaussettes au frigo.
 - [ ] Où est ma pâte à modeler ?
 - [ ] Une tête de chou prend le bateau.
 

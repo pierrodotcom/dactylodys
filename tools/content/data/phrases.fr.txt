@@ -13,7 +13,6 @@
 1 | | je lui dis de fuir
 1 | sport | je suis sur ses skis
 1 | sport | il use ses skis le jeudi
-1 | nature | elle serre les fleurs
 1 | nature | je lis les feuilles
 1 | sport | elle skie le jeudi
 # Palier 2 : t n
@@ -90,13 +89,11 @@
 2 | | où est passé mon sandwich
 3 | animaux | le dragon a mis un caleçon à pois
 2 | animaux | la grenouille joue du xylophone
-3 | vehicules | un wagon plein de yaourts passe
 3 | vehicules | le vélo du hibou fait un bruit bizarre
 2 | animaux | la baleine a pris le bus
 3 | vehicules | le singe invente un avion en carton
 3 | animaux | le chat range ses chaussettes dans le four
 2 | animaux | l'éléphant a perdu sa trompette
-3 | animaux | le cheval fait du hula hoop
 3 | cuisine | la sorcière a un balai en chocolat
 3 | | le robot a mangé tous les boutons
 3 | | mon hamster construit une pyramide
@@ -111,6 +108,8 @@
 3 | espace | le robot cherche où poser sa fusée
 2 | animaux | devine où le lapin range ses carottes
 2 | espace | la lune sait où va la comète
+3 | vehicules | le wagon transporte des yaourts
+3 | animaux | le cheval fait de la balançoire
 # Palier 7 : majuscules et ponctuation
 1 | animaux | Le chat a mis ses lunettes.
 1 | | Où est ma chaussette ?
@@ -148,7 +147,6 @@
 3 | cuisine | Le gâteau a sauté par la fenêtre.
 2 | animaux | Un escargot gagne le marathon !
 3 | animaux | Le crocodile a enfin des dents propres !
-2 | | Le robot a rangé le salon au frigo.
 2 | espace | Sur la lune, le robot plante des carottes.
 2 | espace | La fusée tousse, puis elle repart.
 3 | espace | Dans ma fusée, je range une vache.
@@ -171,7 +169,6 @@
 1 | animaux | Tu as vu ce lapin bleu ?
 2 | vehicules | Mon sous-marin a peur de l'eau.
 2 | vehicules | Le chasse-neige part en vacances au soleil.
-2 | vehicules | Mon garage : un vélo, une girafe.
 3 | vehicules | La pilote annonce : on atterrit sur un nuage.
 2 | vehicules | Menu du camion : des frites à la fraise.
 2 | animaux | La chauve-souris joue à cache-cache.
@@ -187,6 +184,8 @@
 1 | | Voici mon plan : une sieste.
 2 | animaux | Peut-on promener un poisson rouge ?
 2 | maison | Cet après-midi, le canapé fait du sport.
+2 | | Le robot a rangé ses chaussettes au frigo.
+2 | vehicules | Voici mon garage : il est plein de vélos.
 # Palier 8 : circonflexes et trémas
 2 | cuisine | Le dragon fait un gâteau pour la forêt.
 3 | animaux | Une souris dîne sur une île de fromage.
@@ -211,7 +210,6 @@
 2 | vehicules | Le pilote joue de la flûte.
 2 | maison | Qui a mis une boîte sur le toit ?
 2 | vehicules | Le tracteur roule à côté du fantôme.
-2 | cuisine | La tomate est mûre, le camion aussi.
 2 | vehicules | Le bus est sûr de savoir voler.
 2 | nature | Sur mon île, les vélos poussent.
 1 | vehicules | Le train dîne à la gare.
@@ -225,3 +223,4 @@
 2 | vehicules | Le canoë file sur la route.
 3 | maison | La mosaïque du garage a fondu.
 2 | nature | Le maïs pousse sur le toit du bus.
+2 | cuisine | La tomate est mûre, je la mange.

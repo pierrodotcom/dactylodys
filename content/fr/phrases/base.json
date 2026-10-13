@@ -3,733 +3,742 @@
 	"id": "fr.phrases.base",
 	"locale": "fr-FR",
 	"phrases": [
-		{ "text": "je lis le jeudi", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "il file sur ses skis", "themes": ["sport"], "level": 1, "review": "agent" },
-		{ "text": "elle relie les fils", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je fuis le feu", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "il jure de lire", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je lui sers du jus", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "elle se rue sur le jus", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "je serre le fil de fer", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je ris de ses ruses", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je lui dis de fuir", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je suis sur ses skis", "themes": ["sport"], "level": 1, "review": "agent" },
-		{ "text": "il use ses skis le jeudi", "themes": ["sport"], "level": 1, "review": "agent" },
-		{ "text": "elle serre les fleurs", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "je lis les feuilles", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "elle skie le jeudi", "themes": ["sport"], "level": 1, "review": "agent" },
-		{ "text": "un lutin tisse un tutu", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le lit des lutins est dur", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le tutu du lutin est inutile", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le lutin lit sur un lit", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je dessine une lune", "themes": ["espace"], "level": 1, "review": "agent" },
-		{ "text": "elle tient une lettre", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "il lit une lettre de nuit", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je lis le jeudi", "themes": [], "level": 1, "review": "human" },
+		{ "text": "il file sur ses skis", "themes": ["sport"], "level": 1, "review": "human" },
+		{ "text": "elle relie les fils", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je fuis le feu", "themes": [], "level": 1, "review": "human" },
+		{ "text": "il jure de lire", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je lui sers du jus", "themes": ["cuisine"], "level": 1, "review": "human" },
+		{ "text": "elle se rue sur le jus", "themes": ["cuisine"], "level": 1, "review": "human" },
+		{ "text": "je serre le fil de fer", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je ris de ses ruses", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je lui dis de fuir", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je suis sur ses skis", "themes": ["sport"], "level": 1, "review": "human" },
+		{ "text": "il use ses skis le jeudi", "themes": ["sport"], "level": 1, "review": "human" },
+		{ "text": "je lis les feuilles", "themes": ["nature"], "level": 1, "review": "human" },
+		{ "text": "elle skie le jeudi", "themes": ["sport"], "level": 1, "review": "human" },
+		{ "text": "un lutin tisse un tutu", "themes": [], "level": 1, "review": "human" },
+		{ "text": "le lit des lutins est dur", "themes": [], "level": 1, "review": "human" },
+		{ "text": "le tutu du lutin est inutile", "themes": [], "level": 1, "review": "human" },
+		{ "text": "le lutin lit sur un lit", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je dessine une lune", "themes": ["espace"], "level": 1, "review": "human" },
+		{ "text": "elle tient une lettre", "themes": [], "level": 1, "review": "human" },
+		{ "text": "il lit une lettre de nuit", "themes": [], "level": 1, "review": "human" },
 		{
 			"text": "tu dessines un nid et des fruits",
 			"themes": ["nature"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le fruit est sur le lit", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "je sens le fruit et je ris", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "je te tends une fleur", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "elle entend rire les lutins", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "il tire le fil et le tissu suit", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "une fillette lit sur une dune", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "je finis le test et je file", "themes": ["ecole"], "level": 1, "review": "agent" },
-		{ "text": "il tient une tirelire", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le tennis est un jeu", "themes": ["sport"], "level": 1, "review": "agent" },
+		{ "text": "le fruit est sur le lit", "themes": ["cuisine"], "level": 1, "review": "human" },
+		{ "text": "je sens le fruit et je ris", "themes": ["cuisine"], "level": 1, "review": "human" },
+		{ "text": "je te tends une fleur", "themes": ["nature"], "level": 1, "review": "human" },
+		{ "text": "elle entend rire les lutins", "themes": [], "level": 1, "review": "human" },
+		{ "text": "il tire le fil et le tissu suit", "themes": [], "level": 1, "review": "human" },
+		{ "text": "une fillette lit sur une dune", "themes": [], "level": 1, "review": "human" },
+		{ "text": "je finis le test et je file", "themes": ["ecole"], "level": 1, "review": "human" },
+		{ "text": "il tient une tirelire", "themes": [], "level": 1, "review": "human" },
+		{ "text": "le tennis est un jeu", "themes": ["sport"], "level": 1, "review": "human" },
 		{
 			"text": "un renne tire un lutin sur ses skis",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le dindon dort dans la salade",
 			"themes": ["animaux"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "la tortue danse sur le toit", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "la tortue danse sur le toit", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "le renard ronfle dans un tonneau",
 			"themes": ["animaux"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "une souris danse sur un tutu",
 			"themes": ["animaux"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "un dinosaure sort de la salade",
 			"themes": ["dinos"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la lune sort et le soleil ronfle",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "une loutre fait du roller", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "une loutre fait du roller", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "un ours fait la sieste dans la fondue",
 			"themes": ["animaux"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le taureau lit le journal", "themes": ["animaux"], "level": 1, "review": "agent" },
-		{ "text": "le rat dort sur un ananas", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "le taureau lit le journal", "themes": ["animaux"], "level": 1, "review": "human" },
+		{ "text": "le rat dort sur un ananas", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "les nouilles dorent au soleil",
 			"themes": ["cuisine"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le lion tond le jardin", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "le lion tond le jardin", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "le crocodile joue de la trompette",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "un perroquet apprend le piano",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la marmotte conduit un camion de pommes",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le canard perd une pantoufle",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le poulpe tricote trois pantalons",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le pirate a perdu sa casserole", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "le pirate a perdu sa casserole", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "la souris conduit le tracteur",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "une taupe fait la course en pantoufles",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le moustique joue de la clarinette",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "un cloporte sort de la marmite",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "un papillon prend le train",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la limonade coule de la trompette",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le capitaine ronfle sur son tapis", "themes": [], "level": 2, "review": "agent" },
-		{ "text": "l'ours a écrasé la tarte", "themes": ["animaux"], "level": 2, "review": "agent" },
+		{ "text": "le capitaine ronfle sur son tapis", "themes": [], "level": 2, "review": "human" },
+		{ "text": "l'ours a écrasé la tarte", "themes": ["animaux"], "level": 2, "review": "human" },
 		{
 			"text": "le crocodile a croqué la pantoufle",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "l'écureuil conduit un camion de poires",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "la fée a cassé sa trompette", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "la fée a cassé sa trompette", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "le canard a sauté dans la marmite",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "j'ai croisé un crocodile dans mon café",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la souris a coupé la musique",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le pirate a dessiné une pantoufle", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "le pirate a dessiné une pantoufle", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "c'est le poulpe qui a tricoté",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "un cloporte a sauté dans mon café",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "l'ours a écrit une carte pour la lune",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la marmotte a pris un ticket",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "l'étoile a sauté dans la marmite",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "mon canari a cassé le piano", "themes": ["animaux"], "level": 2, "review": "agent" },
-		{ "text": "j'ai perdu mes pantoufles au piano", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "mon canari a cassé le piano", "themes": ["animaux"], "level": 2, "review": "human" },
+		{ "text": "j'ai perdu mes pantoufles au piano", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "le taureau a dansé sur une tarte",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "j'adore les tartines de purée",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le zèbre a mis un pyjama à rayures",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la girafe cherche un chapeau à sa taille",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le yéti prend un bain moussant",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le hibou a oublié ses lunettes",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le dragon éternue des bulles",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le hérisson gonfle des ballons",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "où est passé mon sandwich", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "où est passé mon sandwich", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "le dragon a mis un caleçon à pois",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la grenouille joue du xylophone",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
-		},
-		{
-			"text": "un wagon plein de yaourts passe",
-			"themes": ["vehicules"],
-			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le vélo du hibou fait un bruit bizarre",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "la baleine a pris le bus", "themes": ["animaux"], "level": 2, "review": "agent" },
+		{ "text": "la baleine a pris le bus", "themes": ["animaux"], "level": 2, "review": "human" },
 		{
 			"text": "le singe invente un avion en carton",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le chat range ses chaussettes dans le four",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "l'éléphant a perdu sa trompette",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le cheval fait du hula hoop", "themes": ["animaux"], "level": 3, "review": "agent" },
 		{
 			"text": "la sorcière a un balai en chocolat",
 			"themes": ["cuisine"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "le robot a mangé tous les boutons", "themes": [], "level": 3, "review": "agent" },
-		{ "text": "mon hamster construit une pyramide", "themes": [], "level": 3, "review": "agent" },
+		{ "text": "le robot a mangé tous les boutons", "themes": [], "level": 3, "review": "human" },
+		{ "text": "mon hamster construit une pyramide", "themes": [], "level": 3, "review": "human" },
 		{
 			"text": "le crocodile a des chaussettes violettes",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la fusée décolle avec un yaourt",
 			"themes": ["espace"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "la tortue a gagné la course de vélo",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le poisson a le hoquet à chaque bulle",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "je sais où dort le dragon", "themes": ["dinos"], "level": 1, "review": "agent" },
+		{ "text": "je sais où dort le dragon", "themes": ["dinos"], "level": 1, "review": "human" },
 		{
 			"text": "le chat sait où est le fromage",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "dis où tu caches le chocolat",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "voilà où habite le hibou", "themes": ["animaux"], "level": 2, "review": "agent" },
+		{ "text": "voilà où habite le hibou", "themes": ["animaux"], "level": 2, "review": "human" },
 		{
 			"text": "le robot cherche où poser sa fusée",
 			"themes": ["espace"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "devine où le lapin range ses carottes",
 			"themes": ["animaux"],
 			"level": 2,
+			"review": "human"
+		},
+		{ "text": "la lune sait où va la comète", "themes": ["espace"], "level": 2, "review": "human" },
+		{
+			"text": "le wagon transporte des yaourts",
+			"themes": ["vehicules"],
+			"level": 3,
 			"review": "agent"
 		},
-		{ "text": "la lune sait où va la comète", "themes": ["espace"], "level": 2, "review": "agent" },
-		{ "text": "Le chat a mis ses lunettes.", "themes": ["animaux"], "level": 1, "review": "agent" },
-		{ "text": "Où est ma chaussette ?", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "Le dragon a faim !", "themes": ["dinos"], "level": 1, "review": "agent" },
-		{ "text": "Qui a pris mon vélo ?", "themes": ["vehicules"], "level": 1, "review": "agent" },
-		{ "text": "Le zèbre rit tout seul.", "themes": ["animaux"], "level": 1, "review": "agent" },
-		{ "text": "La fusée a un rhume.", "themes": ["espace"], "level": 2, "review": "agent" },
+		{
+			"text": "le cheval fait de la balançoire",
+			"themes": ["animaux"],
+			"level": 3,
+			"review": "agent"
+		},
+		{ "text": "Le chat a mis ses lunettes.", "themes": ["animaux"], "level": 1, "review": "human" },
+		{ "text": "Où est ma chaussette ?", "themes": [], "level": 1, "review": "human" },
+		{ "text": "Le dragon a faim !", "themes": ["dinos"], "level": 1, "review": "human" },
+		{ "text": "Qui a pris mon vélo ?", "themes": ["vehicules"], "level": 1, "review": "human" },
+		{ "text": "Le zèbre rit tout seul.", "themes": ["animaux"], "level": 1, "review": "human" },
+		{ "text": "La fusée a un rhume.", "themes": ["espace"], "level": 2, "review": "human" },
 		{
 			"text": "Mon poisson sait jouer du piano.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Le singe fait du vélo !", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "Le singe fait du vélo !", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "Un hérisson dans la baignoire !",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "La girafe a le hoquet.", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "La girafe a le hoquet.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "Qui a mis un crocodile dans mon cartable ?",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Quand il pleut, le dragon ouvre un parapluie.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le tricératops a oublié son parapluie.",
 			"themes": ["dinos"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le hibou range ses chaussettes par couleur.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Mon sandwich a pris la fuite !",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Hier, le poulpe a tricoté huit chaussettes.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Le lapin joue au football.", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "Le lapin joue au football.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "L'astronaute a perdu sa pantoufle sur la lune.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le diplodocus passe sous la porte !",
 			"themes": ["dinos"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Combien de chaussettes a mangé la machine ?",
 			"themes": [],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "La soupe a pris un bain de soleil.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Le poisson rit sous l'eau.", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "Le poisson rit sous l'eau.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "Pourquoi le zèbre porte-t-il un pyjama ?",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Le camion a un hoquet !", "themes": ["vehicules"], "level": 2, "review": "agent" },
+		{ "text": "Le camion a un hoquet !", "themes": ["vehicules"], "level": 2, "review": "human" },
 		{
 			"text": "La tortue a gagné la course, quelle surprise !",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Mon chapeau a disparu dans le frigo.", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "Mon chapeau a disparu dans le frigo.", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "Le canard a avalé un xylophone, quel boucan !",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Une planète a éternué sur ma fusée.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le yéti cherche ses lunettes.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Mon vélo parle avec un accent bizarre.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Un cochon fait du parachute avec une crêpe.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "La pizza a peur du four.", "themes": ["cuisine"], "level": 2, "review": "agent" },
+		{ "text": "La pizza a peur du four.", "themes": ["cuisine"], "level": 2, "review": "human" },
 		{
 			"text": "Le chien ronfle comme un tracteur.",
 			"themes": ["animaux"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le gâteau a sauté par la fenêtre.",
 			"themes": ["cuisine"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Un escargot gagne le marathon !",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le crocodile a enfin des dents propres !",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Le robot a rangé le salon au frigo.", "themes": [], "level": 2, "review": "agent" },
 		{
 			"text": "Sur la lune, le robot plante des carottes.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "La fusée tousse, puis elle repart.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Dans ma fusée, je range une vache.",
 			"themes": ["espace"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Ce matin, une comète a pris le bus.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le robot porte un chapeau, une cravate.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le chat dort, le chien ronfle.",
 			"themes": ["animaux"],
 			"level": 1,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Dans ma soupe, il y a un bouton.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "La nuit, les planètes jouent aux billes.",
 			"themes": ["espace"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Petit ou grand, le dinosaure adore les bulles.",
 			"themes": ["dinos"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Sur ma planète, la pluie sent la fraise.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Un, deux, trois, je saute.", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "Un, deux, trois, je saute.", "themes": [], "level": 1, "review": "human" },
 		{
 			"text": "Le lundi, le tracteur va au cinéma.",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Qui conduit le bus ?", "themes": ["vehicules"], "level": 1, "review": "agent" },
+		{ "text": "Qui conduit le bus ?", "themes": ["vehicules"], "level": 1, "review": "human" },
 		{
 			"text": "Le train a perdu ses roues !",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Attention, la trottinette a mangé du piment !",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Oh, mon vélo sait nager !", "themes": ["vehicules"], "level": 2, "review": "agent" },
+		{ "text": "Oh, mon vélo sait nager !", "themes": ["vehicules"], "level": 2, "review": "human" },
 		{
 			"text": "Où va ce bateau à roulettes ?",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Un tracteur dans la baignoire, quel bazar !",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Qui a rangé la lune dans le placard ?",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Tu as vu ce lapin bleu ?", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "Tu as vu ce lapin bleu ?", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "Mon sous-marin a peur de l'eau.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le chasse-neige part en vacances au soleil.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
-		},
-		{
-			"text": "Mon garage : un vélo, une girafe.",
-			"themes": ["vehicules"],
-			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "La pilote annonce : on atterrit sur un nuage.",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Menu du camion : des frites à la fraise.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "La chauve-souris joue à cache-cache.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Un arc-en-ciel est tombé dans mon bol.",
 			"themes": ["nature"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Recette du jour : une tarte aux chaussettes.",
 			"themes": ["cuisine"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Dis-moi, ton vélo sait-il voler ?",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Règle du bus : on chante à chaque virage.",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Mon grille-pain raconte des blagues.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Message de la fusée : le pilote dort !",
 			"themes": ["espace"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Devinette : qui a des roues et un pyjama ?",
 			"themes": [],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le cerf-volant a pris le train.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "On a tout réparé : le klaxon, le sandwich.",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Voici mon plan : une sieste.", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "Voici mon plan : une sieste.", "themes": [], "level": 1, "review": "human" },
 		{
 			"text": "Peut-on promener un poisson rouge ?",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Cet après-midi, le canapé fait du sport.",
 			"themes": ["maison"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le robot a rangé ses chaussettes au frigo.",
+			"themes": [],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Voici mon garage : il est plein de vélos.",
+			"themes": ["vehicules"],
 			"level": 2,
 			"review": "agent"
 		},
@@ -737,201 +746,201 @@
 			"text": "Le dragon fait un gâteau pour la forêt.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Une souris dîne sur une île de fromage.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Une crêpe s'est enfuie par la fenêtre !",
 			"themes": ["cuisine"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le hérisson organise une fête sur une île.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Mon âne mange mon chapeau de paille.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le robot pâtissier a brûlé les crêpes.",
 			"themes": ["cuisine"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le maïs chante sous la pluie.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le crocodile naïf a avalé une ancre.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le canoë du pirate fait des bulles.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Où est ma pâte à modeler ?", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "Où est ma pâte à modeler ?", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "Ce poêle chante, le gâteau danse !",
 			"themes": ["cuisine"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "La vache a une voix aiguë.", "themes": ["animaux"], "level": 3, "review": "agent" },
+		{ "text": "La vache a une voix aiguë.", "themes": ["animaux"], "level": 3, "review": "human" },
 		{
 			"text": "Le dinosaure a dîné sur la lune.",
 			"themes": ["espace"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Une tête de chou prend le bateau.", "themes": [], "level": 2, "review": "agent" },
+		{ "text": "Une tête de chou prend le bateau.", "themes": [], "level": 2, "review": "human" },
 		{
 			"text": "Le canard dîne avec un chapeau.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le castor range sa bûche dans le frigo.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le fantôme conduit le bus de nuit.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Mon goûter a pris le train !",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Bientôt, mon vélo aura des ailes.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Un drôle de hibou pilote la fusée.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le pilote joue de la flûte.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Qui a mis une boîte sur le toit ?",
 			"themes": ["maison"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le tracteur roule à côté du fantôme.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
-		},
-		{
-			"text": "La tomate est mûre, le camion aussi.",
-			"themes": ["cuisine"],
-			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le bus est sûr de savoir voler.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Sur mon île, les vélos poussent.",
 			"themes": ["nature"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
-		{ "text": "Le train dîne à la gare.", "themes": ["vehicules"], "level": 1, "review": "agent" },
+		{ "text": "Le train dîne à la gare.", "themes": ["vehicules"], "level": 1, "review": "human" },
 		{
 			"text": "Le dragon a brûlé le dîner du pilote.",
 			"themes": ["dinos"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Une chaîne de vélo en spaghettis !",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Cet hôtel flotte sur un bateau.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le caïman adore le maïs grillé.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Mon canoë a des roues carrées.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Un caïman naïf attend le bus.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Du maïs dans le moteur, quelle idée !",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le canoë file sur la route.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "La mosaïque du garage a fondu.",
 			"themes": ["maison"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le maïs pousse sur le toit du bus.",
 			"themes": ["nature"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "La tomate est mûre, je la mange.",
+			"themes": ["cuisine"],
 			"level": 2,
 			"review": "agent"
 		}
