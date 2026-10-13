@@ -22,12 +22,11 @@ export function recordLessonOutcome(
 	completedAt: number
 ): RecordedOutcome {
 	const evaluation = evaluateLesson(rules, outcome.metrics);
-	const progress = applyLessonResult(profile.progress, {
-		lessonId,
-		metrics: outcome.metrics,
-		evaluation,
-		completedAt
-	});
+	const progress = applyLessonResult(
+		profile.progress,
+		{ lessonId, metrics: outcome.metrics, evaluation, completedAt },
+		rules
+	);
 	const played = withProgress(profile, progress);
 	const run = evaluation.unlocksNext ? toGhostRun(outcome.pace, completedAt) : null;
 	return { profile: run ? withGhost(played, lessonId, run) : played, evaluation };

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import type { ProgressState, StarCount } from '../src/lib/engine/progression/types';
 import { createProfile, markCalibrated, withProgress } from '../src/lib/state/profile';
 import { createIndexedDbProfileStore } from '../src/lib/state/stores';
-import { asVersion1 } from '../src/lib/state/test-support';
+import { asVersion1, asVersion2 } from '../src/lib/state/test-support';
 import type { Profile } from '../src/lib/state/types';
 
 /** SvelteKit adds its announcer once the client app has taken over the page. */
@@ -151,17 +151,18 @@ async function snapshotOfRealStore(profile: Profile): Promise<DatabaseSnapshot> 
 	}
 }
 
-/** `version-1`: the record as the first version of the app stored it, before any migration. */
-export type StoredFormat = 'current' | 'version-1';
+/** `version-1`, `version-2`: the record as that version of the app stored it, before any migration. */
+export type StoredFormat = 'current' | 'version-1' | 'version-2';
 
 function inFormat(snapshot: DatabaseSnapshot, profile: Profile, format: StoredFormat) {
 	if (format === 'current') return snapshot;
+	const stored = format === 'version-1' ? asVersion1(profile) : asVersion2(profile);
 	const isThisProfile = (record: unknown) => (record as { id?: unknown }).id === profile.id;
 	return {
 		...snapshot,
 		stores: snapshot.stores.map((store) => ({
 			...store,
-			records: store.records.map((record) => (isThisProfile(record) ? asVersion1(profile) : record))
+			records: store.records.map((record) => (isThisProfile(record) ? stored : record))
 		}))
 	};
 }

@@ -6,6 +6,7 @@ import { findLesson, learnedChars, lessonIds, parseProgression } from './definit
 import { generateExercise } from './exercise';
 import { clone, deepFreeze, loadShippedProgressions, seededRng } from './test-support';
 import type {
+	CharSample,
 	Exercise,
 	ExerciseContext,
 	ExerciseMix,
@@ -31,7 +32,8 @@ const RULES = {
 	newCharWeight: 0.6,
 	weakCharBoost: 2,
 	themeBoost: 2,
-	newCharMinCount: 0
+	newCharMinCount: 0,
+	recentCharWindow: 30
 };
 
 function lesson(id: string, newChars: string[], change: Record<string, unknown> = {}) {
@@ -384,7 +386,10 @@ describe('generateExercise', () => {
 
 	it('does not modify the progression, the banks or the progress', () => {
 		const before = clone(SYNTHETIC);
-		const progress: ProgressState = { lessons: {}, chars: { k: { attempts: 4, errors: 2 } } };
+		const progress: ProgressState = {
+			lessons: {},
+			chars: { k: { attempts: 4, errors: 2, recent: [{ attempts: 4, errors: 2 }] } }
+		};
 		const context = deepFreeze({ ...FULL_CONTEXT, progress: clone(progress) });
 		generate(deepFreeze(clone(SYNTHETIC)), 'fr.lesson.dot', 3, context);
 		generate(SYNTHETIC, 'fr.lesson.words', 3);
@@ -794,9 +799,15 @@ describe('generateExercise', () => {
 	});
 
 	describe('weak characters', () => {
-		const weak = (chars: Record<string, { attempts: number; errors: number }>): ProgressState => ({
+		/** Every keystroke of these totals was typed in one recent play. */
+		const weak = (chars: Record<string, CharSample>): ProgressState => ({
 			lessons: {},
-			chars
+			chars: Object.fromEntries(
+				Object.entries(chars).map(([char, sample]) => [
+					char,
+					{ ...sample, recent: sample.attempts > 0 ? [sample] : [] }
+				])
+			)
 		});
 
 		it('picks words that contain a character the child gets wrong more often', () => {
@@ -853,6 +864,43 @@ describe('generateExercise', () => {
 			expect(plain).toBeLessThan(0.3);
 			expect(boosted).toBeGreaterThan(plain * 1.5);
 			expect(frequency({ progress }, 0)).toBeLessThan(plain * 1.3);
+		});
+
+		it('reads the recent plays of a character, not its lifetime totals', () => {
+			const progression = progressionOf([
+				lesson('fj', ['f', 'j']),
+				lesson('space', [SPACE]),
+				lesson('dk', ['d', 'k']),
+				lesson('none', [], { groupCount: 20, targetLength: 1000 })
+			]);
+			const frequency = (context: ExerciseContext) => {
+				let k = 0;
+				let all = 0;
+				for (let seed = 0; seed < 100; seed++) {
+					const chars = graphemesOfGroups(
+						generate(progression, 'fr.lesson.none', seed, context)
+					).filter((char) => char !== SPACE);
+					k += chars.filter((char) => char === 'k').length;
+					all += chars.length;
+				}
+				return share(k, all);
+			};
+			const tamed: ProgressState = {
+				lessons: {},
+				chars: { k: { attempts: 500, errors: 500, recent: [{ attempts: 30, errors: 0 }] } }
+			};
+			const slipping: ProgressState = {
+				lessons: {},
+				chars: { k: { attempts: 500, errors: 0, recent: [{ attempts: 20, errors: 20 }] } }
+			};
+			const plain = frequency({});
+			expect(frequency({ progress: tamed })).toBe(plain);
+			expect(frequency({ progress: slipping })).toBeGreaterThan(plain * 1.5);
+			for (let seed = 0; seed < 20; seed++) {
+				expect(generate(progression, 'fr.lesson.none', seed, { progress: tamed })).toEqual(
+					generate(progression, 'fr.lesson.none', seed)
+				);
+			}
 		});
 
 		it('treats missing or empty statistics as no error', () => {
@@ -1097,7 +1145,12 @@ describe('generateExercise', () => {
 				const history: ProgressState = {
 					lessons: {},
 					chars: Object.fromEntries(
-						learned.slice(0, 4).map((char) => [char, { attempts: 5, errors: 3 }])
+						learned
+							.slice(0, 4)
+							.map((char) => [
+								char,
+								{ attempts: 5, errors: 3, recent: [{ attempts: 5, errors: 3 }] }
+							])
 					)
 				};
 				fc.assert(

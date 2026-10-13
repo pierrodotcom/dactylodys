@@ -32,7 +32,8 @@ export const LEARNING_STEPS = [
 	{ id: 'virgule-point', chars: [',', '.'] },
 	{ id: 'interrogation-exclamation', chars: ['?', '!'] },
 	{ id: 'tiret-deux-points', chars: ['-', ':'] },
-	{ id: 'circonflexes', chars: ['ê', 'â', 'î', 'ô', 'û'] },
+	{ id: 'circonflexes-e-a', chars: ['ê', 'â'] },
+	{ id: 'circonflexes-i-o-u', chars: ['î', 'ô', 'û'] },
 	{ id: 'trémas', chars: ['ë', 'ï'] }
 ];
 

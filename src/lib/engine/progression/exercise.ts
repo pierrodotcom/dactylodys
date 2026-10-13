@@ -1,6 +1,7 @@
 import { toGraphemes } from '../graphemes';
 import { usablePhrases, usableWords } from './banks';
 import { findLesson, learnedChars } from './definition';
+import { recentErrorRate } from './progress';
 import type {
 	Exercise,
 	ExerciseContext,
@@ -203,12 +204,9 @@ export function generateExercise(
 
 	const learned = learnedChars(progression, lessonId);
 	const { newCharWeight, weakCharBoost, themeBoost, newCharMinCount } = progression.rules;
-	const chars = context.progress?.chars ?? {};
-	const errorRate = (char: string): number => {
-		const stat = chars[char];
-		if (stat === undefined || stat.attempts <= 0) return 0;
-		return Math.min(1, Math.max(0, stat.errors / stat.attempts));
-	};
+	const { progress } = context;
+	const errorRate = (char: string): number =>
+		progress === undefined ? 0 : recentErrorRate(progress, char);
 
 	const fresh = [
 		...lesson.newChars,

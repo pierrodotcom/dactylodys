@@ -136,7 +136,8 @@ describe('azerty-decouverte', () => {
 			newCharWeight: 0.6,
 			weakCharBoost: 2,
 			themeBoost: 2,
-			newCharMinCount: 5
+			newCharMinCount: 5,
+			recentCharWindow: 30
 		});
 	});
 
@@ -174,10 +175,29 @@ describe('azerty-decouverte', () => {
 			[
 				['?', '!'],
 				['-', ':'],
-				['ê', 'â', 'î', 'ô', 'û'],
+				['ê', 'â'],
+				['î', 'ô', 'û'],
 				['ë', 'ï']
 			]
 		]);
+	});
+
+	it('teaches the circumflexes in two lessons, the first one under the identifier it always had', () => {
+		const circumflexes = lessons.filter((lesson) =>
+			lesson.newChars.some((char) => 'êâîôû'.includes(char))
+		);
+		expect(circumflexes.map((lesson) => lesson.newChars)).toEqual([
+			['ê', 'â'],
+			['î', 'ô', 'û']
+		]);
+		expect(circumflexes[0]?.id).toBe('fr.lesson.chapeau-circonflexe');
+		expect(circumflexes[1]?.title).not.toBe(circumflexes[0]?.title);
+		const ids = lessons.map((lesson) => lesson.id);
+		expect(ids.indexOf('fr.lesson.trema')).toBe(ids.indexOf(circumflexes[1]?.id ?? '') + 1);
+	});
+
+	it('introduces at most three characters in one lesson', () => {
+		for (const lesson of lessons) expect(lesson.newChars.length).toBeLessThanOrEqual(3);
 	});
 
 	it('keeps the identifiers of the lessons that already existed', () => {
@@ -188,7 +208,9 @@ describe('azerty-decouverte', () => {
 			'fr.lesson.nid-d-k',
 			'fr.lesson.mare-s-l',
 			'fr.lesson.bras-q-m',
-			'fr.lesson.mots-e-i'
+			'fr.lesson.mots-e-i',
+			'fr.lesson.chapeau-circonflexe',
+			'fr.lesson.trema'
 		]) {
 			expect(ids).toContain(id);
 		}

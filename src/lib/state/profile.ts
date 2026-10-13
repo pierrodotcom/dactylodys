@@ -4,6 +4,7 @@ import { toGraphemes } from '../engine/graphemes';
 import { emptyProgress } from '../engine/progression/progress';
 import type {
 	CharProgress,
+	CharSample,
 	LessonProgress,
 	ProgressState,
 	StarCount
@@ -48,7 +49,7 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 2;
+export const PROFILE_SCHEMA_VERSION = 3;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -80,7 +81,12 @@ const SETTINGS_KEYS = [
 ] as const satisfies readonly (keyof Settings)[];
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
-const CHAR_PROGRESS_KEYS = ['attempts', 'errors'] as const;
+const CHAR_PROGRESS_KEYS = [
+	'attempts',
+	'errors',
+	'recent'
+] as const satisfies readonly (keyof CharProgress)[];
+const CHAR_SAMPLE_KEYS = ['attempts', 'errors'] as const satisfies readonly (keyof CharSample)[];
 const COMPANION_KEYS = [
 	'name',
 	'colorId',
@@ -263,12 +269,27 @@ function parseLessonProgress(data: unknown, path: string): LessonProgress {
 	};
 }
 
+function parseCharSample(data: unknown, path: string): CharSample {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, CHAR_SAMPLE_KEYS, path);
+	const attempts = expectCount(record['attempts'], `${path}.attempts`);
+	if (attempts < 1) fail(`${path}.attempts`, 'expected at least 1');
+	const errors = expectCount(record['errors'], `${path}.errors`);
+	if (errors > attempts) fail(`${path}.errors`, `expected at most ${attempts}`);
+	return { attempts, errors };
+}
+
 function parseCharProgress(data: unknown, path: string): CharProgress {
 	const record = expectRecord(data, path);
 	expectExactKeys(record, CHAR_PROGRESS_KEYS, path);
+	const recent = record['recent'];
+	if (!Array.isArray(recent)) fail(`${path}.recent`, 'expected an array');
 	return {
 		attempts: expectCount(record['attempts'], `${path}.attempts`),
-		errors: expectCount(record['errors'], `${path}.errors`)
+		errors: expectCount(record['errors'], `${path}.errors`),
+		recent: recent.map((sample: unknown, index) =>
+			parseCharSample(sample, `${path}.recent[${index}]`)
+		)
 	};
 }
 

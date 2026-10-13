@@ -24,8 +24,23 @@ const REMOVE = Symbol('remove');
 
 const SAMPLE_PROGRESS: ProgressState = {
 	lessons: { [LESSON]: { bestAccuracy: 96.5, stars: 2, attempts: 3, lastPlayedAt: 5 } },
-	chars: { f: { attempts: 20, errors: 2 } }
+	chars: {
+		f: {
+			attempts: 20,
+			errors: 2,
+			recent: [
+				{ attempts: 12, errors: 2 },
+				{ attempts: 8, errors: 0 }
+			]
+		}
+	}
 };
+
+const RECENT = ['progress', 'chars', 'f', 'recent'] as const;
+
+function sample(attempts: number, errors: number) {
+	return { attempts, errors };
+}
 
 const SAMPLE_GHOST: GhostRun = {
 	recordedAt: 7,
@@ -96,7 +111,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 2,
+			schemaVersion: 3,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -321,8 +336,9 @@ describe('parseProfile', () => {
 	});
 
 	it.each<[string, string[], unknown, RegExp]>([
-		['the schema version before', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 3, /schemaVersion/],
+		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 2, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 4, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -361,6 +377,25 @@ describe('parseProfile', () => {
 		['a non-object lesson', ['progress', 'lessons', LESSON], 3, /home-row-01/],
 		['negative char errors', ['progress', 'chars', 'f', 'errors'], -1, /errors/],
 		['a non-numeric char count', ['progress', 'chars', 'f', 'attempts'], '20', /attempts/],
+		['a character without recent plays', [...RECENT], REMOVE, /chars\.f\.recent/],
+		['recent plays that are not a list', [...RECENT], {}, /chars\.f\.recent/],
+		['a recent play that is not an object', [...RECENT], [3], /recent\[0\]/],
+		['a recent play without keystroke', [...RECENT], [sample(0, 0)], /recent\[0\]\.attempts/],
+		['a fractional recent play', [...RECENT], [sample(1.5, 0)], /recent\[0\]\.attempts/],
+		['recent errors below zero', [...RECENT], [sample(4, -1)], /recent\[0\]\.errors/],
+		[
+			'more recent errors than keystrokes',
+			[...RECENT],
+			[sample(4, 1), sample(2, 3)],
+			/recent\[1\]\.errors/
+		],
+		['a recent play without errors', [...RECENT], [{ attempts: 3 }], /recent\[0\]\.errors/],
+		[
+			'a recent play with an unknown property',
+			[...RECENT],
+			[{ ...sample(3, 0), playedAt: 5 }],
+			/recent\[0\]\.playedAt/
+		],
 		['a missing companion', ['companion'], REMOVE, /profile\.companion/],
 		['a companion that is a list', ['companion'], [], /profile\.companion/],
 		['an unknown companion property', ['companion', 'mood'], 'happy', /companion\.mood/],
@@ -388,10 +423,24 @@ describe('parseProfile', () => {
 		expect(() => parseProfile(mutate(path, value))).toThrow(message);
 	});
 
+	it('accepts a character that has no recent play, and one whose every recent keystroke was wrong', () => {
+		expect(parseProfile(mutate([...RECENT], [])).progress.chars['f']?.recent).toEqual([]);
+		const wrong = [sample(5, 5)];
+		expect(parseProfile(mutate([...RECENT], wrong)).progress.chars['f']?.recent).toEqual(wrong);
+	});
+
+	it('returns recent plays that do not share anything with the data', () => {
+		const data = validData();
+		const parsed = parseProfile(data);
+		const given = ((data['progress'] as Json)['chars'] as Json)['f'] as Json;
+		expect(parsed.progress.chars['f']?.recent).not.toBe(given['recent']);
+		expect(parsed.progress.chars['f']?.recent[0]).not.toBe((given['recent'] as unknown[])[0]);
+	});
+
 	it('keeps a progress key named __proto__ as plain data', () => {
 		const json = JSON.stringify(validData()).replace(
 			'"chars":{',
-			'"chars":{"__proto__":{"attempts":1,"errors":0},'
+			'"chars":{"__proto__":{"attempts":1,"errors":0,"recent":[]},'
 		);
 		const parsed = parseProfile(JSON.parse(json));
 		expect(Object.keys(parsed.progress.chars)).toContain('__proto__');

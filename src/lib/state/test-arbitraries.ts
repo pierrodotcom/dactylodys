@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { toGhostRun } from '../engine/ghost/ghost';
 import type { GhostRun } from '../engine/ghost/types';
-import type { ProgressState, StarCount } from '../engine/progression/types';
+import type { CharSample, ProgressState, StarCount } from '../engine/progression/types';
 import {
 	createProfile,
 	markCalibrated,
@@ -34,6 +34,10 @@ const starsArb = fc.constantFrom<StarCount>(0, 1, 2, 3);
 const accuracyArb = fc.integer({ min: 0, max: 1000 }).map((tenths) => tenths / 10);
 const identifierArb = fc.string({ minLength: 1, maxLength: 12 });
 
+const charSampleArb: fc.Arbitrary<CharSample> = fc
+	.record({ attempts: fc.integer({ min: 1, max: 200 }), errors: fc.nat({ max: 200 }) })
+	.map(({ attempts, errors }) => ({ attempts, errors: Math.min(attempts, errors) }));
+
 export const progressArb: fc.Arbitrary<ProgressState> = fc.record({
 	lessons: fc.dictionary(
 		fc.string({ maxLength: 12 }),
@@ -47,7 +51,11 @@ export const progressArb: fc.Arbitrary<ProgressState> = fc.record({
 	),
 	chars: fc.dictionary(
 		fc.string({ maxLength: 4 }),
-		fc.record({ attempts: countArb, errors: countArb }),
+		fc.record({
+			attempts: countArb,
+			errors: countArb,
+			recent: fc.array(charSampleArb, { maxLength: 4 })
+		}),
 		{ maxKeys: 5 }
 	)
 });
@@ -96,7 +104,7 @@ export const ghostArb: fc.Arbitrary<GhostRun> = fc
 	})
 	.filter((run): run is GhostRun => run !== null);
 
-/** A profile as version 1 of the app could hold it: nothing of what version 2 added. */
+/** A profile that holds nothing of what version 2 added. */
 export const firstVersionProfileArb: fc.Arbitrary<Profile> = fc
 	.record({
 		id: fc.string({ minLength: 1, maxLength: 36 }),

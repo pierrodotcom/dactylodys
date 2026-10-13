@@ -9,7 +9,8 @@
 		"newCharWeight": 0.6,
 		"weakCharBoost": 2,
 		"themeBoost": 2,
-		"newCharMinCount": 5
+		"newCharMinCount": 5,
+		"recentCharWindow": 30
 	},
 	"worlds": [
 		{
@@ -442,7 +443,23 @@
 					"id": "fr.lesson.chapeau-circonflexe",
 					"title": "Le chapeau du pilote",
 					"intro": "Tape d'abord la touche morte ^, à droite de P, puis la voyelle : elle apparaît avec son chapeau.",
-					"newChars": ["ê", "â", "î", "ô", "û"],
+					"newChars": ["ê", "â"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 24,
+					"targetLength": 90,
+					"groupLength": [3, 5]
+				},
+				{
+					"id": "fr.lesson.casque-circonflexe",
+					"title": "Le casque du copilote",
+					"intro": "Tape d'abord la touche morte ^, à droite de P, puis I, O ou U : la lettre apparaît avec son chapeau.",
+					"newChars": ["î", "ô", "û"],
 					"words": [],
 					"mix": {
 						"drills": 1,

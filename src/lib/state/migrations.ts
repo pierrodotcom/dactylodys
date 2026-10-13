@@ -43,8 +43,42 @@ function toVersion2(record: StoredRecord): StoredRecord {
 	};
 }
 
+function isCount(value: unknown): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+/*
+ * A character starts with one recent play made of its lifetime totals, brought down to the 30
+ * keystrokes the window of recent results covered when version 3 came out, at the same error rate.
+ */
+function firstRecentPlays(totals: StoredRecord): unknown[] {
+	const attempts = totals['attempts'];
+	const errors = totals['errors'];
+	if (!isCount(attempts) || !isCount(errors) || attempts === 0) return [];
+	const kept = Math.min(attempts, 30);
+	return [{ attempts: kept, errors: Math.min(kept, Math.round((errors * kept) / attempts)) }];
+}
+
+function toVersion3(record: StoredRecord): StoredRecord {
+	const progress = record['progress'];
+	const chars = isRecord(progress) ? progress['chars'] : undefined;
+	if (!isRecord(progress) || !isRecord(chars)) return { ...record, schemaVersion: 3 };
+	const withRecentPlays = Object.entries(chars).map(([char, totals]) => [
+		char,
+		isRecord(totals) ? { recent: firstRecentPlays(totals), ...totals } : totals
+	]);
+	return {
+		...record,
+		progress: { ...progress, chars: Object.fromEntries(withRecentPlays) },
+		schemaVersion: 3
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
-const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([[FIRST_SCHEMA_VERSION, toVersion2]]);
+const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
+	[FIRST_SCHEMA_VERSION, toVersion2],
+	[2, toVersion3]
+]);
 
 function versionOf(record: StoredRecord): number {
 	const version = record['schemaVersion'];

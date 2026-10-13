@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parsePhraseBank, parseWordBank } from '$lib/engine/progression/banks';
+import { parseProgression } from '$lib/engine/progression/definition';
 
 const WORDS_FILE = 'content/fr/words/base.json';
 const PHRASES_FILE = 'content/fr/phrases/base.json';
+const PROGRESSION_FILE = 'content/fr/progression/azerty-decouverte.json';
 
 const WORLD_THEMES = ['dinos', 'cuisine', 'animaux', 'espace', 'vehicules'];
 const MIN_WORDS = 600;
@@ -39,7 +41,8 @@ const STEPS: readonly (readonly string[])[] = [
 	[',', '.'],
 	['?', '!'],
 	['-', ':'],
-	['ê', 'â', 'î', 'ô', 'û'],
+	['ê', 'â'],
+	['î', 'ô', 'û'],
 	['ë', 'ï']
 ];
 const STEP = {
@@ -47,7 +50,7 @@ const STEP = {
 	earlyLetters: 7,
 	capitalsAndPunctuation: 17,
 	lastPunctuation: 20,
-	lastAccent: 22
+	lastAccent: 23
 } as const;
 const STEP_OF = new Map<string, number>();
 STEPS.forEach((chars, step) => chars.forEach((char) => STEP_OF.set(char, step)));
@@ -75,6 +78,15 @@ function readJson(path: string): unknown {
 
 const wordBank = parseWordBank(readJson(WORDS_FILE));
 const phraseBank = parsePhraseBank(readJson(PHRASES_FILE));
+
+describe('learning order of the bank checks', () => {
+	it('is the order in which the progression introduces the characters', () => {
+		const progression = parseProgression(readJson(PROGRESSION_FILE));
+		expect(STEPS).toEqual(
+			progression.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.newChars))
+		);
+	});
+});
 
 describe(WORDS_FILE, () => {
 	it('has the expected identity and its sources', () => {
