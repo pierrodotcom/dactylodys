@@ -100,6 +100,8 @@ voilà où habite le hibou
 le robot cherche où poser sa fusée
 devine où le lapin range ses carottes
 la lune sait où va la comète
+le wagon transporte des yaourts
+le cheval fait de la balançoire
 Le chat a mis ses lunettes.
 Où est ma chaussette ?
 Le dragon a faim !
@@ -173,6 +175,8 @@ On a tout réparé : le klaxon, le sandwich.
 Voici mon plan : une sieste.
 Peut-on promener un poisson rouge ?
 Cet après-midi, le canapé fait du sport.
+Le robot a rangé ses chaussettes au frigo.
+Voici mon garage : il est plein de vélos.
 Le dragon fait un gâteau pour la forêt.
 Une souris dîne sur une île de fromage.
 Une crêpe s'est enfuie par la fenêtre !
@@ -209,3 +213,4 @@ Du maïs dans le moteur, quelle idée !
 Le canoë file sur la route.
 La mosaïque du garage a fondu.
 Le maïs pousse sur le toit du bus.
+La tomate est mûre, je la mange.
