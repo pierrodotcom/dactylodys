@@ -3,6 +3,7 @@
  * are written by the "rewards" work package, in this folder, against these types.
  *
  *   parseRewardCatalogue(data: unknown): RewardCatalogue
+ *   validateRewardCatalogue(catalogue, progression): string[]   (problems; empty when coherent)
  *   unlockedRewards(catalogue, progression, progress): ReadonlySet<string>
  *   newlyUnlocked(catalogue, progression, before, after): readonly RewardDefinition[]
  *   rewardsOfLesson(catalogue, lessonId): readonly RewardDefinition[]
