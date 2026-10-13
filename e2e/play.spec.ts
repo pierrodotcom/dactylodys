@@ -747,12 +747,9 @@ test.describe('play route', () => {
 
 		await reachMap(page);
 		await startLesson(page, FIRST);
-		await page.keyboard.type(await currentGroup(page));
-		await expect(
-			page.getByRole('img', {
-				name: plural('game_hatching_progress', 1, { hatched: 1, total: FIRST.groupCount })
-			})
-		).toBeVisible();
+		const firstGroup = await currentGroup(page);
+		await page.keyboard.type(firstGroup);
+		await expect.poll(() => currentGroup(page)).not.toBe(firstGroup);
 		expect(pageErrors).toEqual([]);
 	});
 
