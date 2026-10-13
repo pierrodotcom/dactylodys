@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
+	import { toTargetUnits } from './target-text';
 
 	interface Props {
 		graphemes: readonly string[];
 		position: number;
 		errorIndex: number | null;
 	}
-
-	type Cell = { index: number; text: string; shown: string };
-	type Group = { kind: 'word' | 'space'; cells: Cell[] };
 
 	const SPACE = ' ';
 	const LINE_BREAK = '\n';
@@ -27,17 +25,7 @@
 		return grapheme;
 	}
 
-	const groups = $derived.by(() => {
-		const result: Group[] = [];
-		graphemes.forEach((text, index) => {
-			const cell = { index, text, shown: shownGlyph(text) };
-			const isSpace = text === SPACE || text === LINE_BREAK;
-			const last = result.at(-1);
-			if (!isSpace && last?.kind === 'word') last.cells.push(cell);
-			else result.push({ kind: isSpace ? 'space' : 'word', cells: [cell] });
-		});
-		return result;
-	});
+	const units = $derived(toTargetUnits(graphemes));
 
 	const alternative = $derived.by(() => {
 		const text = graphemes.join('');
@@ -56,14 +44,18 @@
 <div class="target-text">
 	<p class="dd-visually-hidden">{alternative}</p>
 	<div class="text" aria-hidden="true">
-		{#each groups as group (group.cells[0]?.index)}
-			<span class={group.kind}>
-				{#each group.cells as cell (cell.index)}
-					<span
-						class="cell"
-						data-state={stateOf(cell.index)}
-						data-error={cell.index === errorIndex || undefined}>{cell.shown}</span
-					>
+		{#each units as unit (unit[0]?.cells[0]?.index)}
+			<span class="unit">
+				{#each unit as group (group.cells[0]?.index)}
+					<span class={group.kind}>
+						{#each group.cells as cell (cell.index)}
+							<span
+								class="cell"
+								data-state={stateOf(cell.index)}
+								data-error={cell.index === errorIndex || undefined}>{shownGlyph(cell.text)}</span
+							>
+						{/each}
+					</span>
 				{/each}
 			</span>
 		{/each}
@@ -85,6 +77,12 @@
 		font-size: var(--dd-typing-size-current);
 		font-weight: var(--dd-font-weight-medium);
 		line-height: var(--dd-line-height-tight);
+	}
+
+	.unit {
+		display: inline-flex;
+		align-items: center;
+		column-gap: var(--dd-typing-letter-spacing-current);
 	}
 
 	.word {

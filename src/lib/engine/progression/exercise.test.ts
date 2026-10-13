@@ -659,6 +659,80 @@ describe('generateExercise', () => {
 			expect(share(withE, 400)).toBeGreaterThan(0.5);
 			expect(share(withE, 400)).toBeLessThan(0.75);
 		});
+
+		describe('phrases with the new characters', () => {
+			const phrases = (texts: string[]): PhraseBank =>
+				parsePhraseBank({
+					schemaVersion: 1,
+					id: 'fr.phrases.fresh-check',
+					locale: 'fr-FR',
+					phrases: texts.map((text) => ({ text, themes: [], level: 1, review: 'agent' }))
+				});
+			const base = [
+				lesson('fj', ['f', 'j']),
+				lesson('space', [SPACE]),
+				lesson('dk', ['d', 'k']),
+				lesson('sl', ['s', 'l']),
+				lesson('ei', ['e', 'i'])
+			];
+			const firstGroups = (
+				progression: ProgressionDefinition,
+				lessonId: string,
+				bank: PhraseBank,
+				runs: number
+			) =>
+				Array.from(
+					{ length: runs },
+					(_, seed) => generate(progression, lessonId, seed, { phrases: bank }).groups[0] as string
+				);
+
+			const withComma = progressionOf(
+				[
+					...base,
+					lesson('caps', [], { unlocks: ['uppercase'] }),
+					lesson('comma', [','], { mix: PHRASES_ONLY, groupCount: 2 })
+				],
+				{ newCharWeight: 1 }
+			);
+			const commaBank = phrases([
+				'Je lis, il file',
+				'Elle skie, je file',
+				'Je lis',
+				'Il file',
+				'Elle lie ses skis',
+				'Je dis le sel'
+			]);
+
+			it('prefers phrases with the new punctuation with the probability of the new character weight', () => {
+				for (let seed = 0; seed < 50; seed++) {
+					const { groups } = generate(withComma, 'fr.lesson.comma', seed, { phrases: commaBank });
+					for (const group of groups) expect(group).toContain(',');
+				}
+				const never = withRules(withComma, { newCharWeight: 0 });
+				const drawn = firstGroups(never, 'fr.lesson.comma', commaBank, 600);
+				const commas = share(drawn.filter((group) => group.includes(',')).length, 600);
+				expect(commas).toBeGreaterThan(0.25);
+				expect(commas).toBeLessThan(0.42);
+			});
+
+			it('prefers phrases with capitals in the lesson that unlocks them', () => {
+				const progression = progressionOf(
+					[...base, lesson('caps', [], { unlocks: ['uppercase'], mix: PHRASES_ONLY })],
+					{ newCharWeight: 1 }
+				);
+				const bank = phrases(['Je lis', 'je lis des lis', 'elle file', 'il skie', 'je dis le sel']);
+				for (const group of firstGroups(progression, 'fr.lesson.caps', bank, 50)) {
+					expect(group).toBe('Je lis');
+				}
+			});
+
+			it('falls back to the other phrases when none has the new characters', () => {
+				const bank = phrases(['Je lis', 'Il file', 'Elle lie ses skis']);
+				for (const group of firstGroups(withComma, 'fr.lesson.comma', bank, 50)) {
+					expect(bank.phrases.map((phrase) => phrase.text)).toContain(group);
+				}
+			});
+		});
 	});
 
 	describe('theme boost', () => {

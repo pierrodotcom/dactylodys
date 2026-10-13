@@ -10,18 +10,22 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
-| J3 Pédagogie complète | Mots relus ; phrases à relire ; test avec un enfant à faire | 5 mondes, 23 leçons, 926 mots relus par le porteur, 150 phrases relues par un agent seulement, 3 mini-jeux |
+| J3 Pédagogie complète | Mots relus ; phrases à relire ; test avec un enfant à faire | 5 mondes, 23 leçons, 926 mots relus par le porteur, 195 phrases relues par un agent seulement, 3 mini-jeux |
 | J4 Aventure | — | |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Relecture humaine des phrases** (150), pas encore faite : ouvrir `docs/relecture/relecture.html`, choisir « Afficher : les phrases », répondre, puis cliquer sur « Enregistrer mes réponses dans un fichier » et déposer ce fichier dans `docs/relecture/` (sans ce clic, les réponses restent dans le navigateur). Application : `node tools/content/apply-review.js phrases --no "<phrase refusée>"`.
+2. **Relecture humaine des phrases** (195, dont 45 ajoutées le 2026-10-13 pour la ponctuation et « où » ; une espace précède désormais « ? », « ! » et « : »), pas encore faite : ouvrir `docs/relecture/relecture.html`, choisir « Afficher : les phrases », répondre, puis cliquer sur « Enregistrer mes réponses dans un fichier » et déposer ce fichier dans `docs/relecture/` (sans ce clic, les réponses restent dans le navigateur). Application : `node tools/content/apply-review.js phrases --no "<phrase refusée>"`.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
-4. Dette de J3 : le moteur ne favorise les nouveaux caractères que dans les mots, donc le point et les signes de ponctuation sont peu pratiqués dans les phrases ; les textes d'introduction disent « le doigt de la bague » alors que l'aide à l'écran dit « annulaire » ; la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le parcours ne reprend pas encore le dernier jeu choisi d'une visite à l'autre.
+4. Dette de J3, par ordre de gêne pour l'enfant :
+   - **chaque nouveau signe n'est tapé que 2 à 3 fois par exercice** à partir des accents graves (mesure sur 200 exercices simulés par leçon ; `f j` : 12 fois, `t n` : 7 fois). Les phrases favorisent maintenant les nouveaux signes et la banque en contient assez, mais une phrase n'en porte qu'un : il faut un minimum de répétitions dans le moteur (par exemple quelques suites d'échauffement en tête d'exercice), réglé en données. Proposé au porteur, à faire avant J4 ;
+   - `ü` est enseigné (leçon des trémas) alors qu'aucun mot courant ne le contient : à retirer de la leçon ou à garder en suites seules, au choix du porteur ;
+   - un profil au format inattendu est écarté sans message (aucune migration) : préalable de J4 (ADR-022) ;
+   - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le parcours ne reprend pas encore le dernier jeu choisi d'une visite à l'autre ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
-6. **J4 Aventure** : compagnon personnalisable, compétences, trophées, récit, voix, course contre son propre fantôme.
+6. **J4 Aventure** : cadrage proposé au porteur le 2026-10-13 (ADR-022, « proposée »), en attente de sa validation. Aucun lot lancé.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
 ## Grille d'observation pour le test J2
@@ -93,3 +97,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — Langue sans `localStorage` (travail d'une session parallèle, reporté sur `main`). Page de relecture publiée en ligne pour le téléphone, réponses dans sa base.
 - **2026-10-13** — Relecture humaine faite par le porteur : « toast », « lis » et « divan » retirés, tout le reste validé (`review: "human"`). L'enregistrement en ligne de la page de relecture n'a pas fonctionné sur son téléphone (cause inconnue) ; les refus ont été donnés dans la conversation.
 - **2026-10-13** — Correction : seuls les mots avaient été relus. Les 150 phrases reviennent à `review: "agent"` ; `apply-review.js` ne valide plus qu'une banque à la fois.
+- **2026-10-13** — Dette de J3 : les phrases favorisent les nouveaux caractères ; 45 phrases ajoutées (ponctuation, « où ») ; espace avant « ? », « ! » et « : », gardée sur la même ligne que le mot à l'écran ; noms exacts des doigts dans les textes d'introduction (ADR-021) ; test de cohérence « au moins six phrases pour un signe qu'aucun mot ne contient ». Leçons L-040 et L-041. Cadrage de J4 proposé (ADR-022).

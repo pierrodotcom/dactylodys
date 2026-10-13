@@ -78,3 +78,19 @@ Lexique ne contient aucune information thématique. Proposition : croiser Lexiqu
 
 ## 020 — Périmètre de J3 (2026-10-12, acceptée)
 Progression complète dans l'ordre de l'ADR-018, en cinq mondes ; banque de mots thématiques et banque de phrases, chaque entrée portant thèmes, niveau et état de relecture ; exercices mêlant suites, mots et phrases, avec davantage de pratique sur les caractères que l'enfant rate ; deux nouveaux mini-jeux (une fusée qui monte, une recette farfelue), choix du jeu par l'enfant ; carte de tous les mondes. Les mots et phrases relus seulement par un agent sont jouables pendant le développement ; la version 1.0 n'utilisera que ceux validés par une personne. La course contre son propre fantôme est reportée à J4.
+
+## 021 — Noms des doigts (2026-10-13, acceptée)
+Choix du porteur : les noms exacts partout (« auriculaire », « annulaire », « majeur », « index », « pouce »), dans les textes d'introduction comme dans l'aide à l'écran. Ce sont les mots des ergothérapeutes et l'enfant les apprend en jouant. À la première leçon qui utilise un doigt, le texte le situe en quelques mots (« les doigts juste après les majeurs », « le plus petit doigt »).
+
+## 022 — Périmètre de J4 « Aventure » (2026-10-13, proposée)
+Constats du rapport de recherche : un récit simple suffit et doit avancer parce que l'enfant tape ; le retour sur la compétence nourrit la motivation, la récompense attendue pour la simple participation la mine ; les détails séduisants hors sujet nuisent ; la voix est le seul levier à effet mesuré (sur la compréhension) ; rien n'est démontré sur la course contre son fantôme. Proposition :
+- **Récompenses calculées, jamais stockées** : ce que l'enfant a débloqué est une fonction pure de sa progression et d'un catalogue en données. Rien ne peut se perdre, tout est prévisible et affiché à l'avance, les profils existants reçoivent ce qu'ils ont déjà mérité. Le profil ne garde que les **choix** de l'enfant (nom et apparence du compagnon).
+- **Compétences et objets** débloqués par leçon réussie (seuil de précision de la leçon, jamais la vitesse ni l'assiduité) ; **trophées** pour une maîtrise plus haute (rangée, monde, touche fragile apprivoisée). Aucun trophée de durée, de jours ou de nombre de parties.
+- **Récit minimal en données** : une ouverture et une fin par monde, une ligne par leçon réussie, affichées entre les exercices, jamais pendant la frappe ; textes écrits par un agent, relus par le porteur.
+- **Voix** : fichiers pré-générés hors ligne (ADR-011) par une chaîne `tools/voice/`, lecteur dans `audio/`, bouton « Écouter » sur chaque consigne, réglage séparé des sons. La voix et sa licence sont choisies par le porteur sur échantillons.
+- **Fantôme** : mini-jeu facultatif, proposé seulement pour rejouer une leçon déjà réussie ; le fantôme suit le rythme de la tentative précédente de l'enfant (allure enregistrée, pas le texte), légèrement ralenti ; pas de défaite, pas d'étoile ni de trophée liés à la vitesse.
+- **Préalable** : profil en version 2 avec migration, et lecture tolérante (aujourd'hui un profil au format inattendu est écarté sans message).
+Hors périmètre : nouveaux mondes, musique, espace adulte, export/import, installation hors ligne (J5).
+
+## 023 — Espace avant « ? », « ! » et « : » (2026-10-13, acceptée)
+Choix du porteur (réponse donnée dans la session parallèle du même jour, à confirmer à la relecture des phrases) : les phrases suivent la typographie française, avec une espace avant « ? », « ! » et « : ». C'est une espace ordinaire, celle que l'enfant tape à la barre d'espace ; l'espace insécable n'est pas enseignée. À l'écran, le signe reste sur la même ligne que le mot qui le précède. Le point-virgule et les guillemets, absents de la progression, ne sont pas décidés.

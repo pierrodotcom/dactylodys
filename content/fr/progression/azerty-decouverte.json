@@ -68,7 +68,7 @@
 				{
 					"id": "fr.lesson.mare-s-l",
 					"title": "La mare du stégosaure",
-					"intro": "Pose le doigt de la bague de chaque main : S à gauche et L à droite.",
+					"intro": "Pose tes annulaires, les doigts juste après les majeurs : S à gauche et L à droite.",
 					"newChars": ["s", "l"],
 					"words": [],
 					"mix": {
@@ -192,7 +192,7 @@
 				{
 					"id": "fr.lesson.gateau-a-o",
 					"title": "Le gâteau farfelu",
-					"intro": "Ton petit doigt gauche monte sur A, le doigt de la bague droit monte sur O, puis ils reviennent.",
+					"intro": "Ton auriculaire gauche, le plus petit doigt, monte sur A, ton annulaire droit monte sur O, puis ils reviennent.",
 					"newChars": ["a", "o"],
 					"words": [],
 					"mix": {
@@ -208,7 +208,7 @@
 				{
 					"id": "fr.lesson.bras-q-m",
 					"title": "La quiche qui rigole",
-					"intro": "Tes deux petits doigts se posent sur Q à gauche et sur M à droite.",
+					"intro": "Tes deux auriculaires se posent sur Q à gauche et sur M à droite.",
 					"newChars": ["q", "m"],
 					"words": [],
 					"mix": {
@@ -224,7 +224,7 @@
 				{
 					"id": "fr.lesson.casserole-c-p",
 					"title": "La casserole qui chante",
-					"intro": "Ton majeur gauche descend sur C et ton petit doigt droit monte sur P, puis ils reviennent.",
+					"intro": "Ton majeur gauche descend sur C et ton auriculaire droit monte sur P, puis ils reviennent.",
 					"newChars": ["c", "p"],
 					"words": [],
 					"mix": {
@@ -240,7 +240,7 @@
 				{
 					"id": "fr.lesson.epices-accent-apostrophe",
 					"title": "Les épices surprises",
-					"intro": "Sur la rangée des chiffres, le doigt de la bague gauche tape É et ton index gauche tape l'apostrophe.",
+					"intro": "Sur la rangée des chiffres, ton annulaire gauche tape É et ton index gauche tape l'apostrophe.",
 					"newChars": ["é", "'"],
 					"words": [],
 					"mix": {
@@ -296,7 +296,7 @@
 				{
 					"id": "fr.lesson.yak-y-x",
 					"title": "Le yak mystère",
-					"intro": "Ton index droit monte sur Y et le doigt de la bague gauche descend sur X.",
+					"intro": "Ton index droit monte sur Y et ton annulaire gauche descend sur X.",
 					"newChars": ["y", "x"],
 					"words": [],
 					"mix": {
@@ -312,7 +312,7 @@
 				{
 					"id": "fr.lesson.zebre-z-w",
 					"title": "Le zèbre à rayures",
-					"intro": "Le doigt de la bague gauche monte sur Z et ton petit doigt gauche descend sur W.",
+					"intro": "Ton annulaire gauche monte sur Z et ton auriculaire gauche descend sur W.",
 					"newChars": ["z", "w"],
 					"words": [],
 					"mix": {
@@ -336,7 +336,7 @@
 				{
 					"id": "fr.lesson.lune-accents-graves",
 					"title": "Le café de la Lune",
-					"intro": "Sur la rangée des chiffres, ton index droit tape È et ton petit doigt droit tape À.",
+					"intro": "Sur la rangée des chiffres, ton index droit tape È et ton auriculaire droit tape À.",
 					"newChars": ["è", "à"],
 					"words": [],
 					"mix": {
@@ -352,7 +352,7 @@
 				{
 					"id": "fr.lesson.comete-cedille-u-grave",
 					"title": "La comète pressée",
-					"intro": "Monte le doigt de la bague droit sur Ç, et ton petit doigt droit tape Ù, à droite de M.",
+					"intro": "Monte ton annulaire droit sur Ç, et ton auriculaire droit tape Ù, à droite de M.",
 					"newChars": ["ç", "ù"],
 					"words": [],
 					"mix": {
@@ -368,7 +368,7 @@
 				{
 					"id": "fr.lesson.grandes-majuscules",
 					"title": "Les géantes de la galaxie",
-					"intro": "Pour une majuscule, tiens Maj avec le petit doigt de l'autre main, puis tape la lettre.",
+					"intro": "Pour une majuscule, tiens Maj avec l'auriculaire de l'autre main, puis tape la lettre.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -424,7 +424,7 @@
 				{
 					"id": "fr.lesson.tiret-deux-points",
 					"title": "Le train aux wagons accrochés",
-					"intro": "Ton index droit monte au tiret, sur la rangée des chiffres, et le doigt de la bague droit descend aux deux-points.",
+					"intro": "Ton index droit monte au tiret, sur la rangée des chiffres, et ton annulaire droit descend aux deux-points.",
 					"newChars": ["-", ":"],
 					"words": [],
 					"mix": {

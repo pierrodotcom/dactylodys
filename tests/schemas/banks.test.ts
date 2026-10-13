@@ -141,7 +141,7 @@ describe(PHRASES_FILE, () => {
 		for (const { phrase, tier } of withTier) {
 			expect(phrase.text, phrase.text).toBe(phrase.text.normalize('NFC').trim());
 			expect(tier, phrase.text).toBeGreaterThanOrEqual(0);
-			const words = phrase.text.split(' ').length;
+			const words = phrase.text.split(' ').filter((token) => /\p{L}/u.test(token)).length;
 			expect(words, phrase.text).toBeGreaterThanOrEqual(PHRASE_WORDS.min);
 			expect(words, phrase.text).toBeLessThanOrEqual(PHRASE_WORDS.max);
 		}

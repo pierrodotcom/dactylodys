@@ -4,19 +4,21 @@ Cocher `[x]` = garder la phrase. Barrer (`~~phrase~~`) = retirer la phrase du je
 Pour corriger un thème ou une formulation, écrire la correction à la suite : `→ correction`.
 Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les décisions dans `tools/content/data/`.
 
-## Dinosaures (4)
+## Dinosaures (6)
 
-### Niveau 1 (2)
+### Niveau 1 (3)
 
 - [ ] un dinosaure sort de la salade
-- [ ] Le dragon a faim!
+- [ ] je sais où dort le dragon
+- [ ] Le dragon a faim !
 
-### Niveau 2 (2)
+### Niveau 2 (3)
 
 - [ ] Le tricératops a oublié son parapluie.
-- [ ] Le diplodocus passe sous la porte!
+- [ ] Le diplodocus passe sous la porte !
+- [ ] Petit ou grand, le dinosaure adore les bulles.
 
-## Cuisine (19)
+## Cuisine (23)
 
 ### Niveau 1 (8)
 
@@ -29,26 +31,30 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] le fruit sent le sel
 - [ ] les nouilles dorent au soleil
 
-### Niveau 2 (6)
+### Niveau 2 (9)
 
 - [ ] j'adore les tartines de purée
-- [ ] Mon sandwich a pris la fuite!
+- [ ] dis où tu caches le chocolat
+- [ ] Mon sandwich a pris la fuite !
 - [ ] La soupe a pris un bain de soleil.
 - [ ] La pizza a peur du four.
+- [ ] Dans ma soupe, il y a un bouton.
+- [ ] Mon grille-pain raconte des blagues.
 - [ ] Le dragon fait un gâteau pour la forêt.
 - [ ] Le maïs chante sous la pluie.
 
-### Niveau 3 (5)
+### Niveau 3 (6)
 
 - [ ] la sorcière a un balai en chocolat
 - [ ] Le gâteau a sauté par la fenêtre.
-- [ ] Une crêpe s'est enfuie par la fenêtre!
+- [ ] Recette du jour : une tarte aux chaussettes.
+- [ ] Une crêpe s'est enfuie par la fenêtre !
 - [ ] Le robot pâtissier a brûlé les crêpes.
-- [ ] Ce poêle chante, le gâteau danse!
+- [ ] Ce poêle chante, le gâteau danse !
 
-## Animaux (69)
+## Animaux (76)
 
-### Niveau 1 (16)
+### Niveau 1 (18)
 
 - [ ] le dindon dort dans la salade
 - [ ] la tortue danse sur le toit
@@ -61,13 +67,15 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] le lion tond un radis
 - [ ] Le chat a mis ses lunettes.
 - [ ] Le zèbre rit tout seul.
-- [ ] Le singe fait du vélo!
+- [ ] Le singe fait du vélo !
 - [ ] La girafe a le hoquet.
 - [ ] Le lapin joue au football.
 - [ ] Le poisson rit sous l'eau.
 - [ ] Le chien ronfle comme un tracteur.
+- [ ] Le chat dort, le chien ronfle.
+- [ ] Tu as vu ce lapin bleu ?
 
-### Niveau 2 (36)
+### Niveau 2 (41)
 
 - [ ] le crocodile joue de la trompette
 - [ ] un perroquet apprend le piano
@@ -96,12 +104,17 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] la grenouille joue du xylophone
 - [ ] la baleine a pris le bus
 - [ ] l'éléphant a perdu sa trompette
+- [ ] le chat sait où est le fromage
+- [ ] voilà où habite le hibou
+- [ ] devine où le lapin range ses carottes
 - [ ] Mon poisson sait jouer du piano.
-- [ ] Un hérisson dans la baignoire!
+- [ ] Un hérisson dans la baignoire !
 - [ ] Le hibou range ses chaussettes par couleur.
-- [ ] La tortue a gagné la course, quelle surprise!
+- [ ] La tortue a gagné la course, quelle surprise !
 - [ ] Le yéti cherche ses lunettes.
-- [ ] Un escargot gagne le marathon!
+- [ ] Un escargot gagne le marathon !
+- [ ] La chauve-souris joue à cache-cache.
+- [ ] Peut-on promener un poisson rouge ?
 - [ ] Mon âne mange mon chapeau de paille.
 - [ ] Le canard dîne avec un chapeau.
 - [ ] Le castor range sa bûche dans le frigo.
@@ -114,60 +127,93 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] le cheval fait du hula hoop
 - [ ] le crocodile a des chaussettes violettes
 - [ ] le poisson a le hoquet à chaque bulle
-- [ ] Qui a mis un crocodile dans mon cartable?
+- [ ] Qui a mis un crocodile dans mon cartable ?
 - [ ] Quand il pleut, le dragon ouvre un parapluie.
 - [ ] Hier, le poulpe a tricoté huit chaussettes.
-- [ ] Pourquoi le zèbre porte-t-il un pyjama?
-- [ ] Le canard a avalé un xylophone, quel boucan!
+- [ ] Pourquoi le zèbre porte-t-il un pyjama ?
+- [ ] Le canard a avalé un xylophone, quel boucan !
 - [ ] Un cochon fait du parachute avec une crêpe.
-- [ ] Le crocodile a enfin des dents propres!
+- [ ] Le crocodile a enfin des dents propres !
 - [ ] Une souris dîne sur une île de fromage.
 - [ ] Le hérisson organise une fête sur une île.
 - [ ] Le crocodile naïf a avalé une ancre.
 - [ ] La vache a une voix aiguë.
 
-## Espace (8)
+## Espace (19)
 
 ### Niveau 1 (1)
 
 - [ ] la lune sort et le soleil ronfle
 
-### Niveau 2 (6)
+### Niveau 2 (13)
 
 - [ ] l'ours a écrit une carte pour la lune
 - [ ] l'étoile a sauté dans la marmite
+- [ ] la lune sait où va la comète
 - [ ] La fusée a un rhume.
 - [ ] L'astronaute a perdu sa pantoufle sur la lune.
 - [ ] Une planète a éternué sur ma fusée.
+- [ ] Sur la lune, le robot plante des carottes.
+- [ ] La fusée tousse, puis elle repart.
+- [ ] Ce matin, une comète a pris le bus.
+- [ ] Le robot porte un chapeau, une cravate.
+- [ ] Sur ma planète, la pluie sent la fraise.
+- [ ] Qui a rangé la lune dans le placard ?
 - [ ] Le dinosaure a dîné sur la lune.
 
-### Niveau 3 (1)
+### Niveau 3 (5)
 
 - [ ] la fusée décolle avec un yaourt
+- [ ] le robot cherche où poser sa fusée
+- [ ] Dans ma fusée, je range une vache.
+- [ ] La nuit, les planètes jouent aux billes.
+- [ ] Message de la fusée : le pilote dort !
 
-## Véhicules (11)
+## Véhicules (27)
 
-### Niveau 1 (1)
+### Niveau 1 (2)
 
-- [ ] Qui a pris mon vélo?
+- [ ] Qui a pris mon vélo ?
+- [ ] Qui conduit le bus ?
 
-### Niveau 2 (6)
+### Niveau 2 (15)
 
 - [ ] la marmotte conduit un camion de pommes
 - [ ] la souris conduit le tracteur
 - [ ] un papillon prend le train
-- [ ] Le camion a un hoquet!
+- [ ] Le camion a un hoquet !
 - [ ] Mon vélo parle avec un accent bizarre.
+- [ ] Le train a perdu ses roues !
+- [ ] Oh, mon vélo sait nager !
+- [ ] Où va ce bateau à roulettes ?
+- [ ] Mon sous-marin a peur de l'eau.
+- [ ] Le chasse-neige part en vacances au soleil.
+- [ ] Mon garage : un vélo, une girafe.
+- [ ] Menu du camion : des frites à la fraise.
+- [ ] Dis-moi, ton vélo sait-il voler ?
+- [ ] Le cerf-volant a pris le train.
 - [ ] Le canoë du pirate fait des bulles.
 
-### Niveau 3 (4)
+### Niveau 3 (10)
 
 - [ ] un wagon plein de yaourts passe
 - [ ] le vélo du hibou fait un bruit bizarre
 - [ ] le singe invente un avion en carton
 - [ ] la tortue a gagné la course de vélo
+- [ ] Le lundi, le tracteur va au cinéma.
+- [ ] Attention, la trottinette a mangé du piment !
+- [ ] Un tracteur dans la baignoire, quel bazar !
+- [ ] La pilote annonce : on atterrit sur un nuage.
+- [ ] Règle du bus : on chante à chaque virage.
+- [ ] On a tout réparé : le klaxon, le sandwich.
 
-## Nature (8)
+## Maison (1)
+
+### Niveau 2 (1)
+
+- [ ] Cet après-midi, le canapé fait du sport.
+
+## Nature (9)
 
 ### Niveau 1 (8)
 
@@ -180,9 +226,13 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] jeudi le lis se dresse sur le fil
 - [ ] le lit sue du jus de fleurs
 
-## Sans thème particulier (31)
+### Niveau 2 (1)
 
-### Niveau 1 (18)
+- [ ] Un arc-en-ciel est tombé dans mon bol.
+
+## Sans thème particulier (34)
+
+### Niveau 1 (20)
 
 - [ ] elle se rue sur le jus
 - [ ] le fer file sur le fil
@@ -201,9 +251,11 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] le lit des lutins est dur
 - [ ] un nid de lutins sur le fer
 - [ ] le lutin lit le titre du fruit
-- [ ] Où est ma chaussette?
+- [ ] Où est ma chaussette ?
+- [ ] Un, deux, trois, je saute.
+- [ ] Voici mon plan : une sieste.
 
-### Niveau 2 (10)
+### Niveau 2 (11)
 
 - [ ] le pirate a perdu sa casserole
 - [ ] le capitaine ronfle sur son tapis
@@ -213,11 +265,12 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] où est passé mon sandwich
 - [ ] Mon chapeau a disparu dans le frigo.
 - [ ] Le robot a rangé le salon au frigo.
-- [ ] Où est ma pâte à modeler?
+- [ ] Devinette : qui a des roues et un pyjama ?
+- [ ] Où est ma pâte à modeler ?
 - [ ] Une tête de chou prend le bateau.
 
 ### Niveau 3 (3)
 
 - [ ] le robot a mangé tous les boutons
 - [ ] mon hamster construit une pyramide
-- [ ] Combien de chaussettes a mangé la machine?
+- [ ] Combien de chaussettes a mangé la machine ?
