@@ -17,7 +17,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Voix** : choisir la voix des consignes. Recherche dans `research_notes/Voix pré-générées/` : une seule voix Piper française est sans licence restrictive en amont (`fr_FR-mls-medium`), Kokoro `ff_siwis` est l'alternative, une voix humaine lève toute question. Téléchargements à autoriser par le porteur avant tout échantillon.
+2. **Voix** : le porteur écoute huit échantillons (voix 0 à 7 de `fr_FR-mls-medium`, la seule voix Piper française sans licence restrictive en amont) et dit lesquelles lui plaisent, ou qu'aucune ne convient (repli : Kokoro `ff_siwis`, ou une voix humaine). Détail, adresses et commande pour refaire les échantillons : `research_notes/Voix pré-générées/`.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
@@ -108,3 +108,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — PR 21 fusionnée (phrases qui ont un sens ; test e2e rendu déterministe, L-045). Relecture des phrases par le porteur appliquée. Le moteur garantit au moins un mot dans tout exercice qui en annonce.
 - **2026-10-13** — PR 22 fusionnée (mot garanti, relecture des phrases). Les 5 phrases de remplacement sont validées par le porteur : toute la banque est relue par une personne. Recherche sur les voix consignée. Lots R1 et S1 lancés.
 - **2026-10-13** — PR 23, 24 et 25 fusionnées. Décisions du porteur : récompenses acquises pour toujours, carte aux flèches, écran « l'histoire jusqu'ici » (ADR-027). Téléchargement du moteur Piper et de la voix `fr_FR-mls-medium` autorisé pour des échantillons, hors du dépôt.
+- **2026-10-13** — PR 26 fusionnée. Échantillons de voix envoyés au porteur. Fin de session : reprendre par le retour du test avec un enfant, puis les lots R2, S2, V, F et l'assemblage (une session par lot).

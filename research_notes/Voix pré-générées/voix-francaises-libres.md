@@ -55,3 +55,15 @@ Licence réelle de SIWIS à sa source (la page d'origine ne nomme pas de licence
 - https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html
 - https://huggingface.co/hexgrad/Kokoro-82M · https://huggingface.co/facebook/mms-tts-fra · https://huggingface.co/coqui/XTTS-v2
 - https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Audio_codecs · https://caniuse.com/opus
+
+## Échantillons du 2026-10-13
+
+Avec l'accord du porteur, téléchargés hors du dépôt (dossier temporaire de la session, à refaire dans une nouvelle session) : `piper_windows_amd64.zip` (22 477 236 octets, https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip) et `fr_FR-mls-medium.onnx` avec son `.onnx.json` (76 733 750 et 7 036 octets, https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/mls/medium/). Tailles conformes aux annonces des sources.
+
+Le modèle contient 125 voix (22 050 Hz). Huit échantillons, voix 0 à 7, envoyés au porteur dans une page autonome. Commande, le texte étant lu sur l'entrée standard :
+
+```
+piper.exe --model fr_FR-mls-medium.onnx --speaker <numéro> --output_file <sortie>.wav
+```
+
+Environ une seconde de calcul pour dix secondes de son, sans carte graphique. Aucun fichier audio n'entre dans le dépôt tant que la voix et sa licence ne sont pas choisies.
