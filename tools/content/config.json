@@ -21,7 +21,7 @@
 		}
 	},
 	"candidates": {
-		"pattern": "^[a-zàâçéèêëîïôùûü]+$",
+		"pattern": "^[a-zàâçéèêëîïôùû]+$",
 		"minLetters": 2,
 		"maxLetters": 10,
 		"partsOfSpeech": ["NOM", "ADJ", "VER", "ADV"],
