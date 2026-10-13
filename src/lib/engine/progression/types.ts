@@ -17,6 +17,11 @@ export interface ProgressionRules {
 	readonly weakCharBoost: number;
 	/** How much more often a word of the current world's theme is picked; 0 disables it. */
 	readonly themeBoost: number;
+	/**
+	 * Times each new character of a lesson is asked at least in one exercise, by warm-up suites that
+	 * open it; 0 disables it.
+	 */
+	readonly newCharMinCount: number;
 }
 
 /** Relative weights of the three kinds of groups in an exercise; at least one is positive. */

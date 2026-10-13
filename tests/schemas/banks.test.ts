@@ -40,7 +40,7 @@ const STEPS: readonly (readonly string[])[] = [
 	['?', '!'],
 	['-', ':'],
 	['ê', 'â', 'î', 'ô', 'û'],
-	['ë', 'ï', 'ü']
+	['ë', 'ï']
 ];
 const STEP = {
 	restRowVowels: 5,

@@ -120,7 +120,14 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	const record = expectRecord(value, path);
 	rejectUnknown(
 		record,
-		['unlockAccuracy', 'starThresholds', 'newCharWeight', 'weakCharBoost', 'themeBoost'],
+		[
+			'unlockAccuracy',
+			'starThresholds',
+			'newCharWeight',
+			'weakCharBoost',
+			'themeBoost',
+			'newCharMinCount'
+		],
 		path
 	);
 	const unlockAccuracy = expectPercent(record['unlockAccuracy'], `${path}.unlockAccuracy`);
@@ -139,12 +146,15 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	if (newCharWeight < 0 || newCharWeight > 1) {
 		fail(`${path}.newCharWeight`, 'expected a number between 0 and 1');
 	}
+	const newCharMinCount = expectInteger(record['newCharMinCount'], `${path}.newCharMinCount`);
+	if (newCharMinCount < 0) fail(`${path}.newCharMinCount`, 'expected an integer of at least 0');
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
 		newCharWeight,
 		weakCharBoost: expectNonNegative(record['weakCharBoost'], `${path}.weakCharBoost`),
-		themeBoost: expectNonNegative(record['themeBoost'], `${path}.themeBoost`)
+		themeBoost: expectNonNegative(record['themeBoost'], `${path}.themeBoost`),
+		newCharMinCount
 	};
 }
 
@@ -191,9 +201,36 @@ function parseWord(value: unknown, known: ReadonlySet<string>, path: string): st
 	return word;
 }
 
+/**
+ * A warm-up group holds once each new character still below the minimum, so the minimum needs as
+ * many groups; a single known character fills its groups, which must then differ in length.
+ */
+function checkMinimumFits(
+	lesson: LessonDefinition,
+	typable: number,
+	newCharMinCount: number,
+	path: string
+): void {
+	if (lesson.newChars.length === 0 || newCharMinCount === 0) return;
+	if (newCharMinCount > lesson.groupCount) {
+		fail(
+			`${path}.groupCount`,
+			`expected at least ${newCharMinCount} groups to ask each new character ${newCharMinCount} times (rules.newCharMinCount)`
+		);
+	}
+	const [min, max] = lesson.groupLength;
+	if (typable < 2 && min === max && newCharMinCount > max) {
+		fail(
+			`${path}.groupCount`,
+			`asking the only known character ${newCharMinCount} times (rules.newCharMinCount) needs identical consecutive groups`
+		);
+	}
+}
+
 function checkGeneratable(
 	lesson: LessonDefinition,
 	learned: ReadonlySet<string>,
+	newCharMinCount: number,
 	path: string
 ): void {
 	const [min, max] = lesson.groupLength;
@@ -217,6 +254,7 @@ function checkGeneratable(
 	if (lesson.newChars.length > max) {
 		fail(`${path}.groupLength`, 'expected groups long enough to hold all the new characters');
 	}
+	checkMinimumFits(lesson, typable, newCharMinCount, path);
 }
 
 function parseLesson(
@@ -224,6 +262,7 @@ function parseLesson(
 	introduced: Introduced,
 	lessonIds: Set<string>,
 	language: string,
+	rules: ProgressionRules,
 	path: string
 ): LessonDefinition {
 	const record = expectRecord(value, path);
@@ -293,7 +332,7 @@ function parseLesson(
 		targetLength,
 		groupLength: [min, max]
 	};
-	checkGeneratable(lesson, known, path);
+	checkGeneratable(lesson, known, rules.newCharMinCount, path);
 	return lesson;
 }
 
@@ -303,6 +342,7 @@ function parseWorld(
 	lessonIds: Set<string>,
 	worldIds: Set<string>,
 	language: string,
+	rules: ProgressionRules,
 	path: string
 ): WorldDefinition {
 	const record = expectRecord(value, path);
@@ -328,7 +368,7 @@ function parseWorld(
 		themeId: expectString(record['themeId'], `${path}.themeId`),
 		gameIds,
 		lessons: rawLessons.map((lesson, i) =>
-			parseLesson(lesson, introduced, lessonIds, language, `${path}.lessons[${i}]`)
+			parseLesson(lesson, introduced, lessonIds, language, rules, `${path}.lessons[${i}]`)
 		)
 	};
 }
@@ -371,7 +411,15 @@ export function parseProgression(data: unknown): ProgressionDefinition {
 	const lessonIdSet = new Set<string>();
 	const worldIdSet = new Set<string>();
 	const worlds = rawWorlds.map((world, i) =>
-		parseWorld(world, introduced, lessonIdSet, worldIdSet, language, `progression.worlds[${i}]`)
+		parseWorld(
+			world,
+			introduced,
+			lessonIdSet,
+			worldIdSet,
+			language,
+			rules,
+			`progression.worlds[${i}]`
+		)
 	);
 
 	return { schemaVersion: 1, id, locale, layoutIds, rules, worlds };

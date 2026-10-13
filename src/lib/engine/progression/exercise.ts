@@ -202,7 +202,7 @@ export function generateExercise(
 	if (lesson === undefined) throw new RangeError(`Unknown lesson: ${lessonId}`);
 
 	const learned = learnedChars(progression, lessonId);
-	const { newCharWeight, weakCharBoost, themeBoost } = progression.rules;
+	const { newCharWeight, weakCharBoost, themeBoost, newCharMinCount } = progression.rules;
 	const chars = context.progress?.chars ?? {};
 	const errorRate = (char: string): number => {
 		const stat = chars[char];
@@ -246,35 +246,49 @@ export function generateExercise(
 	const words: Reserve = { items: [...wordItems.values()], used: new Set() };
 	const phrases: Reserve = { items: phraseItems, used: new Set() };
 
+	const buildMixed = (
+		missing: readonly string[],
+		groupIndex: number,
+		length: number,
+		relaxed: boolean
+	): Candidate => {
+		const genre = relaxed
+			? 'drill'
+			: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
+		const candidate =
+			genre === 'drill'
+				? buildDrill([], settings, relaxed)
+				: buildEntry(
+						genre === 'word' ? words : phrases,
+						genre === 'word' ? lesson.newChars : fresh,
+						settings
+					);
+		const present = toGraphemes(candidate.text);
+		const stops =
+			groupIndex + 1 >= lesson.groupCount || length + present.length >= lesson.targetLength;
+		return stops && missing.some((char) => !present.includes(char))
+			? buildDrill(missing, settings, relaxed)
+			: candidate;
+	};
+
 	const groups: string[] = [];
-	const covered = new Set<string>();
+	const asked = new Map<string, number>();
 	let total = 0;
 
-	while (groups.length < lesson.groupCount && total < lesson.targetLength) {
-		const missing = lesson.newChars.filter((char) => !covered.has(char));
+	while (groups.length < lesson.groupCount) {
+		// Warm-up: suites that hold the new characters open the exercise until each was asked enough.
+		const lacking = lesson.newChars.filter((char) => (asked.get(char) ?? 0) < newCharMinCount);
+		if (lacking.length === 0 && total >= lesson.targetLength) break;
+		const missing = lesson.newChars.filter((char) => !asked.has(char));
 		const previous = groups[groups.length - 1];
 		let accepted: Candidate | undefined;
 
 		for (let attempt = 0; attempt < MAX_ATTEMPTS && accepted === undefined; attempt++) {
 			const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
-			const genre = relaxed
-				? 'drill'
-				: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
-			let candidate =
-				genre === 'drill'
-					? buildDrill([], settings, relaxed)
-					: buildEntry(
-							genre === 'word' ? words : phrases,
-							genre === 'word' ? lesson.newChars : fresh,
-							settings
-						);
-
-			const present = toGraphemes(candidate.text);
-			const stops =
-				groups.length + 1 >= lesson.groupCount || total + present.length >= lesson.targetLength;
-			if (stops && missing.some((char) => !present.includes(char))) {
-				candidate = buildDrill(missing, settings, relaxed);
-			}
+			const candidate =
+				lacking.length > 0
+					? buildDrill(lacking, settings, relaxed)
+					: buildMixed(missing, groups.length, total, relaxed);
 			if (candidate.text !== previous) accepted = candidate;
 		}
 		if (accepted === undefined) {
@@ -285,7 +299,7 @@ export function generateExercise(
 		groups.push(accepted.text);
 		const graphemes = toGraphemes(accepted.text);
 		total += graphemes.length;
-		for (const grapheme of graphemes) covered.add(grapheme);
+		for (const grapheme of graphemes) asked.set(grapheme, (asked.get(grapheme) ?? 0) + 1);
 	}
 	return { lessonId, groups };
 }

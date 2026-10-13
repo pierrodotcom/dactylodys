@@ -18,7 +18,8 @@ const RULES: ProgressionRules = {
 	starThresholds: [80, 90, 97],
 	newCharWeight: 0.6,
 	weakCharBoost: 2,
-	themeBoost: 2
+	themeBoost: 2,
+	newCharMinCount: 0
 };
 
 const PROGRESSION: ProgressionDefinition = parseProgression({
@@ -137,7 +138,8 @@ describe('evaluateLesson', () => {
 			starThresholds: [60, 70, 80],
 			newCharWeight: 0.6,
 			weakCharBoost: 0,
-			themeBoost: 0
+			themeBoost: 0,
+			newCharMinCount: 0
 		};
 		expect(evaluateLesson(rules, metricsWith({ accuracy: 55 }))).toEqual({
 			stars: 0,

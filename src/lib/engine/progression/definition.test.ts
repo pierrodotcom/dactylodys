@@ -18,7 +18,8 @@ const BASE: Raw = {
 		starThresholds: [80, 90, 97],
 		newCharWeight: 0.6,
 		weakCharBoost: 2,
-		themeBoost: 2
+		themeBoost: 2,
+		newCharMinCount: 0
 	},
 	worlds: [
 		{
@@ -143,6 +144,37 @@ describe('parseProgression', () => {
 		).not.toThrow();
 	});
 
+	it('accepts a minimum count of new characters that needs every group of a lesson', () => {
+		const parsed = parseProgression(variant((raw) => (raw.rules['newCharMinCount'] = 5)));
+		expect(parsed.rules.newCharMinCount).toBe(5);
+	});
+
+	it('accepts any minimum count for a lesson without new characters', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					raw.rules['newCharMinCount'] = 5;
+					lessonOf(raw, 1, 0)['newChars'] = [];
+					lessonOf(raw, 1, 0)['groupCount'] = 2;
+				})
+			)
+		).not.toThrow();
+	});
+
+	it('accepts a single known character when one warm-up group reaches the minimum count', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					raw.rules['newCharMinCount'] = 2;
+					lessonOf(raw, 0, 0)['newChars'] = ['f'];
+					lessonOf(raw, 0, 0)['words'] = ['f'];
+					lessonOf(raw, 0, 0)['groupLength'] = [2, 2];
+					lessonOf(raw, 0, 1)['newChars'] = ['j', 'e', ' '];
+				})
+			)
+		).not.toThrow();
+	});
+
 	const invalid: [string, (raw: Raw) => void, RegExp][] = [
 		['unknown schema version', (raw) => (raw['schemaVersion'] = 2), /progression\.schemaVersion/],
 		['unknown root property', (raw) => (raw['extra'] = 1), /progression\.extra: unknown property/],
@@ -219,6 +251,50 @@ describe('parseProgression', () => {
 			'unknown rule',
 			(raw) => (raw.rules['maxSpeed'] = 30),
 			/progression\.rules\.maxSpeed: unknown property/
+		],
+		[
+			'negative minimum count of new characters',
+			(raw) => (raw.rules['newCharMinCount'] = -1),
+			/progression\.rules\.newCharMinCount/
+		],
+		[
+			'fractional minimum count of new characters',
+			(raw) => (raw.rules['newCharMinCount'] = 2.5),
+			/progression\.rules\.newCharMinCount.*integer/
+		],
+		[
+			'minimum count of new characters that is not a number',
+			(raw) => (raw.rules['newCharMinCount'] = '5'),
+			/progression\.rules\.newCharMinCount/
+		],
+		[
+			'missing minimum count of new characters',
+			(raw) => delete raw.rules['newCharMinCount'],
+			/progression\.rules\.newCharMinCount/
+		],
+		[
+			'a minimum count of new characters that does not fit in the groups of a lesson',
+			(raw) => (raw.rules['newCharMinCount'] = 6),
+			/lessons\[0\]\.groupCount: expected at least 6 groups.*newCharMinCount/
+		],
+		[
+			'a minimum count that only fits in the groups of the first lessons',
+			(raw) => {
+				raw.rules['newCharMinCount'] = 5;
+				lessonOf(raw, 1, 0)['groupCount'] = 4;
+			},
+			/worlds\[1\]\.lessons\[0\]\.groupCount: expected at least 5 groups.*newCharMinCount/
+		],
+		[
+			'a single known character whose warm-up would repeat the same group',
+			(raw) => {
+				raw.rules['newCharMinCount'] = 3;
+				lessonOf(raw, 0, 0)['newChars'] = ['f'];
+				lessonOf(raw, 0, 0)['words'] = ['f'];
+				lessonOf(raw, 0, 0)['groupLength'] = [2, 2];
+				lessonOf(raw, 0, 1)['newChars'] = ['j', 'e', ' '];
+			},
+			/lessons\[0\]\.groupCount.*identical consecutive groups/
 		],
 		['no world', (raw) => (raw.worlds = []), /progression\.worlds/],
 		['world without lesson', (raw) => (raw.worlds[0]!.lessons = []), /worlds\[0\]\.lessons/],

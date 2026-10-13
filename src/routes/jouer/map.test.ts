@@ -118,7 +118,8 @@ const MANY_WORLDS: ProgressionDefinition = {
 		starThresholds: [80, 90, 97],
 		newCharWeight: 0.6,
 		weakCharBoost: 0,
-		themeBoost: 0
+		themeBoost: 0,
+		newCharMinCount: 0
 	},
 	worlds: [1, 2, 3].map((index) => ({
 		id: `xx.world.${index}`,
