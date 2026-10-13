@@ -91,3 +91,6 @@ Constats du rapport de recherche : un récit simple suffit et doit avancer parce
 - **Fantôme** : mini-jeu facultatif, proposé seulement pour rejouer une leçon déjà réussie ; le fantôme suit le rythme de la tentative précédente de l'enfant (allure enregistrée, pas le texte), légèrement ralenti ; pas de défaite, pas d'étoile ni de trophée liés à la vitesse.
 - **Préalable** : profil en version 2 avec migration, et lecture tolérante (aujourd'hui un profil au format inattendu est écarté sans message).
 Hors périmètre : nouveaux mondes, musique, espace adulte, export/import, installation hors ligne (J5).
+
+## 023 — Espace avant « ? », « ! » et « : » (2026-10-13, acceptée)
+Choix du porteur (réponse donnée dans la session parallèle du même jour, à confirmer à la relecture des phrases) : les phrases suivent la typographie française, avec une espace avant « ? », « ! » et « : ». C'est une espace ordinaire, celle que l'enfant tape à la barre d'espace ; l'espace insécable n'est pas enseignée. À l'écran, le signe reste sur la même ligne que le mot qui le précède. Le point-virgule et les guillemets, absents de la progression, ne sont pas décidés.
