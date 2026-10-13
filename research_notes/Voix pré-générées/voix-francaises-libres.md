@@ -67,3 +67,5 @@ piper.exe --model fr_FR-mls-medium.onnx --speaker <numéro> --output_file <sorti
 ```
 
 Environ une seconde de calcul pour dix secondes de son, sans carte graphique. Aucun fichier audio n'entre dans le dépôt tant que la voix et sa licence ne sont pas choisies.
+
+Résultat de l'écoute par le porteur (2026-10-13) : aucune des huit voix ne lit le texte correctement, toutes butent sur des mots ; la voix 2 est la plus agréable sans être satisfaisante. Le découpage en sons fait par le moteur était correct (vérifié avec `--debug`) : le défaut vient du modèle. Décision : voix humaine (ADR-028).

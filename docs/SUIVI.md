@@ -17,7 +17,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Voix** : le porteur écoute huit échantillons (voix 0 à 7 de `fr_FR-mls-medium`, la seule voix Piper française sans licence restrictive en amont) et dit lesquelles lui plaisent, ou qu'aucune ne convient (repli : Kokoro `ff_siwis`, ou une voix humaine). Détail, adresses et commande pour refaire les échantillons : `research_notes/Voix pré-générées/`.
+2. **Voix** : voix humaine (ADR-028). Lot V1 en cours (`feat/j4-voix-enregistrement`) : page d'enregistrement `/dev/voix`, lecteur de voix, bouton « Écouter », outil d'import. Ensuite le porteur (ou un proche, d'accord pour une publication sous CC BY-SA 4.0) enregistre les consignes ; les textes du récit s'y ajouteront quand ils seront écrits.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
@@ -27,7 +27,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - **Lot 0c** : fait (PR 19, ADR-025) — seules les parties récentes d'une touche comptent, jusqu'à 30 frappes ; profil version 3 ; leçon des circonflexes en deux (« ê â », puis « î ô û » : « Le casque du copilote ») ; `isLessonPassed` exporté. 21 phrases ajoutées pour les circonflexes et les trémas.
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
    - **Lots R1 et S1** : faits (PR 25 et PR 24) — moteur des récompenses et moteur du récit, fonctions pures, pas encore branchés à l'écran.
-   - **Après le retour du test avec un enfant** : R2 catalogue des récompenses, écrans du compagnon, récompenses acquises pour toujours (profil version 4), quête « le compagnon a besoin d'aide » sur une touche redevenue fragile · S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V voix (échantillons en cours d'écoute par le porteur) · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
+   - **Après le retour du test avec un enfant** : R2 catalogue des récompenses, écrans du compagnon, récompenses acquises pour toujours (profil version 4), quête « le compagnon a besoin d'aide » sur une touche redevenue fragile · S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V2 branchement du bouton « Écouter » dans le parcours et enregistrement des textes définitifs · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
    - **Puis assemblage** dans le parcours `/jouer`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
@@ -109,3 +109,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — PR 22 fusionnée (mot garanti, relecture des phrases). Les 5 phrases de remplacement sont validées par le porteur : toute la banque est relue par une personne. Recherche sur les voix consignée. Lots R1 et S1 lancés.
 - **2026-10-13** — PR 23, 24 et 25 fusionnées. Décisions du porteur : récompenses acquises pour toujours, carte aux flèches, écran « l'histoire jusqu'ici » (ADR-027). Téléchargement du moteur Piper et de la voix `fr_FR-mls-medium` autorisé pour des échantillons, hors du dépôt.
 - **2026-10-13** — PR 26 fusionnée. Échantillons de voix envoyés au porteur. Fin de session : reprendre par le retour du test avec un enfant, puis les lots R2, S2, V, F et l'assemblage (une session par lot).
+- **2026-10-13** — PR 27 fusionnée. Voix de synthèse écartée après écoute, voix humaine retenue (ADR-028) ; lot V1 lancé.
