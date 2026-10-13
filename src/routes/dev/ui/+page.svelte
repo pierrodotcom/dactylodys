@@ -7,10 +7,12 @@
 	import Companion from '$lib/ui/components/Companion.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import { keyLabel, pressLabel } from '$lib/ui/components/key-labels';
 	import Stars from '$lib/ui/components/Stars.svelte';
 	import TargetText from '$lib/ui/components/TargetText.svelte';
 	import type { PageProps } from './$types';
+	import { createDemoVoicePlayer } from './demo-voice';
 	import FingerLegend from './FingerLegend.svelte';
 
 	type Mood = 'idle' | 'happy' | 'oops' | 'cheer';
@@ -56,6 +58,8 @@
 	};
 
 	const sampleGraphemes = toGraphemes(m.dev_ui_sample_text());
+	const LISTEN_SAMPLES = [m.dev_ui_listen_sample_first(), m.dev_ui_listen_sample_second()];
+	const demoVoice = createDemoVoicePlayer(LISTEN_SAMPLES);
 	const middlePosition = Math.floor(sampleGraphemes.length / 2);
 
 	let { data }: PageProps = $props();
@@ -234,6 +238,23 @@
 			<Button variant="primary" disabled>{m.dev_ui_button_primary()}</Button>
 			<Button variant="secondary" disabled>{m.dev_ui_button_secondary()}</Button>
 			<Button variant="quiet" disabled>{m.dev_ui_button_quiet()}</Button>
+		</div>
+	</section>
+
+	<section aria-labelledby="listen-heading">
+		<h2 id="listen-heading">{m.dev_ui_listen_heading()}</h2>
+		<p class="hint">{m.dev_ui_listen_hint()}</p>
+		<h3>{m.dev_ui_listen_available()}</h3>
+		{#each LISTEN_SAMPLES as sample (sample)}
+			<div class="row" data-testid="listen-available">
+				<p>{sample}</p>
+				<ListenButton text={sample} player={demoVoice} />
+			</div>
+		{/each}
+		<h3>{m.dev_ui_listen_missing()}</h3>
+		<div class="row" data-testid="listen-missing">
+			<p>{m.dev_ui_listen_sample_missing()}</p>
+			<ListenButton text={m.dev_ui_listen_sample_missing()} player={demoVoice} />
 		</div>
 	</section>
 
