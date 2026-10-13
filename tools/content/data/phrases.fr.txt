@@ -1,39 +1,40 @@
 # level | themes (comma separated, may be empty) | text
 # Original sentences. Each one is typable with the characters learned up to its own step (see check.js).
 # Palier 1 : f j d k s l e i r u (sans t ni n)
-1 | nature | je lis des lis
-1 | cuisine | le sel se dresse sur le fil
-1 | nature | elle dilue le jus de fleurs
-1 | | elle se rue sur le jus
-1 | nature | il sue des fleurs
-1 | | le fer file sur le fil
-1 | | le fer se dresse sur les elfes
-1 | | elle dresse les elfes sur le fil
-1 | cuisine | jeudi le sel ruisselle sur les lis
-1 | nature | le jus jure des fleurs
-1 | nature | elle lui dilue des fleurs sur le sel
-1 | nature | le jus de fleurs lui ruisselle dessus
-1 | nature | jeudi le lis se dresse sur le fil
+1 | | je lis le jeudi
+1 | sport | il file sur ses skis
+1 | | elle relie les fils
+1 | | je fuis le feu
+1 | | il jure de lire
+1 | cuisine | je lui sers du jus
+1 | cuisine | elle se rue sur le jus
+1 | | je serre le fil de fer
+1 | | je ris de ses ruses
+1 | | je lui dis de fuir
+1 | sport | je suis sur ses skis
+1 | sport | il use ses skis le jeudi
+1 | nature | elle serre les fleurs
+1 | nature | je lis les feuilles
+1 | sport | elle skie le jeudi
 # Palier 2 : t n
-1 | cuisine | le sel fuit le lit
-1 | | le jus ruisselle sur le lit
-1 | nature | le lit sue du jus de fleurs
-1 | | elle lui dit je fuis le jus
-1 | | des elfes jurent sur le sel
-1 | | le fil file sur le lit
 1 | | un lutin tisse un tutu
-1 | | le tutu du lutin est inutile
-1 | cuisine | un fruit se tient sur un nid
-1 | | il tire le fil et le tissu fuit
-1 | cuisine | le futur lutin refuse le fruit
-1 | | le lutin tend un fil dur
-1 | | une tuile tient sur un fil
-1 | | tu es un intrus dit le nid
-1 | cuisine | le lutin ruse le fruit lui dit tuile
 1 | | le lit des lutins est dur
-1 | | un nid de lutins sur le fer
-1 | cuisine | le fruit sent le sel
-1 | | le lutin lit le titre du fruit
+1 | | le tutu du lutin est inutile
+1 | | le lutin lit sur un lit
+1 | espace | je dessine une lune
+1 | | elle tient une lettre
+1 | | il lit une lettre de nuit
+1 | nature | tu dessines un nid et des fruits
+1 | cuisine | le fruit est sur le lit
+1 | cuisine | je sens le fruit et je ris
+1 | nature | je te tends une fleur
+1 | | elle entend rire les lutins
+1 | | il tire le fil et le tissu suit
+1 | | une fillette lit sur une dune
+1 | ecole | je finis le test et je file
+1 | | il tient une tirelire
+1 | sport | le tennis est un jeu
+2 | animaux | un renne tire un lutin sur ses skis
 # Palier 3 : a o
 1 | animaux | le dindon dort dans la salade
 1 | animaux | la tortue danse sur le toit
@@ -41,12 +42,12 @@
 1 | animaux | une souris danse sur un tutu
 1 | dinos | un dinosaure sort de la salade
 1 | espace | la lune sort et le soleil ronfle
-1 | animaux | une loutre tord un radis
+1 | animaux | une loutre fait du roller
 1 | animaux | un ours fait la sieste dans la fondue
 1 | animaux | le taureau lit le journal
 1 | animaux | le rat dort sur un ananas
 1 | cuisine | les nouilles dorent au soleil
-1 | animaux | le lion tond un radis
+1 | animaux | le lion tond le jardin
 # Palier 4 : q m c p
 2 | animaux | le crocodile joue de la trompette
 2 | animaux | un perroquet apprend le piano

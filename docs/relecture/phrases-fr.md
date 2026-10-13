@@ -22,17 +22,14 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 - [ ] Le dragon a brûlé le dîner du pilote.
 
-## Cuisine (27)
+## Cuisine (24)
 
-### Niveau 1 (8)
+### Niveau 1 (5)
 
-- [ ] le sel se dresse sur le fil
-- [ ] jeudi le sel ruisselle sur les lis
-- [ ] le sel fuit le lit
-- [ ] un fruit se tient sur un nid
-- [ ] le futur lutin refuse le fruit
-- [ ] le lutin ruse le fruit lui dit tuile
-- [ ] le fruit sent le sel
+- [ ] je lui sers du jus
+- [ ] elle se rue sur le jus
+- [ ] le fruit est sur le lit
+- [ ] je sens le fruit et je ris
 - [ ] les nouilles dorent au soleil
 
 ### Niveau 2 (13)
@@ -60,7 +57,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le robot pâtissier a brûlé les crêpes.
 - [ ] Ce poêle chante, le gâteau danse !
 
-## Animaux (78)
+## Animaux (79)
 
 ### Niveau 1 (18)
 
@@ -68,11 +65,11 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] la tortue danse sur le toit
 - [ ] le renard ronfle dans un tonneau
 - [ ] une souris danse sur un tutu
-- [ ] une loutre tord un radis
+- [ ] une loutre fait du roller
 - [ ] un ours fait la sieste dans la fondue
 - [ ] le taureau lit le journal
 - [ ] le rat dort sur un ananas
-- [ ] le lion tond un radis
+- [ ] le lion tond le jardin
 - [ ] Le chat a mis ses lunettes.
 - [ ] Le zèbre rit tout seul.
 - [ ] Le singe fait du vélo !
@@ -83,8 +80,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le chat dort, le chien ronfle.
 - [ ] Tu as vu ce lapin bleu ?
 
-### Niveau 2 (41)
+### Niveau 2 (42)
 
+- [ ] un renne tire un lutin sur ses skis
 - [ ] le crocodile joue de la trompette
 - [ ] un perroquet apprend le piano
 - [ ] le canard perd une pantoufle
@@ -149,10 +147,11 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Un drôle de hibou pilote la fusée.
 - [ ] Un caïman naïf attend le bus.
 
-## Espace (19)
+## Espace (20)
 
-### Niveau 1 (1)
+### Niveau 1 (2)
 
+- [ ] je dessine une lune
 - [ ] la lune sort et le soleil ronfle
 
 ### Niveau 2 (13)
@@ -238,18 +237,14 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 - [ ] La mosaïque du garage a fondu.
 
-## Nature (11)
+## Nature (7)
 
-### Niveau 1 (8)
+### Niveau 1 (4)
 
-- [ ] je lis des lis
-- [ ] elle dilue le jus de fleurs
-- [ ] il sue des fleurs
-- [ ] le jus jure des fleurs
-- [ ] elle lui dilue des fleurs sur le sel
-- [ ] le jus de fleurs lui ruisselle dessus
-- [ ] jeudi le lis se dresse sur le fil
-- [ ] le lit sue du jus de fleurs
+- [ ] elle serre les fleurs
+- [ ] je lis les feuilles
+- [ ] tu dessines un nid et des fruits
+- [ ] je te tends une fleur
 
 ### Niveau 2 (3)
 
@@ -257,27 +252,43 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Sur mon île, les vélos poussent.
 - [ ] Le maïs pousse sur le toit du bus.
 
+## Sport et jeux (5)
+
+### Niveau 1 (5)
+
+- [ ] il file sur ses skis
+- [ ] je suis sur ses skis
+- [ ] il use ses skis le jeudi
+- [ ] elle skie le jeudi
+- [ ] le tennis est un jeu
+
+## L'école (1)
+
+### Niveau 1 (1)
+
+- [ ] je finis le test et je file
+
 ## Sans thème particulier (34)
 
 ### Niveau 1 (20)
 
-- [ ] elle se rue sur le jus
-- [ ] le fer file sur le fil
-- [ ] le fer se dresse sur les elfes
-- [ ] elle dresse les elfes sur le fil
-- [ ] le jus ruisselle sur le lit
-- [ ] elle lui dit je fuis le jus
-- [ ] des elfes jurent sur le sel
-- [ ] le fil file sur le lit
+- [ ] je lis le jeudi
+- [ ] elle relie les fils
+- [ ] je fuis le feu
+- [ ] il jure de lire
+- [ ] je serre le fil de fer
+- [ ] je ris de ses ruses
+- [ ] je lui dis de fuir
 - [ ] un lutin tisse un tutu
-- [ ] le tutu du lutin est inutile
-- [ ] il tire le fil et le tissu fuit
-- [ ] le lutin tend un fil dur
-- [ ] une tuile tient sur un fil
-- [ ] tu es un intrus dit le nid
 - [ ] le lit des lutins est dur
-- [ ] un nid de lutins sur le fer
-- [ ] le lutin lit le titre du fruit
+- [ ] le tutu du lutin est inutile
+- [ ] le lutin lit sur un lit
+- [ ] elle tient une lettre
+- [ ] il lit une lettre de nuit
+- [ ] elle entend rire les lutins
+- [ ] il tire le fil et le tissu suit
+- [ ] une fillette lit sur une dune
+- [ ] il tient une tirelire
 - [ ] Où est ma chaussette ?
 - [ ] Un, deux, trois, je saute.
 - [ ] Voici mon plan : une sieste.
