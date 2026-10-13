@@ -11,7 +11,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
 | J3 Pédagogie complète | Mots relus ; phrases à relire ; test avec un enfant à faire | 5 mondes, 23 leçons, 926 mots relus par le porteur, 195 phrases relues par un agent seulement, 3 mini-jeux |
-| J4 Aventure | — | |
+| J4 Aventure | En cours : lot 0 (socle) | Cadrage validé le 2026-10-13 (ADR-022) |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
@@ -25,7 +25,10 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - un profil au format inattendu est écarté sans message (aucune migration) : préalable de J4 (ADR-022) ;
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le parcours ne reprend pas encore le dernier jeu choisi d'une visite à l'autre ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
-6. **J4 Aventure** : cadrage proposé au porteur le 2026-10-13 (ADR-022, « proposée »), en attente de sa validation. Aucun lot lancé.
+6. **J4 Aventure** (ADR-022, acceptée) :
+   - **Lot 0, socle** (en cours, deux branches) : `feat/j4-repetitions` — minimum de frappes par nouveau signe, retrait de « ü » (ADR-024) ; `feat/j4-socle` — profil version 2 avec migration et lecture tolérante, types des récompenses, du récit, de la voix et du fantôme, allure enregistrée à chaque partie.
+   - **Puis quatre lots parallèles**, à lancer après le retour du test avec un enfant : R récompenses et compagnon · S récit · V voix (échantillons à faire écouter au porteur d'abord) · F fantôme (en dernier).
+   - **Puis assemblage** dans le parcours `/jouer`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
 ## Grille d'observation pour le test J2
@@ -98,3 +101,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — Relecture humaine faite par le porteur : « toast », « lis » et « divan » retirés, tout le reste validé (`review: "human"`). L'enregistrement en ligne de la page de relecture n'a pas fonctionné sur son téléphone (cause inconnue) ; les refus ont été donnés dans la conversation.
 - **2026-10-13** — Correction : seuls les mots avaient été relus. Les 150 phrases reviennent à `review: "agent"` ; `apply-review.js` ne valide plus qu'une banque à la fois.
 - **2026-10-13** — Dette de J3 : les phrases favorisent les nouveaux caractères ; 45 phrases ajoutées (ponctuation, « où ») ; espace avant « ? », « ! » et « : », gardée sur la même ligne que le mot à l'écran ; noms exacts des doigts dans les textes d'introduction (ADR-021) ; test de cohérence « au moins six phrases pour un signe qu'aucun mot ne contient ». Leçons L-040 et L-041. Cadrage de J4 proposé (ADR-022).
+- **2026-10-13** — PR 14 fusionnée. Cadrage de J4 validé par le porteur (ADR-022, ADR-024) ; lot 0 lancé. Test avec un enfant annoncé par le porteur pour le soir même.
