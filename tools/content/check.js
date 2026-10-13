@@ -127,7 +127,7 @@ function checkPhrases() {
 		const bad = unknownChars(text);
 		if (bad.length > 0)
 			fail(`phrase "${text}": characters outside the learning order: ${bad.join(' ')}`);
-		const wordCount = text.split(' ').length;
+		const wordCount = text.split(' ').filter((token) => /\p{L}/u.test(token)).length;
 		if (wordCount < PHRASE_WORDS[0] || wordCount > PHRASE_WORDS[1])
 			fail(`phrase "${text}": ${wordCount} words`);
 		if (![1, 2, 3].includes(phrase.level)) fail(`phrase "${text}": bad level`);

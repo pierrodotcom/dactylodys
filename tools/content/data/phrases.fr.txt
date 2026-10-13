@@ -112,32 +112,32 @@
 2 | espace | la lune sait où va la comète
 # Palier 7 : majuscules et ponctuation
 1 | animaux | Le chat a mis ses lunettes.
-1 | | Où est ma chaussette?
-1 | dinos | Le dragon a faim!
-1 | vehicules | Qui a pris mon vélo?
+1 | | Où est ma chaussette ?
+1 | dinos | Le dragon a faim !
+1 | vehicules | Qui a pris mon vélo ?
 1 | animaux | Le zèbre rit tout seul.
 2 | espace | La fusée a un rhume.
 2 | animaux | Mon poisson sait jouer du piano.
-1 | animaux | Le singe fait du vélo!
-2 | animaux | Un hérisson dans la baignoire!
+1 | animaux | Le singe fait du vélo !
+2 | animaux | Un hérisson dans la baignoire !
 1 | animaux | La girafe a le hoquet.
-3 | animaux | Qui a mis un crocodile dans mon cartable?
+3 | animaux | Qui a mis un crocodile dans mon cartable ?
 3 | animaux | Quand il pleut, le dragon ouvre un parapluie.
 2 | dinos | Le tricératops a oublié son parapluie.
 2 | animaux | Le hibou range ses chaussettes par couleur.
-2 | cuisine | Mon sandwich a pris la fuite!
+2 | cuisine | Mon sandwich a pris la fuite !
 3 | animaux | Hier, le poulpe a tricoté huit chaussettes.
 1 | animaux | Le lapin joue au football.
 2 | espace | L'astronaute a perdu sa pantoufle sur la lune.
-2 | dinos | Le diplodocus passe sous la porte!
-3 | | Combien de chaussettes a mangé la machine?
+2 | dinos | Le diplodocus passe sous la porte !
+3 | | Combien de chaussettes a mangé la machine ?
 2 | cuisine | La soupe a pris un bain de soleil.
 1 | animaux | Le poisson rit sous l'eau.
-3 | animaux | Pourquoi le zèbre porte-t-il un pyjama?
-2 | vehicules | Le camion a un hoquet!
-2 | animaux | La tortue a gagné la course, quelle surprise!
+3 | animaux | Pourquoi le zèbre porte-t-il un pyjama ?
+2 | vehicules | Le camion a un hoquet !
+2 | animaux | La tortue a gagné la course, quelle surprise !
 2 | | Mon chapeau a disparu dans le frigo.
-3 | animaux | Le canard a avalé un xylophone, quel boucan!
+3 | animaux | Le canard a avalé un xylophone, quel boucan !
 2 | espace | Une planète a éternué sur ma fusée.
 2 | animaux | Le yéti cherche ses lunettes.
 2 | vehicules | Mon vélo parle avec un accent bizarre.
@@ -145,8 +145,8 @@
 2 | cuisine | La pizza a peur du four.
 1 | animaux | Le chien ronfle comme un tracteur.
 3 | cuisine | Le gâteau a sauté par la fenêtre.
-2 | animaux | Un escargot gagne le marathon!
-3 | animaux | Le crocodile a enfin des dents propres!
+2 | animaux | Un escargot gagne le marathon !
+3 | animaux | Le crocodile a enfin des dents propres !
 2 | | Le robot a rangé le salon au frigo.
 2 | espace | Sur la lune, le robot plante des carottes.
 2 | espace | La fusée tousse, puis elle repart.
@@ -160,44 +160,44 @@
 2 | espace | Sur ma planète, la pluie sent la fraise.
 1 | | Un, deux, trois, je saute.
 3 | vehicules | Le lundi, le tracteur va au cinéma.
-1 | vehicules | Qui conduit le bus?
-2 | vehicules | Le train a perdu ses roues!
-3 | vehicules | Attention, la trottinette a mangé du piment!
-2 | vehicules | Oh, mon vélo sait nager!
-2 | vehicules | Où va ce bateau à roulettes?
-3 | vehicules | Un tracteur dans la baignoire, quel bazar!
-2 | espace | Qui a rangé la lune dans le placard?
-1 | animaux | Tu as vu ce lapin bleu?
+1 | vehicules | Qui conduit le bus ?
+2 | vehicules | Le train a perdu ses roues !
+3 | vehicules | Attention, la trottinette a mangé du piment !
+2 | vehicules | Oh, mon vélo sait nager !
+2 | vehicules | Où va ce bateau à roulettes ?
+3 | vehicules | Un tracteur dans la baignoire, quel bazar !
+2 | espace | Qui a rangé la lune dans le placard ?
+1 | animaux | Tu as vu ce lapin bleu ?
 2 | vehicules | Mon sous-marin a peur de l'eau.
 2 | vehicules | Le chasse-neige part en vacances au soleil.
-2 | vehicules | Mon garage: un vélo, une girafe.
-3 | vehicules | La pilote annonce: on atterrit sur un nuage.
-2 | vehicules | Menu du camion: des frites à la fraise.
+2 | vehicules | Mon garage : un vélo, une girafe.
+3 | vehicules | La pilote annonce : on atterrit sur un nuage.
+2 | vehicules | Menu du camion : des frites à la fraise.
 2 | animaux | La chauve-souris joue à cache-cache.
 2 | nature | Un arc-en-ciel est tombé dans mon bol.
-3 | cuisine | Recette du jour: une tarte aux chaussettes.
-2 | vehicules | Dis-moi, ton vélo sait-il voler?
-3 | vehicules | Règle du bus: on chante à chaque virage.
+3 | cuisine | Recette du jour : une tarte aux chaussettes.
+2 | vehicules | Dis-moi, ton vélo sait-il voler ?
+3 | vehicules | Règle du bus : on chante à chaque virage.
 2 | cuisine | Mon grille-pain raconte des blagues.
-3 | espace | Message de la fusée: le pilote dort!
-2 | | Devinette: qui a des roues et un pyjama?
+3 | espace | Message de la fusée : le pilote dort !
+2 | | Devinette : qui a des roues et un pyjama ?
 2 | vehicules | Le cerf-volant a pris le train.
-3 | vehicules | On a tout réparé: le klaxon, le sandwich.
-1 | | Voici mon plan: une sieste.
-2 | animaux | Peut-on promener un poisson rouge?
+3 | vehicules | On a tout réparé : le klaxon, le sandwich.
+1 | | Voici mon plan : une sieste.
+2 | animaux | Peut-on promener un poisson rouge ?
 2 | maison | Cet après-midi, le canapé fait du sport.
 # Palier 8 : circonflexes et trémas
 2 | cuisine | Le dragon fait un gâteau pour la forêt.
 3 | animaux | Une souris dîne sur une île de fromage.
-3 | cuisine | Une crêpe s'est enfuie par la fenêtre!
+3 | cuisine | Une crêpe s'est enfuie par la fenêtre !
 3 | animaux | Le hérisson organise une fête sur une île.
 2 | animaux | Mon âne mange mon chapeau de paille.
 3 | cuisine | Le robot pâtissier a brûlé les crêpes.
 2 | cuisine | Le maïs chante sous la pluie.
 3 | animaux | Le crocodile naïf a avalé une ancre.
 2 | vehicules | Le canoë du pirate fait des bulles.
-2 | | Où est ma pâte à modeler?
-3 | cuisine | Ce poêle chante, le gâteau danse!
+2 | | Où est ma pâte à modeler ?
+3 | cuisine | Ce poêle chante, le gâteau danse !
 3 | animaux | La vache a une voix aiguë.
 2 | espace | Le dinosaure a dîné sur la lune.
 2 | | Une tête de chou prend le bateau.
