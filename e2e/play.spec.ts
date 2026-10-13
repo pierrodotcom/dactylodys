@@ -9,9 +9,16 @@ import {
 } from '../src/lib/engine/progression/banks';
 import { learnedChars, parseProgression } from '../src/lib/engine/progression/definition';
 import { generateExercise } from '../src/lib/engine/progression/exercise';
+import { recentCharStats } from '../src/lib/engine/progression/progress';
 import { seededRng } from '../src/lib/engine/progression/test-support';
 import type { ExerciseContext, StarCount } from '../src/lib/engine/progression/types';
-import { MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../src/lib/state/profile';
+import { readProfile } from '../src/lib/state/migrations';
+import {
+	MAX_NAME_LENGTH,
+	MIN_NAME_LENGTH,
+	PROFILE_SCHEMA_VERSION,
+	withProgress
+} from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
 import { LAST_PLAYER_KEY } from '../src/routes/jouer/last-player';
 import {
@@ -46,6 +53,8 @@ const STEP_TIMEOUT = 15_000;
 const LAST_SEED = 500;
 const PASSED_STARS: StarCount = 3;
 const TOTAL_TOKEN = 'TOTALTOKEN';
+/** Keystrokes, all wrong, that a profile of the second version holds for a key: well above the window. */
+const OLD_KEYSTROKES = 400;
 /** The lessons of the first version of the progression, whose profiles must still open. */
 const LEGACY_LESSON_STARS: Readonly<Record<string, StarCount>> = {
 	'fr.lesson.oeufs-f-j': 3,
@@ -1075,6 +1084,68 @@ test.describe('play route', () => {
 				await expect(row).toContainText(message('play_lesson_current'));
 			}
 		}
+		expect(failures).toEqual([]);
+	});
+
+	test('opens a profile stored by the second version, finds its stars, and keeps its recent results from the next play on', async ({
+		page
+	}) => {
+		const failures: string[] = [];
+		page.on('pageerror', (error) => failures.push(error.message));
+		const passed: Record<string, StarCount> = { [FIRST.id]: 2, [SECOND.id]: 1 };
+		const stored = advancedProfile({ name: PLAYER_NAME, passed });
+		const totals = { attempts: OLD_KEYSTROKES, errors: OLD_KEYSTROKES };
+		const legacy = withProgress(stored, {
+			...stored.progress,
+			chars: Object.fromEntries(FIRST.newChars.map((char) => [char, { ...totals, recent: [] }]))
+		});
+		await reachMapAs(page, legacy, 'version-2');
+
+		await expect(page.getByRole('alert')).toHaveCount(0);
+		const untouched = await storedRecord(page, legacy);
+		expect(untouched?.['schemaVersion']).toBe(2);
+		expect(untouched?.['progress']).toEqual({
+			lessons: legacy.progress.lessons,
+			chars: Object.fromEntries(FIRST.newChars.map((char) => [char, totals]))
+		});
+		for (const [id, count] of Object.entries(passed)) {
+			const lesson = allLessons.find((item) => item.id === id);
+			if (!lesson) throw new Error(`Unknown lesson: ${id}`);
+			const row = lessonRow(page, lesson);
+			await expect(row.getByRole('img', { name: stars(count) })).toBeVisible();
+			await expect(row).toContainText(message('play_lesson_done'));
+		}
+		await expect(lessonRow(page, lessonAfter(SECOND.id))).toContainText(
+			message('play_lesson_current')
+		);
+
+		await startLesson(page, FIRST);
+		const { groups } = await typeToResult(page, { skipDelay: true });
+
+		const typed = groups.flatMap((group) => toGraphemes(group));
+		const readStored = async () => {
+			const record = await storedRecord(page, legacy);
+			const reading = readProfile(record);
+			return reading.ok ? { record, profile: reading.profile } : undefined;
+		};
+		await expect
+			.poll(async () => (await readStored())?.profile.progress.lessons[FIRST.id]?.attempts)
+			.toBe((legacy.progress.lessons[FIRST.id]?.attempts ?? 0) + 1);
+		const after = await readStored();
+		if (!after) throw new Error('The profile can no longer be opened');
+		expect(after.record?.['schemaVersion']).toBe(PROFILE_SCHEMA_VERSION);
+		const saved = after.profile;
+		for (const char of FIRST.newChars) {
+			const asked = typed.filter((grapheme) => grapheme === char).length;
+			expect(asked).toBeGreaterThan(0);
+			const progress = saved.progress.chars[char];
+			expect(progress?.attempts).toBe(OLD_KEYSTROKES + asked);
+			expect(progress?.errors).toBe(OLD_KEYSTROKES);
+			expect(progress?.recent.at(-1)).toEqual({ attempts: asked, errors: 0 });
+			expect(recentCharStats(saved.progress, char).attempts).toBeLessThan(OLD_KEYSTROKES + asked);
+		}
+		expect(saved.progress.lessons[FIRST.id]?.stars).toBe(PASSED_STARS);
+		expect(saved.progress.lessons[SECOND.id]?.stars).toBe(passed[SECOND.id]);
 		expect(failures).toEqual([]);
 	});
 

@@ -22,6 +22,11 @@ export interface ProgressionRules {
 	 * open it; 0 disables it.
 	 */
 	readonly newCharMinCount: number;
+	/**
+	 * Keystrokes of a character that its recent results cover, at least 1: plays older than those
+	 * that reach this number no longer count.
+	 */
+	readonly recentCharWindow: number;
 }
 
 /** Relative weights of the three kinds of groups in an exercise; at least one is positive. */
@@ -164,14 +169,26 @@ export interface LessonProgress {
 	readonly lastPlayedAt: number;
 }
 
-export interface CharProgress {
+/** One play in which a character was asked: integers, `attempts >= 1`, `0 <= errors <= attempts`. */
+export interface CharSample {
 	readonly attempts: number;
 	readonly errors: number;
+}
+
+export interface CharProgress {
+	/** Lifetime totals: a key that was hard for long keeps them, so nothing is decided on them. */
+	readonly attempts: number;
+	readonly errors: number;
+	/**
+	 * The most recent plays, oldest first, one sample per play in which the character was asked;
+	 * older ones are dropped once these cover `ProgressionRules.recentCharWindow` keystrokes.
+	 */
+	readonly recent: readonly CharSample[];
 }
 
 /** Everything the game remembers about one child's learning. Plain JSON. */
 export interface ProgressState {
 	readonly lessons: Readonly<Record<string, LessonProgress>>;
-	/** Keyed by expected grapheme, accumulated over all sessions. */
+	/** Keyed by expected grapheme. */
 	readonly chars: Readonly<Record<string, CharProgress>>;
 }

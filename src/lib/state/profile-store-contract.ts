@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createProfile, updateSettings, withProgress } from './profile';
 import { UnreadableProfileError } from './stores';
-import { asVersion1 } from './test-support';
+import { asVersion1, asVersion2 } from './test-support';
 import type { Profile, ProfileStore } from './types';
 
 function profileAt(id: string, createdAt: number, name = 'Léa'): Profile {
@@ -36,7 +36,7 @@ export function describeProfileStoreContract(
 			const store = await createStore();
 			const profile = withProgress(updateSettings(profileAt('a', 10), { theme: 'dark' }), {
 				lessons: { 'fr.lesson.x': { bestAccuracy: 92.5, stars: 2, attempts: 4, lastPlayedAt: 99 } },
-				chars: { é: { attempts: 3, errors: 1 } }
+				chars: { é: { attempts: 3, errors: 1, recent: [{ attempts: 3, errors: 1 }] } }
 			});
 			await store.save(profile);
 			expect(await store.get('a')).toEqual(profile);
@@ -110,6 +110,17 @@ export function describeProfileStoreContract(
 		it('opens a record of the first version as a profile of the current one', async () => {
 			const profile = profileAt('a', 10);
 			const store = await createStore([asVersion1(profile)]);
+			expect(await store.get('a')).toEqual(profile);
+			expect(await store.list()).toEqual([profile]);
+			expect(await store.listUnreadable()).toEqual([]);
+		});
+
+		it('opens a record of the second version with its stars and its totals per character', async () => {
+			const profile = withProgress(profileAt('a', 10), {
+				lessons: { 'fr.lesson.x': { bestAccuracy: 92.5, stars: 2, attempts: 4, lastPlayedAt: 99 } },
+				chars: { é: { attempts: 3, errors: 1, recent: [{ attempts: 3, errors: 1 }] } }
+			});
+			const store = await createStore([asVersion2(profile)]);
 			expect(await store.get('a')).toEqual(profile);
 			expect(await store.list()).toEqual([profile]);
 			expect(await store.listUnreadable()).toEqual([]);

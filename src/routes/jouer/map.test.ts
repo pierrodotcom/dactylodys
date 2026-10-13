@@ -37,12 +37,16 @@ function metrics(accuracy: number): SessionMetrics {
 }
 
 function played(progress: ProgressState, lessonId: string, accuracy: number, stars: StarCount) {
-	return applyLessonResult(progress, {
-		lessonId,
-		metrics: metrics(accuracy),
-		evaluation: { stars, unlocksNext: accuracy >= progression.rules.unlockAccuracy },
-		completedAt: 1
-	});
+	return applyLessonResult(
+		progress,
+		{
+			lessonId,
+			metrics: metrics(accuracy),
+			evaluation: { stars, unlocksNext: accuracy >= progression.rules.unlockAccuracy },
+			completedAt: 1
+		},
+		progression.rules
+	);
 }
 
 describe('lessonStatus', () => {
@@ -119,7 +123,8 @@ const MANY_WORLDS: ProgressionDefinition = {
 		newCharWeight: 0.6,
 		weakCharBoost: 0,
 		themeBoost: 0,
-		newCharMinCount: 0
+		newCharMinCount: 0,
+		recentCharWindow: 30
 	},
 	worlds: [1, 2, 3].map((index) => ({
 		id: `xx.world.${index}`,
@@ -135,12 +140,16 @@ const MANY_IDS = lessonIds(MANY_WORLDS);
 function passed(count: number): ProgressState {
 	return MANY_IDS.slice(0, count).reduce(
 		(progress, id) =>
-			applyLessonResult(progress, {
-				lessonId: id,
-				metrics: metrics(100),
-				evaluation: { stars: 3, unlocksNext: true },
-				completedAt: 1
-			}),
+			applyLessonResult(
+				progress,
+				{
+					lessonId: id,
+					metrics: metrics(100),
+					evaluation: { stars: 3, unlocksNext: true },
+					completedAt: 1
+				},
+				MANY_WORLDS.rules
+			),
 		emptyProgress()
 	);
 }

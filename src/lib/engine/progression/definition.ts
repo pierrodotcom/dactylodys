@@ -126,7 +126,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'newCharWeight',
 			'weakCharBoost',
 			'themeBoost',
-			'newCharMinCount'
+			'newCharMinCount',
+			'recentCharWindow'
 		],
 		path
 	);
@@ -148,13 +149,16 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	}
 	const newCharMinCount = expectInteger(record['newCharMinCount'], `${path}.newCharMinCount`);
 	if (newCharMinCount < 0) fail(`${path}.newCharMinCount`, 'expected an integer of at least 0');
+	const recentCharWindow = expectInteger(record['recentCharWindow'], `${path}.recentCharWindow`);
+	if (recentCharWindow < 1) fail(`${path}.recentCharWindow`, 'expected an integer of at least 1');
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
 		newCharWeight,
 		weakCharBoost: expectNonNegative(record['weakCharBoost'], `${path}.weakCharBoost`),
 		themeBoost: expectNonNegative(record['themeBoost'], `${path}.themeBoost`),
-		newCharMinCount
+		newCharMinCount,
+		recentCharWindow
 	};
 }
 

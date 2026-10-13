@@ -136,7 +136,8 @@ describe('azerty-decouverte', () => {
 			newCharWeight: 0.6,
 			weakCharBoost: 2,
 			themeBoost: 2,
-			newCharMinCount: 5
+			newCharMinCount: 5,
+			recentCharWindow: 30
 		});
 	});
 

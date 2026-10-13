@@ -1,5 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import type { CharProgress, ProgressState } from '../engine/progression/types';
 import { migrateProfile, ProfileMigrationError, readProfile } from './migrations';
 import {
 	createProfile,
@@ -7,15 +8,21 @@ import {
 	parseProfile,
 	PROFILE_SCHEMA_VERSION,
 	updateSettings,
+	withCompanion,
+	withGhost,
+	withLastGame,
 	withProgress
 } from './profile';
 import { firstVersionProfileArb, profileArb } from './test-arbitraries';
-import { asVersion1 } from './test-support';
+import { asVersion1, asVersion2 } from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
 
 const toJson = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
+
+/** The window of recent keystrokes when version 3 came out: what its migration step wrote. */
+const WINDOW_AT_VERSION_3 = 30;
 
 function playedProfile(): Profile {
 	const created = createProfile({
@@ -27,7 +34,7 @@ function playedProfile(): Profile {
 	const tuned = updateSettings(markCalibrated(created), { soundEnabled: false, theme: 'dark' });
 	return withProgress(tuned, {
 		lessons: { 'fr.lesson.x': { bestAccuracy: 96.5, stars: 2, attempts: 3, lastPlayedAt: 5 } },
-		chars: { f: { attempts: 20, errors: 2 } }
+		chars: { f: { attempts: 20, errors: 2, recent: [{ attempts: 20, errors: 2 }] } }
 	});
 }
 
@@ -54,6 +61,102 @@ const STORED_BY_VERSION_1 = {
 	}
 };
 
+/** Written by hand as well: what version 2 really left on devices. */
+const STORED_BY_VERSION_2 = {
+	schemaVersion: 2,
+	id: 'p-2',
+	name: 'Noé',
+	createdAt: 1_750_000_000_000,
+	calibrated: true,
+	settings: {
+		layoutId: 'fr-fr-azerty-pc',
+		fingeringProfileId: 'ten-fingers-iso',
+		soundEnabled: true,
+		voiceEnabled: false,
+		theme: 'light',
+		motion: 'reduced',
+		textScale: 'lg',
+		textSpacing: 'wide',
+		showKeyboard: false
+	},
+	progress: {
+		lessons: {
+			'fr.lesson.x': { bestAccuracy: 96.5, stars: 2, attempts: 3, lastPlayedAt: 5 },
+			'fr.lesson.y': { bestAccuracy: 71, stars: 0, attempts: 1, lastPlayedAt: 9 }
+		},
+		chars: {
+			f: { attempts: 20, errors: 2 },
+			j: { attempts: 0, errors: 0 },
+			e: { attempts: 100, errors: 7 },
+			ù: { attempts: 90, errors: 89 },
+			q: { attempts: 5, errors: 9 }
+		}
+	},
+	companion: { name: 'Pixel', colorId: 'moss', wornItemIds: ['fr.reward.scarf'] },
+	lastGameByWorld: { 'fr.world.x': 'rocket' },
+	ghosts: {
+		'fr.lesson.x': {
+			recordedAt: 7,
+			charCount: 12,
+			activeMs: 3000,
+			points: [
+				{ correctChars: 5, activeMs: 1000 },
+				{ correctChars: 12, activeMs: 3000 }
+			]
+		}
+	}
+};
+
+function profileOfVersion2(): Profile {
+	const created = createProfile({
+		id: 'p-2',
+		name: 'Noé',
+		now: 1_750_000_000_000,
+		platform: 'pc'
+	});
+	const tuned = updateSettings(markCalibrated(created), {
+		voiceEnabled: false,
+		theme: 'light',
+		motion: 'reduced',
+		textScale: 'lg',
+		textSpacing: 'wide',
+		showKeyboard: false
+	});
+	const played = withProgress(tuned, {
+		lessons: STORED_BY_VERSION_2.progress.lessons as ProgressState['lessons'],
+		chars: {
+			f: { attempts: 20, errors: 2, recent: [{ attempts: 20, errors: 2 }] },
+			j: { attempts: 0, errors: 0, recent: [] },
+			e: { attempts: 100, errors: 7, recent: [{ attempts: 30, errors: 2 }] },
+			ù: { attempts: 90, errors: 89, recent: [{ attempts: 30, errors: 30 }] },
+			q: { attempts: 5, errors: 9, recent: [{ attempts: 5, errors: 5 }] }
+		}
+	});
+	const dressed = withCompanion(played, STORED_BY_VERSION_2.companion);
+	return withGhost(
+		withLastGame(dressed, 'fr.world.x', 'rocket'),
+		'fr.lesson.x',
+		STORED_BY_VERSION_2.ghosts['fr.lesson.x']
+	);
+}
+
+/** What the step to version 3 gives a character, computed apart from the code under test. */
+function migratedChar({ attempts, errors }: Pick<CharProgress, 'attempts' | 'errors'>) {
+	if (attempts === 0) return { attempts, errors, recent: [] };
+	const kept = Math.min(attempts, WINDOW_AT_VERSION_3);
+	const scaled = Math.min(kept, Math.round((errors * kept) / attempts));
+	return { attempts, errors, recent: [{ attempts: kept, errors: scaled }] };
+}
+
+function migratedProgress(progress: ProgressState): ProgressState {
+	return {
+		lessons: progress.lessons,
+		chars: Object.fromEntries(
+			Object.entries(progress.chars).map(([char, stats]) => [char, migratedChar(stats)])
+		)
+	};
+}
+
 function reasonOf(data: unknown): unknown {
 	try {
 		migrateProfile(data);
@@ -79,17 +182,46 @@ describe('migrateProfile', () => {
 		expect(migrated.settings.soundEnabled).toBe(false);
 	});
 
+	it('brings a version 2 profile to the current version with nothing lost', () => {
+		expect(parseProfile(migrateProfile(STORED_BY_VERSION_2))).toEqual(profileOfVersion2());
+	});
+
+	it.each<[string, number, number, { attempts: number; errors: number }[]]>([
+		['is given no recent play when it was never typed', 0, 0, []],
+		['keeps its totals as one recent play under the window', 29, 4, [{ attempts: 29, errors: 4 }]],
+		['keeps its totals as one recent play at the window', 30, 30, [{ attempts: 30, errors: 30 }]],
+		['is brought down to the window at the same rate', 300, 100, [{ attempts: 30, errors: 10 }]],
+		['has its errors rounded to the nearest', 100, 8, [{ attempts: 30, errors: 2 }]],
+		['has its errors rounded up above the half', 100, 9, [{ attempts: 30, errors: 3 }]],
+		['has its errors rounded up at the half', 60, 1, [{ attempts: 30, errors: 1 }]],
+		['loses a rare old error', 1000, 10, [{ attempts: 30, errors: 0 }]],
+		['never has more errors than keystrokes', 4, 11, [{ attempts: 4, errors: 4 }]]
+	])('a character of a version 2 profile %s', (_label, attempts, errors, recent) => {
+		const stored = {
+			...STORED_BY_VERSION_2,
+			progress: { lessons: {}, chars: { f: { attempts, errors } } }
+		};
+		expect(parseProfile(migrateProfile(stored)).progress.chars['f']).toEqual({
+			attempts,
+			errors,
+			recent
+		});
+	});
+
 	it('does not alter the record it is given', () => {
-		const stored = structuredClone(STORED_BY_VERSION_1);
-		migrateProfile(stored);
-		expect(stored).toEqual(STORED_BY_VERSION_1);
+		for (const record of [STORED_BY_VERSION_1, STORED_BY_VERSION_2]) {
+			const stored = structuredClone(record);
+			migrateProfile(stored);
+			expect(stored).toEqual(record);
+		}
 	});
 
-	it('describes version 1 the way the test support does', () => {
+	it('describes version 1 and version 2 the way the test support does', () => {
 		expect(asVersion1(playedProfile())).toEqual(STORED_BY_VERSION_1);
+		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 	});
 
-	it('keeps the id, the name, the date, the settings and the progress of any version 1 profile', () => {
+	it('keeps the id, the name, the date, the settings, the lessons and the totals of any version 1 profile', () => {
 		fc.assert(
 			fc.property(firstVersionProfileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion1(profile))));
@@ -97,8 +229,27 @@ describe('migrateProfile', () => {
 				expect(migrated.name).toBe(profile.name);
 				expect(migrated.createdAt).toBe(profile.createdAt);
 				expect(migrated.calibrated).toBe(profile.calibrated);
-				expect(migrated.progress).toEqual(profile.progress);
+				expect(migrated.progress).toEqual(migratedProgress(profile.progress));
 				expect(migrated.settings).toEqual({ ...profile.settings, voiceEnabled: true });
+			})
+		);
+	});
+
+	it('changes nothing but the recent plays of any version 2 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion2(profile))));
+				expect(migrated).toEqual({ ...profile, progress: migratedProgress(profile.progress) });
+				for (const [char, stats] of Object.entries(migrated.progress.chars)) {
+					expect(stats.recent.length).toBeLessThanOrEqual(1);
+					const kept = stats.recent[0];
+					if (kept === undefined) continue;
+					const before = profile.progress.chars[char] as CharProgress;
+					expect(kept.attempts).toBe(Math.min(before.attempts, WINDOW_AT_VERSION_3));
+					const bounded = Math.min(before.errors, before.attempts);
+					const exact = (bounded * kept.attempts) / before.attempts;
+					expect(Math.abs(kept.errors - exact)).toBeLessThanOrEqual(0.5);
+				}
 			})
 		);
 	});
@@ -107,7 +258,7 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const data = toJson(profile);
-				expect(migrateProfile(data)).toEqual(profile);
+				expect(migrateProfile(data)).toBe(data);
 				expect(parseProfile(migrateProfile(data))).toEqual(profile);
 			})
 		);
@@ -115,9 +266,11 @@ describe('migrateProfile', () => {
 
 	it('changes nothing when applied twice', () => {
 		fc.assert(
-			fc.property(firstVersionProfileArb, (profile) => {
-				const once = migrateProfile(toJson(asVersion1(profile)));
-				expect(migrateProfile(once)).toEqual(once);
+			fc.property(profileArb, (profile) => {
+				for (const stored of [asVersion1(profile), asVersion2(profile)]) {
+					const once = migrateProfile(toJson(stored));
+					expect(migrateProfile(once)).toEqual(once);
+				}
 			})
 		);
 	});
@@ -134,9 +287,41 @@ describe('migrateProfile', () => {
 		}
 	});
 
-	it('passes on damaged settings for the parser to refuse', () => {
+	it('does not make valid a version 2 record whose characters carry something unknown or damaged', () => {
+		const withChars = (chars: unknown) => ({
+			...STORED_BY_VERSION_2,
+			progress: { ...STORED_BY_VERSION_2.progress, chars }
+		});
+		expect(() =>
+			parseProfile(migrateProfile(withChars({ f: { attempts: 3, errors: 0, streak: 4 } })))
+		).toThrow(/chars\.f\.streak/);
+		expect(() =>
+			parseProfile(migrateProfile(withChars({ f: { attempts: 3, errors: 0, recent: 'none' } })))
+		).toThrow(/chars\.f\.recent/);
+		expect(() =>
+			parseProfile(migrateProfile(withChars({ f: { attempts: '3', errors: 0 } })))
+		).toThrow(/chars\.f\.attempts/);
+		expect(() =>
+			parseProfile(migrateProfile(withChars({ f: { attempts: 3.5, errors: 1 } })))
+		).toThrow(/chars\.f\.attempts/);
+		expect(() => parseProfile(migrateProfile(withChars({ f: { attempts: 3 } })))).toThrow(
+			/chars\.f\.errors/
+		);
+		expect(() => parseProfile(migrateProfile(withChars({ f: 12 })))).toThrow(/chars\.f/);
+		expect(() => parseProfile(migrateProfile(withChars(['f'])))).toThrow(/progress\.chars/);
+	});
+
+	it('passes on damaged settings and damaged progress for the parser to refuse', () => {
 		const data = { ...STORED_BY_VERSION_1, settings: 'none' };
 		expect(() => parseProfile(migrateProfile(data))).toThrow(/profile\.settings/);
+		for (const stored of [STORED_BY_VERSION_1, STORED_BY_VERSION_2]) {
+			expect(() => parseProfile(migrateProfile({ ...stored, progress: 'none' }))).toThrow(
+				/profile\.progress/
+			);
+			expect(() => parseProfile(migrateProfile({ ...stored, progress: { lessons: {} } }))).toThrow(
+				/progress\.chars/
+			);
+		}
 	});
 
 	it('says that a profile of a later version is too recent', () => {
@@ -167,6 +352,23 @@ describe('migrateProfile', () => {
 			})
 		);
 	});
+
+	it('never fails in another way, whatever a record of a known version holds', () => {
+		fc.assert(
+			fc.property(
+				fc.constantFrom(1, 2),
+				fc.anything(),
+				fc.anything(),
+				(version, progress, chars) => {
+					expect(reasonOf({ schemaVersion: version, progress })).toBe('migrated');
+					expect(reasonOf({ schemaVersion: version, progress: { chars } })).toBe('migrated');
+					expect(reasonOf({ schemaVersion: version, progress: { chars: { f: chars } } })).toBe(
+						'migrated'
+					);
+				}
+			)
+		);
+	});
 });
 
 describe('readProfile', () => {
@@ -179,8 +381,16 @@ describe('readProfile', () => {
 		expect(readProfile(STORED_BY_VERSION_1)).toEqual({ ok: true, profile: playedProfile() });
 	});
 
+	it('opens a version 2 profile as a profile of the current version', () => {
+		expect(readProfile(STORED_BY_VERSION_2)).toEqual({ ok: true, profile: profileOfVersion2() });
+	});
+
 	it('reports a profile of a later version with its id and its name', () => {
-		const data = { ...(toJson(playedProfile()) as Json), schemaVersion: 3, badges: ['a'] };
+		const data = {
+			...(toJson(playedProfile()) as Json),
+			schemaVersion: PROFILE_SCHEMA_VERSION + 1,
+			badges: ['a']
+		};
 		expect(readProfile(data)).toEqual({
 			ok: false,
 			unreadable: { id: 'p-1', name: 'Léa', reason: 'newer-version' }

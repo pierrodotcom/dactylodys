@@ -12,7 +12,8 @@ const RULES: ProgressionRules = {
 	newCharWeight: 0.5,
 	weakCharBoost: 0,
 	themeBoost: 0,
-	newCharMinCount: 0
+	newCharMinCount: 0,
+	recentCharWindow: 30
 };
 const LESSON = 'fr.lesson.a';
 const OTHER_LESSON = 'fr.lesson.b';
@@ -57,7 +58,28 @@ describe('recordLessonOutcome', () => {
 			attempts: 1,
 			lastPlayedAt: NOW
 		});
-		expect(recorded.profile.progress.chars['f']).toEqual({ attempts: 10, errors: 0 });
+		expect(recorded.profile.progress.chars['f']).toEqual({
+			attempts: 10,
+			errors: 0,
+			recent: [{ attempts: 10, errors: 0 }]
+		});
+	});
+
+	it('forgets the oldest plays of a character with the window of the rules it is given', () => {
+		const narrow: ProgressionRules = { ...RULES, recentCharWindow: 15 };
+		let profile = newProfile();
+		for (let play = 0; play < 3; play++) {
+			profile = recordLessonOutcome(profile, narrow, LESSON, outcome(95), NOW + play).profile;
+		}
+
+		expect(profile.progress.chars['f']).toEqual({
+			attempts: 30,
+			errors: 0,
+			recent: [
+				{ attempts: 10, errors: 0 },
+				{ attempts: 10, errors: 0 }
+			]
+		});
 	});
 
 	it('keeps the pace of a passed lesson to race against next time', () => {

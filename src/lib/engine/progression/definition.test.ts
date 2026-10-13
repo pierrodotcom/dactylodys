@@ -19,7 +19,8 @@ const BASE: Raw = {
 		newCharWeight: 0.6,
 		weakCharBoost: 2,
 		themeBoost: 2,
-		newCharMinCount: 0
+		newCharMinCount: 0,
+		recentCharWindow: 30
 	},
 	worlds: [
 		{
@@ -149,6 +150,12 @@ describe('parseProgression', () => {
 		expect(parsed.rules.newCharMinCount).toBe(5);
 	});
 
+	it('reads the window of recent keystrokes per character, down to a single keystroke', () => {
+		expect(parseProgression(BASE).rules.recentCharWindow).toBe(30);
+		const narrow = parseProgression(variant((raw) => (raw.rules['recentCharWindow'] = 1)));
+		expect(narrow.rules.recentCharWindow).toBe(1);
+	});
+
 	it('accepts any minimum count for a lesson without new characters', () => {
 		expect(() =>
 			parseProgression(
@@ -271,6 +278,26 @@ describe('parseProgression', () => {
 			'missing minimum count of new characters',
 			(raw) => delete raw.rules['newCharMinCount'],
 			/progression\.rules\.newCharMinCount/
+		],
+		[
+			'a window of recent keystrokes of zero',
+			(raw) => (raw.rules['recentCharWindow'] = 0),
+			/progression\.rules\.recentCharWindow.*at least 1/
+		],
+		[
+			'a fractional window of recent keystrokes',
+			(raw) => (raw.rules['recentCharWindow'] = 30.5),
+			/progression\.rules\.recentCharWindow.*integer/
+		],
+		[
+			'a window of recent keystrokes that is not a number',
+			(raw) => (raw.rules['recentCharWindow'] = '30'),
+			/progression\.rules\.recentCharWindow/
+		],
+		[
+			'a missing window of recent keystrokes',
+			(raw) => delete raw.rules['recentCharWindow'],
+			/progression\.rules\.recentCharWindow/
 		],
 		[
 			'a minimum count of new characters that does not fit in the groups of a lesson',

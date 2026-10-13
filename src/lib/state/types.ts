@@ -27,7 +27,7 @@ export type { CompanionChoice };
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 2;
+	readonly schemaVersion: 3;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

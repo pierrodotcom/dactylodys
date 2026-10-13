@@ -40,6 +40,8 @@ export type RewardCondition =
 	/**
 	 * Each of these characters has been typed at least `minAttempts` times with an error rate
 	 * (errors / attempts, 0 to 1) of at most `maxErrorRate`: a key that was hard has been tamed.
+	 * Both are read on the recent results of the character (`recentCharStats`), never on its
+	 * lifetime totals, which a key that was hard for long would keep out of reach.
 	 */
 	| {
 			readonly kind: 'chars-mastered';
