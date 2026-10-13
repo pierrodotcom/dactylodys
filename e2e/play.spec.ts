@@ -731,6 +731,28 @@ test.describe('play route', () => {
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 	});
 
+	test('starts a game when the browser forbids any access to local storage', async ({ page }) => {
+		const pageErrors: Error[] = [];
+		page.on('pageerror', (error) => pageErrors.push(error));
+		await page.addInitScript(() => {
+			Object.defineProperty(window, 'localStorage', {
+				get() {
+					throw new DOMException('Access denied', 'SecurityError');
+				}
+			});
+		});
+
+		await openPage(page, '/');
+		await expect(heading(page, message('home_title'))).toBeVisible();
+
+		await reachMap(page);
+		await startLesson(page, FIRST);
+		const firstGroup = await currentGroup(page);
+		await page.keyboard.type(firstGroup);
+		await expect.poll(() => currentGroup(page)).not.toBe(firstGroup);
+		expect(pageErrors).toEqual([]);
+	});
+
 	test('offers a second player on the same device', async ({ page }) => {
 		await reachMap(page);
 		await button(page, message('play_change_player')).click();

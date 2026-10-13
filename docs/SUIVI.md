@@ -17,10 +17,10 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Relecture humaine** des mots et des phrases : ouvrir `docs/relecture/relecture.html` (double-clic), répondre Oui ou Non à chaque ligne, puis « Enregistrer mes réponses dans un fichier » et déposer ce fichier dans `docs/relecture/`. Reste à écrire : le script qui applique ces réponses aux banques (`review: "human"` pour les Oui, retrait des Non). Tant que ce n'est pas fait, les entrées restent `review: "agent"`.
+2. **Relecture humaine** des mots et des phrases, au choix : sur téléphone ou ordinateur avec la page en ligne privée https://claude.ai/artifact/1eCjoEFs59NerpapFyVVrX (réponses enregistrées dans la base de l'artefact, collections `words` et `phrases`, un document par entrée répondue : `{ text, keep, note }`) ; ou hors ligne avec `docs/relecture/relecture.html` (réponses à enregistrer dans un fichier à déposer dans `docs/relecture/`). Reste à écrire : le script qui applique ces réponses aux banques (`review: "human"` pour les Oui, retrait des Non, remarques listées). Les deux pages sont générées par `tools/content/build-review-page.js` et doivent être régénérées si les banques changent.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
 4. Dette de J3 : le moteur ne favorise les nouveaux caractères que dans les mots, donc le point et les signes de ponctuation sont peu pratiqués dans les phrases ; les textes d'introduction disent « le doigt de la bague » alors que l'aide à l'écran dit « annulaire » ; la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le parcours ne reprend pas encore le dernier jeu choisi d'une visite à l'autre.
-5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double ; le code i18n généré lit `localStorage` sans protection.
+5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
 6. **J4 Aventure** : compagnon personnalisable, compétences, trophées, récit, voix, course contre son propre fantôme.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
@@ -69,7 +69,6 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 ## Réponses acquises
 
 - Matériel du porteur : Windows, clavier NuPhy Node 100 en AZERTY, navigateurs Chrome et Firefox (ni Edge, ni Mac). Il lance ses commandes depuis l'invite de commandes Windows.
-- Une autre session travaille à part sur la détection de langue sans `localStorage` (code i18n généré) : sa branche devra être resynchronisée sur `main`.
 - Branches locales de travail déjà fusionnées (`feat/j1-*`, `feat/j2-*`, `feat/j3-*`, `worktree-agent-*`) : supprimables.
 
 - Testeurs enfants disponibles ; matériel du porteur : Windows avec clavier physique uniquement.
@@ -91,3 +90,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-12** — Recherche complémentaire : ordre des touches et regroupement thématique des mots (notes dans `research_notes/Ordre des touches et mots thématiques/`). ADR-018 et 019 proposés ; jalon « J6 bis Adaptation à l'âge » ajouté à la feuille de route.
 - **2026-10-12** — ADR-018 et 019 acceptés. J3 : contrats, 3 lots parallèles (moteur et progression, banques, mini-jeux) puis un lot de branchement. Audits axe limités à Chromium. Leçons L-035 à L-039, ADR-020.
 - **2026-10-12** — J3 fusionné et en ligne (PR 9). Page de relecture Oui/Non générée par `tools/content/build-review-page.js`.
+- **2026-10-13** — Langue sans `localStorage` (travail d'une session parallèle, reporté sur `main`). Page de relecture publiée en ligne pour le téléphone, réponses dans sa base.
