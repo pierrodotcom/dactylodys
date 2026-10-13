@@ -11,7 +11,8 @@ const RULES: ProgressionRules = {
 	starThresholds: [80, 90, 97],
 	newCharWeight: 0.5,
 	weakCharBoost: 0,
-	themeBoost: 0
+	themeBoost: 0,
+	newCharMinCount: 0
 };
 const LESSON = 'fr.lesson.a';
 const OTHER_LESSON = 'fr.lesson.b';
