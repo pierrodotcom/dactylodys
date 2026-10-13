@@ -265,7 +265,7 @@ export function generateExercise(
 					? buildDrill([], settings, relaxed)
 					: buildEntry(
 							genre === 'word' ? words : phrases,
-							genre === 'word' ? lesson.newChars : [],
+							genre === 'word' ? lesson.newChars : fresh,
 							settings
 						);
 
