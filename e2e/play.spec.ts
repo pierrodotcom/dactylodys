@@ -211,13 +211,30 @@ function typableEntries(lesson: Lesson) {
 	};
 }
 
-/** The first seed whose exercise holds a sentence with a capital and a final punctuation mark. */
-function exerciseWithCapitalSentence(lessonId: string, context: ExerciseContext) {
+/**
+ * The first seed whose exercise holds a group that is accepted. An exercise is drawn at random:
+ * a test that needs a kind of group picks its seed here, then plays that very exercise.
+ */
+function exerciseWith(
+	lessonId: string,
+	context: ExerciseContext,
+	accepts: (group: string) => boolean
+) {
 	for (let seed = 1; seed <= LAST_SEED; seed++) {
 		const exercise = generateExercise(progression, lessonId, seededRng(seed), context);
-		if (exercise.groups.some((group) => CAPITAL_SENTENCE.test(group))) return { seed, exercise };
+		if (exercise.groups.some(accepts)) return { seed, exercise };
 	}
-	throw new Error(`No exercise of ${lessonId} holds a capital sentence within ${LAST_SEED} seeds`);
+	throw new Error(`No exercise of ${lessonId} holds the wanted group within ${LAST_SEED} seeds`);
+}
+
+/** Makes the next exercise of the page the one `generateExercise` builds from this seed. */
+async function seedExercise(page: Page, seed: number) {
+	await page.evaluate(
+		([source, value]) => {
+			Math.random = new Function(`return (${source})`)()(value);
+		},
+		[seededRng.toString(), seed] as const
+	);
 }
 
 async function openPlay(page: Page) {
@@ -965,15 +982,28 @@ test.describe('play route', () => {
 		page
 	}) => {
 		const entries = typableEntries(NEXT_FIRST);
-		await reachMapAs(page, profileAfter(lastLessonOf(world).id));
-		await startLesson(page, NEXT_FIRST);
+		const profile = profileAfter(lastLessonOf(world).id);
+		const { seed, exercise } = exerciseWith(
+			NEXT_FIRST.id,
+			{
+				words: wordBank,
+				phrases: phraseBank,
+				progress: profile.progress,
+				themeId: worldOf(NEXT_FIRST.id).themeId,
+				maxLevel: playRules.maxWordLevel
+			},
+			(group) => entries.bankWords.has(group)
+		);
+		await reachMapAs(page, profile);
+		await openIntro(page, NEXT_FIRST);
+		await seedExercise(page, seed);
+		await button(page, message('play_intro_start')).click();
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 
 		const { groups } = await typeToResult(page, { skipDelay: true });
 
+		expect(groups).toEqual(exercise.groups);
 		expect(groups.some((group) => entries.bankWords.has(group))).toBe(true);
-		expect(groups.some((group) => entries.words.has(group) || entries.phrases.has(group))).toBe(
-			true
-		);
 		for (const group of groups) {
 			for (const char of toGraphemes(group)) expect(entries.learned.has(char), group).toBe(true);
 		}
@@ -1007,22 +1037,21 @@ test.describe('play route', () => {
 		const lesson = lessonAfter(uppercase.id);
 		const profile = profileAfter(uppercase.id);
 		const entries = typableEntries(lesson);
-		const { seed, exercise } = exerciseWithCapitalSentence(lesson.id, {
-			words: wordBank,
-			phrases: phraseBank,
-			progress: profile.progress,
-			themeId: worldOf(lesson.id).themeId,
-			maxLevel: playRules.maxWordLevel
-		});
+		const { seed, exercise } = exerciseWith(
+			lesson.id,
+			{
+				words: wordBank,
+				phrases: phraseBank,
+				progress: profile.progress,
+				themeId: worldOf(lesson.id).themeId,
+				maxLevel: playRules.maxWordLevel
+			},
+			(group) => CAPITAL_SENTENCE.test(group)
+		);
 		await reachMapAs(page, profile);
 		await openIntro(page, lesson);
 		await page.getByRole('radio', { name: gameTitle(ROCKET) }).check();
-		await page.evaluate(
-			([source, value]) => {
-				Math.random = new Function(`return (${source})`)()(value);
-			},
-			[seededRng.toString(), seed] as const
-		);
+		await seedExercise(page, seed);
 		await button(page, message('play_intro_start')).click();
 		await expect(progressPicture(page, ROCKET, 0)).toBeVisible();
 
