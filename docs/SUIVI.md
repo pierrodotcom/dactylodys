@@ -26,8 +26,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - **Lot 0, socle** : fait — minimum de 5 frappes par nouveau signe et retrait de « ü » (PR 16, ADR-024) ; profil version 2 avec migration, profils illisibles conservés et listés, jeu choisi retrouvé à la visite suivante, allure de chaque partie réussie enregistrée, types des récompenses, du récit et de la voix (PR 17). Contrats dans `.claude/rules/jeux-pedagogie.md`.
    - **Lot 0c** : fait (PR 19, ADR-025) — seules les parties récentes d'une touche comptent, jusqu'à 30 frappes ; profil version 3 ; leçon des circonflexes en deux (« ê â », puis « î ô û » : « Le casque du copilote ») ; `isLessonPassed` exporté. 21 phrases ajoutées pour les circonflexes et les trémas.
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
-   - **Lots R1 et S1** (en cours, lancés avant le test car sans écran ni contenu) : moteur des récompenses (`feat/j4-recompenses-moteur`), moteur du récit (`feat/j4-recit-moteur`).
-   - **Après le retour du test avec un enfant** : R2 catalogue des récompenses et écrans du compagnon · S2 textes du récit et écrans · V voix (après choix du porteur) · F fantôme (en dernier).
+   - **Lots R1 et S1** : faits (PR 25 et PR 24) — moteur des récompenses et moteur du récit, fonctions pures, pas encore branchés à l'écran.
+   - **Après le retour du test avec un enfant** : R2 catalogue des récompenses, écrans du compagnon, récompenses acquises pour toujours (profil version 4), quête « le compagnon a besoin d'aide » sur une touche redevenue fragile · S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V voix (échantillons en cours d'écoute par le porteur) · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
    - **Puis assemblage** dans le parcours `/jouer`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
@@ -69,7 +69,6 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 | # | Question | Bloque |
 |---|---|---|
-| Q10 | Idée du porteur (2026-10-13) : déplacer un personnage avec les flèches, avec des quêtes à taper au clavier. Avis rendu : pas de flèches mêlées à la frappe (la main droite quitte la rangée de repos, temps hors frappe) ; oui pour une carte parcourue aux flèches entre les exercices, des quêtes qui sont des exercices mis en récit, et plus tard une quête « réparer une phrase » (flèches et Effacer dans un texte). Décision du porteur attendue | Lot d'assemblage de J4 |
 | Q9 | Confirmer la licence de Lexique auprès de ses auteurs : le fichier dit CC BY-SA, la page d'accueil du site pointe vers une licence non commerciale | Publication des listes de mots |
 | Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
@@ -108,3 +107,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — Retour du porteur : des phrases ne voulaient rien dire. Phrases des deux premiers paliers réécrites, règle « toute phrase a un sens » (ADR-026, L-044). PR 20 fusionnée (phrases avec circonflexes et trémas).
 - **2026-10-13** — PR 21 fusionnée (phrases qui ont un sens ; test e2e rendu déterministe, L-045). Relecture des phrases par le porteur appliquée. Le moteur garantit au moins un mot dans tout exercice qui en annonce.
 - **2026-10-13** — PR 22 fusionnée (mot garanti, relecture des phrases). Les 5 phrases de remplacement sont validées par le porteur : toute la banque est relue par une personne. Recherche sur les voix consignée. Lots R1 et S1 lancés.
+- **2026-10-13** — PR 23, 24 et 25 fusionnées. Décisions du porteur : récompenses acquises pour toujours, carte aux flèches, écran « l'histoire jusqu'ici » (ADR-027). Téléchargement du moteur Piper et de la voix `fr_FR-mls-medium` autorisé pour des échantillons, hors du dépôt.
