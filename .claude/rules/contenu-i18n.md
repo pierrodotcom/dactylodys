@@ -20,6 +20,7 @@ paths:
 3. Vocabulaire adapté aux 8-12 ans, issu de sources libres : **Lexique 3.83 (CC BY-SA 4.0)**. **Interdit sans autorisation écrite** : Manulex (clause non commerciale), listes Dubois-Buyse et ÉOLE (éditeurs).
 4. En français, les accents fréquents (`é`, `è`, `à`) arrivent **tôt** dans la progression, pas après toutes les lettres.
 5. L'humour est **dans le texte à taper** ou entre deux exercices, jamais en distraction pendant la frappe. Ressorts adaptés : incongruité, absurde, devinettes, jeux de mots.
+8. **Toute phrase à taper a un sens** (ADR-026) : en la lisant, on peut dessiner la scène, même absurde (« le chat range ses chaussettes dans le four »). Jamais une suite de mots forcée par les lettres disponibles (« le sel se dresse sur le fil ») : l'enfant cherche à comprendre et décroche. Quand les lettres apprises ne permettent pas une vraie phrase, on en écrit moins, ou de plus courtes.
 6. Contenu non genré, sans stéréotype, sans marque, sans référence datée. Aucun prénom réel d'enfant stocké ailleurs que dans le profil local.
 7. Pour la dyslexie associée : mots réguliers et fréquents d'abord, syllabes avant mots, graphèmes complexes introduits explicitement.
 

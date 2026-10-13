@@ -3,73 +3,49 @@
 	"id": "fr.phrases.base",
 	"locale": "fr-FR",
 	"phrases": [
-		{ "text": "je lis des lis", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "le sel se dresse sur le fil", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "elle dilue le jus de fleurs", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "elle se rue sur le jus", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "il sue des fleurs", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "le fer file sur le fil", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le fer se dresse sur les elfes", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "elle dresse les elfes sur le fil", "themes": [], "level": 1, "review": "agent" },
-		{
-			"text": "jeudi le sel ruisselle sur les lis",
-			"themes": ["cuisine"],
-			"level": 1,
-			"review": "agent"
-		},
-		{ "text": "le jus jure des fleurs", "themes": ["nature"], "level": 1, "review": "agent" },
-		{
-			"text": "elle lui dilue des fleurs sur le sel",
-			"themes": ["nature"],
-			"level": 1,
-			"review": "agent"
-		},
-		{
-			"text": "le jus de fleurs lui ruisselle dessus",
-			"themes": ["nature"],
-			"level": 1,
-			"review": "agent"
-		},
-		{
-			"text": "jeudi le lis se dresse sur le fil",
-			"themes": ["nature"],
-			"level": 1,
-			"review": "agent"
-		},
-		{ "text": "le sel fuit le lit", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "le jus ruisselle sur le lit", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le lit sue du jus de fleurs", "themes": ["nature"], "level": 1, "review": "agent" },
-		{ "text": "elle lui dit je fuis le jus", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "des elfes jurent sur le sel", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le fil file sur le lit", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je lis le jeudi", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "il file sur ses skis", "themes": ["sport"], "level": 1, "review": "agent" },
+		{ "text": "elle relie les fils", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je fuis le feu", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "il jure de lire", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je lui sers du jus", "themes": ["cuisine"], "level": 1, "review": "agent" },
+		{ "text": "elle se rue sur le jus", "themes": ["cuisine"], "level": 1, "review": "agent" },
+		{ "text": "je serre le fil de fer", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je ris de ses ruses", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je lui dis de fuir", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je suis sur ses skis", "themes": ["sport"], "level": 1, "review": "agent" },
+		{ "text": "il use ses skis le jeudi", "themes": ["sport"], "level": 1, "review": "agent" },
+		{ "text": "elle serre les fleurs", "themes": ["nature"], "level": 1, "review": "agent" },
+		{ "text": "je lis les feuilles", "themes": ["nature"], "level": 1, "review": "agent" },
+		{ "text": "elle skie le jeudi", "themes": ["sport"], "level": 1, "review": "agent" },
 		{ "text": "un lutin tisse un tutu", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le tutu du lutin est inutile", "themes": [], "level": 1, "review": "agent" },
-		{
-			"text": "un fruit se tient sur un nid",
-			"themes": ["cuisine"],
-			"level": 1,
-			"review": "agent"
-		},
-		{ "text": "il tire le fil et le tissu fuit", "themes": [], "level": 1, "review": "agent" },
-		{
-			"text": "le futur lutin refuse le fruit",
-			"themes": ["cuisine"],
-			"level": 1,
-			"review": "agent"
-		},
-		{ "text": "le lutin tend un fil dur", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "une tuile tient sur un fil", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "tu es un intrus dit le nid", "themes": [], "level": 1, "review": "agent" },
-		{
-			"text": "le lutin ruse le fruit lui dit tuile",
-			"themes": ["cuisine"],
-			"level": 1,
-			"review": "agent"
-		},
 		{ "text": "le lit des lutins est dur", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "un nid de lutins sur le fer", "themes": [], "level": 1, "review": "agent" },
-		{ "text": "le fruit sent le sel", "themes": ["cuisine"], "level": 1, "review": "agent" },
-		{ "text": "le lutin lit le titre du fruit", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "le tutu du lutin est inutile", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "le lutin lit sur un lit", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je dessine une lune", "themes": ["espace"], "level": 1, "review": "agent" },
+		{ "text": "elle tient une lettre", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "il lit une lettre de nuit", "themes": [], "level": 1, "review": "agent" },
+		{
+			"text": "tu dessines un nid et des fruits",
+			"themes": ["nature"],
+			"level": 1,
+			"review": "agent"
+		},
+		{ "text": "le fruit est sur le lit", "themes": ["cuisine"], "level": 1, "review": "agent" },
+		{ "text": "je sens le fruit et je ris", "themes": ["cuisine"], "level": 1, "review": "agent" },
+		{ "text": "je te tends une fleur", "themes": ["nature"], "level": 1, "review": "agent" },
+		{ "text": "elle entend rire les lutins", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "il tire le fil et le tissu suit", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "une fillette lit sur une dune", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "je finis le test et je file", "themes": ["ecole"], "level": 1, "review": "agent" },
+		{ "text": "il tient une tirelire", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "le tennis est un jeu", "themes": ["sport"], "level": 1, "review": "agent" },
+		{
+			"text": "un renne tire un lutin sur ses skis",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
 		{
 			"text": "le dindon dort dans la salade",
 			"themes": ["animaux"],
@@ -101,7 +77,7 @@
 			"level": 1,
 			"review": "agent"
 		},
-		{ "text": "une loutre tord un radis", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "une loutre fait du roller", "themes": ["animaux"], "level": 1, "review": "agent" },
 		{
 			"text": "un ours fait la sieste dans la fondue",
 			"themes": ["animaux"],
@@ -116,7 +92,7 @@
 			"level": 1,
 			"review": "agent"
 		},
-		{ "text": "le lion tond un radis", "themes": ["animaux"], "level": 1, "review": "agent" },
+		{ "text": "le lion tond le jardin", "themes": ["animaux"], "level": 1, "review": "agent" },
 		{
 			"text": "le crocodile joue de la trompette",
 			"themes": ["animaux"],
