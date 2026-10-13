@@ -133,6 +133,7 @@ La session principale est **chef d'orchestre** : elle découpe, délègue, véri
 - Un lot parallèle = un worktree = une branche. Deux agents ne modifient jamais les mêmes fichiers ; les contrats partagés (types d'`engine/`, schémas JSON) sont figés **avant** de paralléliser.
 - Chaque ordre de mission contient : objectif, fichiers autorisés, contrat d'interface, tests attendus, ce qui est déjà décidé, format de retour (≤ 15 lignes : fait / non fait / résultat de `verify` / leçons).
 - Le résultat d'un agent est vérifié (diff + `verify`) avant fusion ; son compte rendu n'est pas une preuve.
+- Un champ obligatoire ajouté à un type partagé casse les autres lots en cours : après chaque fusion, fusionner `main` dans les branches encore ouvertes et relancer `npm run check` avant de les fusionner (L-035, L-042).
 - Seul le chef d'orchestre modifie `CLAUDE.md`, `.claude/` et `docs/DECISIONS.md`.
 - **Avant chaque jalon ou lot**, annoncer au porteur du projet le modèle et l'effort recommandés pour la session, et attendre qu'il ait pu en changer.
 - Le porteur valide les **résultats**, pas le code : comptes rendus en termes de comportement observable et de ce qu'il peut essayer lui-même.
