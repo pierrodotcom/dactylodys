@@ -39,7 +39,7 @@ function positionHeading(page: Page, position: number) {
 }
 
 function exportIssue(page: Page) {
-	return page.getByRole('alert').filter({ hasText: /archive/ });
+	return page.locator('#voix-export-issue');
 }
 
 function consentBox(page: Page) {
@@ -53,9 +53,9 @@ async function openRecorder(page: Page) {
 }
 
 /**
- * MediaRecorder and the decoding of what it records are only exercised on Chromium: Playwright's
- * builds of Firefox and WebKit do not record a generated stream reliably. Everything that does not
- * need a microphone runs on the three engines.
+ * MediaRecorder and the decoding of what it records are only exercised on Chromium. Tried on
+ * Playwright's WebKit, these tests time out: the page never gets to record there. Firefox could not
+ * be tried where they were written. Everything that needs no microphone runs on the three engines.
  */
 function needsRecording(testInfo: TestInfo) {
 	test.skip(
@@ -240,6 +240,8 @@ test.describe('voice recording page', () => {
 
 	test('explains that the browser cannot record when it has no MediaRecorder', async ({ page }) => {
 		await page.addInitScript(() => {
+			// Whatever the engine thinks of a local address: this test is about the missing recorder.
+			Object.defineProperty(window, 'isSecureContext', { value: true });
 			Object.defineProperty(window, 'MediaRecorder', { value: undefined });
 		});
 		await openRecorder(page);
