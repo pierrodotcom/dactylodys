@@ -374,13 +374,13 @@
 			"text": "le wagon transporte des yaourts",
 			"themes": ["vehicules"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "le cheval fait de la balançoire",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "agent"
+			"review": "human"
 		},
 		{ "text": "Le chat a mis ses lunettes.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{ "text": "Où est ma chaussette ?", "themes": [], "level": 1, "review": "human" },
@@ -734,13 +734,13 @@
 			"text": "Le robot a rangé ses chaussettes au frigo.",
 			"themes": [],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Voici mon garage : il est plein de vélos.",
 			"themes": ["vehicules"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		},
 		{
 			"text": "Le dragon fait un gâteau pour la forêt.",
@@ -942,7 +942,7 @@
 			"text": "La tomate est mûre, je la mange.",
 			"themes": ["cuisine"],
 			"level": 2,
-			"review": "agent"
+			"review": "human"
 		}
 	]
 }
