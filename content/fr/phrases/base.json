@@ -837,6 +837,127 @@
 			"themes": ["animaux"],
 			"level": 2,
 			"review": "agent"
+		},
+		{
+			"text": "Le fantôme conduit le bus de nuit.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Mon goûter a pris le train !",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Bientôt, mon vélo aura des ailes.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Un drôle de hibou pilote la fusée.",
+			"themes": ["animaux"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Le pilote joue de la flûte.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Qui a mis une boîte sur le toit ?",
+			"themes": ["maison"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le tracteur roule à côté du fantôme.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "La tomate est mûre, le camion aussi.",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le bus est sûr de savoir voler.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Sur mon île, les vélos poussent.",
+			"themes": ["nature"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "Le train dîne à la gare.", "themes": ["vehicules"], "level": 1, "review": "agent" },
+		{
+			"text": "Le dragon a brûlé le dîner du pilote.",
+			"themes": ["dinos"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Une chaîne de vélo en spaghettis !",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Cet hôtel flotte sur un bateau.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le caïman adore le maïs grillé.",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Mon canoë a des roues carrées.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Un caïman naïf attend le bus.",
+			"themes": ["animaux"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Du maïs dans le moteur, quelle idée !",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le canoë file sur la route.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "La mosaïque du garage a fondu.",
+			"themes": ["maison"],
+			"level": 3,
+			"review": "agent"
+		},
+		{
+			"text": "Le maïs pousse sur le toit du bus.",
+			"themes": ["nature"],
+			"level": 2,
+			"review": "agent"
 		}
 	]
 }

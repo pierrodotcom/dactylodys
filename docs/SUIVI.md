@@ -10,21 +10,21 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
-| J3 Pédagogie complète | Mots relus ; phrases à relire ; test avec un enfant à faire | 5 mondes, 23 leçons, 926 mots relus par le porteur, 195 phrases relues par un agent seulement, 3 mini-jeux |
+| J3 Pédagogie complète | Mots relus ; phrases à relire ; test avec un enfant à faire | 5 mondes, 24 leçons, 926 mots relus par le porteur, 216 phrases relues par un agent seulement, 3 mini-jeux |
 | J4 Aventure | En cours : lot 0 (socle) | Cadrage validé le 2026-10-13 (ADR-022) |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Relecture humaine des phrases** (195, dont 45 ajoutées le 2026-10-13 pour la ponctuation et « où » ; une espace précède désormais « ? », « ! » et « : »), pas encore faite : ouvrir `docs/relecture/relecture.html`, choisir « Afficher : les phrases », répondre, puis cliquer sur « Enregistrer mes réponses dans un fichier » et déposer ce fichier dans `docs/relecture/` (sans ce clic, les réponses restent dans le navigateur). Application : `node tools/content/apply-review.js phrases --no "<phrase refusée>"`.
+2. **Relecture humaine des phrases** (216, dont 66 ajoutées le 2026-10-13 pour la ponctuation, « où », les circonflexes et les trémas ; une espace précède désormais « ? », « ! » et « : »), pas encore faite : ouvrir `docs/relecture/relecture.html`, choisir « Afficher : les phrases », répondre, puis cliquer sur « Enregistrer mes réponses dans un fichier » et déposer ce fichier dans `docs/relecture/` (sans ce clic, les réponses restent dans le navigateur). Application : `node tools/content/apply-review.js phrases --no "<phrase refusée>"`.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
 6. **J4 Aventure** (ADR-022, acceptée) :
    - **Lot 0, socle** : fait — minimum de 5 frappes par nouveau signe et retrait de « ü » (PR 16, ADR-024) ; profil version 2 avec migration, profils illisibles conservés et listés, jeu choisi retrouvé à la visite suivante, allure de chaque partie réussie enregistrée, types des récompenses, du récit et de la voix (PR 17). Contrats dans `.claude/rules/jeux-pedagogie.md`.
-   - **Lot 0c** (en cours, `feat/j4-resultats-recents`) : résultats récents par touche avec oubli des anciens, leçon des circonflexes en deux (ADR-025), `isLessonPassed` exporté.
+   - **Lot 0c** : fait (PR 19, ADR-025) — seules les parties récentes d'une touche comptent, jusqu'à 30 frappes ; profil version 3 ; leçon des circonflexes en deux (« ê â », puis « î ô û » : « Le casque du copilote ») ; `isLessonPassed` exporté. 21 phrases ajoutées pour les circonflexes et les trémas.
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
    - **Puis quatre lots parallèles**, à lancer après le retour du test avec un enfant : R récompenses et compagnon · S récit · V voix (échantillons à faire écouter au porteur d'abord) · F fantôme (en dernier).
    - **Puis assemblage** dans le parcours `/jouer`.
@@ -102,3 +102,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — Dette de J3 : les phrases favorisent les nouveaux caractères ; 45 phrases ajoutées (ponctuation, « où ») ; espace avant « ? », « ! » et « : », gardée sur la même ligne que le mot à l'écran ; noms exacts des doigts dans les textes d'introduction (ADR-021) ; test de cohérence « au moins six phrases pour un signe qu'aucun mot ne contient ». Leçons L-040 et L-041. Cadrage de J4 proposé (ADR-022).
 - **2026-10-13** — PR 14 fusionnée. Cadrage de J4 validé par le porteur (ADR-022, ADR-024) ; lot 0 lancé. Test avec un enfant annoncé par le porteur pour le soir même.
 - **2026-10-13** — J4, lot 0 : PR 16 (répétitions, « ü ») et PR 17 (profil version 2, contrats) fusionnées après relecture du diff et CI verte. Décisions du porteur : leçon des circonflexes à alléger, oubli des anciens résultats par touche (ADR-025). Leçons L-042 et L-043.
+- **2026-10-13** — J4, lot 0c : PR 19 fusionnée après relecture du diff et CI verte. Le lot 0 est terminé ; les quatre lots parallèles attendent le retour du test avec un enfant.
