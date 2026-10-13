@@ -33,7 +33,7 @@ export const LEARNING_STEPS = [
 	{ id: 'interrogation-exclamation', chars: ['?', '!'] },
 	{ id: 'tiret-deux-points', chars: ['-', ':'] },
 	{ id: 'circonflexes', chars: ['ê', 'â', 'î', 'ô', 'û'] },
-	{ id: 'trémas', chars: ['ë', 'ï', 'ü'] }
+	{ id: 'trémas', chars: ['ë', 'ï'] }
 ];
 
 export const STEP_INDEX = Object.fromEntries(LEARNING_STEPS.map((step, i) => [step.id, i]));

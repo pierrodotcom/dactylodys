@@ -20,8 +20,6 @@ const PHRASES_FILE = 'content/fr/phrases/base.json';
 const MIN_USABLE_WORDS = 8;
 const MIN_USABLE_PHRASES = 6;
 const MIN_PHRASES_PER_NEW_CHAR = 6;
-/** No common French word has it: practised in letter suites only, until the lesson is decided. */
-const CHARS_WITHOUT_TEXT = ['ü'];
 const SEED_COUNT = 20;
 
 function readJson(path: string): unknown {
@@ -66,7 +64,7 @@ describe('progression and banks together', () => {
 		.flatMap(({ lesson }) => {
 			const inWords = new Set([...usableWordTexts(lesson.id)].flatMap((text) => toGraphemes(text)));
 			return lesson.newChars
-				.filter((char) => !inWords.has(char) && !CHARS_WITHOUT_TEXT.includes(char))
+				.filter((char) => !inWords.has(char))
 				.map((char) => [lesson.id, char] as const);
 		});
 
@@ -111,6 +109,32 @@ describe('progression and banks together', () => {
 				for (const group of exercise.groups) {
 					const unknown = toGraphemes(group).filter((char) => !known.has(char));
 					expect(unknown, `${lessonId} seed ${seed}: "${group}"`).toEqual([]);
+				}
+			}
+		}
+	);
+
+	it.each(
+		entries
+			.filter(({ lesson }) => lesson.newChars.length > 0)
+			.map(({ world, lesson }) => [lesson.id, world.themeId, lesson.newChars] as const)
+	)(
+		`%s asks each new character at least the minimum number of times over ${SEED_COUNT} seeds`,
+		(lessonId, themeId, newChars) => {
+			for (let seed = 1; seed <= SEED_COUNT; seed++) {
+				const exercise = generateExercise(progression, lessonId, seededRng(seed), {
+					words,
+					phrases,
+					progress: emptyProgress(),
+					themeId,
+					maxLevel: PLAY_RULES.maxWordLevel
+				});
+				const asked = exercise.groups.flatMap((group) => toGraphemes(group));
+				for (const char of newChars) {
+					const count = asked.filter((grapheme) => grapheme === char).length;
+					expect(count, `${lessonId} seed ${seed}: "${char}"`).toBeGreaterThanOrEqual(
+						progression.rules.newCharMinCount
+					);
 				}
 			}
 		}

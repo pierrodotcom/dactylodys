@@ -135,7 +135,8 @@ describe('azerty-decouverte', () => {
 			starThresholds: [80, 90, 97],
 			newCharWeight: 0.6,
 			weakCharBoost: 2,
-			themeBoost: 2
+			themeBoost: 2,
+			newCharMinCount: 5
 		});
 	});
 
@@ -174,7 +175,7 @@ describe('azerty-decouverte', () => {
 				['?', '!'],
 				['-', ':'],
 				['ê', 'â', 'î', 'ô', 'û'],
-				['ë', 'ï', 'ü']
+				['ë', 'ï']
 			]
 		]);
 	});

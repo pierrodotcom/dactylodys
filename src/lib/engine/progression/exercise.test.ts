@@ -30,7 +30,8 @@ const RULES = {
 	starThresholds: [80, 90, 97],
 	newCharWeight: 0.6,
 	weakCharBoost: 2,
-	themeBoost: 2
+	themeBoost: 2,
+	newCharMinCount: 0
 };
 
 function lesson(id: string, newChars: string[], change: Record<string, unknown> = {}) {
@@ -251,6 +252,11 @@ function playableTexts(
 	return { words, phrases };
 }
 
+function countOf(groups: readonly string[], char: string): number {
+	return groups.flatMap((group) => toGraphemes(group)).filter((grapheme) => grapheme === char)
+		.length;
+}
+
 function checkExercise(
 	progression: ProgressionDefinition,
 	lessonDefinition: LessonDefinition,
@@ -262,15 +268,15 @@ function checkExercise(
 	const [min, max] = lessonDefinition.groupLength;
 	expect(exercise.lessonId).toBe(lessonDefinition.id);
 
-	const lengths = exercise.groups.map(lengthOf);
-	const total = lengths.reduce((sum, length) => sum + length, 0);
-	const lastLength = lengths[lengths.length - 1] as number;
+	const minimum = progression.rules.newCharMinCount;
+	const isComplete = (groups: readonly string[]): boolean =>
+		groups.reduce((sum, group) => sum + lengthOf(group), 0) >= lessonDefinition.targetLength &&
+		lessonDefinition.newChars.every((char) => countOf(groups, char) >= minimum);
 	expect(exercise.groups.length).toBeGreaterThan(0);
 	expect(exercise.groups.length).toBeLessThanOrEqual(lessonDefinition.groupCount);
 	const reachedCount = exercise.groups.length === lessonDefinition.groupCount;
-	const reachedLength = total >= lessonDefinition.targetLength;
-	expect(reachedCount || reachedLength).toBe(true);
-	expect(total - lastLength).toBeLessThan(lessonDefinition.targetLength);
+	expect(reachedCount || isComplete(exercise.groups)).toBe(true);
+	expect(isComplete(exercise.groups.slice(0, -1))).toBe(false);
 
 	exercise.groups.forEach((group, index) => {
 		const graphemes = toGraphemes(group);
@@ -289,8 +295,9 @@ function checkExercise(
 		if (index > 0) expect(group).not.toBe(exercise.groups[index - 1]);
 	});
 
-	const present = new Set(graphemesOfGroups(exercise));
-	for (const char of lessonDefinition.newChars) expect(present.has(char)).toBe(true);
+	for (const char of lessonDefinition.newChars) {
+		expect(countOf(exercise.groups, char)).toBeGreaterThanOrEqual(Math.max(1, minimum));
+	}
 }
 
 function generate(
@@ -886,6 +893,162 @@ describe('generateExercise', () => {
 		});
 	});
 
+	describe('minimum count of each new character', () => {
+		const withMinimum = (newCharMinCount: number) => withRules(SYNTHETIC, { newCharMinCount });
+		const lessonsWithNewChars = lessonIds(SYNTHETIC).filter(
+			(id) => (findLesson(SYNTHETIC, id) as LessonDefinition).newChars.length > 0
+		);
+
+		it('keeps the exact exercises of before the rule existed when the minimum is 0', () => {
+			expect(generate(SYNTHETIC, 'fr.lesson.dk', 7).groups).toEqual([
+				'jdd',
+				'djdkk',
+				'ddkkd',
+				'jfddk',
+				'k dd',
+				'kdj',
+				'jk jk',
+				'fdjj',
+				'kjddj',
+				'j k'
+			]);
+			expect(generate(SYNTHETIC, 'fr.lesson.dot', 42, FULL_CONTEXT).groups).toEqual([
+				'Je dis le sel.',
+				'Il file.',
+				'sel',
+				'Je lis.',
+				'Elle lie ses skis.',
+				'J.f.',
+				'les',
+				'..E..',
+				'ses',
+				'ski'
+			]);
+		});
+
+		it.each(lessonsWithNewChars)(
+			'%s: asks every new character at least that many times',
+			(lessonId) => {
+				const { newChars } = findLesson(SYNTHETIC, lessonId) as LessonDefinition;
+				for (let seed = 0; seed < 50; seed++) {
+					const { groups } = generate(withMinimum(4), lessonId, seed, FULL_CONTEXT);
+					for (const char of newChars) expect(countOf(groups, char)).toBeGreaterThanOrEqual(4);
+				}
+			}
+		);
+
+		it('starts with groups that hold every new character still below the minimum', () => {
+			for (let seed = 0; seed < 50; seed++) {
+				const { groups } = generate(withMinimum(3), 'fr.lesson.words', seed, FULL_CONTEXT);
+				let warmUps = 0;
+				while (countOf(groups.slice(0, warmUps), 'e') < 3) {
+					expect(groups[warmUps]).toContain('e');
+					warmUps += 1;
+				}
+				expect(warmUps).toBeGreaterThan(0);
+				expect(warmUps).toBeLessThanOrEqual(3);
+			}
+		});
+
+		it('warms up with suites, even when the mix asks for words only', () => {
+			const progression = progressionOf(
+				[
+					lesson('fj', ['f', 'j']),
+					lesson('e', ['e'], { words: ['fe', 'je', 'fjef'], mix: WORDS_ONLY, groupLength: [5, 5] })
+				],
+				{ newCharMinCount: 2 }
+			);
+			for (let seed = 0; seed < 30; seed++) {
+				const first = generate(progression, 'fr.lesson.e', seed).groups[0] as string;
+				expect(lengthOf(first)).toBe(5);
+				expect(first).toContain('e');
+			}
+		});
+
+		it('counts the warm-up groups in the group count', () => {
+			const progression = progressionOf(
+				[lesson('fj', ['f', 'j'], { groupCount: 6, targetLength: 500, groupLength: [2, 4] })],
+				{ newCharMinCount: 6 }
+			);
+			for (let seed = 0; seed < 30; seed++) {
+				const { groups } = generate(progression, 'fr.lesson.fj', seed);
+				expect(groups).toHaveLength(6);
+				for (const char of 'fj') expect(countOf(groups, char)).toBeGreaterThanOrEqual(6);
+			}
+		});
+
+		it('counts the warm-up groups in the target length', () => {
+			const progression = progressionOf(
+				[
+					lesson('fj', ['f', 'j']),
+					lesson('dk', ['d', 'k'], { groupCount: 50, targetLength: 30, groupLength: [3, 5] })
+				],
+				{ newCharMinCount: 3 }
+			);
+			for (let seed = 0; seed < 30; seed++) {
+				const lengths = generate(progression, 'fr.lesson.dk', seed).groups.map(lengthOf);
+				const total = lengths.reduce((sum, length) => sum + length, 0);
+				expect(total).toBeGreaterThanOrEqual(30);
+				expect(total - (lengths[lengths.length - 1] as number)).toBeLessThan(30);
+			}
+		});
+
+		it('goes past the target length rather than below the minimum', () => {
+			const progression = progressionOf(
+				[lesson('fj', ['f', 'j'], { groupCount: 10, targetLength: 1, groupLength: [2, 4] })],
+				{ newCharMinCount: 5 }
+			);
+			for (let seed = 0; seed < 30; seed++) {
+				const { groups } = generate(progression, 'fr.lesson.fj', seed);
+				expect(groups.length).toBeLessThanOrEqual(5);
+				for (const char of 'fj') expect(countOf(groups, char)).toBeGreaterThanOrEqual(5);
+				const before = groups.slice(0, -1);
+				expect(['f', 'j'].some((char) => countOf(before, char) < 5)).toBe(true);
+			}
+		});
+
+		it('keeps the space inside the warm-up groups', () => {
+			for (let seed = 0; seed < 50; seed++) {
+				const { groups } = generate(withMinimum(6), 'fr.lesson.space', seed);
+				expect(countOf(groups, SPACE)).toBeGreaterThanOrEqual(6);
+				for (const group of groups) expect(group).toMatch(/^\S+( \S+)*$/u);
+			}
+		});
+
+		it('does not concern the capitals a lesson unlocks, nor a lesson without new character', () => {
+			for (const id of ['fr.lesson.caps', 'fr.lesson.only-words', 'fr.lesson.long-drills']) {
+				for (let seed = 0; seed < 10; seed++) {
+					expect(generate(withMinimum(5), id, seed, FULL_CONTEXT)).toEqual(
+						generate(SYNTHETIC, id, seed, FULL_CONTEXT)
+					);
+				}
+			}
+		});
+
+		it.each(
+			allLessons().map(([progression, l, context]) => [l.id, progression, l, context] as const)
+		)(
+			'%s: respects the constraints for any seed and any minimum',
+			(_id, progression, lessonDefinition, context) => {
+				fc.assert(
+					fc.property(SEEDS, fc.integer({ min: 1, max: 8 }), (seed, newCharMinCount) => {
+						const configured = withRules(progression, { newCharMinCount });
+						const exercise = generate(configured, lessonDefinition.id, seed, context);
+						checkExercise(configured, lessonDefinition, exercise, context);
+						checkExercise(
+							configured,
+							lessonDefinition,
+							generate(configured, lessonDefinition.id, seed),
+							{}
+						);
+						expect(generate(configured, lessonDefinition.id, seed, context)).toEqual(exercise);
+					}),
+					{ numRuns: 25 }
+				);
+			}
+		);
+	});
+
 	describe('properties on every lesson', () => {
 		it.each(
 			allLessons().map(([progression, l, context]) => [l.id, progression, l, context] as const)
@@ -957,14 +1120,16 @@ describe('generateExercise', () => {
 			fc.assert(
 				fc.property(
 					fc.array(fc.double({ min: 0, max: 1, maxExcluded: true, noNaN: true }), { minLength: 1 }),
-					(values) => {
+					fc.constantFrom(0, 3),
+					(values, newCharMinCount) => {
 						let cursor = 0;
 						const rng = () => values[cursor++ % values.length] as number;
+						const configured = withRules(SYNTHETIC, { newCharMinCount });
 						try {
 							checkExercise(
-								SYNTHETIC,
+								configured,
 								lessonDefinition,
-								generateExercise(SYNTHETIC, lessonDefinition.id, rng, FULL_CONTEXT),
+								generateExercise(configured, lessonDefinition.id, rng, FULL_CONTEXT),
 								FULL_CONTEXT
 							);
 						} catch (error) {
