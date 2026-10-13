@@ -69,6 +69,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 | # | Question | Bloque |
 |---|---|---|
+| Q10 | Idée du porteur (2026-10-13) : déplacer un personnage avec les flèches, avec des quêtes à taper au clavier. Avis rendu : pas de flèches mêlées à la frappe (la main droite quitte la rangée de repos, temps hors frappe) ; oui pour une carte parcourue aux flèches entre les exercices, des quêtes qui sont des exercices mis en récit, et plus tard une quête « réparer une phrase » (flèches et Effacer dans un texte). Décision du porteur attendue | Lot d'assemblage de J4 |
 | Q9 | Confirmer la licence de Lexique auprès de ses auteurs : le fichier dit CC BY-SA, la page d'accueil du site pointe vers une licence non commerciale | Publication des listes de mots |
 | Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
