@@ -1,6 +1,5 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import type { ProgressState, StarCount } from '../engine/progression/types';
 import { toGraphemes } from '../engine/graphemes';
 import {
 	createProfile,
@@ -8,70 +7,20 @@ import {
 	parseProfile,
 	renameProfile,
 	updateSettings,
+	withCompanion,
+	withGhost,
+	withLastGame,
 	withProgress
 } from './profile';
-import type { Profile, Settings } from './types';
-
-const NAME_UNITS = ['a', 'B', 'é', 'é', ' ', '日', '\u{1F600}', '\u{1F468}‍\u{1F469}'];
-
-const nameArb = fc
-	.string({ unit: fc.constantFrom(...NAME_UNITS), minLength: 1, maxLength: 20 })
-	.filter((name) => name.trim() !== '');
-
-const timestampArb = fc.integer({ min: 0, max: Number.MAX_SAFE_INTEGER });
-const countArb = fc.nat({ max: 100_000 });
-const starsArb = fc.constantFrom<StarCount>(0, 1, 2, 3);
-const accuracyArb = fc.integer({ min: 0, max: 1000 }).map((tenths) => tenths / 10);
-
-const progressArb: fc.Arbitrary<ProgressState> = fc.record({
-	lessons: fc.dictionary(
-		fc.string({ maxLength: 12 }),
-		fc.record({
-			bestAccuracy: accuracyArb,
-			stars: starsArb,
-			attempts: countArb,
-			lastPlayedAt: timestampArb
-		}),
-		{ maxKeys: 5 }
-	),
-	chars: fc.dictionary(
-		fc.string({ maxLength: 4 }),
-		fc.record({ attempts: countArb, errors: countArb }),
-		{ maxKeys: 5 }
-	)
-});
-
-const settingsPatchArb: fc.Arbitrary<Partial<Settings>> = fc.record(
-	{
-		layoutId: fc.constantFrom('fr-fr-azerty-pc', 'fr-fr-azerty-mac'),
-		fingeringProfileId: fc.constant('ten-fingers-iso'),
-		soundEnabled: fc.boolean(),
-		theme: fc.constantFrom('system', 'light', 'dark'),
-		motion: fc.constantFrom('system', 'reduced', 'full'),
-		textScale: fc.constantFrom('md', 'lg', 'xl'),
-		textSpacing: fc.constantFrom('normal', 'wide', 'wider'),
-		showKeyboard: fc.boolean()
-	},
-	{ requiredKeys: [] }
-);
-
-const profileArb: fc.Arbitrary<Profile> = fc
-	.record({
-		id: fc.string({ minLength: 1, maxLength: 36 }),
-		name: nameArb,
-		now: timestampArb,
-		platform: fc.constantFrom('pc', 'mac'),
-		patch: settingsPatchArb,
-		progress: progressArb,
-		calibrated: fc.boolean()
-	})
-	.map(({ id, name, now, platform, patch, progress, calibrated }) => {
-		const profile = withProgress(
-			updateSettings(createProfile({ id, name, now, platform }), patch),
-			progress
-		);
-		return calibrated ? markCalibrated(profile) : profile;
-	});
+import {
+	companionArb,
+	ghostArb,
+	nameArb,
+	profileArb,
+	progressArb,
+	settingsPatchArb
+} from './test-arbitraries';
+import type { Profile } from './types';
 
 function deepFreeze<T>(value: T): T {
 	if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
@@ -91,15 +40,22 @@ describe('profile properties', () => {
 				settingsPatchArb,
 				progressArb,
 				nameArb,
-				(profile, patch, progress, name) => {
+				companionArb,
+				ghostArb,
+				(profile, patch, progress, name, companion, ghost) => {
 					const snapshot = structuredClone(profile);
 					deepFreeze(profile);
 					deepFreeze(patch);
 					deepFreeze(progress);
+					deepFreeze(companion);
+					deepFreeze(ghost);
 					renameProfile(profile, name);
 					updateSettings(profile, patch);
 					withProgress(profile, progress);
 					markCalibrated(profile);
+					withCompanion(profile, companion);
+					withLastGame(profile, name, name);
+					withGhost(profile, name, ghost);
 					expect(profile).toEqual(snapshot);
 				}
 			)
@@ -183,7 +139,10 @@ describe('profile properties', () => {
 			'createdAt',
 			'calibrated',
 			'settings',
-			'progress'
+			'progress',
+			'companion',
+			'lastGameByWorld',
+			'ghosts'
 		];
 		fc.assert(
 			fc.property(

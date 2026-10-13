@@ -3,5 +3,6 @@
 	"breakAfterMinutes": 12,
 	"maxWordLevel": 3,
 	"bankLoadTimeoutMs": 3000,
+	"ghostPaceFactor": 0.9,
 	"keyboardCheckCodes": ["KeyQ", "KeyW", "Semicolon"]
 }

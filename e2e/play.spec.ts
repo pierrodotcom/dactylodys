@@ -20,7 +20,9 @@ import {
 	loadMessages,
 	openPage,
 	readJson,
-	reloadPage
+	reloadPage,
+	storedRecord,
+	type StoredFormat
 } from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
@@ -241,9 +243,9 @@ async function reachMap(page: Page) {
 }
 
 /** Arrives on the map as a child whose profile was installed beforehand. */
-async function reachMapAs(page: Page, profile: Profile) {
+async function reachMapAs(page: Page, profile: Profile, format: StoredFormat = 'current') {
 	await openPlay(page);
-	await installProfile(page, profile);
+	await installProfile(page, profile, format);
 	await reloadPage(page);
 	await page.getByRole('button', { name: profile.name }).click();
 	await expect(heading(page, message('play_map_title'))).toBeVisible();
@@ -925,6 +927,31 @@ test.describe('play route', () => {
 		await expect(progressPicture(page, DEFAULT_GAME, 0)).toHaveCount(0);
 	});
 
+	test('finds the game chosen in a world again at the next visit', async ({ page }) => {
+		const profile = profileAfter(lastLessonOf(world).id);
+		const radio = (gameId: string) => page.getByRole('radio', { name: gameTitle(gameId) });
+		await reachMapAs(page, profile);
+		await openIntro(page, NEXT_FIRST);
+		await expect(radio(DEFAULT_GAME)).toBeChecked();
+
+		await radio(DEFAULT_GAME).focus();
+		await page.keyboard.press('ArrowDown');
+		await expect(radio(OTHER_GAME)).toBeChecked();
+		await expect
+			.poll(async () => (await storedRecord(page, profile))?.['lastGameByWorld'])
+			.toEqual({ [NEXT_WORLD.id]: OTHER_GAME });
+
+		await reloadPage(page);
+
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		await openIntro(page, NEXT_FIRST);
+		await expect(radio(OTHER_GAME)).toBeChecked();
+		await expect(radio(DEFAULT_GAME)).not.toBeChecked();
+		await button(page, message('play_intro_start')).click();
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
+	});
+
 	test('puts real words of the banks in the groups of a lesson that asks for words', async ({
 		page
 	}) => {
@@ -1022,14 +1049,16 @@ test.describe('play route', () => {
 		expect(errors.filter((text) => text.includes('phrase bank'))).toHaveLength(0);
 	});
 
-	test('opens a profile that only knows the first lessons and finds its stars', async ({
+	test('opens a profile stored by the first version, that only knows the first lessons, and finds its stars', async ({
 		page
 	}) => {
 		const failures: string[] = [];
 		page.on('pageerror', (error) => failures.push(error.message));
-		await reachMapAs(page, advancedProfile({ name: PLAYER_NAME, passed: LEGACY_LESSON_STARS }));
+		const legacy = advancedProfile({ name: PLAYER_NAME, passed: LEGACY_LESSON_STARS });
+		await reachMapAs(page, legacy, 'version-1');
 
 		await expect(page.getByRole('alert')).toHaveCount(0);
+		expect((await storedRecord(page, legacy))?.['schemaVersion']).toBe(1);
 		for (const [index, lesson] of allLessons.entries()) {
 			const earlier = allLessons[index - 1];
 			const open = index === 0 || (earlier !== undefined && earlier.id in LEGACY_LESSON_STARS);

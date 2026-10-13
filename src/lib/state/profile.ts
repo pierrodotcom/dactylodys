@@ -1,3 +1,5 @@
+import { parseGhostRun } from '../engine/ghost/ghost';
+import type { GhostRun } from '../engine/ghost/types';
 import { toGraphemes } from '../engine/graphemes';
 import { emptyProgress } from '../engine/progression/progress';
 import type {
@@ -14,6 +16,7 @@ import {
 } from '../keyboard/layout-ids';
 import type { LayoutPlatform } from '../keyboard/types';
 import type {
+	CompanionChoice,
 	MotionPreference,
 	Profile,
 	Settings,
@@ -30,6 +33,7 @@ const DEFAULT_FINGERING_PROFILE_ID: FingeringProfileId = 'ten-fingers-iso';
 const DEFAULT_SETTINGS_COMMON = {
 	fingeringProfileId: DEFAULT_FINGERING_PROFILE_ID,
 	soundEnabled: true,
+	voiceEnabled: true,
 	theme: 'system',
 	motion: 'system',
 	textScale: 'md',
@@ -43,7 +47,8 @@ const TEXT_SCALES = ['md', 'lg', 'xl'] as const satisfies readonly TextScale[];
 const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly TextSpacing[];
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
-const SCHEMA_VERSION = 1;
+/** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
+export const PROFILE_SCHEMA_VERSION = 2;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -57,12 +62,16 @@ const PROFILE_KEYS = [
 	'createdAt',
 	'calibrated',
 	'settings',
-	'progress'
-] as const;
+	'progress',
+	'companion',
+	'lastGameByWorld',
+	'ghosts'
+] as const satisfies readonly (keyof Profile)[];
 const SETTINGS_KEYS = [
 	'layoutId',
 	'fingeringProfileId',
 	'soundEnabled',
+	'voiceEnabled',
 	'theme',
 	'motion',
 	'textScale',
@@ -72,6 +81,12 @@ const SETTINGS_KEYS = [
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
 const CHAR_PROGRESS_KEYS = ['attempts', 'errors'] as const;
+const COMPANION_KEYS = [
+	'name',
+	'colorId',
+	'wornItemIds'
+] as const satisfies readonly (keyof CompanionChoice)[];
+const UNNAMED = '';
 
 export interface NewProfileInput {
 	readonly id: string;
@@ -110,13 +125,16 @@ export function createProfile(input: NewProfileInput): Profile {
 	if (input.id === '') throw new RangeError('id must not be empty');
 	if (!isTimestamp(input.now)) throw new RangeError('now must be a non-negative integer');
 	return {
-		schemaVersion: SCHEMA_VERSION,
+		schemaVersion: PROFILE_SCHEMA_VERSION,
 		id: input.id,
 		name: cleanName(input.name),
 		createdAt: input.now,
 		calibrated: false,
 		settings: defaultSettings(input.platform),
-		progress: emptyProgress()
+		progress: emptyProgress(),
+		companion: { name: UNNAMED, colorId: null, wornItemIds: [] },
+		lastGameByWorld: {},
+		ghosts: {}
 	};
 }
 
@@ -139,6 +157,23 @@ export function withProgress(profile: Profile, progress: ProgressState): Profile
 
 export function markCalibrated(profile: Profile): Profile {
 	return { ...profile, calibrated: true };
+}
+
+/** The name is cleaned like a nickname; a blank one means the companion is not named yet. */
+export function withCompanion(profile: Profile, companion: CompanionChoice): Profile {
+	const blank = companion.name.trim() === UNNAMED;
+	const name = blank ? UNNAMED : cleanName(companion.name);
+	return { ...profile, companion: parseCompanion({ ...companion, name }, 'companion') };
+}
+
+export function withLastGame(profile: Profile, worldId: string, gameId: string): Profile {
+	if (gameId === '') throw new RangeError('gameId must not be empty');
+	return { ...profile, lastGameByWorld: { ...profile.lastGameByWorld, [worldId]: gameId } };
+}
+
+/** Replaces the ghost of the lesson: only the last passed play is raced against. */
+export function withGhost(profile: Profile, lessonId: string, run: GhostRun): Profile {
+	return { ...profile, ghosts: { ...profile.ghosts, [lessonId]: parseGhostRun(run) } };
 }
 
 function fail(path: string, message: string): never {
@@ -179,6 +214,11 @@ function expectCount(value: unknown, path: string): number {
 	return value;
 }
 
+function expectIdentifier(value: unknown, path: string): string {
+	if (typeof value !== 'string' || value === '') fail(path, 'expected a non-empty string');
+	return value;
+}
+
 function parseSettings(data: unknown, path: string): Settings {
 	const record = expectRecord(data, path);
 	expectExactKeys(record, SETTINGS_KEYS, path);
@@ -190,6 +230,7 @@ function parseSettings(data: unknown, path: string): Settings {
 			`${path}.fingeringProfileId`
 		),
 		soundEnabled: expectBoolean(record['soundEnabled'], `${path}.soundEnabled`),
+		voiceEnabled: expectBoolean(record['voiceEnabled'], `${path}.voiceEnabled`),
 		theme: expectOneOf(record['theme'], THEMES, `${path}.theme`),
 		motion: expectOneOf(record['motion'], MOTIONS, `${path}.motion`),
 		textScale: expectOneOf(record['textScale'], TEXT_SCALES, `${path}.textScale`),
@@ -251,10 +292,40 @@ function parseProgress(data: unknown, path: string): ProgressState {
 	};
 }
 
+function parseCompanion(data: unknown, path: string): CompanionChoice {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, COMPANION_KEYS, path);
+	const name = record['name'];
+	if (typeof name !== 'string' || (name !== UNNAMED && normalizeName(name) !== name)) {
+		fail(
+			`${path}.name`,
+			`expected nothing or a trimmed NFC name of ${MIN_NAME_LENGTH} to ${MAX_NAME_LENGTH} characters`
+		);
+	}
+	const colorId = record['colorId'];
+	const rawItems = record['wornItemIds'];
+	if (!Array.isArray(rawItems)) fail(`${path}.wornItemIds`, 'expected an array');
+	const wornItemIds: string[] = [];
+	rawItems.forEach((raw: unknown, index) => {
+		const itemPath = `${path}.wornItemIds[${index}]`;
+		const itemId = expectIdentifier(raw, itemPath);
+		if (wornItemIds.includes(itemId)) fail(itemPath, `duplicate item "${itemId}"`);
+		wornItemIds.push(itemId);
+	});
+	return {
+		name,
+		colorId: colorId === null ? null : expectIdentifier(colorId, `${path}.colorId`),
+		wornItemIds
+	};
+}
+
+/** Strict, and only for the current version: stored data goes through `readProfile` instead. */
 export function parseProfile(data: unknown): Profile {
 	const root = expectRecord(data, 'profile');
 	expectExactKeys(root, PROFILE_KEYS, 'profile');
-	if (root['schemaVersion'] !== SCHEMA_VERSION) fail('profile.schemaVersion', 'expected 1');
+	if (root['schemaVersion'] !== PROFILE_SCHEMA_VERSION) {
+		fail('profile.schemaVersion', `expected ${PROFILE_SCHEMA_VERSION}`);
+	}
 	const id = root['id'];
 	if (typeof id !== 'string' || id === '') fail('profile.id', 'expected a non-empty string');
 	const name = root['name'];
@@ -268,12 +339,19 @@ export function parseProfile(data: unknown): Profile {
 	const createdAt = root['createdAt'];
 	if (!isTimestamp(createdAt)) fail('profile.createdAt', 'expected a timestamp');
 	return {
-		schemaVersion: SCHEMA_VERSION,
+		schemaVersion: PROFILE_SCHEMA_VERSION,
 		id,
 		name,
 		createdAt,
 		calibrated: expectBoolean(root['calibrated'], 'profile.calibrated'),
 		settings: parseSettings(root['settings'], 'profile.settings'),
-		progress: parseProgress(root['progress'], 'profile.progress')
+		progress: parseProgress(root['progress'], 'profile.progress'),
+		companion: parseCompanion(root['companion'], 'profile.companion'),
+		lastGameByWorld: parseRecordOf(
+			root['lastGameByWorld'],
+			'profile.lastGameByWorld',
+			expectIdentifier
+		),
+		ghosts: parseRecordOf(root['ghosts'], 'profile.ghosts', parseGhostRun)
 	};
 }

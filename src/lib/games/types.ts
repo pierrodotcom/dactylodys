@@ -1,4 +1,5 @@
 import type { SoundPlayer } from '../audio';
+import type { GhostRun, PacePoint } from '../engine/ghost/types';
 import type { Exercise } from '../engine/progression/types';
 import type { ErrorPolicy, SessionMetrics } from '../engine/types';
 import type {
@@ -18,6 +19,8 @@ export interface GameSettings {
 export interface GameOutcome {
 	/** Metrics combined over all the groups of the exercise. */
 	readonly metrics: SessionMetrics;
+	/** How far the exercise was at the end of each group, filled in by the shell shared by the games. */
+	readonly pace: readonly PacePoint[];
 }
 
 /**
@@ -33,6 +36,8 @@ export interface GameProps {
 	readonly settings: GameSettings;
 	/** Shared by the whole play route and already bound to the sound setting of the profile. */
 	readonly sounds: SoundPlayer;
+	/** An earlier play of the same lesson to race against; a game is free to ignore it. */
+	readonly ghost?: GhostRun;
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
 }

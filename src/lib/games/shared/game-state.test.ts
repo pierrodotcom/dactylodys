@@ -4,6 +4,7 @@ import {
 	completedCount,
 	createGame,
 	exerciseMetrics,
+	exerciseOutcome,
 	reduce,
 	type GameAction,
 	type GameState
@@ -254,6 +255,70 @@ describe('the last group', () => {
 		expect(reduce(complete, char('f')).state).toBe(complete);
 		expect(reduce(complete, { type: 'pause' }).state).toBe(complete);
 		expect(reduce(complete, { type: 'finish' }).state).toBe(complete);
+	});
+});
+
+describe('the outcome of an exercise', () => {
+	function playGroups(groups: readonly string[], typed: readonly string[]): GameState {
+		let state = createGame(groups, 'retry');
+		for (const text of typed) {
+			state = typeText(state, text);
+			state = play(state, [{ type: 'advance' }]);
+		}
+		return state;
+	}
+
+	it('carries the metrics of the whole exercise', () => {
+		const state = playGroups(['fjf', 'jf'], ['fjf', 'jf']);
+
+		expect(exerciseOutcome(state).metrics).toEqual(exerciseMetrics(state));
+	});
+
+	it('gives the pace as one point at the end of each group, cumulated', () => {
+		const state = playGroups(['fjf', 'jf'], ['fjf', 'jf']);
+
+		expect(exerciseOutcome(state).pace).toEqual([
+			{ correctChars: 3, activeMs: 200 },
+			{ correctChars: 5, activeMs: 300 }
+		]);
+	});
+
+	it('ends the pace on the correct keystrokes and the time of the metrics', () => {
+		const { metrics, pace } = exerciseOutcome(playGroups(['fj', 'jfj', 'f'], ['fxj', 'jfj', 'f']));
+
+		expect(pace).toHaveLength(3);
+		expect(pace[pace.length - 1]).toEqual({
+			correctChars: metrics.correctKeystrokes,
+			activeMs: metrics.elapsedMs
+		});
+	});
+
+	it('counts a mistake as time spent, not as a character', () => {
+		const state = playGroups(['fj'], ['fxj']);
+
+		expect(exerciseOutcome(state).pace).toEqual([{ correctChars: 2, activeMs: 200 }]);
+	});
+
+	it('leaves the time between two groups out of the pace', () => {
+		let state = typeText(createGame(['fj', 'jf'], 'retry'), 'fj');
+		clock += 60_000;
+		state = play(state, [{ type: 'advance' }]);
+		clock += 60_000;
+		state = play(typeText(state, 'jf'), [{ type: 'advance' }]);
+
+		expect(exerciseOutcome(state).pace).toEqual([
+			{ correctChars: 2, activeMs: 100 },
+			{ correctChars: 4, activeMs: 200 }
+		]);
+	});
+
+	it('gives no time to a group of a single character', () => {
+		const state = playGroups(['f', 'jf'], ['f', 'jf']);
+
+		expect(exerciseOutcome(state).pace).toEqual([
+			{ correctChars: 1, activeMs: 0 },
+			{ correctChars: 3, activeMs: 100 }
+		]);
 	});
 });
 

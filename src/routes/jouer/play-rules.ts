@@ -11,6 +11,11 @@ export interface PlayRules {
 	/** Longest wait for the banks when a game starts; after that the child plays without them. */
 	readonly bankLoadTimeoutMs: number;
 	/**
+	 * Pace of the ghost against the play it was recorded from: under 1 it is slower, so that a
+	 * child who types as last time finishes ahead. Never above 1.
+	 */
+	readonly ghostPaceFactor: number;
+	/**
 	 * Physical keys the child is asked to press to check the keyboard. They are chosen
 	 * where the layouts the game supports differ from other common ones (A, Z and M on AZERTY).
 	 */
@@ -37,6 +42,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 				'breakAfterMinutes',
 				'maxWordLevel',
 				'bankLoadTimeoutMs',
+				'ghostPaceFactor',
 				'keyboardCheckCodes'
 			].includes(name)
 		) {
@@ -64,6 +70,16 @@ export function parsePlayRules(data: unknown): PlayRules {
 		fail('playRules.bankLoadTimeoutMs', 'expected a positive number');
 	}
 
+	const ghostPaceFactor = data['ghostPaceFactor'];
+	if (
+		typeof ghostPaceFactor !== 'number' ||
+		!Number.isFinite(ghostPaceFactor) ||
+		ghostPaceFactor <= 0 ||
+		ghostPaceFactor > 1
+	) {
+		fail('playRules.ghostPaceFactor', 'expected a number above 0 and up to 1');
+	}
+
 	const rawCodes = data['keyboardCheckCodes'];
 	if (!Array.isArray(rawCodes) || rawCodes.length === 0) {
 		fail('playRules.keyboardCheckCodes', 'expected a non-empty array');
@@ -76,7 +92,13 @@ export function parsePlayRules(data: unknown): PlayRules {
 		codes.push(code);
 	});
 
-	return { breakAfterMinutes: minutes, maxWordLevel, bankLoadTimeoutMs, keyboardCheckCodes: codes };
+	return {
+		breakAfterMinutes: minutes,
+		maxWordLevel,
+		bankLoadTimeoutMs,
+		ghostPaceFactor,
+		keyboardCheckCodes: codes
+	};
 }
 
 export const PLAY_RULES: PlayRules = parsePlayRules(rulesData);
