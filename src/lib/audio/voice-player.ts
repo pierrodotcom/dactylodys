@@ -1,5 +1,13 @@
 import { VOICE_KEY_PATTERN, voiceKey } from './voice-key';
 import type { VoiceClip, VoiceManifest, VoicePlayer } from './voice-types';
+import {
+	expectLocale,
+	expectPositive,
+	expectRecord,
+	expectText,
+	fail,
+	refuseUnknownKeys
+} from './voice-validation';
 
 type PlaybackEvent = 'ended' | 'error';
 type SpeakResult = Awaited<ReturnType<VoicePlayer['speak']>>;
@@ -32,38 +40,11 @@ export type VoiceFetcher = (url: string) => Promise<VoiceResponseLike>;
 
 export const VOICE_MANIFEST_FILE = 'manifest.json';
 
-const LOCALE_PATTERN = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 /** A plain file name: a clip can only be a file served next to its manifest, never another address. */
 const FILE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*\.[A-Za-z0-9]+$/;
 const MANIFEST_KEYS = ['schemaVersion', 'locale', 'voice', 'clips'];
 const VOICE_KEYS = ['name', 'source', 'license'] as const;
 const CLIP_KEYS = ['file', 'durationMs'];
-
-function fail(path: string, message: string): never {
-	throw new Error(`${path}: ${message}`);
-}
-
-function expectRecord(value: unknown, path: string): Record<string, unknown> {
-	if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-		fail(path, 'expected an object');
-	}
-	return value as Record<string, unknown>;
-}
-
-function refuseUnknownKeys(
-	record: Record<string, unknown>,
-	known: readonly string[],
-	path: string
-) {
-	for (const name of Object.keys(record)) {
-		if (!known.includes(name)) fail(`${path}.${name}`, 'unknown property');
-	}
-}
-
-function expectText(value: unknown, path: string): string {
-	if (typeof value !== 'string' || value.trim() === '') fail(path, 'expected a non-empty string');
-	return value;
-}
 
 function parseClip(value: unknown, path: string): VoiceClip {
 	const record = expectRecord(value, path);
@@ -72,11 +53,7 @@ function parseClip(value: unknown, path: string): VoiceClip {
 	if (typeof file !== 'string' || !FILE_PATTERN.test(file)) {
 		fail(`${path}.file`, 'expected a plain file name, without any folder or address');
 	}
-	const durationMs = record['durationMs'];
-	if (typeof durationMs !== 'number' || !Number.isFinite(durationMs) || durationMs <= 0) {
-		fail(`${path}.durationMs`, 'expected a positive number');
-	}
-	return { file, durationMs };
+	return { file, durationMs: expectPositive(record['durationMs'], `${path}.durationMs`) };
 }
 
 export function parseVoiceManifest(data: unknown): VoiceManifest {
@@ -84,10 +61,7 @@ export function parseVoiceManifest(data: unknown): VoiceManifest {
 	refuseUnknownKeys(root, MANIFEST_KEYS, 'voiceManifest');
 	if (root['schemaVersion'] !== 1) fail('voiceManifest.schemaVersion', 'expected 1');
 
-	const locale = root['locale'];
-	if (typeof locale !== 'string' || !LOCALE_PATTERN.test(locale)) {
-		fail('voiceManifest.locale', 'expected a language tag such as "fr"');
-	}
+	const locale = expectLocale(root['locale'], 'voiceManifest.locale');
 
 	const voiceRecord = expectRecord(root['voice'], 'voiceManifest.voice');
 	refuseUnknownKeys(voiceRecord, VOICE_KEYS, 'voiceManifest.voice');

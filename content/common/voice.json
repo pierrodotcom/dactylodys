@@ -1,0 +1,12 @@
+{
+	"schemaVersion": 1,
+	"sampleRate": 22050,
+	"maxTakeSeconds": 60,
+	"silenceFrameMs": 20,
+	"silenceRatio": 0.05,
+	"silencePaddingMs": 150,
+	"minPeak": 0.02,
+	"targetPeak": 0.9,
+	"fadeMs": 10,
+	"mp3BitrateKbps": 64
+}
