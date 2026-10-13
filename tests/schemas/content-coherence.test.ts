@@ -78,6 +78,30 @@ describe('progression and banks together', () => {
 		}
 	);
 
+	it.each(
+		entries
+			.filter(({ lesson }) => lesson.mix.words > 0)
+			.map(({ world, lesson }) => [lesson.id, world.themeId] as const)
+	)(
+		`%s gives at least one word in every exercise over ${SEED_COUNT} seeds`,
+		(lessonId, themeId) => {
+			const usable = usableWordTexts(lessonId);
+			for (let seed = 1; seed <= SEED_COUNT; seed++) {
+				const exercise = generateExercise(progression, lessonId, seededRng(seed), {
+					words,
+					phrases,
+					progress: emptyProgress(),
+					themeId,
+					maxLevel: PLAY_RULES.maxWordLevel
+				});
+				expect(
+					exercise.groups.some((group) => usable.has(group)),
+					`${lessonId} seed ${seed}: ${exercise.groups.join(' | ')}`
+				).toBe(true);
+			}
+		}
+	);
+
 	it('offers only games that exist in the registry', () => {
 		for (const world of progression.worlds) {
 			for (const gameId of world.gameIds) {

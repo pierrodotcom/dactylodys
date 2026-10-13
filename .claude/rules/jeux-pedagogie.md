@@ -71,7 +71,7 @@ Ajouts dans `engine/progression/types.ts` : `ExerciseMix`, `LessonUnlock`, `Word
 
 | Fonction | Module | Rôle |
 |---|---|---|
-| `generateExercise(progression, lessonId, rng, context?)` | `engine/progression/exercise` | Mélange suites, mots et phrases selon `mix` ; s'arrête à `targetLength` ou `groupCount` |
+| `generateExercise(progression, lessonId, rng, context?)` | `engine/progression/exercise` | Mélange suites, mots et phrases selon `mix` ; s'arrête à `targetLength` ou `groupCount` ; garantit le minimum de frappes par caractère nouveau et au moins un mot quand `mix.words > 0` |
 | `parseWordBank(data)` / `parsePhraseBank(data)` | `engine/progression/banks` | Valident les banques |
 | `usableWords(bank, learned, options?)` / `usablePhrases(bank, learned, options?)` | idem | Entrées écrites uniquement avec les caractères connus, filtrées par niveau |
 | `learnedChars(progression, lessonId)` | `engine/progression/definition` | Inclut les capitales des lettres non accentuées dès qu'une leçon porte `unlocks: ["uppercase"]` |
