@@ -52,3 +52,5 @@ Niveau 1 : mots très simples et phrases courtes ; niveau 3 : phrases plus longu
 ## Page de relecture
 
 `node tools/content/build-review-page.js` régénère `docs/relecture/relecture.html`, une page autonome (aucune ressource externe) où une personne répond Oui ou Non à chaque mot et à chaque phrase, puis enregistre ses réponses dans un fichier JSON à déposer dans `docs/relecture/`.
+
+`node tools/content/build-review-page.js --artifact <fichier>` produit la variante à publier comme artefact claude.ai (utilisable sur téléphone) : les réponses vont dans la base de l'artefact, collections `words` et `phrases`, un document par entrée répondue (`{ text, keep, note }`). L'identifiant d'un document suit l'ordre alphabétique des entrées ; c'est le champ `text` qui fait foi.
