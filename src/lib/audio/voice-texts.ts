@@ -32,6 +32,14 @@ export function parseVoiceOrigin(origin: string): VoiceOrigin | null {
 }
 
 /**
+ * The language of the content, as in `content/<language>/` and in the identifiers
+ * `<language>.progression.<slug>`: the voice of a language is published in `static/voice/<language>/`.
+ */
+export function voiceLocale(progression: ProgressionDefinition): string {
+	return progression.id.slice(0, progression.id.indexOf('.'));
+}
+
+/**
  * Every text the voice has to say, once each, in the order a child meets them. A story world that
  * the progression does not have comes last rather than being forgotten.
  */

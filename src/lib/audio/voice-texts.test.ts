@@ -4,7 +4,7 @@ import { parseProgression } from '../engine/progression/definition';
 import type { ProgressionDefinition } from '../engine/progression/types';
 import type { StoryDefinition } from '../engine/story/types';
 import { voiceKey } from './voice-key';
-import { parseVoiceOrigin, voiceOrigin, voiceTexts } from './voice-texts';
+import { parseVoiceOrigin, voiceLocale, voiceOrigin, voiceTexts } from './voice-texts';
 
 const shipped = parseProgression(
 	JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
@@ -165,5 +165,12 @@ describe('voice origin', () => {
 		expect(parseVoiceOrigin('fr.lesson.a')).toBeNull();
 		expect(parseVoiceOrigin('fr.lesson.a#song')).toBeNull();
 		expect(parseVoiceOrigin('#intro')).toBeNull();
+	});
+});
+
+describe('voiceLocale', () => {
+	it('is the language of the content, the folder its voice is published in', () => {
+		expect(shipped.locale).toBe('fr-FR');
+		expect(voiceLocale(shipped)).toBe('fr');
 	});
 });
