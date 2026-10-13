@@ -10,14 +10,13 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
-| J3 Pédagogie complète | Code livré, relecture humaine des mots et phrases à faire | 5 mondes, 23 leçons, 929 mots, 150 phrases, 3 mini-jeux |
+| J3 Pédagogie complète | Terminé côté contenu ; test avec un enfant à faire | 5 mondes, 23 leçons, 926 mots et 150 phrases relus par le porteur, 3 mini-jeux |
 | J4 Aventure | — | |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Relecture humaine** des mots et des phrases, au choix : sur téléphone ou ordinateur avec la page en ligne privée https://claude.ai/artifact/1eCjoEFs59NerpapFyVVrX (réponses enregistrées dans la base de l'artefact, collections `words` et `phrases`, un document par entrée répondue : `{ text, keep, note }`) ; ou hors ligne avec `docs/relecture/relecture.html` (réponses à enregistrer dans un fichier à déposer dans `docs/relecture/`). Reste à écrire : le script qui applique ces réponses aux banques (`review: "human"` pour les Oui, retrait des Non, remarques listées). Les deux pages sont générées par `tools/content/build-review-page.js` et doivent être régénérées si les banques changent.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
 4. Dette de J3 : le moteur ne favorise les nouveaux caractères que dans les mots, donc le point et les signes de ponctuation sont peu pratiqués dans les phrases ; les textes d'introduction disent « le doigt de la bague » alors que l'aide à l'écran dit « annulaire » ; la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le parcours ne reprend pas encore le dernier jeu choisi d'une visite à l'autre.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
@@ -91,3 +90,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-12** — ADR-018 et 019 acceptés. J3 : contrats, 3 lots parallèles (moteur et progression, banques, mini-jeux) puis un lot de branchement. Audits axe limités à Chromium. Leçons L-035 à L-039, ADR-020.
 - **2026-10-12** — J3 fusionné et en ligne (PR 9). Page de relecture Oui/Non générée par `tools/content/build-review-page.js`.
 - **2026-10-13** — Langue sans `localStorage` (travail d'une session parallèle, reporté sur `main`). Page de relecture publiée en ligne pour le téléphone, réponses dans sa base.
+- **2026-10-13** — Relecture humaine faite par le porteur : « toast », « lis » et « divan » retirés, tout le reste validé (`review: "human"`). L'enregistrement en ligne de la page de relecture n'a pas fonctionné sur son téléphone (cause inconnue) ; les refus ont été donnés dans la conversation.

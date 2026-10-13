@@ -1,17 +1,32 @@
 import { join } from 'node:path';
-import { CONFIG, DATA_DIR, REPO_ROOT, readTable, writeBankJson, writeText } from './lib/common.js';
+import {
+	CONFIG,
+	DATA_DIR,
+	REPO_ROOT,
+	readLines,
+	readTable,
+	writeBankJson,
+	writeText
+} from './lib/common.js';
 
 const THEME_TITLES = new Map(CONFIG.themes.map((theme) => [theme.id, theme.title]));
 const NO_THEME = 'Sans thème particulier';
 
 function loadPhrases() {
+	const validated = new Set(readLines(join(DATA_DIR, 'validated-phrases.txt')));
 	return readTable(join(DATA_DIR, 'phrases.fr.txt')).map(([level, themes, text], i) => {
 		const ids = themes === '' ? [] : themes.split(',').map((id) => id.trim());
 		for (const id of ids) {
 			if (!THEME_TITLES.has(id))
 				throw new Error(`phrases.fr.txt line ${i + 1}: unknown theme "${id}"`);
 		}
-		return { text: text.normalize('NFC'), themes: ids, level: Number(level), review: 'agent' };
+		const normalized = text.normalize('NFC');
+		return {
+			text: normalized,
+			themes: ids,
+			level: Number(level),
+			review: validated.has(normalized) ? 'human' : 'agent'
+		};
 	});
 }
 
