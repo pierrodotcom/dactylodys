@@ -78,3 +78,24 @@ Ajouts dans `engine/progression/types.ts` : `ExerciseMix`, `LessonUnlock`, `Word
 | `GAMES` / `findGame(id)` | `games/registry` | Liste des mini-jeux |
 
 Données : `content/<langue>/words/<slug>.json`, `content/<langue>/phrases/<slug>.json`. Un mot ou une phrase `review: "agent"` est jouable pendant le développement ; seuls les `"human"` le seront à partir de la version 1.0.
+
+## Contrats figés (J4, lot 0)
+
+Le contrat réel d'un mini-jeu est un composant Svelte `Component<GameProps>` (il n'existe pas de type `GameModule`).
+
+Règle de progression `newCharMinCount` (`engine/progression/types.ts`, ADR-024) : chaque caractère nouveau d'une leçon est demandé au moins ce nombre de fois, par des suites d'échauffement en tête d'exercice ; 0 désactive. Le parseur refuse une progression où ce minimum dépasse `groupCount`.
+
+Profil version 2 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `migrateProfile(data)` / `readProfile(data)` | `state/migrations` | Chaîne de migrations par version ; tout nouveau champ de profil = une étape de plus, avec ses valeurs par défaut écrites en dur dans l'étape |
+| `ProfileStore.listUnreadable()` | `state/stores` | Enregistrements ni migrables ni lisibles : jamais supprimés, jamais écrasés (`save` et `remove` les refusent) |
+| `withCompanion` / `withLastGame` / `withGhost` | `state/profile` | Mises à jour sans mutation |
+| `toGhostRun(points, recordedAt)` / `ghostProgress(run, elapsedMs, paceFactor)` / `parseGhostRun(data)` | `engine/ghost/ghost` | Allure d'une partie ; part de l'exercice accomplie par le fantôme, dans [0, 1] |
+| `GameOutcome.pace` / `GameProps.ghost?` | `games/types` | Allure rendue par tout jeu (un point par groupe) ; fantôme facultatif reçu par un jeu |
+| `isLessonPassed(rules, progress, lessonId)` | `engine/progression/progress` | Seule définition de « leçon réussie » ; ne pas la recopier |
+
+Types seuls, à implémenter par les lots suivants sans les modifier : `engine/rewards/types.ts` (`RewardCondition`, `RewardDefinition`, `RewardCatalogue`, `CompanionChoice`, `CompanionLook`), `engine/story/types.ts` (`StoryDefinition`), `audio/voice-types.ts` (`VoiceManifest`, `VoicePlayer`). Les signatures attendues sont en tête de chaque fichier. Aucune condition de récompense ne porte sur le temps, les jours, le nombre de parties ou la vitesse.
+
+À savoir : le temps « actif » d'une partie est la somme des durées de groupes, de la première à la dernière frappe de chaque groupe (le fantôme avance sur cette horloge) ; `ProgressState.chars` est cumulé à vie, sans fenêtre récente ; `voiceKey` doit être synchrone.
