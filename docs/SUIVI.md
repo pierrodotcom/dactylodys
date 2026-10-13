@@ -17,7 +17,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 ## Prochaines actions
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
-2. **Voix** : voix humaine (ADR-028). Lot V1 en cours (`feat/j4-voix-enregistrement`) : page d'enregistrement `/dev/voix`, lecteur de voix, bouton « Écouter », outil d'import. Ensuite le porteur (ou un proche, d'accord pour une publication sous CC BY-SA 4.0) enregistre les consignes ; les textes du récit s'y ajouteront quand ils seront écrits.
+2. **Voix** : voix humaine (ADR-028). Outillage livré (PR 29) : page `/dev/voix`, lecteur, bouton « Écouter » (pas encore branché dans `/jouer`), outil `tools/voice/import.js` (mode d'emploi dans `tools/voice/README.md`). **Attendu du porteur** : enregistrer depuis son ordinateur les 24 consignes de leçon sur la page en ligne, en commençant par deux ou trois pour juger du résultat, puis déposer `voix-fr__<date>.zip` dans `docs/voix/`. Le chef d'orchestre lance alors l'import et ouvre la PR. Jamais essayé avec un vrai micro ; `ffmpeg` absent du poste (fichiers WAV tant qu'il n'est pas installé). Les textes du récit s'y ajouteront quand ils seront écrits.
 3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
@@ -110,3 +110,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — PR 23, 24 et 25 fusionnées. Décisions du porteur : récompenses acquises pour toujours, carte aux flèches, écran « l'histoire jusqu'ici » (ADR-027). Téléchargement du moteur Piper et de la voix `fr_FR-mls-medium` autorisé pour des échantillons, hors du dépôt.
 - **2026-10-13** — PR 26 fusionnée. Échantillons de voix envoyés au porteur. Fin de session : reprendre par le retour du test avec un enfant, puis les lots R2, S2, V, F et l'assemblage (une session par lot).
 - **2026-10-13** — PR 27 fusionnée. Voix de synthèse écartée après écoute, voix humaine retenue (ADR-028) ; lot V1 lancé.
+- **2026-10-13** — PR 28 et 29 fusionnées : outillage de la voix humaine en ligne (lot V1).
