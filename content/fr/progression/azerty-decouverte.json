@@ -458,7 +458,7 @@
 					"id": "fr.lesson.trema",
 					"title": "Le camion aux deux yeux",
 					"intro": "Tiens Maj, tape la touche morte à droite de P, puis la voyelle : elle apparaît avec deux points.",
-					"newChars": ["ë", "ï", "ü"],
+					"newChars": ["ë", "ï"],
 					"words": [],
 					"mix": {
 						"drills": 1,

@@ -20,8 +20,6 @@ const PHRASES_FILE = 'content/fr/phrases/base.json';
 const MIN_USABLE_WORDS = 8;
 const MIN_USABLE_PHRASES = 6;
 const MIN_PHRASES_PER_NEW_CHAR = 6;
-/** No common French word has it: practised in letter suites only, until the lesson is decided. */
-const CHARS_WITHOUT_TEXT = ['ü'];
 const SEED_COUNT = 20;
 
 function readJson(path: string): unknown {
@@ -66,7 +64,7 @@ describe('progression and banks together', () => {
 		.flatMap(({ lesson }) => {
 			const inWords = new Set([...usableWordTexts(lesson.id)].flatMap((text) => toGraphemes(text)));
 			return lesson.newChars
-				.filter((char) => !inWords.has(char) && !CHARS_WITHOUT_TEXT.includes(char))
+				.filter((char) => !inWords.has(char))
 				.map((char) => [lesson.id, char] as const);
 		});
 
