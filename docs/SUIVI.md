@@ -9,7 +9,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
-| J2 Tranche jouable | Code livré, test avec un enfant à faire | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
+| J2 Tranche jouable | Premier test avec un enfant fait le 2026-10-13 (retours ci-dessous) | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
 | J3 Pédagogie complète | Mots et phrases relus par le porteur ; test avec un enfant à faire | 5 mondes, 24 leçons, 926 mots et 216 phrases relus par le porteur, 3 mini-jeux |
 | J4 Aventure | En cours : lot 0 (socle) | Cadrage validé le 2026-10-13 (ADR-022) |
 | J5 Version 1.0 | — | |
@@ -22,7 +22,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
-6. **J4 Aventure** (ADR-022, acceptée) :
+6. **Retours du test** (proposé au porteur le 2026-10-14, à valider) : exercices plus courts, animations plus longues et plus variées, mains guides animées, consignes montrées et dites plutôt qu'écrites. À faire avant la suite de J4, qui en dépend (le récit ne doit pas reposer sur la lecture).
+7. **J4 Aventure** (ADR-022, acceptée) :
    - **Lot 0, socle** : fait — minimum de 5 frappes par nouveau signe et retrait de « ü » (PR 16, ADR-024) ; profil version 2 avec migration, profils illisibles conservés et listés, jeu choisi retrouvé à la visite suivante, allure de chaque partie réussie enregistrée, types des récompenses, du récit et de la voix (PR 17). Contrats dans `.claude/rules/jeux-pedagogie.md`.
    - **Lot 0c** : fait (PR 19, ADR-025) — seules les parties récentes d'une touche comptent, jusqu'à 30 frappes ; profil version 3 ; leçon des circonflexes en deux (« ê â », puis « î ô û » : « Le casque du copilote ») ; `isLessonPassed` exporté. 21 phrases ajoutées pour les circonflexes et les trémas.
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
@@ -30,6 +31,13 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - **Après le retour du test avec un enfant** : R2 catalogue des récompenses, écrans du compagnon, récompenses acquises pour toujours (profil version 4), quête « le compagnon a besoin d'aide » sur une touche redevenue fragile · S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V2 branchement du bouton « Écouter » dans le parcours et enregistrement des textes définitifs · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
    - **Puis assemblage** dans le parcours `/jouer`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
+
+## Retours du premier test avec un enfant (2026-10-13, observés par le porteur)
+
+- **Trop long** : l'enfant a dit « c'est long » au début de la 5ᵉ leçon des dinosaures. Mesure : un exercice passe d'environ 25 caractères (leçons 1 à 4) à 61 (leçon 5), 69 (leçons 7 à 11) puis plus de 100 (leçons 12 et suivantes), soit 4 à 7 minutes pour un débutant à 15-20 caractères par minute, loin des 2 à 4 minutes visées.
+- **Animations** : amusantes sur les deux premiers exercices, vite redondantes ; trop courtes et trop rapides pour être vues, surtout dans le monde de la cuisine. À diversifier, à allonger, et à renouveler plus souvent (thème ou variantes).
+- **Consignes jamais lues** : l'enfant ne lit pas les textes d'introduction. Conséquence directe : il n'a pas placé les bons doigts.
+- **Proposition du porteur** : afficher une main dessinée, un peu transparente, sur le clavier à l'écran, qui déplace le bon doigt vers la touche demandée puis revient en place, pour les premiers exercices.
 
 ## Grille d'observation pour le test J2
 
@@ -111,3 +119,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — PR 26 fusionnée. Échantillons de voix envoyés au porteur. Fin de session : reprendre par le retour du test avec un enfant, puis les lots R2, S2, V, F et l'assemblage (une session par lot).
 - **2026-10-13** — PR 27 fusionnée. Voix de synthèse écartée après écoute, voix humaine retenue (ADR-028) ; lot V1 lancé.
 - **2026-10-13** — PR 28 et 29 fusionnées : outillage de la voix humaine en ligne (lot V1).
+- **2026-10-14** — Retours du premier test avec un enfant consignés ; lot « retours du test » proposé au porteur.
