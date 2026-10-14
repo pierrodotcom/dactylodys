@@ -17,11 +17,16 @@
 		variant: number;
 		/** The big egg moves when it hatches; the small ones of the row only change shape. */
 		big?: boolean;
+		/** Calm motion: the baby fades in and the cap is already off. */
+		still?: boolean;
 	}
 
-	let { stage, hatched, variant, big = false }: Props = $props();
+	const REWARD_VARIANTS = 4;
+
+	let { stage, hatched, variant, big = false, still = false }: Props = $props();
 
 	const color = $derived(Math.abs(variant) % BABY_VARIANTS);
+	const rewardVariant = $derived(Math.abs(variant) % REWARD_VARIANTS);
 </script>
 
 <svg
@@ -31,10 +36,15 @@
 	aria-hidden="true"
 	data-hatched={hatched || undefined}
 	data-big={big || undefined}
+	data-still={still || undefined}
 	data-color={color}
 >
 	{#if hatched}
-		<g class="baby">
+		<g
+			class="baby"
+			data-reward={big || undefined}
+			data-reward-variant={big ? rewardVariant : undefined}
+		>
 			<ellipse class="body line" cx="60" cy="100" rx="32" ry="26" />
 			<g transform="translate(0 -8)">
 				<path class="plate line" d={BABY_PLATES[0]} />
@@ -147,33 +157,12 @@
 		translate: -14% -18%;
 	}
 
-	[data-big] .baby {
-		animation-name: emerge;
-		animation-duration: var(--dd-duration-slow);
-		animation-timing-function: var(--dd-easing-enter);
-	}
-
-	[data-big] .cap {
+	[data-big]:not([data-still]) .cap {
 		animation-name: lift;
-		animation-duration: var(--dd-duration-slow);
+		animation-duration: var(--dd-duration-reward);
+		animation-delay: var(--dd-duration-reward-delay);
 		animation-timing-function: var(--dd-easing-enter);
-	}
-
-	@keyframes emerge {
-		0% {
-			translate: 0 30%;
-			scale: 0.7;
-		}
-
-		70% {
-			translate: 0 -6%;
-			scale: 1.05;
-		}
-
-		100% {
-			translate: 0 0;
-			scale: 1;
-		}
+		animation-fill-mode: backwards;
 	}
 
 	@keyframes lift {

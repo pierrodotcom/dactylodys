@@ -85,6 +85,10 @@ Le contrat réel d'un mini-jeu est un composant Svelte `Component<GameProps>` (i
 
 Règle de progression `newCharMinCount` (`engine/progression/types.ts`, ADR-024) : chaque caractère nouveau d'une leçon est demandé au moins ce nombre de fois, par des suites d'échauffement en tête d'exercice ; 0 désactive. Le parseur refuse une progression où ce minimum dépasse `groupCount`.
 
+Règle de progression `lengthSlack` (ADR-030, facultative) : nombre de caractères dont un exercice peut dépasser `targetLength` ; un mot ou une phrase qui irait au-delà est remplacé par une suite (jamais le mot dû par `mix.words`). Les leçons 5 et suivantes visent 35 caractères (`targetLength`), les quatre premières 24.
+
+Récompenses d'un jeu (ADR-030) : un élément qui apparaît ou change quand un groupe est fini porte `data-reward` et `data-reward-variant` (0 à 3, `groupIndex % 4`, jamais de hasard) ; `app.css` fournit durée (`--dd-duration-reward`), délai après la dernière frappe (`--dd-duration-reward-delay`) et variante calme (fondu, sans mouvement) quand `data-still` est posé sur l'élément ou un ancêtre. Une touche ne passe la récompense qu'une fois `settled` (délai + durée écoulés, action `settle` du réducteur). `gameForLesson` (`routes/jouer/game-choice`) propose à chaque nouvelle leçon le jeu suivant du monde ; une leçon déjà jouée garde le jeu du monde.
+
 Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
 
 | Fonction | Module | Rôle |

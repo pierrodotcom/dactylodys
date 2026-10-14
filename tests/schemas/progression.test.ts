@@ -137,7 +137,8 @@ describe('azerty-decouverte', () => {
 			weakCharBoost: 2,
 			themeBoost: 2,
 			newCharMinCount: 5,
-			recentCharWindow: 30
+			recentCharWindow: 30,
+			lengthSlack: 12
 		});
 	});
 
@@ -145,7 +146,7 @@ describe('azerty-decouverte', () => {
 		expect(
 			progression.worlds.map((world) => [world.id, world.themeId, world.gameIds] as const)
 		).toEqual([
-			['fr.world.dinosaures', 'dinos', ['hatching']],
+			['fr.world.dinosaures', 'dinos', ['hatching', 'recipe']],
 			['fr.world.cuisine', 'cuisine', ['recipe', 'hatching']],
 			['fr.world.animaux', 'animaux', ['hatching', 'recipe']],
 			['fr.world.espace', 'espace', ['rocket', 'recipe', 'hatching']],
@@ -223,10 +224,9 @@ describe('azerty-decouverte', () => {
 		expect(unlocking[0]?.newChars).toEqual([]);
 	});
 
-	it('keeps the first four lessons short and the later ones longer', () => {
+	it('keeps every exercise short: 24 characters at first, then about 35 (ADR-029)', () => {
 		expect(lessons.slice(0, 4).map((lesson) => lesson.targetLength)).toEqual([24, 24, 24, 24]);
-		expect(lessons.slice(4, 11).every((lesson) => lesson.targetLength === 60)).toBe(true);
-		expect(lessons.slice(11).every((lesson) => lesson.targetLength === 90)).toBe(true);
+		expect(lessons.slice(4).every((lesson) => lesson.targetLength === 35)).toBe(true);
 	});
 
 	it('mixes suites only until a word is possible, then mostly words, then mostly phrases', () => {

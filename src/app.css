@@ -80,11 +80,109 @@ p {
 	--dd-typing-word-spacing-current: var(--dd-typing-word-spacing-wider);
 }
 
+/*
+ * Rewards: what a game draws when a group is typed. It starts a moment after the last key, while
+ * the child's eyes come back to the screen, and it lasts long enough to be seen. A game marks the
+ * element with data-reward and picks a variant (0 to 3) in a fixed order, never at random.
+ * Calm motion (data-still on the element or on an ancestor) keeps the fade and takes the
+ * movement out: reduced motion shows less, not nothing.
+ */
+@keyframes dd-reward-0 {
+	0% {
+		opacity: 0;
+		translate: 0 var(--dd-space-xl);
+		scale: 0.8;
+	}
+
+	100% {
+		opacity: 100%;
+		translate: 0 0;
+		scale: 1;
+	}
+}
+
+@keyframes dd-reward-1 {
+	0% {
+		opacity: 0;
+		translate: 0 calc(var(--dd-space-xl) * -1);
+	}
+
+	100% {
+		opacity: 100%;
+		translate: 0 0;
+	}
+}
+
+@keyframes dd-reward-2 {
+	0% {
+		opacity: 0;
+		translate: calc(var(--dd-space-xl) * -1) 0;
+		rotate: -8deg;
+	}
+
+	100% {
+		opacity: 100%;
+		translate: 0 0;
+		rotate: 0deg;
+	}
+}
+
+@keyframes dd-reward-3 {
+	0% {
+		opacity: 0;
+		scale: 0.4;
+		rotate: 12deg;
+	}
+
+	100% {
+		opacity: 100%;
+		scale: 1;
+		rotate: 0deg;
+	}
+}
+
+@keyframes dd-reward-calm {
+	0% {
+		opacity: 0;
+	}
+
+	100% {
+		opacity: 100%;
+	}
+}
+
+[data-reward] {
+	transform-box: fill-box;
+	transform-origin: 50% 50%;
+	animation-name: dd-reward-0;
+	animation-duration: var(--dd-duration-reward);
+	animation-delay: var(--dd-duration-reward-delay);
+	animation-timing-function: var(--dd-easing-enter);
+	animation-fill-mode: backwards;
+}
+
+[data-reward-variant='1'] {
+	animation-name: dd-reward-1;
+}
+
+[data-reward-variant='2'] {
+	animation-name: dd-reward-2;
+}
+
+[data-reward-variant='3'] {
+	animation-name: dd-reward-3;
+}
+
+[data-still] [data-reward],
+[data-reward][data-still] {
+	animation-name: dd-reward-calm;
+}
+
 /* data-motion="full" wins over the system setting, data-motion="reduced" over a system that allows motion. */
 @media (prefers-reduced-motion: reduce) {
-	:root:not([data-motion='full']) *,
-	:root:not([data-motion='full']) *::before,
-	:root:not([data-motion='full']) *::after {
+	:root:not([data-motion='full']) *:not([data-reward]),
+	:root:not([data-motion='full']) *:not([data-reward])::before,
+	:root:not([data-motion='full']) *:not([data-reward])::after {
 		animation-duration: var(--dd-duration-instant) !important;
 		animation-delay: var(--dd-duration-instant) !important;
 		animation-iteration-count: 1 !important;
@@ -94,9 +192,9 @@ p {
 	}
 }
 
-:root[data-motion='reduced'] *,
-:root[data-motion='reduced'] *::before,
-:root[data-motion='reduced'] *::after {
+:root[data-motion='reduced'] *:not([data-reward]),
+:root[data-motion='reduced'] *:not([data-reward])::before,
+:root[data-motion='reduced'] *:not([data-reward])::after {
 	animation-duration: var(--dd-duration-instant) !important;
 	animation-delay: var(--dd-duration-instant) !important;
 	animation-iteration-count: 1 !important;

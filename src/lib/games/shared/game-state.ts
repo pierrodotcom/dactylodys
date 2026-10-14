@@ -28,6 +28,11 @@ export interface GameState {
 	/** Metrics of the groups already typed, in order. */
 	readonly finished: readonly SessionMetrics[];
 	readonly phase: GamePhase;
+	/**
+	 * The reward has been on screen long enough to be seen: from then on a key moves the game
+	 * to the next group. Before that the keys of a child still typing out of habit change nothing.
+	 */
+	readonly settled: boolean;
 	readonly paused: boolean;
 	/** Index in the current group of the character that was mistyped, `null` when there is none. */
 	readonly errorIndex: number | null;
@@ -40,6 +45,8 @@ export type GameAction =
 	| { readonly type: 'keystroke'; readonly keystroke: NormalizedKeystroke }
 	/** The time given to the reward is over. */
 	| { readonly type: 'advance' }
+	/** The reward has had the time to be seen. */
+	| { readonly type: 'settle' }
 	/** The moment after a mistake is over. */
 	| { readonly type: 'calm' }
 	| { readonly type: 'pause' }
@@ -72,6 +79,7 @@ export function createGame(
 		session: createSession(first, { errorPolicy }),
 		finished: [],
 		phase: 'typing',
+		settled: false,
 		paused: false,
 		errorIndex: null,
 		wrongCode: null,
@@ -100,6 +108,7 @@ function advance(state: GameState): GameStep {
 			groupIndex,
 			session: createSession(next, { errorPolicy: state.errorPolicy }),
 			phase: 'typing',
+			settled: false,
 			errorIndex: null,
 			wrongCode: null,
 			mood: 'idle'
@@ -109,7 +118,7 @@ function advance(state: GameState): GameStep {
 }
 
 function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
-	if (state.phase === 'celebrating') return advance(state);
+	if (state.phase === 'celebrating') return state.settled ? advance(state) : unchanged(state);
 	if (state.phase !== 'typing') return unchanged(state);
 
 	// Enter is a habit at the end of a word, not a mistake, unless the text asks for a line break.
@@ -160,6 +169,10 @@ export function reduce(state: GameState, action: GameAction): GameStep {
 			return state.mood === 'oops'
 				? { state: { ...state, mood: 'idle' }, sounds: [] }
 				: unchanged(state);
+		case 'settle':
+			return state.paused || state.phase !== 'celebrating' || state.settled
+				? unchanged(state)
+				: { state: { ...state, settled: true }, sounds: [] };
 		case 'pause':
 			return state.paused || state.phase === 'finale' || state.phase === 'complete'
 				? unchanged(state)

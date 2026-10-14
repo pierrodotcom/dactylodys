@@ -23,9 +23,9 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
 6. **PROCHAIN LOT — Retours du test** (ADR-029, validé le 2026-10-14), dans cet ordre, une session par lot :
-   - **T1 Durée et animations** (Sonnet 5.5) : exercices d'environ 35 caractères (`targetLength`, `groupCount` dans `content/fr/progression/azerty-decouverte.json`, garde-fous de `tests/schemas/` et minimum de 5 frappes par signe à tenir) avec mesure avant et après ; animations plus longues (tokens de durée) et plusieurs variantes par jeu, en ordre fixe ; jeu différent proposé à chaque leçon ; question des animations « Complètes » par défaut à présenter au porteur (voir ADR-029).
+   - **T1 Durée et animations** : fait (PR T1, ADR-030) — exercices à 35 caractères (35 à 47 en pratique), récompenses 400 ms après la dernière frappe et d'1,4 s, quatre variantes par jeu, un jeu différent par leçon, mode réduit en fondu visible (option C). Mesures ci-dessous.
    - **T2 Main guide** (Opus 5.5, effort élevé) : composant de mains alignées sur la géométrie et le profil de doigté (`keyboard/`), animation du doigt vers la touche et retour, retrait progressif, réglage, animations calmes.
-   - **T3 Consignes montrées et dites** : écran d'introduction réduit (touche, main, bouton Jouer), consigne dite automatiquement avec réglage (lecteur et `ListenButton` du lot V1), explication du mouvement par la voix synchronisée avec la main. Dépend des enregistrements du porteur pour être entendu ; se construit avant, le site marchant sans voix.
+   - **T3 Consignes montrées et dites** (à faire aussi : un **rappel régulier « regarde l'écran plutôt que le clavier »**, demandé par le porteur, dit et affiché à intervalle réglable, sans reproche et jamais pendant la frappe ; l'enfant a regardé ses mains pendant tout le test) : écran d'introduction réduit (touche, main, bouton Jouer), consigne dite automatiquement avec réglage (lecteur et `ListenButton` du lot V1), explication du mouvement par la voix synchronisée avec la main. Dépend des enregistrements du porteur pour être entendu ; se construit avant, le site marchant sans voix.
    - Puis la suite de J4, en tenant compte du constat : un récit en texte ne sera pas lu ; il doit être dit et illustré, en phrases très courtes.
 7. **J4 Aventure** (ADR-022, acceptée ; en pause derrière le lot 6) :
    - **Lot 0, socle** : fait — minimum de 5 frappes par nouveau signe et retrait de « ü » (PR 16, ADR-024) ; profil version 2 avec migration, profils illisibles conservés et listés, jeu choisi retrouvé à la visite suivante, allure de chaque partie réussie enregistrée, types des récompenses, du récit et de la voix (PR 17). Contrats dans `.claude/rules/jeux-pedagogie.md`.
@@ -43,6 +43,20 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **Consignes jamais lues** : l'enfant ne lit pas les textes d'introduction. Conséquence directe : il n'a pas placé les bons doigts.
 - Durée : environ 15 minutes ; il voulait recommencer ; il regardait ses mains.
 - **Proposition du porteur** : afficher une main dessinée, un peu transparente, sur le clavier à l'écran, qui déplace le bon doigt vers la touche demandée puis revient en place, pour les premiers exercices.
+
+## Mesures du lot T1 (200 graines par leçon, avant → après)
+
+Caractères par exercice, moyenne (plafond après) · frappes minimales par signe nouveau (jamais sous 5) · part des groupes qui sont des mots · part des phrases :
+
+| Leçons | Caractères | Min. par signe | Mots | Phrases |
+|---|---|---|---|---|
+| 1 à 4 (suites seules) | 25 → 25 | 5 à 8 → 5 à 8 | 0 % | 0 % |
+| 5 et 6 (mots) | 61 → 36 (≤ 40) | 9-10 → 6 | 54-57 % → 39-42 % | 0 % |
+| 7 à 11 (cuisine) | 67-69 → 40-41 (≤ 47) | 5-6 → 5 | 33-36 % → 28-29 % | 11 % → 5-6 % |
+| 12 à 15 (animaux) | 100-104 → 42 (≤ 47) | 5 → 5 | 29-30 % → 24-25 % | 18-19 % → 8-9 % |
+| 16 à 24 (espace, véhicules) | 103-105 → 41-44 (≤ 47) | 5 → 5 | 15-29 % → 18-43 % | 25-59 % → 11-44 % |
+
+Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, minimum de 5 frappes par signe, tous les signes demandés connus (tests de `tests/schemas/content-coherence.test.ts`). Les phrases restent présentes mais moins nombreuses : une phrase de 32 caractères médiane tient mal dans 35 (voir ADR-030).
 
 ## Grille d'observation pour le test J2
 
@@ -126,3 +140,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — PR 28 et 29 fusionnées : outillage de la voix humaine en ligne (lot V1).
 - **2026-10-14** — Retours du premier test avec un enfant consignés ; lot « retours du test » proposé au porteur.
 - **2026-10-14** — Décisions du porteur sur les retours du test (ADR-029). Critère de sortie de J2 atteint. Passage à une nouvelle session pour le lot T1.
+- **2026-10-14** — Lot T1 : les effets d'animation de Windows étaient désactivés sur l'ordinateur du test (cause des animations « trop courtes ») ; le porteur choisit de garder « Comme l'appareil » et de rendre le mode réduit visible (ADR-030). Il demande aussi un délai avant les animations et un rappel régulier « regarde l'écran » (inscrit en T3).

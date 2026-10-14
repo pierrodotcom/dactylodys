@@ -159,9 +159,17 @@ function remaining(reserve: Reserve): readonly Item[] {
 	return reserve.items;
 }
 
-function buildEntry(reserve: Reserve, preferred: readonly string[], settings: Settings): Candidate {
+function buildEntry(
+	reserve: Reserve,
+	preferred: readonly string[],
+	settings: Settings,
+	room = Number.POSITIVE_INFINITY
+): Candidate | undefined {
 	const { newCharWeight, rng } = settings;
-	let pool = remaining(reserve);
+	const fits = (item: Item) => item.graphemes.length <= room;
+	let pool = remaining(reserve).filter(fits);
+	if (pool.length === 0) pool = reserve.items.filter(fits);
+	if (pool.length === 0) return undefined;
 	if (preferred.length > 0) {
 		const matching = pool.filter((item) => item.graphemes.some((char) => preferred.includes(char)));
 		if (matching.length > 0 && rng() < newCharWeight) pool = matching;
@@ -212,6 +220,7 @@ export function generateExercise(
 		...lesson.newChars,
 		...(lesson.unlocks.includes('uppercase') ? capitalsIn(learned) : [])
 	];
+	const { lengthSlack } = progression.rules;
 	const settings: Settings = {
 		lesson,
 		fresh,
@@ -256,14 +265,19 @@ export function generateExercise(
 		const genre = relaxed
 			? 'drill'
 			: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
+		const room =
+			lengthSlack === undefined
+				? Number.POSITIVE_INFINITY
+				: Math.max(0, lesson.targetLength + lengthSlack - length);
 		const candidate =
-			genre === 'drill'
-				? buildDrill([], settings, relaxed)
+			(genre === 'drill'
+				? undefined
 				: buildEntry(
 						genre === 'word' ? words : phrases,
 						genre === 'word' ? lesson.newChars : fresh,
-						settings
-					);
+						settings,
+						room
+					)) ?? buildDrill([], settings, relaxed);
 		const present = toGraphemes(candidate.text);
 		const stops =
 			groupIndex + 1 >= lesson.groupCount || length + present.length >= lesson.targetLength;
@@ -271,7 +285,7 @@ export function generateExercise(
 			return buildDrill(missing, settings, relaxed);
 		}
 		return stops && owesWord && candidate.reserve !== words
-			? buildEntry(words, lesson.newChars, settings)
+			? (buildEntry(words, lesson.newChars, settings) ?? candidate)
 			: candidate;
 	};
 

@@ -4,6 +4,8 @@
 	import { ingredientPlace, isDishReady, prepStage } from './prep';
 	import { KITCHEN, POT, SCENE } from './shapes';
 
+	const REWARD_VARIANTS = 4;
+
 	interface Props {
 		view: GameView;
 	}
@@ -13,6 +15,7 @@
 	const place = $derived(ingredientPlace(view));
 	const stage = $derived(prepStage(view));
 	const ready = $derived(isDishReady(view));
+	const rewardVariant = $derived(view.groupIndex % REWARD_VARIANTS);
 
 	function placeTransform(spot: { x: number; y: number; scale: number }): string {
 		return `translate(${spot.x} ${spot.y}) scale(${spot.scale})`;
@@ -36,13 +39,13 @@
 	<ellipse class="soup" cx={POT.soup.cx} cy={POT.soup.cy} rx={POT.soup.rx} ry={POT.soup.ry} />
 
 	{#if place === 'pot'}
-		<g class="bubbles">
+		<g class="bubbles" data-reward data-reward-variant="0">
 			{#each POT.bubbles as bubble (bubble.x)}
 				<circle class="bubble-dot" cx={bubble.x} cy={bubble.y} r={bubble.radius} />
 			{/each}
 		</g>
 		<g transform={placeTransform(KITCHEN.potIngredient)}>
-			<g class="jump">
+			<g data-reward data-reward-variant={rewardVariant}>
 				<IngredientShape variant={view.groupIndex} {stage} />
 			</g>
 		</g>
@@ -57,9 +60,11 @@
 	{/if}
 
 	{#if ready}
-		{#each POT.steamPaths as steam (steam)}
-			<path class="steam" d={steam} />
-		{/each}
+		<g data-reward data-reward-variant="0">
+			{#each POT.steamPaths as steam (steam)}
+				<path class="steam" d={steam} />
+			{/each}
+		</g>
 	{/if}
 </svg>
 
@@ -125,42 +130,5 @@
 
 	.bubble-dot {
 		fill: var(--dd-color-pot-bubble);
-	}
-
-	.jump {
-		animation-name: drop-in;
-		animation-duration: var(--dd-duration-slow);
-		animation-timing-function: var(--dd-easing-enter);
-	}
-
-	.bubbles {
-		animation-name: rise;
-		animation-duration: var(--dd-duration-slow);
-		animation-timing-function: var(--dd-easing-enter);
-	}
-
-	[data-still] .jump,
-	[data-still] .bubbles {
-		animation-name: none;
-	}
-
-	@keyframes drop-in {
-		0% {
-			translate: 0 calc(var(--dd-space-3xl) * -1.5);
-		}
-
-		100% {
-			translate: 0 0;
-		}
-	}
-
-	@keyframes rise {
-		0% {
-			translate: 0 var(--dd-space-md);
-		}
-
-		100% {
-			translate: 0 0;
-		}
 	}
 </style>

@@ -28,6 +28,7 @@ import {
 	openPage,
 	readJson,
 	reloadPage,
+	shortenRewards,
 	storedRecord,
 	type StoredFormat
 } from './support';
@@ -372,6 +373,10 @@ async function activateByTab(page: Page, target: Locator) {
 	await page.keyboard.press('Enter');
 }
 
+test.beforeEach(async ({ page }) => {
+	await shortenRewards(page);
+});
+
 test.describe('play route', () => {
 	test('leads a child from the home page to a lesson passed with three stars', async ({
 		page,
@@ -419,7 +424,7 @@ test.describe('play route', () => {
 			})
 		).toBeVisible();
 		await expect(page.locator('[data-target]')).toHaveCount(FIRST.newChars.length);
-		await expect(page.getByRole('radio')).toHaveCount(0);
+		await expect(page.getByRole('radio')).toHaveCount(world.gameIds.length);
 		await expect(button(page, message('play_intro_start'))).toBeFocused();
 		await page.keyboard.press('Enter');
 
@@ -965,7 +970,7 @@ test.describe('play route', () => {
 		await expect(radio(OTHER_GAME)).toBeChecked();
 		await expect
 			.poll(async () => (await storedRecord(page, profile))?.['lastGameByWorld'])
-			.toEqual({ [NEXT_WORLD.id]: OTHER_GAME });
+			.toEqual({ [NEXT_WORLD.id]: OTHER_GAME, [NEXT_FIRST.id]: OTHER_GAME });
 
 		await reloadPage(page);
 

@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		/** Draw the bubble without the little pop. */
+		/** Draw the bubble with a fade only, without the little movement. */
 		still?: boolean;
 		/** Smaller text, for a bubble drawn over a picture. */
 		compact?: boolean;
@@ -15,6 +15,8 @@
 <p
 	class="bubble"
 	aria-hidden="true"
+	data-reward
+	data-reward-variant="0"
 	data-still={still || undefined}
 	data-compact={compact || undefined}
 >
@@ -34,26 +36,9 @@
 		font-size: var(--dd-font-size-xl);
 		font-weight: var(--dd-font-weight-bold);
 		line-height: var(--dd-line-height-tight);
-		animation-name: pop;
-		animation-duration: var(--dd-duration-slow);
-		animation-timing-function: var(--dd-easing-enter);
 	}
 
 	.bubble[data-compact] {
 		font-size: var(--dd-font-size-lg);
-	}
-
-	.bubble[data-still] {
-		animation-name: none;
-	}
-
-	@keyframes pop {
-		0% {
-			scale: 0.6;
-		}
-
-		100% {
-			scale: 1;
-		}
 	}
 </style>

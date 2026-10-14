@@ -3,7 +3,12 @@
 	import { isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, lessonIds } from '$lib/engine/progression/definition';
 	import { generateExercise } from '$lib/engine/progression/exercise';
-	import type { Exercise, ProgressionDefinition, StarCount } from '$lib/engine/progression/types';
+	import type {
+		Exercise,
+		ProgressionDefinition,
+		StarCount,
+		WorldDefinition
+	} from '$lib/engine/progression/types';
 	import type { GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
@@ -29,7 +34,7 @@
 	} from './break';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
-	import { gameOptions, selectedGame } from './game-choice';
+	import { gameForLesson, gameOptions } from './game-choice';
 	import { toGameSettings } from './game-settings';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
@@ -211,16 +216,36 @@
 	}
 
 	/** The choice is kept in the profile, so that the child finds the same game at the next visit. */
-	function chooseGame(worldId: string, gameId: string) {
+	function chooseGame(worldId: string, lessonId: string, gameId: string) {
 		gameLoadFailed = false;
-		if (profile) void commit(withLastGame(profile, worldId, gameId));
+		if (profile) void commit(withGames(profile, worldId, lessonId, gameId));
+	}
+
+	/** The game is kept for the world and for the lesson, so that a return finds it. */
+	function withGames(current: Profile, worldId: string, lessonId: string, gameId: string): Profile {
+		return withLastGame(withLastGame(current, worldId, gameId), lessonId, gameId);
+	}
+
+	function gameFor(world: WorldDefinition, lessonId: string, current: Profile) {
+		return gameForLesson(
+			world,
+			lessonId,
+			current.lastGameByWorld,
+			Object.hasOwn(current.progress.lessons, lessonId)
+		);
 	}
 
 	async function beginGame(lessonId: string, event: FlowEvent) {
 		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
-		const definition = world ? selectedGame(world, profile.lastGameByWorld) : undefined;
+		const definition = world ? gameFor(world, lessonId, profile) : undefined;
 		if (!world || !definition) return;
+		if (
+			profile.lastGameByWorld[world.id] !== definition.id ||
+			profile.lastGameByWorld[lessonId] !== definition.id
+		) {
+			void commit(withGames(profile, world.id, lessonId, definition.id));
+		}
 		let banks: LoadedBanks;
 		try {
 			const [module, loaded] = await Promise.all([
@@ -342,9 +367,9 @@
 				number={lessonIds(progression).indexOf(lessonId) + 1}
 				{assets}
 				games={gameOptions(world)}
-				gameId={selectedGame(world, profile.lastGameByWorld)?.id ?? ''}
+				gameId={gameFor(world, lessonId, profile)?.id ?? ''}
 				loadFailed={gameLoadFailed}
-				onchoose={(gameId) => chooseGame(world.id, gameId)}
+				onchoose={(gameId) => chooseGame(world.id, lessonId, gameId)}
 				onstart={() => beginGame(lessonId, { type: 'start' })}
 				onback={() => go({ type: 'back-to-map' })}
 			/>

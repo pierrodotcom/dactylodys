@@ -38,7 +38,10 @@ export interface Profile {
 	readonly progress: ProgressState;
 	/** Only the choices of the child: what is unlocked is computed from the progress, never stored. */
 	readonly companion: CompanionChoice;
-	/** Mini-game chosen last in each world, by world identifier. */
+	/**
+	 * Mini-game played last in each world (key: the world identifier) and, for a lesson already
+	 * started, the one it was played with (key: the lesson identifier).
+	 */
 	readonly lastGameByWorld: Readonly<Record<string, string>>;
 	/** Pace of the last passed play of each lesson, by lesson identifier. */
 	readonly ghosts: Readonly<Record<string, GhostRun>>;

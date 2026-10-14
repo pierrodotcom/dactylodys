@@ -156,6 +156,12 @@ describe('parseProgression', () => {
 		expect(narrow.rules.recentCharWindow).toBe(1);
 	});
 
+	it('reads the optional length slack, absent by default', () => {
+		expect(parseProgression(BASE).rules.lengthSlack).toBeUndefined();
+		const slack = parseProgression(variant((raw) => (raw.rules['lengthSlack'] = 12)));
+		expect(slack.rules.lengthSlack).toBe(12);
+	});
+
 	it('accepts any minimum count for a lesson without new characters', () => {
 		expect(() =>
 			parseProgression(
@@ -278,6 +284,16 @@ describe('parseProgression', () => {
 			'missing minimum count of new characters',
 			(raw) => delete raw.rules['newCharMinCount'],
 			/progression\.rules\.newCharMinCount/
+		],
+		[
+			'negative length slack',
+			(raw) => (raw.rules['lengthSlack'] = -1),
+			/progression.rules.lengthSlack.*at least 0/
+		],
+		[
+			'fractional length slack',
+			(raw) => (raw.rules['lengthSlack'] = 2.5),
+			/progression.rules.lengthSlack.*integer/
 		],
 		[
 			'a window of recent keystrokes of zero',

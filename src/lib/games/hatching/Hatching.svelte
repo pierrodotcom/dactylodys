@@ -68,7 +68,13 @@
 			{/if}
 		</div>
 		<div class="egg">
-			<HatchEgg stage={crackStage(view)} hatched={isRewarded(view)} variant={view.groupIndex} big />
+			<HatchEgg
+				stage={crackStage(view)}
+				hatched={isRewarded(view)}
+				variant={view.groupIndex}
+				still={view.reducedMotion}
+				big
+			/>
 		</div>
 	</div>
 {/snippet}

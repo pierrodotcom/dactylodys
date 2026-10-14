@@ -1271,3 +1271,53 @@ describe('generateExercise', () => {
 		});
 	});
 });
+
+describe('length slack', () => {
+	const shippedLessons = allLessons().filter(([progression]) =>
+		SHIPPED.some((shipped) => shipped.progression === progression)
+	);
+
+	it('ships a slack, so that a phrase never stretches an exercise far past its target', () => {
+		for (const { progression } of SHIPPED) {
+			expect(progression.rules.lengthSlack).toBeGreaterThanOrEqual(0);
+		}
+	});
+
+	it('keeps every shipped exercise within its target plus the slack', () => {
+		for (const [progression, lesson, context] of shippedLessons) {
+			const slack = progression.rules.lengthSlack ?? Number.POSITIVE_INFINITY;
+			const limit = lesson.targetLength + Math.max(slack, lesson.groupLength[1]);
+			for (let seed = 0; seed < 10; seed++) {
+				const exercise = generate(progression, lesson.id, seed, context);
+				const total = exercise.groups.reduce((sum, group) => sum + lengthOf(group), 0);
+				expect(
+					total,
+					`${lesson.id} seed ${seed}: ${exercise.groups.join(' | ')}`
+				).toBeLessThanOrEqual(limit);
+			}
+		}
+	});
+
+	it('replaces an entry that would run past the slack with a suite, but never drops a word owed', () => {
+		const slim = withRules(SYNTHETIC, { lengthSlack: 0 });
+		const lesson = findLesson(slim, 'fr.lesson.dot') as LessonDefinition;
+		for (let seed = 0; seed < 30; seed++) {
+			const exercise = generate(slim, lesson.id, seed, FULL_CONTEXT);
+			const { words } = playableTexts(slim, lesson.id, FULL_CONTEXT);
+			const total = exercise.groups.reduce((sum, group) => sum + lengthOf(group), 0);
+			expect(total).toBeLessThanOrEqual(lesson.targetLength + lesson.groupLength[1]);
+			if (lesson.mix.words > 0) {
+				expect(exercise.groups.some((group) => words.has(group))).toBe(true);
+			}
+		}
+	});
+
+	it('changes nothing when no slack is given', () => {
+		const unlimited = { ...SYNTHETIC, rules: { ...SYNTHETIC.rules, lengthSlack: undefined } };
+		for (let seed = 0; seed < 5; seed++) {
+			expect(generate(unlimited, 'fr.lesson.dot', seed, FULL_CONTEXT)).toEqual(
+				generate(SYNTHETIC, 'fr.lesson.dot', seed, FULL_CONTEXT)
+			);
+		}
+	});
+});
