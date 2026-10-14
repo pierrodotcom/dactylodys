@@ -28,6 +28,7 @@ import {
 	openPage,
 	readJson,
 	reloadPage,
+	shortenRewards,
 	storedRecord,
 	type StoredFormat
 } from './support';
@@ -371,6 +372,10 @@ async function activateByTab(page: Page, target: Locator) {
 	await focusByTab(page, target);
 	await page.keyboard.press('Enter');
 }
+
+test.beforeEach(async ({ page }) => {
+	await shortenRewards(page);
+});
 
 test.describe('play route', () => {
 	test('leads a child from the home page to a lesson passed with three stars', async ({
@@ -965,7 +970,7 @@ test.describe('play route', () => {
 		await expect(radio(OTHER_GAME)).toBeChecked();
 		await expect
 			.poll(async () => (await storedRecord(page, profile))?.['lastGameByWorld'])
-			.toEqual({ [NEXT_WORLD.id]: OTHER_GAME });
+			.toEqual({ [NEXT_WORLD.id]: OTHER_GAME, [NEXT_FIRST.id]: OTHER_GAME });
 
 		await reloadPage(page);
 

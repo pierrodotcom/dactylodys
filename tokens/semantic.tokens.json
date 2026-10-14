@@ -293,7 +293,10 @@
 		"fast": { "$value": "{duration.150}" },
 		"base": { "$value": "{duration.250}" },
 		"slow": { "$value": "{duration.500}" },
-		"celebration": { "$value": "{duration.1000}" },
+		"beat": { "$value": "{duration.700}" },
+		"reward-delay": { "$value": "{duration.400}" },
+		"reward": { "$value": "{duration.1400}" },
+		"celebration": { "$value": "{duration.2800}" },
 		"notice": { "$value": "{duration.1600}" }
 	},
 	"easing": {

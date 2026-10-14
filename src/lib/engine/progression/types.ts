@@ -27,6 +27,11 @@ export interface ProgressionRules {
 	 * that reach this number no longer count.
 	 */
 	readonly recentCharWindow: number;
+	/**
+	 * Characters by which an exercise may run past its lesson's `targetLength` : a word or phrase
+	 * that would go beyond it is replaced by a suite. Absent: no limit.
+	 */
+	readonly lengthSlack?: number;
 }
 
 /** Relative weights of the three kinds of groups in an exercise; at least one is positive. */

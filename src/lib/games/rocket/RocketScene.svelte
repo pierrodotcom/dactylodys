@@ -11,6 +11,7 @@
 	}
 
 	const HOME_VARIANT = 3;
+	const REWARD_VARIANTS = 4;
 	const INHABITANT = { x: 372, y: 63, scale: 0.9 } as const;
 	const ROCKET_SCALE = 1.2;
 	/** Where the smoke of a cough appears, behind the engine. */
@@ -51,7 +52,9 @@
 
 	{#if lit}
 		<g transform="translate({INHABITANT.x} {INHABITANT.y}) scale({INHABITANT.scale})">
-			<InhabitantShape variant={destinationVariant} />
+			<g data-reward data-reward-variant={destinationVariant % REWARD_VARIANTS}>
+				<InhabitantShape variant={destinationVariant} />
+			</g>
 		</g>
 	{/if}
 

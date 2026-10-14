@@ -192,8 +192,36 @@ describe('a group typed to the end', () => {
 		expect(completedCount(step.state)).toBe(1);
 	});
 
-	it('moves to the next group at the next key, without counting that key', () => {
+	it('ignores the keys typed before the reward has been seen', () => {
 		const rewarded = typeText(createGame(['fj', 'jf'], 'retry'), 'fj');
+
+		const step = reduce(rewarded, char('x'));
+
+		expect(step.state).toBe(rewarded);
+		expect(step.state.settled).toBe(false);
+		expect(step.sounds).toEqual([]);
+	});
+
+	it('settles once the reward has been seen, and not while paused or when typing', () => {
+		const rewarded = typeText(createGame(['fj', 'jf'], 'retry'), 'fj');
+		const paused = reduce(rewarded, { type: 'pause' }).state;
+		const typing = createGame(['fj', 'jf'], 'retry');
+
+		expect(reduce(rewarded, { type: 'settle' }).state.settled).toBe(true);
+		expect(reduce(paused, { type: 'settle' }).state).toBe(paused);
+		expect(reduce(typing, { type: 'settle' }).state).toBe(typing);
+	});
+
+	it('forgets the settling when the next group starts', () => {
+		const rewarded = typeText(createGame(['fj', 'jf'], 'retry'), 'fj');
+
+		const next = play(rewarded, [{ type: 'settle' }, { type: 'advance' }]);
+
+		expect(next.settled).toBe(false);
+	});
+
+	it('moves to the next group at the next key once the reward is seen, without counting that key', () => {
+		const rewarded = play(typeText(createGame(['fj', 'jf'], 'retry'), 'fj'), [{ type: 'settle' }]);
 
 		const step = reduce(rewarded, char('x'));
 
@@ -243,8 +271,8 @@ describe('the last group', () => {
 		expect(metrics.accuracy).toBe(100);
 	});
 
-	it('completes at the next key too', () => {
-		const rewarded = typeText(createGame(['fj'], 'retry'), 'fj');
+	it('completes at the next key too, once the reward has been seen', () => {
+		const rewarded = play(typeText(createGame(['fj'], 'retry'), 'fj'), [{ type: 'settle' }]);
 
 		expect(reduce(rewarded, char('x')).state.phase).toBe('complete');
 	});
@@ -334,8 +362,8 @@ describe('a game with a final picture', () => {
 		expect(state.mood).toBe('cheer');
 	});
 
-	it('shows it at the next key too', () => {
-		const rewarded = typeText(withFinale(), 'fj');
+	it('shows it at the next key too, once the reward has been seen', () => {
+		const rewarded = play(typeText(withFinale(), 'fj'), [{ type: 'settle' }]);
 
 		expect(reduce(rewarded, char('x')).state.phase).toBe('finale');
 	});

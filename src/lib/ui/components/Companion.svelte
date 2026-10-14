@@ -121,7 +121,8 @@
 	[data-mood='happy'] .dino,
 	[data-mood='cheer'] .dino {
 		animation-name: hop;
-		animation-duration: var(--dd-duration-slow);
+		animation-duration: var(--dd-duration-beat);
+		animation-delay: var(--dd-duration-reward-delay);
 		animation-timing-function: var(--dd-easing-standard);
 		animation-iteration-count: 2;
 	}

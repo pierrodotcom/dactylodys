@@ -18,9 +18,11 @@
 
 <g class="astre" data-lit={lit || undefined} data-look={look}>
 	{#if lit}
-		{#each RAYS as ray (ray)}
-			<path class="ray" d={ray} />
-		{/each}
+		<g data-reward data-reward-variant="0">
+			{#each RAYS as ray (ray)}
+				<path class="ray" d={ray} />
+			{/each}
+		</g>
 	{/if}
 	<circle class="planet" cx="50" cy="50" r="30" />
 	{#if look === 0}

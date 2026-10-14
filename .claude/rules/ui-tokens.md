@@ -22,7 +22,7 @@ paths:
 - Texte à taper : police sans empattement droite, jamais d'italique, taille de base généreuse, espacement des lettres et des mots **réglable** par l'utilisateur. Les polices « spéciales dyslexie » n'ont pas d'effet démontré : option possible, jamais argument.
 - Fond chaud par défaut, contraste WCAG AA au minimum, information jamais portée par la couleur seule (doigts : couleur **et** forme ou position).
 - Cibles cliquables ≥ 48 px ; tout est utilisable au clavier, focus toujours visible.
-- Animations : respecter `prefers-reduced-motion` ; jamais plus de 3 flashs par seconde ; aucune animation décorative pendant la frappe.
+- Animations : respecter `prefers-reduced-motion` (le mode réduit **retire le mouvement mais garde un fondu visible** pour les récompenses de jeu : `data-reward`, ADR-030) ; jamais plus de 3 flashs par seconde ; aucune animation décorative pendant la frappe.
 - **Mode calme** et réglages séparés pour sons, musique, voix et animations. La stimulation doit venir de la tâche, pas de l'entourer.
 - Peu de texte de consigne : une phrase, écoutable, illustrée. L'enfant saute les consignes longues.
 - Ne jamais paraître « bébé » : le public va jusqu'à 12 ans.

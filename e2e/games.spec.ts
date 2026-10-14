@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { GAMES } from '../src/lib/games/registry';
-import { linkedPaths, loadMessages, openPage, readJson } from './support';
+import { linkedPaths, loadMessages, openPage, readJson, shortenRewards } from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
@@ -196,6 +196,10 @@ interface RawMetrics {
 async function rawResult(page: Page): Promise<RawMetrics> {
 	return JSON.parse(await page.locator('.raw').innerText()) as RawMetrics;
 }
+
+test.beforeEach(async ({ page }) => {
+	await shortenRewards(page);
+});
 
 test.describe('games test page', () => {
 	test('is not linked from the home page', async ({ page }) => {
@@ -394,7 +398,9 @@ for (const game of games) {
 		test.describe('with reduced motion', () => {
 			test.use({ reducedMotion: 'reduce' });
 
-			test('follows the system setting and plays the same game, still', async ({ page }) => {
+			test('follows the system setting and plays the same game, with a fade and no movement', async ({
+				page
+			}) => {
 				await openChooser(page);
 				await expect(
 					page.getByRole('checkbox', { name: message('dev_games_reduced_label') })
@@ -403,7 +409,7 @@ for (const game of games) {
 
 				await page.keyboard.type(FIRST_GROUP);
 				await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-				await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'none');
+				await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'dd-reward-calm');
 
 				await page.keyboard.press(SKIP_KEY);
 				await typeGroups(page, game, { from: 1, skipDelay: true });
@@ -415,21 +421,21 @@ for (const game of games) {
 		test.describe('with motion allowed', () => {
 			test.use({ reducedMotion: 'no-preference' });
 
-			test('animates the reward bubble, unless the page is told to be still', async ({ page }) => {
+			test('moves the reward bubble, unless the page is told to be still', async ({ page }) => {
 				await openChooser(page);
 				const reduced = page.getByRole('checkbox', { name: message('dev_games_reduced_label') });
 				await expect(reduced).not.toBeChecked();
 				await beginGame(page, game);
 
 				await page.keyboard.type(FIRST_GROUP);
-				await expect(page.locator('.bubble')).not.toHaveCSS('animation-name', 'none');
+				await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'dd-reward-0');
 
 				await page.keyboard.press('Escape');
 				await button(page, message('game_shared_quit')).click();
 				await reduced.check();
 				await beginGame(page, game);
 				await page.keyboard.type(FIRST_GROUP);
-				await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'none');
+				await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'dd-reward-calm');
 			});
 		});
 	});

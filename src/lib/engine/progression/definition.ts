@@ -127,7 +127,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'weakCharBoost',
 			'themeBoost',
 			'newCharMinCount',
-			'recentCharWindow'
+			'recentCharWindow',
+			'lengthSlack'
 		],
 		path
 	);
@@ -151,6 +152,13 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	if (newCharMinCount < 0) fail(`${path}.newCharMinCount`, 'expected an integer of at least 0');
 	const recentCharWindow = expectInteger(record['recentCharWindow'], `${path}.recentCharWindow`);
 	if (recentCharWindow < 1) fail(`${path}.recentCharWindow`, 'expected an integer of at least 1');
+	const lengthSlack =
+		record['lengthSlack'] === undefined
+			? undefined
+			: expectInteger(record['lengthSlack'], `${path}.lengthSlack`);
+	if (lengthSlack !== undefined && lengthSlack < 0) {
+		fail(`${path}.lengthSlack`, 'expected an integer of at least 0');
+	}
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -158,7 +166,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		weakCharBoost: expectNonNegative(record['weakCharBoost'], `${path}.weakCharBoost`),
 		themeBoost: expectNonNegative(record['themeBoost'], `${path}.themeBoost`),
 		newCharMinCount,
-		recentCharWindow
+		recentCharWindow,
+		...(lengthSlack === undefined ? {} : { lengthSlack })
 	};
 }
 

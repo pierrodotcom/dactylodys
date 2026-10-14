@@ -15,6 +15,20 @@ export async function waitForHydration(page: Page): Promise<void> {
 	await page.locator(HYDRATION_SIGNAL).waitFor({ state: 'attached' });
 }
 
+/**
+ * Rewards last a millisecond: a key skips a reward only once it has been seen, and a test that
+ * types through a whole exercise must not wait for each one. The tokens are read when a timer is set.
+ */
+export async function shortenRewards(page: Page): Promise<void> {
+	await page.addInitScript(() => {
+		document.addEventListener('DOMContentLoaded', () => {
+			const style = document.createElement('style');
+			style.textContent = ':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms}';
+			document.head.append(style);
+		});
+	});
+}
+
 export async function openPage(page: Page, url: string): Promise<void> {
 	await page.goto(url);
 	await waitForHydration(page);

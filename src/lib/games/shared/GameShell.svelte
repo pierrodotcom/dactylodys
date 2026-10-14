@@ -41,6 +41,8 @@
 	}
 
 	const CELEBRATION_TOKEN = '--dd-duration-celebration';
+	const REWARD_DELAY_TOKEN = '--dd-duration-reward-delay';
+	const REWARD_TOKEN = '--dd-duration-reward';
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
@@ -132,6 +134,16 @@
 		const timer = setTimeout(
 			() => dispatch({ type: 'advance' }),
 			readDurationToken(CELEBRATION_TOKEN)
+		);
+		return () => clearTimeout(timer);
+	});
+
+	// A key skips the reward only once it has been seen: the child is still typing when it starts.
+	$effect(() => {
+		if (phase !== 'celebrating' || paused) return;
+		const timer = setTimeout(
+			() => dispatch({ type: 'settle' }),
+			readDurationToken(REWARD_DELAY_TOKEN) + readDurationToken(REWARD_TOKEN)
 		);
 		return () => clearTimeout(timer);
 	});

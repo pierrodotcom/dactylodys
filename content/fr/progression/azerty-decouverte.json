@@ -10,14 +10,15 @@
 		"weakCharBoost": 2,
 		"themeBoost": 2,
 		"newCharMinCount": 5,
-		"recentCharWindow": 30
+		"recentCharWindow": 30,
+		"lengthSlack": 12
 	},
 	"worlds": [
 		{
 			"id": "fr.world.dinosaures",
 			"title": "Au pays des dinosaures",
 			"themeId": "dinos",
-			"gameIds": ["hatching"],
+			"gameIds": ["hatching", "recipe"],
 			"lessons": [
 				{
 					"id": "fr.lesson.oeufs-f-j",
@@ -116,7 +117,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -164,7 +165,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				}
 			]
@@ -188,7 +189,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -204,7 +205,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -220,7 +221,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -236,7 +237,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -252,7 +253,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 20,
-					"targetLength": 60,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				}
 			]
@@ -276,7 +277,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -292,7 +293,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -308,7 +309,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -324,7 +325,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				}
 			]
@@ -348,7 +349,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -364,7 +365,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -380,7 +381,7 @@
 					},
 					"unlocks": ["uppercase"],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -396,7 +397,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				}
 			]
@@ -420,7 +421,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -436,7 +437,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -452,7 +453,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -468,7 +469,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				},
 				{
@@ -484,7 +485,7 @@
 					},
 					"unlocks": [],
 					"groupCount": 24,
-					"targetLength": 90,
+					"targetLength": 35,
 					"groupLength": [3, 5]
 				}
 			]
