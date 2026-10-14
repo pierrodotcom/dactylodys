@@ -424,7 +424,7 @@ test.describe('play route', () => {
 			})
 		).toBeVisible();
 		await expect(page.locator('[data-target]')).toHaveCount(FIRST.newChars.length);
-		await expect(page.getByRole('radio')).toHaveCount(0);
+		await expect(page.getByRole('radio')).toHaveCount(world.gameIds.length);
 		await expect(button(page, message('play_intro_start'))).toBeFocused();
 		await page.keyboard.press('Enter');
 
