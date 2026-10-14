@@ -9,7 +9,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Cadrage et recherche | Terminé (2026-10-11) | Rapport dans `reports/` |
 | J0 Fondations | Terminé (2026-10-11) | En ligne : https://pierrodotcom.github.io/dactylodys/ |
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
-| J2 Tranche jouable | Premier test avec un enfant fait le 2026-10-13 (retours ci-dessous) | Critère de sortie : un enfant joue 10 minutes seul et veut recommencer |
+| J2 Tranche jouable | Critère de sortie atteint au premier test (2026-10-13) | L'enfant a joué environ 15 minutes et voulait recommencer ; il regardait ses mains |
 | J3 Pédagogie complète | Mots et phrases relus par le porteur ; test avec un enfant à faire | 5 mondes, 24 leçons, 926 mots et 216 phrases relus par le porteur, 3 mini-jeux |
 | J4 Aventure | En cours : lot 0 (socle) | Cadrage validé le 2026-10-13 (ADR-022) |
 | J5 Version 1.0 | — | |
@@ -22,8 +22,12 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
-6. **Retours du test** (proposé au porteur le 2026-10-14, à valider) : exercices plus courts, animations plus longues et plus variées, mains guides animées, consignes montrées et dites plutôt qu'écrites. À faire avant la suite de J4, qui en dépend (le récit ne doit pas reposer sur la lecture).
-7. **J4 Aventure** (ADR-022, acceptée) :
+6. **PROCHAIN LOT — Retours du test** (ADR-029, validé le 2026-10-14), dans cet ordre, une session par lot :
+   - **T1 Durée et animations** (Sonnet 5.5) : exercices d'environ 35 caractères (`targetLength`, `groupCount` dans `content/fr/progression/azerty-decouverte.json`, garde-fous de `tests/schemas/` et minimum de 5 frappes par signe à tenir) avec mesure avant et après ; animations plus longues (tokens de durée) et plusieurs variantes par jeu, en ordre fixe ; jeu différent proposé à chaque leçon ; question des animations « Complètes » par défaut à présenter au porteur (voir ADR-029).
+   - **T2 Main guide** (Opus 5.5, effort élevé) : composant de mains alignées sur la géométrie et le profil de doigté (`keyboard/`), animation du doigt vers la touche et retour, retrait progressif, réglage, animations calmes.
+   - **T3 Consignes montrées et dites** : écran d'introduction réduit (touche, main, bouton Jouer), consigne dite automatiquement avec réglage (lecteur et `ListenButton` du lot V1), explication du mouvement par la voix synchronisée avec la main. Dépend des enregistrements du porteur pour être entendu ; se construit avant, le site marchant sans voix.
+   - Puis la suite de J4, en tenant compte du constat : un récit en texte ne sera pas lu ; il doit être dit et illustré, en phrases très courtes.
+7. **J4 Aventure** (ADR-022, acceptée ; en pause derrière le lot 6) :
    - **Lot 0, socle** : fait — minimum de 5 frappes par nouveau signe et retrait de « ü » (PR 16, ADR-024) ; profil version 2 avec migration, profils illisibles conservés et listés, jeu choisi retrouvé à la visite suivante, allure de chaque partie réussie enregistrée, types des récompenses, du récit et de la voix (PR 17). Contrats dans `.claude/rules/jeux-pedagogie.md`.
    - **Lot 0c** : fait (PR 19, ADR-025) — seules les parties récentes d'une touche comptent, jusqu'à 30 frappes ; profil version 3 ; leçon des circonflexes en deux (« ê â », puis « î ô û » : « Le casque du copilote ») ; `isLessonPassed` exporté. 21 phrases ajoutées pour les circonflexes et les trémas.
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
@@ -37,6 +41,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **Trop long** : l'enfant a dit « c'est long » au début de la 5ᵉ leçon des dinosaures. Mesure : un exercice passe d'environ 25 caractères (leçons 1 à 4) à 61 (leçon 5), 69 (leçons 7 à 11) puis plus de 100 (leçons 12 et suivantes), soit 4 à 7 minutes pour un débutant à 15-20 caractères par minute, loin des 2 à 4 minutes visées.
 - **Animations** : amusantes sur les deux premiers exercices, vite redondantes ; trop courtes et trop rapides pour être vues, surtout dans le monde de la cuisine. À diversifier, à allonger, et à renouveler plus souvent (thème ou variantes).
 - **Consignes jamais lues** : l'enfant ne lit pas les textes d'introduction. Conséquence directe : il n'a pas placé les bons doigts.
+- Durée : environ 15 minutes ; il voulait recommencer ; il regardait ses mains.
 - **Proposition du porteur** : afficher une main dessinée, un peu transparente, sur le clavier à l'écran, qui déplace le bon doigt vers la touche demandée puis revient en place, pour les premiers exercices.
 
 ## Grille d'observation pour le test J2
@@ -120,3 +125,4 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 - **2026-10-13** — PR 27 fusionnée. Voix de synthèse écartée après écoute, voix humaine retenue (ADR-028) ; lot V1 lancé.
 - **2026-10-13** — PR 28 et 29 fusionnées : outillage de la voix humaine en ligne (lot V1).
 - **2026-10-14** — Retours du premier test avec un enfant consignés ; lot « retours du test » proposé au porteur.
+- **2026-10-14** — Décisions du porteur sur les retours du test (ADR-029). Critère de sortie de J2 atteint. Passage à une nouvelle session pour le lot T1.
