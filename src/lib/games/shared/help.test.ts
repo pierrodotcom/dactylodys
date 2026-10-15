@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { needsCapsLockHelp } from './help';
+import { isLookReminderDue, needsCapsLockHelp } from './help';
 
 describe('needsCapsLockHelp', () => {
 	it('helps when Caps Lock is on and a lowercase letter is expected', () => {
@@ -23,5 +23,18 @@ describe('needsCapsLockHelp', () => {
 
 	it('stays quiet when nothing is expected', () => {
 		expect(needsCapsLockHelp(true, undefined)).toBe(false);
+	});
+});
+
+describe('isLookReminderDue', () => {
+	it('reminds every so many groups, between two groups only', () => {
+		const due = [1, 2, 3, 4, 5, 6, 7, 8].map((completed) => isLookReminderDue(completed, 8, 4));
+		expect(due).toEqual([false, false, false, true, false, false, false, false]);
+	});
+
+	it('never reminds before the first group, after the last one, or when turned off', () => {
+		expect(isLookReminderDue(0, 8, 4)).toBe(false);
+		expect(isLookReminderDue(8, 8, 4)).toBe(false);
+		expect(isLookReminderDue(4, 8, 0)).toBe(false);
 	});
 });

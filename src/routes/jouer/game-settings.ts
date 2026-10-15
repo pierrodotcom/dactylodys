@@ -10,13 +10,15 @@ export function isMotionReduced(settings: Settings, systemPrefersReduced: boolea
 export function toGameSettings(
 	settings: Settings,
 	systemPrefersReduced: boolean,
-	guide: GameGuide
+	guide: GameGuide,
+	lookReminderEvery = 0
 ): GameSettings {
 	return {
 		soundEnabled: settings.soundEnabled,
 		reducedMotion: isMotionReduced(settings, systemPrefersReduced),
 		showKeyboard: settings.showKeyboard,
 		errorPolicy: 'retry',
-		guide
+		guide,
+		lookReminderEvery
 	};
 }

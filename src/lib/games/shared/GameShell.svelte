@@ -20,7 +20,7 @@
 	} from './game-state';
 	import { viewOf, type GameView } from './game-view';
 	import { isGuided } from '$lib/engine/progression/guide';
-	import { needsCapsLockHelp } from './help';
+	import { isLookReminderDue, needsCapsLockHelp } from './help';
 	import { targetKeyPress } from './target';
 
 	interface Props extends GameProps {
@@ -59,6 +59,7 @@
 		onComplete,
 		onQuit,
 		onSettings,
+		voice,
 		title,
 		pauseText,
 		arrangement = 'side',
@@ -90,6 +91,11 @@
 	const target = $derived(typing ? targetKeyPress(charIndex, expected) : null);
 	const capsHelp = $derived(typing && needsCapsLockHelp(capsLock, expected));
 	const announcement = $derived(announce(view));
+	const lookReminder = $derived(
+		phase === 'celebrating' &&
+			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
+	);
+	const lookReminderText = m.game_shared_look_reminder();
 	const guide = $derived(settings.guide);
 	const guided = $derived(
 		typing && isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null)
@@ -164,6 +170,13 @@
 	});
 
 	$effect(() => {
+		if (!lookReminder || !voice) return;
+		const speaker = voice;
+		void speaker.speak(lookReminderText);
+		return () => speaker.stop();
+	});
+
+	$effect(() => {
 		if (mood !== 'oops') return;
 		const timer = setTimeout(() => dispatch({ type: 'calm' }), readDurationToken(NOTICE_TOKEN));
 		return () => clearTimeout(timer);
@@ -202,6 +215,17 @@
 			</div>
 		{:else}
 			<div class="text-zone">
+				{#if lookReminder}
+					<p class="look-reminder" data-reward data-reward-variant="1">
+						<svg class="eyes" viewBox="0 0 48 24" focusable="false" aria-hidden="true">
+							<ellipse cx="12" cy="12" rx="10" ry="8" />
+							<ellipse cx="36" cy="12" rx="10" ry="8" />
+							<circle class="pupil" cx="13" cy="10" r="4" />
+							<circle class="pupil" cx="37" cy="10" r="4" />
+						</svg>
+						<span>{lookReminderText}</span>
+					</p>
+				{/if}
 				<TargetText
 					graphemes={view.group}
 					position={typing ? view.position : view.group.length}
@@ -348,6 +372,37 @@
 
 	.hint {
 		min-block-size: calc(var(--dd-font-size-xl) * 1.3);
+	}
+
+	.look-reminder {
+		display: flex;
+		align-items: center;
+		gap: var(--dd-space-sm);
+		padding: var(--dd-space-sm) var(--dd-space-md);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-accent-base);
+		border-radius: var(--dd-radius-lg);
+		background-color: var(--dd-color-surface-raised);
+		font-size: var(--dd-font-size-xl);
+		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.eyes {
+		inline-size: calc(var(--dd-size-icon) * 2.5);
+		block-size: auto;
+		flex: none;
+	}
+
+	.eyes ellipse {
+		fill: var(--dd-color-companion-eye);
+		stroke: var(--dd-color-drawing-line);
+		stroke-width: var(--dd-border-width-thick);
+		vector-effect: non-scaling-stroke;
+	}
+
+	.eyes .pupil {
+		fill: var(--dd-color-companion-line);
 	}
 
 	.bottom {

@@ -2,8 +2,11 @@ import type { ProgressionDefinition } from '../engine/progression/types';
 import type { StoryDefinition } from '../engine/story/types';
 import { voiceKey } from './voice-key';
 
-/** `intro`: said before a lesson; `opening`, `line`, `ending`: the three moments of the story. */
-export type VoiceTextKind = 'intro' | 'opening' | 'line' | 'ending';
+/**
+ * `intro`: said before a lesson; `opening`, `line`, `ending`: the three moments of the story;
+ * `reminder`: said by the games between two groups.
+ */
+export type VoiceTextKind = 'intro' | 'opening' | 'line' | 'ending' | 'reminder';
 
 export interface VoiceText {
 	/** `voiceKey(text)`: the name of the file that says it. */
@@ -19,7 +22,16 @@ export interface VoiceOrigin {
 }
 
 const ORIGIN_SEPARATOR = '#';
-const KINDS: readonly VoiceTextKind[] = ['intro', 'opening', 'line', 'ending'];
+const KINDS: readonly VoiceTextKind[] = ['intro', 'opening', 'line', 'ending', 'reminder'];
+
+/** Where the reminder to look at the screen comes from, in the list of the texts to record. */
+export const LOOK_REMINDER_ID = 'game.look-reminder';
+
+/** A sentence of the games that the voice says, apart from the content: `id` names where it comes from. */
+export interface VoiceReminder {
+	readonly id: string;
+	readonly text: string;
+}
 
 export function voiceOrigin(id: string, kind: VoiceTextKind): string {
 	return `${id}${ORIGIN_SEPARATOR}${kind}`;
@@ -45,7 +57,8 @@ export function voiceLocale(progression: ProgressionDefinition): string {
  */
 export function voiceTexts(
 	progression: ProgressionDefinition,
-	story?: StoryDefinition
+	story?: StoryDefinition,
+	reminders: readonly VoiceReminder[] = []
 ): readonly VoiceText[] {
 	const texts = new Map<string, VoiceText>();
 
@@ -71,5 +84,6 @@ export function voiceTexts(
 		for (const item of told.lessons) add(item.line, item.lessonId, 'line');
 		add(told.ending, told.worldId, 'ending');
 	}
+	for (const reminder of reminders) add(reminder.text, reminder.id, 'reminder');
 	return [...texts.values()];
 }

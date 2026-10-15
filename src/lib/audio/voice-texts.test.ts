@@ -57,6 +57,22 @@ function story(): StoryDefinition {
 }
 
 describe('voiceTexts', () => {
+	it('adds the reminders of the games after the content, once each', () => {
+		const reminder = { id: 'game.look-reminder', text: 'Regarde l’écran.' };
+		const texts = voiceTexts(progression(), undefined, [reminder, reminder]);
+
+		expect(texts.at(-1)).toEqual({
+			key: voiceKey(reminder.text),
+			text: reminder.text,
+			origin: 'game.look-reminder#reminder'
+		});
+		expect(texts.filter((item) => item.text === reminder.text)).toHaveLength(1);
+		expect(parseVoiceOrigin('game.look-reminder#reminder')).toEqual({
+			id: 'game.look-reminder',
+			kind: 'reminder'
+		});
+	});
+
 	it('lists the introduction of every lesson, in the order of the course', () => {
 		const texts = voiceTexts(progression());
 

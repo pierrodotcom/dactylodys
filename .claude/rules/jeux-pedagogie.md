@@ -91,6 +91,8 @@ Récompenses d'un jeu (ADR-030) : un élément qui apparaît ou change quand un 
 
 Main guide (ADR-031) : `GameSettings.guide` (`mode`, `freshChars`) est décidé par la route à partir de `guideMode(rules, numéro de leçon, réglage)` (`engine/progression/guide`) ; `GameShell` montre la touche attendue quand `isGuided` le dit, en passant `hands` et `still` à `KeyboardView`. Réglage `Settings.handGuide` (profil version 4).
 
+Avant-leçon et voix (ADR-033) : `GameProps.voice` (facultatif) dit le rappel « regarde l'écran » ; `GameSettings.lookReminderEvery` (règle de jeu `lookReminderEveryGroups`) en fixe la fréquence, `isLookReminderDue` (`games/shared/help`) décide. Chaque jeu a une image `<jeu>/Picture.svelte`, déclarée dans `games/GamePicture.svelte` : un jeu ajouté sans image s'affiche sans dessin.
+
 Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
 
 | Fonction | Module | Rôle |
