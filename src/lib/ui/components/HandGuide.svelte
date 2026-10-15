@@ -22,14 +22,17 @@
 		trigger: string;
 		/** Calm motion: the finger lights up where it rests, it does not move. */
 		still: boolean;
+		/** Shows the presses again and again, after a pause, for a child whose eyes wander. */
+		repeat?: boolean;
 	}
 
 	const MOVE_TOKEN = '--dd-duration-guide-move';
 	const HOLD_TOKEN = '--dd-duration-guide-hold';
 	const EASING_TOKEN = '--dd-easing-standard';
+	const PAUSE_TOKEN = '--dd-duration-guide-pause';
 	const OUTLINE_WIDTH = HAND_STROKES.finger + HAND_STROKES.outline * 2;
 
-	let { geometry, fingering, presses, trigger, still }: Props = $props();
+	let { geometry, fingering, presses, trigger, still, repeat = false }: Props = $props();
 
 	const hands = $derived(restingHands(geometry, fingering));
 	const size = $derived(keyboardSize(geometry));
@@ -46,6 +49,7 @@
 	async function show(
 		sequence: readonly (readonly FingerMove[])[],
 		calm: boolean,
+		again: boolean,
 		signal: AbortSignal
 	) {
 		void progress.set(0, { duration: 0 });
@@ -54,6 +58,21 @@
 		const duration = readDurationToken(MOVE_TOKEN);
 		const hold = readDurationToken(HOLD_TOKEN);
 		const easing = readEasingToken(EASING_TOKEN);
+		do {
+			await showOnce(sequence, calm, signal, { duration, hold, easing });
+			if (!again || signal.aborted) return;
+			moves = [];
+			await sleep(readDurationToken(PAUSE_TOKEN), signal);
+		} while (!signal.aborted);
+	}
+
+	async function showOnce(
+		sequence: readonly (readonly FingerMove[])[],
+		calm: boolean,
+		signal: AbortSignal,
+		timing: { duration: number; hold: number; easing: (time: number) => number }
+	) {
+		const { duration, hold, easing } = timing;
 		for (const step of sequence) {
 			if (signal.aborted) return;
 			moves = step;
@@ -75,7 +94,7 @@
 			.map((press) => fingerMoves(geometry, fingering, press))
 			.filter((step) => step.length > 0);
 		const controller = new AbortController();
-		void show(sequence, still, controller.signal);
+		void show(sequence, still, repeat, controller.signal);
 		return () => controller.abort();
 	});
 

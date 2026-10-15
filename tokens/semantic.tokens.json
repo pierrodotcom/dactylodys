@@ -226,6 +226,8 @@
 		"panel-max": { "$value": "32rem" },
 		"bubble-tail": { "$value": "{dimension.16}" },
 		"star": { "$value": "2rem" },
+		"star-large": { "$value": "5rem" },
+		"icon": { "$value": "1.25rem" },
 		"visually-hidden": { "$value": "1px" }
 	},
 	"radius": {
@@ -303,6 +305,8 @@
 		"reward-delay": { "$value": "{duration.400}" },
 		"guide-move": { "$value": "{duration.500}" },
 		"guide-hold": { "$value": "{duration.400}" },
+		"guide-pause": { "$value": "{duration.3000}" },
+		"confetti": { "$value": "{duration.1600}" },
 		"reward": { "$value": "{duration.1400}" },
 		"celebration": { "$value": "{duration.2800}" },
 		"notice": { "$value": "{duration.1600}" }

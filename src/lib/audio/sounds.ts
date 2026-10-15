@@ -1,4 +1,4 @@
-export const SOUND_IDS = ['correct', 'error', 'groupDone', 'lessonDone'] as const;
+export const SOUND_IDS = ['correct', 'error', 'groupDone', 'lessonDone', 'star'] as const;
 export type SoundId = (typeof SOUND_IDS)[number];
 
 export type Waveform = 'sine' | 'triangle' | 'square' | 'sawtooth';
@@ -47,6 +47,16 @@ export const SOUNDS: Readonly<Record<SoundId, SoundDefinition>> = {
 		notes: [
 			{ frequency: 523.25, start: 0, duration: 0.14 },
 			{ frequency: 783.99, start: 0.13, duration: 0.24 }
+		]
+	},
+	star: {
+		waveform: 'sine',
+		volume: 0.15,
+		attack: 0.01,
+		release: 0.06,
+		notes: [
+			{ frequency: 783.99, start: 0, duration: 0.1 },
+			{ frequency: 1046.5, start: 0.08, duration: 0.18 }
 		]
 	},
 	lessonDone: {

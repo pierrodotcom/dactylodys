@@ -58,6 +58,7 @@
 		sounds,
 		onComplete,
 		onQuit,
+		onSettings,
 		title,
 		pauseText,
 		arrangement = 'side',
@@ -258,6 +259,9 @@
 			<div class="actions">
 				<Button {@attach focusOnMount} onclick={resume}>{m.game_shared_resume()}</Button>
 				<Button variant="secondary" onclick={onQuit}>{m.game_shared_quit()}</Button>
+				{#if onSettings}
+					<Button variant="quiet" onclick={onSettings}>{m.play_settings_open()}</Button>
+				{/if}
 			</div>
 			<p class="note">{m.game_shared_quit_note()}</p>
 		</div>

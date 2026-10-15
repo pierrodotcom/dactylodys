@@ -4,9 +4,16 @@ export type Screen =
 	| { readonly name: 'new-player' }
 	| { readonly name: 'keyboard-check' }
 	| { readonly name: 'map' }
-	| { readonly name: 'settings' }
+	| { readonly name: 'settings'; readonly back: SettingsOrigin }
 	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'game'; readonly lessonId: string }
+	| { readonly name: 'result'; readonly lessonId: string }
+	| { readonly name: 'break' };
+
+/** Screens the settings open from, and come back to. A game left for the settings comes back to its lesson. */
+export type SettingsOrigin =
+	| { readonly name: 'map' }
+	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'result'; readonly lessonId: string }
 	| { readonly name: 'break' };
 
@@ -40,11 +47,27 @@ const CAN_CHANGE_PLAYER: ReadonlySet<Screen['name']> = new Set([
 	'keyboard-check'
 ]);
 
+function openSettings(screen: Screen): Screen {
+	switch (screen.name) {
+		case 'map':
+		case 'intro':
+		case 'result':
+		case 'break':
+			return { name: 'settings', back: screen };
+		case 'game':
+			return { name: 'settings', back: { name: 'intro', lessonId: screen.lessonId } };
+		default:
+			return screen;
+	}
+}
+
 /** Pure screen automaton. An event that makes no sense on the current screen changes nothing. */
 export function transition(screen: Screen, event: FlowEvent): Screen {
 	if (event.type === 'change-player') {
 		return CAN_CHANGE_PLAYER.has(screen.name) ? { name: 'players' } : screen;
 	}
+
+	if (event.type === 'open-settings') return openSettings(screen);
 
 	switch (screen.name) {
 		case 'loading':
@@ -68,13 +91,12 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 		case 'keyboard-check':
 			return event.type === 'keyboard-checked' ? { name: 'map' } : screen;
 		case 'map':
-			if (event.type === 'open-settings') return { name: 'settings' };
 			if (event.type === 'open-lesson' && event.unlocked) {
 				return { name: 'intro', lessonId: event.lessonId };
 			}
 			return screen;
 		case 'settings':
-			return event.type === 'close-settings' ? { name: 'map' } : screen;
+			return event.type === 'close-settings' ? screen.back : screen;
 		case 'intro':
 			if (event.type === 'start') return { name: 'game', lessonId: screen.lessonId };
 			if (event.type === 'back-to-map') return { name: 'map' };

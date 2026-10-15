@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
+import {
+	INITIAL_SCREEN,
+	transition,
+	type FlowEvent,
+	type Screen,
+	type SettingsOrigin
+} from './flow';
 
 const LESSON = 'fr.lesson.one';
 
@@ -87,16 +93,43 @@ describe('screen automaton', () => {
 		expect(transition({ name: 'break' }, { type: 'back-to-map' })).toEqual({ name: 'map' });
 	});
 
-	it('opens and closes the settings from the map', () => {
-		const screen = run([{ type: 'open-settings' }], { name: 'map' });
-		expect(screen).toEqual({ name: 'settings' });
-		expect(transition(screen, { type: 'close-settings' })).toEqual({ name: 'map' });
+	it('opens the settings from the map, a lesson, a result and the break, and comes back there', () => {
+		const origins: SettingsOrigin[] = [
+			{ name: 'map' },
+			{ name: 'intro', lessonId: LESSON },
+			{ name: 'result', lessonId: LESSON },
+			{ name: 'break' }
+		];
+		for (const origin of origins) {
+			const screen = transition(origin, { type: 'open-settings' });
+			expect(screen).toEqual({ name: 'settings', back: origin });
+			expect(transition(screen, { type: 'close-settings' })).toEqual(origin);
+		}
+	});
+
+	it('leaves a paused game for the settings, and comes back to its lesson', () => {
+		const screen = transition({ name: 'game', lessonId: LESSON }, { type: 'open-settings' });
+		expect(screen).toEqual({ name: 'settings', back: { name: 'intro', lessonId: LESSON } });
+		expect(transition(screen, { type: 'close-settings' })).toEqual({
+			name: 'intro',
+			lessonId: LESSON
+		});
+	});
+
+	it('does not open the settings before a player is chosen', () => {
+		for (const screen of [
+			INITIAL_SCREEN,
+			{ name: 'players' },
+			{ name: 'new-player' }
+		] as Screen[]) {
+			expect(transition(screen, { type: 'open-settings' })).toBe(screen);
+		}
 	});
 
 	it('changes player from every screen except the game', () => {
 		const allowed: Screen[] = [
 			{ name: 'map' },
-			{ name: 'settings' },
+			{ name: 'settings', back: { name: 'map' } },
 			{ name: 'intro', lessonId: LESSON },
 			{ name: 'result', lessonId: LESSON },
 			{ name: 'break' },

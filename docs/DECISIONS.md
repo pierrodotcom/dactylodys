@@ -138,3 +138,12 @@ Réalise la « main guide » de l'ADR-029 (lot T2).
 - **Quand.** Leçons 1 à 4 : chaque touche. Leçons 5 à 15 : seulement les touches nouvelles de la leçon (et les majuscules qu'elle débloque) et la touche qui suit une erreur. À partir de la leçon 16 : plus du tout. Ces bornes sont des données (`handGuide` dans les règles de la progression). Sur l'écran d'avant-leçon, la main montre une fois chaque touche nouvelle, l'une après l'autre.
 - **Réglage** « Main qui montre le bon doigt » : Selon les leçons (défaut), Toujours, Jamais. Profil en **version 4** (migration : « Selon les leçons »). Le lot R2 passera donc le profil en version 5.
 - La main **montre**, elle ne vérifie pas : le jeu ne voit pas les doigts de l'enfant. La voix qui explique le mouvement viendra avec le lot T3.
+
+## 032 — Retours du porteur sur T1 et T2 (2026-10-15, acceptée)
+Six remarques du porteur après avoir vu T1 et T2, toutes acceptées ; principe commun : l'enfant ne lit pas et son regard dérive, il faut montrer, répéter et surprendre.
+1. **Réglages en haut** : une barre en haut de la carte, de l'avant-leçon, du bilan et de la pause (nom du joueur, « Réglages » avec une roue dentée, « Changer de joueur ») ; jamais pendant la frappe. Les réglages s'ouvrent aussi depuis la pause d'un jeu (retour à l'avant-leçon) et reviennent toujours à l'écran d'où ils ont été ouverts.
+2. **Choix du jeu en images** : chaque jeu devient une grande image qui lance la partie ; le jeu proposé est plus grand. Fait avec le lot T3, qui refait l'avant-leçon.
+3. **Étoiles célébrées** : grandes étoiles qui apparaissent une par une, un petit son par étoile, une gerbe de confettis brève ; en animations calmes, un fondu sans confettis ; aucune célébration à zéro étoile.
+4. **Démonstration répétée** : sur l'avant-leçon, la main refait la démonstration des touches nouvelles toutes les 3 secondes (`--dd-duration-guide-pause`) tant que l'écran est affiché.
+5. **Scènes surprises** propres à chaque jeu, débloquées par la réussite des leçons, en ordre fixe (lot A1, propositions dans `docs/SCENES_SURPRISES.md`).
+6. **Main complète au 2ᵉ monde** : chaque touche montrée jusqu'à la leçon 11, puis les touches nouvelles et après une erreur jusqu'à la leçon 24 (amende l'ADR-031).

@@ -1,11 +1,14 @@
 <script lang="ts">
+	import type { SoundPlayer } from '$lib/audio';
 	import type { StarCount } from '$lib/engine/progression/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
 	import Companion from '$lib/ui/components/Companion.svelte';
+	import Confetti from '$lib/ui/components/Confetti.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import Stars from '$lib/ui/components/Stars.svelte';
 	import { keyName } from '$lib/ui/components/names';
+	import { readDurationToken } from '$lib/ui/motion';
 	import { isOne } from '$lib/ui/plural';
 	import type { ResultSummary } from './summary';
 
@@ -18,6 +21,9 @@
 		worldDone: boolean;
 		suggestBreak: boolean;
 		saveFailed: boolean;
+		/** Calm motion: the stars fade in, no confetti. */
+		still: boolean;
+		sounds: SoundPlayer;
 		onnext: () => void;
 		onreplay: () => void;
 		onmap: () => void;
@@ -31,6 +37,8 @@
 		worldDone,
 		suggestBreak,
 		saveFailed,
+		still,
+		sounds,
 		onnext,
 		onreplay,
 		onmap,
@@ -50,6 +58,18 @@
 		m.play_result_note_3
 	];
 	const SPACE = ' ';
+	const DELAY_TOKEN = '--dd-duration-reward-delay';
+	const BEAT_TOKEN = '--dd-duration-beat';
+
+	// One chime per star, as each one pops in.
+	$effect(() => {
+		const delay = readDurationToken(DELAY_TOKEN);
+		const beat = readDurationToken(BEAT_TOKEN);
+		const timers = Array.from({ length: stars }, (_, index) =>
+			setTimeout(() => sounds.play('star'), delay + beat * index)
+		);
+		return () => timers.forEach(clearTimeout);
+	});
 
 	function keyText(char: string): string {
 		return char === SPACE ? (keyName('Space') ?? char) : char.toLocaleUpperCase();
@@ -65,9 +85,14 @@
 </script>
 
 <ScreenFrame title={HEADLINES[stars]?.() ?? ''}>
-	<div class="hero">
+	<div class="hero" data-still={still || undefined}>
 		<Companion mood={stars > 0 ? 'cheer' : 'happy'} />
-		<Stars count={stars} />
+		<div class="stars-zone">
+			{#if stars > 0 && !still}
+				<Confetti />
+			{/if}
+			<Stars count={stars} celebrate />
+		</div>
 	</div>
 	<p class="note">{NOTES[stars]?.()}</p>
 
@@ -119,6 +144,10 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--dd-space-lg);
+	}
+
+	.stars-zone {
+		position: relative;
 	}
 
 	.note {

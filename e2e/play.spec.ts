@@ -876,6 +876,33 @@ test.describe('play route', () => {
 		await expect(root).toHaveAttribute('data-theme', 'dark');
 	});
 
+	test('shows the settings at the top of the map and of a lesson, and from the pause of a game', async ({
+		page
+	}) => {
+		await reachMap(page);
+		const settingsButton = button(page, message('play_settings_open'));
+		const top = page.locator('header.top-bar');
+		await expect(top.getByRole('button', { name: message('play_settings_open') })).toBeVisible();
+		const barBox = await top.boundingBox();
+		const mapTitle = await heading(page, message('play_map_title')).boundingBox();
+		expect(barBox?.y ?? Infinity).toBeLessThan(mapTitle?.y ?? -Infinity);
+
+		await openIntro(page, FIRST);
+		await expect(settingsButton).toBeVisible();
+		await button(page, message('play_intro_start')).click();
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+		await expect(top).toHaveCount(0);
+
+		await page.keyboard.press('Escape');
+		await page
+			.getByRole('dialog')
+			.getByRole('button', { name: message('play_settings_open') })
+			.click();
+		await expect(heading(page, message('settings_title'))).toBeVisible();
+		await button(page, message('settings_back')).click();
+		await expect(heading(page, FIRST.title)).toBeVisible();
+	});
+
 	test('hides the on-screen keyboard when asked to', async ({ page }) => {
 		await reachMap(page);
 		await button(page, message('play_settings_open')).click();
