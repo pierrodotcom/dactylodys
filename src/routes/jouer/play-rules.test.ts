@@ -8,6 +8,7 @@ const VALID = {
 	maxWordLevel: 3,
 	bankLoadTimeoutMs: 3000,
 	ghostPaceFactor: 0.9,
+	lookReminderEveryGroups: 4,
 	keyboardCheckCodes: ['KeyQ', 'KeyW']
 };
 
@@ -25,8 +26,15 @@ describe('parsePlayRules', () => {
 			maxWordLevel: 3,
 			bankLoadTimeoutMs: 3000,
 			ghostPaceFactor: 0.9,
+			lookReminderEveryGroups: 4,
 			keyboardCheckCodes: ['KeyQ', 'KeyW']
 		});
+	});
+
+	it('can turn the reminder to look at the screen off', () => {
+		expect(parsePlayRules({ ...VALID, lookReminderEveryGroups: 0 }).lookReminderEveryGroups).toBe(
+			0
+		);
 	});
 
 	it('lets the ghost run at the pace of the child, but never faster', () => {
@@ -48,6 +56,9 @@ describe('parsePlayRules', () => {
 		['a ghost faster than the child was', { ...VALID, ghostPaceFactor: 1.1 }],
 		['a ghost pace that is not a number', { ...VALID, ghostPaceFactor: '0.9' }],
 		['no ghost pace', { ...VALID, ghostPaceFactor: undefined }],
+		['a negative reminder period', { ...VALID, lookReminderEveryGroups: -1 }],
+		['a fractional reminder period', { ...VALID, lookReminderEveryGroups: 2.5 }],
+		['no reminder period', { ...VALID, lookReminderEveryGroups: undefined }],
 		['no key to check', { ...VALID, keyboardCheckCodes: [] }],
 		['an invalid key code', { ...VALID, keyboardCheckCodes: ['q'] }],
 		['a duplicated key code', { ...VALID, keyboardCheckCodes: ['KeyQ', 'KeyQ'] }]

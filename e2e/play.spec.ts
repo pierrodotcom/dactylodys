@@ -283,9 +283,19 @@ async function openIntro(page: Page, lesson: Lesson) {
 	await expect(heading(page, lesson.title)).toBeVisible();
 }
 
+/** The picture of a game on the lesson screen: it starts the lesson with that game. */
+function playButton(page: Page, gameId: string): Locator {
+	return button(page, message('play_game_play', { game: gameTitle(gameId) }));
+}
+
+/** The game the lesson screen proposes: the first and biggest picture, focused. */
+function proposedGame(page: Page): Locator {
+	return page.locator('button[data-proposed]');
+}
+
 async function startLesson(page: Page, lesson: Lesson) {
 	await openIntro(page, lesson);
-	await button(page, message('play_intro_start')).click();
+	await proposedGame(page).click();
 	await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 }
 
@@ -424,8 +434,8 @@ test.describe('play route', () => {
 			})
 		).toBeVisible();
 		await expect(page.locator('[data-target]')).toHaveCount(FIRST.newChars.length);
-		await expect(page.getByRole('radio')).toHaveCount(world.gameIds.length);
-		await expect(button(page, message('play_intro_start'))).toBeFocused();
+		await expect(page.locator('button[data-game]')).toHaveCount(world.gameIds.length);
+		await expect(playButton(page, FIRST_GAME)).toBeFocused();
 		await page.keyboard.press('Enter');
 
 		const total = await groupTotal(page, FIRST_GAME);
@@ -493,7 +503,7 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await activateByTab(page, page.getByRole('button', { name: FIRST.title }));
-		await expect(button(page, message('play_intro_start'))).toBeFocused();
+		await expect(playButton(page, FIRST_GAME)).toBeFocused();
 		await page.keyboard.press('Enter');
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(page.locator('#game-input')).toBeFocused();
@@ -889,7 +899,7 @@ test.describe('play route', () => {
 
 		await openIntro(page, FIRST);
 		await expect(settingsButton).toBeVisible();
-		await button(page, message('play_intro_start')).click();
+		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(top).toHaveCount(0);
 
@@ -946,7 +956,7 @@ test.describe('play route', () => {
 		await openIntro(page, FIRST);
 		await expect(page.locator('.keyboard')).toBeVisible();
 		await expect(page.locator('[data-hand-guide]')).toHaveCount(0);
-		await button(page, message('play_intro_start')).click();
+		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(page.locator('.keyboard')).toBeVisible();
 		await expect(page.locator('[data-hand-guide]')).toHaveCount(0);
@@ -999,19 +1009,15 @@ test.describe('play route', () => {
 		await expect(lessonRow(page, NEXT_SECOND)).toContainText(message('play_lesson_locked'));
 
 		await openIntro(page, NEXT_FIRST);
-		const radio = (gameId: string) => page.getByRole('radio', { name: gameTitle(gameId) });
 		await expect(
-			page.getByRole('group', { name: message('play_game_choice_legend') })
+			page.getByRole('list', { name: message('play_game_choice_legend') })
 		).toBeVisible();
-		await expect(page.getByRole('radio')).toHaveCount(NEXT_WORLD.gameIds.length);
-		for (const gameId of NEXT_WORLD.gameIds) await expect(radio(gameId)).toBeVisible();
-		await expect(radio(DEFAULT_GAME)).toBeChecked();
+		await expect(page.locator('button[data-game]')).toHaveCount(NEXT_WORLD.gameIds.length);
+		for (const gameId of NEXT_WORLD.gameIds) await expect(playButton(page, gameId)).toBeVisible();
+		await expect(proposedGame(page)).toHaveAttribute('data-game', DEFAULT_GAME);
+		await expect(playButton(page, DEFAULT_GAME)).toBeFocused();
 
-		await radio(DEFAULT_GAME).focus();
-		await page.keyboard.press('ArrowDown');
-		await expect(radio(OTHER_GAME)).toBeChecked();
-		await expect(radio(DEFAULT_GAME)).not.toBeChecked();
-		await activateByTab(page, button(page, message('play_intro_start')));
+		await activateByTab(page, playButton(page, OTHER_GAME));
 
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
@@ -1020,14 +1026,12 @@ test.describe('play route', () => {
 
 	test('finds the game chosen in a world again at the next visit', async ({ page }) => {
 		const profile = profileAfter(lastLessonOf(world).id);
-		const radio = (gameId: string) => page.getByRole('radio', { name: gameTitle(gameId) });
 		await reachMapAs(page, profile);
 		await openIntro(page, NEXT_FIRST);
-		await expect(radio(DEFAULT_GAME)).toBeChecked();
+		await expect(proposedGame(page)).toHaveAttribute('data-game', DEFAULT_GAME);
 
-		await radio(DEFAULT_GAME).focus();
-		await page.keyboard.press('ArrowDown');
-		await expect(radio(OTHER_GAME)).toBeChecked();
+		await playButton(page, OTHER_GAME).click();
+		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
 		await expect
 			.poll(async () => (await storedRecord(page, profile))?.['lastGameByWorld'])
 			.toEqual({ [NEXT_WORLD.id]: OTHER_GAME, [NEXT_FIRST.id]: OTHER_GAME });
@@ -1036,9 +1040,8 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await openIntro(page, NEXT_FIRST);
-		await expect(radio(OTHER_GAME)).toBeChecked();
-		await expect(radio(DEFAULT_GAME)).not.toBeChecked();
-		await button(page, message('play_intro_start')).click();
+		await expect(proposedGame(page)).toHaveAttribute('data-game', OTHER_GAME);
+		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
 	});
@@ -1062,7 +1065,7 @@ test.describe('play route', () => {
 		await reachMapAs(page, profile);
 		await openIntro(page, NEXT_FIRST);
 		await seedExercise(page, seed);
-		await button(page, message('play_intro_start')).click();
+		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 
 		const { groups } = await typeToResult(page, { skipDelay: true });
@@ -1079,8 +1082,7 @@ test.describe('play route', () => {
 	}) => {
 		await reachMapAs(page, profileAfter(NEXT_FIRST.id));
 		await openIntro(page, NEXT_SECOND);
-		await page.getByRole('radio', { name: gameTitle(RECIPE) }).check();
-		await button(page, message('play_intro_start')).click();
+		await playButton(page, RECIPE).click();
 		await expect(progressPicture(page, RECIPE, 0)).toBeVisible();
 
 		const { typed } = await typeToResult(page, { skipDelay: true });
@@ -1115,9 +1117,8 @@ test.describe('play route', () => {
 		);
 		await reachMapAs(page, profile);
 		await openIntro(page, lesson);
-		await page.getByRole('radio', { name: gameTitle(ROCKET) }).check();
 		await seedExercise(page, seed);
-		await button(page, message('play_intro_start')).click();
+		await playButton(page, ROCKET).click();
 		await expect(progressPicture(page, ROCKET, 0)).toBeVisible();
 
 		const { groups } = await typeToResult(page, { skipDelay: true });
@@ -1317,7 +1318,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expectNoAxeViolation(page);
 
 			await openIntro(page, NEXT_FIRST);
-			await expect(page.getByRole('radio')).toHaveCount(NEXT_WORLD.gameIds.length);
+			await expect(page.locator('button[data-game]')).toHaveCount(NEXT_WORLD.gameIds.length);
 			await expectNoAxeViolation(page);
 		});
 

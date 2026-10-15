@@ -1,4 +1,5 @@
 import type { SoundPlayer } from '../audio';
+import type { VoicePlayer } from '../audio/voice-types';
 import type { GhostRun, PacePoint } from '../engine/ghost/types';
 import type { Exercise, GuideMode } from '../engine/progression/types';
 import type { ErrorPolicy, SessionMetrics } from '../engine/types';
@@ -22,6 +23,8 @@ export interface GameSettings {
 	readonly showKeyboard: boolean;
 	readonly errorPolicy: ErrorPolicy;
 	readonly guide: GameGuide;
+	/** Every so many groups, the child is reminded to look at the screen; 0: never. */
+	readonly lookReminderEvery: number;
 }
 
 export interface GameOutcome {
@@ -48,6 +51,8 @@ export interface GameProps {
 	readonly ghost?: GhostRun;
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
+	/** Says the reminders of the game aloud; absent: they are only shown. */
+	readonly voice?: VoicePlayer;
 	/** Leaves the game for the settings, from the pause; absent where there are none. */
 	readonly onSettings?: () => void;
 }

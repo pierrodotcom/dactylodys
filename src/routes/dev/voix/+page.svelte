@@ -4,6 +4,7 @@
 	import { VOICE_CREDIT_MAX_LENGTH } from '$lib/audio/voice-recordings';
 	import { processTake } from '$lib/audio/voice-signal';
 	import {
+		LOOK_REMINDER_ID,
 		parseVoiceOrigin,
 		voiceLocale,
 		voiceTexts,
@@ -39,13 +40,16 @@
 
 	const config = parseVoiceConfig(configData);
 	const progression = parseProgression(progressionData);
-	const texts = voiceTexts(progression);
-	const titles = new Map(
-		progression.worlds.flatMap((world): [string, string][] => [
+	const texts = voiceTexts(progression, undefined, [
+		{ id: LOOK_REMINDER_ID, text: m.game_shared_look_reminder() }
+	]);
+	const titles = new Map([
+		...progression.worlds.flatMap((world): [string, string][] => [
 			[world.id, world.title],
 			...world.lessons.map((lesson): [string, string] => [lesson.id, lesson.title])
-		])
-	);
+		]),
+		[LOOK_REMINDER_ID, m.dev_voix_reminder_look()]
+	]);
 
 	const MS_PER_SECOND = 1000;
 	const REVOKE_DELAY_MS = 10_000;
@@ -57,7 +61,8 @@
 		intro: m.dev_voix_origin_intro,
 		opening: m.dev_voix_origin_opening,
 		line: m.dev_voix_origin_line,
-		ending: m.dev_voix_origin_ending
+		ending: m.dev_voix_origin_ending,
+		reminder: m.dev_voix_origin_reminder
 	};
 	const PROBLEM_MESSAGES: Readonly<Record<MicrophoneProblem, () => string>> = {
 		insecure: m.dev_voix_problem_insecure,

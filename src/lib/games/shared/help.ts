@@ -6,3 +6,11 @@ export function needsCapsLockHelp(capsLockOn: boolean, expected: string | undefi
 	if (!capsLockOn || expected === undefined) return false;
 	return expected !== expected.toLocaleUpperCase() && expected === expected.toLocaleLowerCase();
 }
+
+/**
+ * Between two groups, every `every` groups, the child is reminded to look at the screen: never
+ * while typing, never after the last group, never when `every` is 0.
+ */
+export function isLookReminderDue(completed: number, total: number, every: number): boolean {
+	return every > 0 && completed > 0 && completed < total && completed % every === 0;
+}

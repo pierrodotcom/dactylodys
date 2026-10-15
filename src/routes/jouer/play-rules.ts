@@ -16,6 +16,11 @@ export interface PlayRules {
 	 */
 	readonly ghostPaceFactor: number;
 	/**
+	 * Every so many groups, between two groups, the child is reminded to look at the screen rather
+	 * than at the keys; 0: never.
+	 */
+	readonly lookReminderEveryGroups: number;
+	/**
 	 * Physical keys the child is asked to press to check the keyboard. They are chosen
 	 * where the layouts the game supports differ from other common ones (A, Z and M on AZERTY).
 	 */
@@ -43,6 +48,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 				'maxWordLevel',
 				'bankLoadTimeoutMs',
 				'ghostPaceFactor',
+				'lookReminderEveryGroups',
 				'keyboardCheckCodes'
 			].includes(name)
 		) {
@@ -80,6 +86,15 @@ export function parsePlayRules(data: unknown): PlayRules {
 		fail('playRules.ghostPaceFactor', 'expected a number above 0 and up to 1');
 	}
 
+	const lookReminderEveryGroups = data['lookReminderEveryGroups'];
+	if (
+		typeof lookReminderEveryGroups !== 'number' ||
+		!Number.isSafeInteger(lookReminderEveryGroups) ||
+		lookReminderEveryGroups < 0
+	) {
+		fail('playRules.lookReminderEveryGroups', 'expected an integer of at least 0');
+	}
+
 	const rawCodes = data['keyboardCheckCodes'];
 	if (!Array.isArray(rawCodes) || rawCodes.length === 0) {
 		fail('playRules.keyboardCheckCodes', 'expected a non-empty array');
@@ -97,6 +112,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 		maxWordLevel,
 		bankLoadTimeoutMs,
 		ghostPaceFactor,
+		lookReminderEveryGroups,
 		keyboardCheckCodes: codes
 	};
 }

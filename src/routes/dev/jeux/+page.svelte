@@ -18,6 +18,9 @@
 		description: gameDescription(game.id)
 	}));
 
+	/** Often enough to see the reminder in the short sample exercise. */
+	const LOOK_REMINDER_EVERY = 2;
+
 	let { data }: PageProps = $props();
 
 	let gameId = $state(GAMES[0]?.id ?? '');
@@ -34,7 +37,8 @@
 		reducedMotion,
 		showKeyboard,
 		errorPolicy: 'retry' as const,
-		guide: { mode: showHand ? ('every-key' as const) : ('none' as const), freshChars: [] }
+		guide: { mode: showHand ? ('every-key' as const) : ('none' as const), freshChars: [] },
+		lookReminderEvery: LOOK_REMINDER_EVERY
 	});
 
 	onMount(() => {

@@ -72,6 +72,13 @@
 			onchange={(value) => onchange({ soundEnabled: value === YES })}
 		/>
 		<ChoiceGroup
+			legend={m.settings_voice_label()}
+			name="setting-voice"
+			options={FLAG_OPTIONS}
+			value={flag(settings.voiceEnabled)}
+			onchange={(value) => onchange({ voiceEnabled: value === YES })}
+		/>
+		<ChoiceGroup
 			legend={m.settings_theme_label()}
 			name="setting-theme"
 			options={THEME_OPTIONS}

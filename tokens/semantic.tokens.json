@@ -228,6 +228,8 @@
 		"star": { "$value": "2rem" },
 		"star-large": { "$value": "5rem" },
 		"icon": { "$value": "1.25rem" },
+		"game-picture": { "$value": "9rem" },
+		"game-picture-small": { "$value": "6rem" },
 		"visually-hidden": { "$value": "1px" }
 	},
 	"radius": {

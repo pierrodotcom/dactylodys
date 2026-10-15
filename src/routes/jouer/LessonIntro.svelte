@@ -2,32 +2,35 @@
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
 	import { targetKeyPress } from '$lib/games/shared/target';
 	import type { KeyPress } from '$lib/keyboard/types';
+	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
-	import CardChoice from '$lib/ui/components/CardChoice.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
-	import { focusOnMount } from '$lib/ui/focus';
 	import { isOne } from '$lib/ui/plural';
 	import type { KeyboardAssets } from './assets';
 	import type { GameOption } from './game-choice';
+	import GamePicker from './GamePicker.svelte';
 
 	interface Props {
 		lesson: LessonDefinition;
 		number: number;
 		assets: KeyboardAssets;
-		/** The games of the world; the child chooses when there are several. */
+		/** The games of the world; each one starts the lesson. */
 		games: readonly GameOption[];
+		/** The game proposed for this lesson. */
 		gameId: string;
 		/** What the hand on the keyboard shows in this lesson: here, the new keys one after the other. */
 		guide: GuideMode;
 		/** Calm motion: the fingers light up, they do not move. */
 		still: boolean;
+		/** Says the instruction of the lesson as the screen opens, and again on demand. */
+		voice: VoicePlayer;
 		/** The chosen game could not be loaded. */
 		loadFailed: boolean;
-		onchoose: (gameId: string) => void;
-		onstart: () => void;
+		onplay: (gameId: string) => void;
 		onback: () => void;
 	}
 
@@ -39,11 +42,19 @@
 		gameId,
 		guide,
 		still,
+		voice,
 		loadFailed,
-		onchoose,
-		onstart,
+		onplay,
 		onback
 	}: Props = $props();
+
+	// The child does not read: the instruction is said once as the lesson opens.
+	$effect(() => {
+		const said = lesson.intro;
+		const speaker = voice;
+		void speaker.speak(said);
+		return () => speaker.stop();
+	});
 
 	const presses = $derived(
 		lesson.newChars.flatMap((char) => {
@@ -62,7 +73,10 @@
 
 <ScreenFrame title={lesson.title} focusHeading={false} wide>
 	<p class="number">{m.play_lesson_number({ number })}</p>
-	<p class="intro">{lesson.intro}</p>
+	<div class="say">
+		<ListenButton text={lesson.intro} player={voice} />
+		<p class="intro">{lesson.intro}</p>
+	</div>
 
 	<section class="keys" aria-labelledby="intro-keys-heading">
 		<h2 id="intro-keys-heading">
@@ -88,22 +102,13 @@
 		</ul>
 	</section>
 
-	{#if games.length > 1}
-		<CardChoice
-			legend={m.play_game_choice_legend()}
-			name="game"
-			options={games}
-			value={gameId}
-			onchange={onchoose}
-		/>
-	{/if}
+	<GamePicker {games} proposed={gameId} {onplay} />
 
 	{#if loadFailed}
 		<p class="problem" role="alert">{m.play_game_load_error()}</p>
 	{/if}
 
 	<div class="actions">
-		<Button size="lg" {@attach focusOnMount} onclick={onstart}>{m.play_intro_start()}</Button>
 		<Button variant="quiet" onclick={onback}>{m.play_intro_back()}</Button>
 	</div>
 </ScreenFrame>
@@ -114,8 +119,16 @@
 		font-weight: var(--dd-font-weight-bold);
 	}
 
+	.say {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-md);
+	}
+
 	.intro {
-		font-size: var(--dd-font-size-xl);
+		font-size: var(--dd-font-size-lg);
 	}
 
 	.keys {

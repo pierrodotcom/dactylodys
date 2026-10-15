@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { voiceKey } from '../src/lib/audio/voice-key';
 import { parseVoiceRecordings } from '../src/lib/audio/voice-recordings';
 import { readWavHeader } from '../src/lib/audio/voice-signal';
-import { voiceTexts } from '../src/lib/audio/voice-texts';
+import { LOOK_REMINDER_ID, voiceTexts } from '../src/lib/audio/voice-texts';
 import { readZipEntry } from '../src/lib/audio/zip-test-support';
 import { parseProgression } from '../src/lib/engine/progression/definition';
 import { linkedPaths, loadMessages, openPage, readJson, reloadPage } from './support';
@@ -20,7 +20,9 @@ const TAKE_SECONDS = 1;
 const { message } = loadMessages();
 const config = readJson<{ sampleRate: number }>('content/common/voice.json');
 const TEXTS = voiceTexts(
-	parseProgression(readJson('content/fr/progression/azerty-decouverte.json'))
+	parseProgression(readJson('content/fr/progression/azerty-decouverte.json')),
+	undefined,
+	[{ id: LOOK_REMINDER_ID, text: message('game_shared_look_reminder') }]
 );
 const TOTAL = TEXTS.length;
 const FIRST = TEXTS[0]!;

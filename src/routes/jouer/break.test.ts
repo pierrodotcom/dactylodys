@@ -13,6 +13,7 @@ const RULES: PlayRules = {
 	maxWordLevel: 3,
 	bankLoadTimeoutMs: 3000,
 	ghostPaceFactor: 0.9,
+	lookReminderEveryGroups: 4,
 	keyboardCheckCodes: ['KeyQ']
 };
 const MINUTE = 60_000;

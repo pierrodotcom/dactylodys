@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount, type Component } from 'svelte';
+	import { resolve } from '$app/paths';
+	import { createVoicePlayer, loadVoiceManifest, type VoicePlayer } from '$lib/audio';
+	import { voiceLocale } from '$lib/audio/voice-texts';
 	import { isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
 	import { guideMode } from '$lib/engine/progression/guide';
@@ -121,6 +124,33 @@
 
 	onMount(() => () => sounds.dispose());
 
+	const SILENT_VOICE = createVoicePlayer({ manifest: null, baseUrl: '', isEnabled: () => false });
+	/** The recorded voice of the language of the lessons; silent until its files are found, or without them. */
+	let voice = $state.raw<VoicePlayer>(SILENT_VOICE);
+
+	$effect(() => {
+		if (!progression) return;
+		const baseUrl = `${resolve('/')}voice/${voiceLocale(progression)}/`;
+		let cancelled = false;
+		let created: VoicePlayer | undefined;
+		void loadVoiceManifest(fetch, baseUrl)
+			.catch(() => null)
+			.then((manifest) => {
+				if (cancelled) return;
+				created = createVoicePlayer({
+					manifest,
+					baseUrl,
+					isEnabled: () => profile?.settings.voiceEnabled ?? false
+				});
+				voice = created;
+			});
+		return () => {
+			cancelled = true;
+			created?.dispose();
+			voice = SILENT_VOICE;
+		};
+	});
+
 	async function resumeLastPlayer(): Promise<boolean> {
 		const lastId = readLastPlayerId();
 		if (lastId === null) return false;
@@ -225,6 +255,12 @@
 	function chooseGame(worldId: string, lessonId: string, gameId: string) {
 		gameLoadFailed = false;
 		if (profile) void commit(withGames(profile, worldId, lessonId, gameId));
+	}
+
+	/** A picture of a game was chosen on the lesson screen: it is kept, and the lesson starts with it. */
+	function playLesson(worldId: string, lessonId: string, gameId: string) {
+		chooseGame(worldId, lessonId, gameId);
+		void beginGame(lessonId, { type: 'start' });
 	}
 
 	/** The game is kept for the world and for the lesson, so that a return finds it. */
@@ -383,9 +419,9 @@
 				gameId={gameFor(world, lessonId, profile)?.id ?? ''}
 				guide={guideFor(profile, lessonId).mode}
 				still={isMotionReduced(profile.settings, systemPrefersReduced)}
+				{voice}
 				loadFailed={gameLoadFailed}
-				onchoose={(gameId) => chooseGame(world.id, lessonId, gameId)}
-				onstart={() => beginGame(lessonId, { type: 'start' })}
+				onplay={(gameId) => playLesson(world.id, lessonId, gameId)}
 				onback={() => go({ type: 'back-to-map' })}
 			/>
 		{/if}
@@ -401,11 +437,13 @@
 				settings={toGameSettings(
 					profile.settings,
 					systemPrefersReduced,
-					guideFor(profile, lessonId)
+					guideFor(profile, lessonId),
+					PLAY_RULES.lookReminderEveryGroups
 				)}
 				{sounds}
 				onComplete={(outcome) => finishGame(lessonId, outcome)}
 				onSettings={openSettings}
+				{voice}
 				onQuit={quitGame}
 			/>
 		{/if}
