@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findLesson, learnedChars, lessonIds, parseProgression } from './definition';
+import { findLesson, freshChars, learnedChars, lessonIds, parseProgression } from './definition';
 import { clone, loadShippedProgressions } from './test-support';
 
 type Raw = {
@@ -156,6 +156,14 @@ describe('parseProgression', () => {
 		expect(narrow.rules.recentCharWindow).toBe(1);
 	});
 
+	it('reads the optional rules of the hand guide, absent by default', () => {
+		expect(parseProgression(BASE).rules.handGuide).toBeUndefined();
+		const parsed = parseProgression(
+			variant((raw) => (raw.rules['handGuide'] = { everyKeyUntil: 4, newKeysUntil: 15 }))
+		);
+		expect(parsed.rules.handGuide).toEqual({ everyKeyUntil: 4, newKeysUntil: 15 });
+	});
+
 	it('reads the optional length slack, absent by default', () => {
 		expect(parseProgression(BASE).rules.lengthSlack).toBeUndefined();
 		const slack = parseProgression(variant((raw) => (raw.rules['lengthSlack'] = 12)));
@@ -284,6 +292,16 @@ describe('parseProgression', () => {
 			'missing minimum count of new characters',
 			(raw) => delete raw.rules['newCharMinCount'],
 			/progression\.rules\.newCharMinCount/
+		],
+		[
+			'hand guide that shows new keys for fewer lessons than every key',
+			(raw) => (raw.rules['handGuide'] = { everyKeyUntil: 5, newKeysUntil: 4 }),
+			/progression.rules.handGuide.newKeysUntil/
+		],
+		[
+			'hand guide with an unknown property',
+			(raw) => (raw.rules['handGuide'] = { everyKeyUntil: 1, newKeysUntil: 2, speed: 3 }),
+			/progression.rules.handGuide.speed: unknown property/
 		],
 		[
 			'negative length slack',
@@ -659,6 +677,13 @@ describe('lesson accessors', () => {
 				});
 			})
 		);
+
+		it('counts as fresh the new characters of a lesson, and the capitals it unlocks', () => {
+			expect(freshChars(withCapitals, 'fr.lesson.b')).toEqual(['é', ' ']);
+			expect(freshChars(withCapitals, 'fr.lesson.c')).toEqual(['F', 'J']);
+			expect(freshChars(withCapitals, 'fr.lesson.d')).toEqual(['e', ',', '.']);
+			expect(() => freshChars(withCapitals, 'fr.lesson.zzz')).toThrow(RangeError);
+		});
 
 		it('does not add capitals before the unlocking lesson', () => {
 			expect(learnedChars(withCapitals, 'fr.lesson.b')).toEqual(['f', 'j', 'é', ' ']);

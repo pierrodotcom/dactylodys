@@ -1,4 +1,4 @@
-import { fingerForKey } from '$lib/keyboard/fingering';
+import { modifierCodes } from '$lib/keyboard/fingering';
 import type {
 	FingeringProfile,
 	KeyCode,
@@ -7,9 +7,6 @@ import type {
 	LayoutDefinition
 } from '$lib/keyboard/types';
 
-const SHIFT_BY_OPPOSITE_HAND = { left: 'ShiftRight', right: 'ShiftLeft' } as const;
-const DEFAULT_SHIFT = 'ShiftLeft';
-const ALTGR = 'AltRight';
 const INDEX_FINGERS = ['left-index', 'right-index'] as const;
 
 function outputText(layout: LayoutDefinition, output: KeyOutput | undefined): string | null {
@@ -46,14 +43,7 @@ export function pressLabel(layout: LayoutDefinition, press: KeyPress): string | 
 	return outputText(layout, layout.keys[press.code]?.[press.level]);
 }
 
-/** Modifier keys to hold for a press: Shift on the hand opposite to the typing finger, then AltGr. */
-export function modifierCodes(press: KeyPress, fingering: FingeringProfile): KeyCode[] {
-	const needsShift = press.level === 'shift' || press.level === 'shiftAltgr';
-	const needsAltgr = press.level === 'altgr' || press.level === 'shiftAltgr';
-	const hand = fingerForKey(fingering, press.code)?.split('-')[0];
-	const shift = hand === 'left' || hand === 'right' ? SHIFT_BY_OPPOSITE_HAND[hand] : DEFAULT_SHIFT;
-	return [...(needsShift ? [shift] : []), ...(needsAltgr ? [ALTGR] : [])];
-}
+export { modifierCodes };
 
 /** Home keys marked on a real keyboard: the ones under the two index fingers (F and J on AZERTY). */
 export function homeKeyCodes(fingering: FingeringProfile): KeyCode[] {

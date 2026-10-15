@@ -5,6 +5,7 @@ import { emptyProgress } from '../engine/progression/progress';
 import type {
 	CharProgress,
 	CharSample,
+	HandGuidePreference,
 	LessonProgress,
 	ProgressState,
 	StarCount
@@ -39,17 +40,19 @@ const DEFAULT_SETTINGS_COMMON = {
 	motion: 'system',
 	textScale: 'md',
 	textSpacing: 'normal',
-	showKeyboard: true
+	showKeyboard: true,
+	handGuide: 'auto'
 } as const satisfies Omit<Settings, 'layoutId'>;
 
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
 const MOTIONS = ['system', 'reduced', 'full'] as const satisfies readonly MotionPreference[];
+const HAND_GUIDES = ['auto', 'always', 'off'] as const satisfies readonly HandGuidePreference[];
 const TEXT_SCALES = ['md', 'lg', 'xl'] as const satisfies readonly TextScale[];
 const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly TextSpacing[];
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 3;
+export const PROFILE_SCHEMA_VERSION = 4;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -77,7 +80,8 @@ const SETTINGS_KEYS = [
 	'motion',
 	'textScale',
 	'textSpacing',
-	'showKeyboard'
+	'showKeyboard',
+	'handGuide'
 ] as const satisfies readonly (keyof Settings)[];
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
@@ -241,7 +245,8 @@ function parseSettings(data: unknown, path: string): Settings {
 		motion: expectOneOf(record['motion'], MOTIONS, `${path}.motion`),
 		textScale: expectOneOf(record['textScale'], TEXT_SCALES, `${path}.textScale`),
 		textSpacing: expectOneOf(record['textSpacing'], TEXT_SPACINGS, `${path}.textSpacing`),
-		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`)
+		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
+		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`)
 	};
 }
 

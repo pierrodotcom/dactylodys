@@ -892,6 +892,39 @@ test.describe('play route', () => {
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 	});
 
+	test('rests two hands on the keyboard in the first lessons and lights up the finger to use', async ({
+		page
+	}) => {
+		await reachMap(page);
+		await startLesson(page, FIRST);
+
+		const hands = page.locator('.keyboard [data-hand-guide]');
+		await expect(hands).toBeVisible();
+		await expect(hands.locator('[data-finger]')).toHaveCount(10);
+		await expect(hands.locator('[data-active]')).toHaveCount(1);
+		await page.keyboard.type(await currentGroup(page));
+		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+	});
+
+	test('takes the hands away when the setting says never', async ({ page }) => {
+		await reachMap(page);
+		await button(page, message('play_settings_open')).click();
+		await page
+			.getByRole('group', { name: message('settings_hand_label') })
+			.getByRole('radio', { name: message('settings_hand_off') })
+			.check();
+		await expect(page.getByText(message('settings_saved'))).toBeVisible();
+		await button(page, message('settings_back')).click();
+
+		await openIntro(page, FIRST);
+		await expect(page.locator('.keyboard')).toBeVisible();
+		await expect(page.locator('[data-hand-guide]')).toHaveCount(0);
+		await button(page, message('play_intro_start')).click();
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+		await expect(page.locator('.keyboard')).toBeVisible();
+		await expect(page.locator('[data-hand-guide]')).toHaveCount(0);
+	});
+
 	test('suggests a break after the play time of the rules, and never before', async ({ page }) => {
 		await page.clock.install();
 		await reachMap(page);

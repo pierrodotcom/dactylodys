@@ -1,6 +1,6 @@
 import type { SoundPlayer } from '../audio';
 import type { GhostRun, PacePoint } from '../engine/ghost/types';
-import type { Exercise } from '../engine/progression/types';
+import type { Exercise, GuideMode } from '../engine/progression/types';
 import type { ErrorPolicy, SessionMetrics } from '../engine/types';
 import type {
 	CharIndex,
@@ -9,11 +9,19 @@ import type {
 	LayoutDefinition
 } from '../keyboard/types';
 
+/** What the hand drawn on the keyboard shows during the exercise, decided by the lesson. */
+export interface GameGuide {
+	readonly mode: GuideMode;
+	/** The characters the lesson brings, shown in the `new-keys` mode. */
+	readonly freshChars: readonly string[];
+}
+
 export interface GameSettings {
 	readonly soundEnabled: boolean;
 	readonly reducedMotion: boolean;
 	readonly showKeyboard: boolean;
 	readonly errorPolicy: ErrorPolicy;
+	readonly guide: GameGuide;
 }
 
 export interface GameOutcome {

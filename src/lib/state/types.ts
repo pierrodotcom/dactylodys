@@ -1,5 +1,5 @@
 import type { GhostRun } from '../engine/ghost/types';
-import type { ProgressState } from '../engine/progression/types';
+import type { HandGuidePreference, ProgressState } from '../engine/progression/types';
 import type { CompanionChoice } from '../engine/rewards/types';
 import type { FingeringProfileId, LayoutId } from '../keyboard/layout-ids';
 
@@ -21,13 +21,15 @@ export interface Settings {
 	readonly textSpacing: TextSpacing;
 	/** Show the on-screen keyboard and the expected finger. */
 	readonly showKeyboard: boolean;
+	/** The hand drawn on the keyboard: as the lessons go, always, never. */
+	readonly handGuide: HandGuidePreference;
 }
 
-export type { CompanionChoice };
+export type { CompanionChoice, HandGuidePreference };
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 3;
+	readonly schemaVersion: 4;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

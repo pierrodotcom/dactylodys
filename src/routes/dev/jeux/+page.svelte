@@ -23,6 +23,7 @@
 	let gameId = $state(GAMES[0]?.id ?? '');
 	let showKeyboard = $state(true);
 	let reducedMotion = $state(false);
+	let showHand = $state(true);
 	let step = $state<Step>('choose');
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let outcome = $state.raw<GameOutcome | null>(null);
@@ -32,7 +33,8 @@
 		soundEnabled: false,
 		reducedMotion,
 		showKeyboard,
-		errorPolicy: 'retry' as const
+		errorPolicy: 'retry' as const,
+		guide: { mode: showHand ? ('every-key' as const) : ('none' as const), freshChars: [] }
 	});
 
 	onMount(() => {
@@ -106,6 +108,10 @@
 				<label>
 					<input type="checkbox" bind:checked={reducedMotion} />
 					<span>{m.dev_games_reduced_label()}</span>
+				</label>
+				<label>
+					<input type="checkbox" bind:checked={showHand} />
+					<span>{m.dev_games_hand_label()}</span>
 				</label>
 			</div>
 

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount, type Component } from 'svelte';
 	import { isLessonUnlocked } from '$lib/engine/progression/progress';
-	import { findLesson, lessonIds } from '$lib/engine/progression/definition';
+	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
+	import { guideMode } from '$lib/engine/progression/guide';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import type {
 		Exercise,
@@ -9,7 +10,7 @@
 		StarCount,
 		WorldDefinition
 	} from '$lib/engine/progression/types';
-	import type { GameOutcome, GameProps } from '$lib/games/types';
+	import type { GameGuide, GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import { applySettings } from '$lib/state/apply-settings';
@@ -35,7 +36,7 @@
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
 	import { gameForLesson, gameOptions } from './game-choice';
-	import { toGameSettings } from './game-settings';
+	import { isMotionReduced, toGameSettings } from './game-settings';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
@@ -235,6 +236,16 @@
 		);
 	}
 
+	/** What the hand on the keyboard shows in this lesson, for this child. */
+	function guideFor(current: Profile, lessonId: string): GameGuide {
+		if (!progression) return { mode: 'none', freshChars: [] };
+		const number = lessonIds(progression).indexOf(lessonId) + 1;
+		return {
+			mode: guideMode(progression.rules, number, current.settings.handGuide),
+			freshChars: freshChars(progression, lessonId)
+		};
+	}
+
 	async function beginGame(lessonId: string, event: FlowEvent) {
 		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
@@ -368,6 +379,8 @@
 				{assets}
 				games={gameOptions(world)}
 				gameId={gameFor(world, lessonId, profile)?.id ?? ''}
+				guide={guideFor(profile, lessonId).mode}
+				still={isMotionReduced(profile.settings, systemPrefersReduced)}
 				loadFailed={gameLoadFailed}
 				onchoose={(gameId) => chooseGame(world.id, lessonId, gameId)}
 				onstart={() => beginGame(lessonId, { type: 'start' })}
@@ -383,7 +396,11 @@
 				charIndex={assets.charIndex}
 				geometry={assets.geometry}
 				fingering={assets.fingering}
-				settings={toGameSettings(profile.settings, systemPrefersReduced)}
+				settings={toGameSettings(
+					profile.settings,
+					systemPrefersReduced,
+					guideFor(profile, lessonId)
+				)}
 				{sounds}
 				onComplete={(outcome) => finishGame(lessonId, outcome)}
 				onQuit={quitGame}

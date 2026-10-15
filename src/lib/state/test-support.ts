@@ -70,3 +70,34 @@ export function asVersion2(profile: Profile): Record<string, unknown> {
 		ghosts: structuredClone(profile.ghosts)
 	};
 }
+
+/** The record version 3 of the app stored for this profile, listed field by field as well. */
+export function asVersion3(profile: Profile): Record<string, unknown> {
+	const { settings, companion } = profile;
+	return {
+		schemaVersion: 3,
+		id: profile.id,
+		name: profile.name,
+		createdAt: profile.createdAt,
+		calibrated: profile.calibrated,
+		settings: {
+			layoutId: settings.layoutId,
+			fingeringProfileId: settings.fingeringProfileId,
+			soundEnabled: settings.soundEnabled,
+			voiceEnabled: settings.voiceEnabled,
+			theme: settings.theme,
+			motion: settings.motion,
+			textScale: settings.textScale,
+			textSpacing: settings.textSpacing,
+			showKeyboard: settings.showKeyboard
+		},
+		progress: structuredClone(profile.progress),
+		companion: {
+			name: companion.name,
+			colorId: companion.colorId,
+			wornItemIds: [...companion.wornItemIds]
+		},
+		lastGameByWorld: { ...profile.lastGameByWorld },
+		ghosts: structuredClone(profile.ghosts)
+	};
+}

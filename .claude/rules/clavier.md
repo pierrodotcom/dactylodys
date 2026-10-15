@@ -53,6 +53,8 @@ Types : `src/lib/keyboard/types.ts`, `src/lib/keyboard/layout-ids.ts`, `src/lib/
 | `applyKeystroke(state, keystroke): SessionStep` | `engine/session` | Réducteur pur |
 | `computeMetrics(state, now?): SessionMetrics` | `engine/metrics` | Précision, vitesse, statistiques par caractère |
 
+Mains dessinées (ADR-031, `keyboard/hands.ts`, sans DOM) : `keyBoxes(geometry)` et `keyboardSize(geometry)` en pas de touche (une touche et son espacement) ; `restingHands(geometry, fingering)` place les bouts de doigt sur `homeKeys` et les pouces sur la rangée d'espace ; `fingerMoves(geometry, fingering, press)` donne le doigt qui frappe puis ceux des modificateurs (`modifierCodes`, désormais dans `keyboard/fingering`).
+
 Données : `layouts/<id>.json`, `layouts/fingering/<id>.json`. Traces réelles : fichier téléchargé depuis `/dev/traces`, déposé **tel quel** dans `tests/traces/<layoutId>/` (nom `<layoutId>__<os>-<navigateur>__<date>.json`). Si le testeur n'a pas tapé exactement la consigne, `expectedText` est corrigé pour refléter ce qui a réellement été tapé, et le commit le dit.
 
 Sur AZERTY PC, `É` et `Ç` ne sont pas productibles sans Verr. Maj ; `È` et `À` ne le sont que par la touche morte AltGr+7 : `findUnproducible` signale les premiers, et les contenus pour débutants évitent toutes les majuscules accentuées. Le modèle n'a pas de couche Verr. Maj.

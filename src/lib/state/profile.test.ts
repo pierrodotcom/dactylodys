@@ -93,7 +93,7 @@ describe('defaultSettings', () => {
 		expect(defaultSettings('mac').layoutId).toBe('fr-fr-azerty-mac');
 	});
 
-	it('uses the ten-finger profile, sound and voice on, system look, medium text and a visible keyboard', () => {
+	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard and the hand of the lessons', () => {
 		expect(defaultSettings('pc')).toEqual({
 			layoutId: 'fr-fr-azerty-pc',
 			fingeringProfileId: 'ten-fingers-iso',
@@ -103,7 +103,8 @@ describe('defaultSettings', () => {
 			motion: 'system',
 			textScale: 'md',
 			textSpacing: 'normal',
-			showKeyboard: true
+			showKeyboard: true,
+			handGuide: 'auto'
 		});
 	});
 });
@@ -111,7 +112,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 3,
+			schemaVersion: 4,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -337,8 +338,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 2, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 4, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 3, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 5, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],

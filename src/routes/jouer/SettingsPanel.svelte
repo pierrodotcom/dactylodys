@@ -3,6 +3,7 @@
 	import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import type {
+		HandGuidePreference,
 		MotionPreference,
 		Settings,
 		TextScale,
@@ -39,6 +40,11 @@
 		{ value: 'system', label: m.settings_motion_system() },
 		{ value: 'reduced', label: m.settings_motion_reduced() },
 		{ value: 'full', label: m.settings_motion_full() }
+	];
+	const HAND_OPTIONS = [
+		{ value: 'auto', label: m.settings_hand_auto() },
+		{ value: 'always', label: m.settings_hand_always() },
+		{ value: 'off', label: m.settings_hand_off() }
 	];
 	const SCALE_OPTIONS = [
 		{ value: 'md', label: m.settings_scale_md() },
@@ -103,6 +109,13 @@
 			options={FLAG_OPTIONS}
 			value={flag(settings.showKeyboard)}
 			onchange={(value) => onchange({ showKeyboard: value === YES })}
+		/>
+		<ChoiceGroup
+			legend={m.settings_hand_label()}
+			name="setting-hand"
+			options={HAND_OPTIONS}
+			value={settings.handGuide}
+			onchange={(value) => onchange({ handGuide: value as HandGuidePreference })}
 		/>
 		<ChoiceGroup
 			legend={m.settings_layout_label()}

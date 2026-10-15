@@ -14,7 +14,7 @@ import {
 	withProgress
 } from './profile';
 import { firstVersionProfileArb, profileArb } from './test-arbitraries';
-import { asVersion1, asVersion2 } from './test-support';
+import { asVersion1, asVersion2, asVersion3 } from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
@@ -230,7 +230,11 @@ describe('migrateProfile', () => {
 				expect(migrated.createdAt).toBe(profile.createdAt);
 				expect(migrated.calibrated).toBe(profile.calibrated);
 				expect(migrated.progress).toEqual(migratedProgress(profile.progress));
-				expect(migrated.settings).toEqual({ ...profile.settings, voiceEnabled: true });
+				expect(migrated.settings).toEqual({
+					...profile.settings,
+					voiceEnabled: true,
+					handGuide: 'auto'
+				});
 			})
 		);
 	});
@@ -239,7 +243,11 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion2(profile))));
-				expect(migrated).toEqual({ ...profile, progress: migratedProgress(profile.progress) });
+				expect(migrated).toEqual({
+					...profile,
+					settings: { ...profile.settings, handGuide: 'auto' },
+					progress: migratedProgress(profile.progress)
+				});
 				for (const [char, stats] of Object.entries(migrated.progress.chars)) {
 					expect(stats.recent.length).toBeLessThanOrEqual(1);
 					const kept = stats.recent[0];
@@ -250,6 +258,18 @@ describe('migrateProfile', () => {
 					const exact = (bounded * kept.attempts) / before.attempts;
 					expect(Math.abs(kept.errors - exact)).toBeLessThanOrEqual(0.5);
 				}
+			})
+		);
+	});
+
+	it('changes nothing but the hand guide of any version 3 profile, which follows the lessons', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion3(profile))));
+				expect(migrated).toEqual({
+					...profile,
+					settings: { ...profile.settings, handGuide: 'auto' }
+				});
 			})
 		);
 	});
@@ -267,7 +287,7 @@ describe('migrateProfile', () => {
 	it('changes nothing when applied twice', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
-				for (const stored of [asVersion1(profile), asVersion2(profile)]) {
+				for (const stored of [asVersion1(profile), asVersion2(profile), asVersion3(profile)]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);
 				}
