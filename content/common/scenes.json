@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"unlockEveryLessons": 2,
+	"games": {
+		"hatching": ["fall-out", "burst", "triple-jump", "peek"],
+		"recipe": ["somersault", "rim-bounce", "diving-board", "burp"],
+		"rocket": ["looping", "barrel-roll", "inhabitant-joy", "fireworks"]
+	}
+}

@@ -97,3 +97,22 @@ export const POT = {
 		'M300 120Q290 100 302 84Q314 68 304 52'
 	]
 } as const;
+
+/**
+ * Surprise scenes (ADR-032). The diving board stands to the left of the pot, in the units of the
+ * ingredient once it is in the pot (centered on 0 0): the ingredient walks on it before diving.
+ */
+export const DIVING_BOARD = {
+	plank: { x: -235, y: -64, width: 110, height: 10 },
+	leg: { x: -235, y: -54, width: 10, height: 92 }
+} as const;
+
+/** Drops thrown up by an ingredient that dives into the soup: directions in degrees, from the soup. */
+export const SPLASH = {
+	center: { x: 260, y: 156 },
+	radius: 6,
+	angles: [-160, -120, -60, -20]
+} as const;
+
+/** The big bubble the pot burps once it has swallowed an ingredient. */
+export const BURP_BUBBLE = { cx: 260, cy: 138, r: 26 } as const;

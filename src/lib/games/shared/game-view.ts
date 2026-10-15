@@ -1,3 +1,4 @@
+import { sceneForGroup, type SceneChoice } from '../../engine/rewards/scenes';
 import type { KeyCode } from '../../keyboard/types';
 import { completedCount, type GameMood, type GamePhase, type GameState } from './game-state';
 
@@ -20,9 +21,16 @@ export interface GameView {
 	readonly wrongCode: KeyCode | null;
 	/** Draw the new state only: no movement. */
 	readonly reducedMotion: boolean;
+	/** What the reward of the current group shows: a surprise scene, or a common entrance. */
+	readonly scene: SceneChoice;
 }
 
-export function viewOf(state: GameState, reducedMotion: boolean): GameView {
+/** With calm motion, no scene: the common entrance, which then fades in without moving. */
+export function viewOf(
+	state: GameState,
+	reducedMotion: boolean,
+	scenes: readonly string[] = []
+): GameView {
 	return {
 		groups: state.groups,
 		groupIndex: state.groupIndex,
@@ -34,7 +42,8 @@ export function viewOf(state: GameState, reducedMotion: boolean): GameView {
 		mood: state.mood,
 		errorIndex: state.errorIndex,
 		wrongCode: state.wrongCode,
-		reducedMotion
+		reducedMotion,
+		scene: sceneForGroup(reducedMotion ? [] : scenes, state.groupIndex)
 	};
 }
 

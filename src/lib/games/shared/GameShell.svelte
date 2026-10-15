@@ -44,6 +44,7 @@
 	const CELEBRATION_TOKEN = '--dd-duration-celebration';
 	const REWARD_DELAY_TOKEN = '--dd-duration-reward-delay';
 	const REWARD_TOKEN = '--dd-duration-reward';
+	const SCENE_TOKEN = '--dd-duration-scene';
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
@@ -81,7 +82,7 @@
 
 	const normalizer = createInputNormalizer();
 
-	const view = $derived(viewOf(game, settings.reducedMotion));
+	const view = $derived(viewOf(game, settings.reducedMotion, settings.scenes));
 	const phase = $derived(game.phase);
 	const paused = $derived(game.paused);
 	const mood = $derived(game.mood);
@@ -164,7 +165,8 @@
 		if (phase !== 'celebrating' || paused) return;
 		const timer = setTimeout(
 			() => dispatch({ type: 'settle' }),
-			readDurationToken(REWARD_DELAY_TOKEN) + readDurationToken(REWARD_TOKEN)
+			readDurationToken(REWARD_DELAY_TOKEN) +
+				readDurationToken(view.scene.kind === 'scene' ? SCENE_TOKEN : REWARD_TOKEN)
 		);
 		return () => clearTimeout(timer);
 	});

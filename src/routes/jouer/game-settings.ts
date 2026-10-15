@@ -11,7 +11,8 @@ export function toGameSettings(
 	settings: Settings,
 	systemPrefersReduced: boolean,
 	guide: GameGuide,
-	lookReminderEvery = 0
+	lookReminderEvery = 0,
+	scenes: readonly string[] = []
 ): GameSettings {
 	return {
 		soundEnabled: settings.soundEnabled,
@@ -19,6 +20,7 @@ export function toGameSettings(
 		showKeyboard: settings.showKeyboard,
 		errorPolicy: 'retry',
 		guide,
-		lookReminderEvery
+		lookReminderEvery,
+		scenes
 	};
 }

@@ -3,6 +3,7 @@
 	import { createSoundPlayer } from '$lib/audio';
 	import { gameDescription, gameTitle } from '$lib/games/labels';
 	import { GAMES, findGame } from '$lib/games/registry';
+	import { SCENE_SCHEDULE } from '../../jouer/scenes';
 	import type { GameOutcome, GameProps } from '$lib/games/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
@@ -27,6 +28,7 @@
 	let showKeyboard = $state(true);
 	let reducedMotion = $state(false);
 	let showHand = $state(true);
+	let showScenes = $state(false);
 	let step = $state<Step>('choose');
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let outcome = $state.raw<GameOutcome | null>(null);
@@ -38,7 +40,8 @@
 		showKeyboard,
 		errorPolicy: 'retry' as const,
 		guide: { mode: showHand ? ('every-key' as const) : ('none' as const), freshChars: [] },
-		lookReminderEvery: LOOK_REMINDER_EVERY
+		lookReminderEvery: LOOK_REMINDER_EVERY,
+		scenes: showScenes ? (SCENE_SCHEDULE.games[gameId] ?? []) : []
 	});
 
 	onMount(() => {
@@ -116,6 +119,10 @@
 				<label>
 					<input type="checkbox" bind:checked={showHand} />
 					<span>{m.dev_games_hand_label()}</span>
+				</label>
+				<label>
+					<input type="checkbox" bind:checked={showScenes} />
+					<span>{m.dev_games_scenes_label()}</span>
 				</label>
 			</div>
 

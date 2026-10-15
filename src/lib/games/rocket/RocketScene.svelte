@@ -12,6 +12,10 @@
 
 	const HOME_VARIANT = 3;
 	const REWARD_VARIANTS = 4;
+	/** Directions of the sparks of the fireworks around the astre reached, in degrees. */
+	const SPARK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
+	const SPARK_COLORS = 4;
+	const SPARK_RADIUS = 7;
 	const INHABITANT = { x: 372, y: 63, scale: 0.9 } as const;
 	const ROCKET_SCALE = 1.2;
 	/** Where the smoke of a cough appears, behind the engine. */
@@ -24,6 +28,7 @@
 	const lit = $derived(destinationLit(view));
 	const coughing = $derived(view.errorIndex !== null);
 	const destinationVariant = $derived(view.groupIndex);
+	const sceneId = $derived(lit && view.scene.kind === 'scene' ? view.scene.id : undefined);
 
 	function astreTransform(centerX: number): string {
 		const scale = FLIGHT.astreScale;
@@ -38,6 +43,7 @@
 	focusable="false"
 	aria-hidden="true"
 	data-still={view.reducedMotion || undefined}
+	data-scene={sceneId}
 >
 	{#each STARS as star (star.x)}
 		<circle class="star" cx={star.x} cy={star.y} r={star.radius} />
@@ -52,10 +58,30 @@
 
 	{#if lit}
 		<g transform="translate({INHABITANT.x} {INHABITANT.y}) scale({INHABITANT.scale})">
-			<g data-reward data-reward-variant={destinationVariant % REWARD_VARIANTS}>
-				<InhabitantShape variant={destinationVariant} />
-			</g>
+			{#if sceneId === 'inhabitant-joy'}
+				<g class="inhabitant">
+					<InhabitantShape variant={destinationVariant} />
+				</g>
+			{:else}
+				<g data-reward data-reward-variant={destinationVariant % REWARD_VARIANTS}>
+					<InhabitantShape variant={destinationVariant} />
+				</g>
+			{/if}
 		</g>
+	{/if}
+
+	{#if sceneId === 'fireworks'}
+		{#each SPARK_ANGLES as angle, index (angle)}
+			<g transform="rotate({angle} {FLIGHT.destinationX} {FLIGHT.astreY})">
+				<circle
+					class="spark"
+					cx={FLIGHT.destinationX}
+					cy={FLIGHT.astreY}
+					r={SPARK_RADIUS}
+					data-color={index % SPARK_COLORS}
+				/>
+			</g>
+		{/each}
 	{/if}
 
 	{#if coughing}
@@ -69,7 +95,9 @@
 	{/if}
 
 	<g transform="translate({pose.x} {pose.y}) rotate({pose.angle}) scale({ROCKET_SCALE})">
-		<RocketShape landed={pose.landed} thrust={view.position} still={view.reducedMotion} />
+		<g class="flyer">
+			<RocketShape landed={pose.landed} thrust={view.position} still={view.reducedMotion} />
+		</g>
 	</g>
 </svg>
 
@@ -114,6 +142,135 @@
 
 		100% {
 			scale: 1;
+		}
+	}
+	.spark {
+		opacity: 0;
+	}
+
+	.spark[data-color='0'] {
+		fill: var(--dd-color-star-fill);
+	}
+
+	.spark[data-color='1'] {
+		fill: var(--dd-color-finger-left-index);
+	}
+
+	.spark[data-color='2'] {
+		fill: var(--dd-color-finger-right-ring);
+	}
+
+	.spark[data-color='3'] {
+		fill: var(--dd-color-sky-star);
+	}
+
+	/* Surprise scenes (ADR-032): a moment after the last key, long enough to be seen. */
+	[data-scene] .flyer,
+	[data-scene] .inhabitant,
+	[data-scene] .spark {
+		transform-box: fill-box;
+		transform-origin: 50% 50%;
+		animation-duration: var(--dd-duration-scene);
+		animation-delay: var(--dd-duration-reward-delay);
+		animation-timing-function: var(--dd-easing-standard);
+		animation-fill-mode: both;
+	}
+
+	/* The rocket is drawn nose up and turned nose right: its left side is the top of the sky. */
+	[data-scene='looping'] .flyer {
+		transform-origin: -60% 50%;
+		animation-name: looping;
+	}
+
+	[data-scene='barrel-roll'] .flyer {
+		animation-name: barrel-roll;
+	}
+
+	[data-scene='inhabitant-joy'] .inhabitant {
+		transform-origin: 50% 100%;
+		animation-name: joy;
+	}
+
+	[data-scene='fireworks'] .spark {
+		animation-name: spark;
+	}
+
+	@keyframes looping {
+		0% {
+			rotate: 0deg;
+		}
+
+		70%,
+		100% {
+			rotate: 360deg;
+		}
+	}
+
+	@keyframes barrel-roll {
+		0%,
+		50%,
+		100% {
+			scale: 1 1;
+		}
+
+		25%,
+		75% {
+			scale: -1 1;
+		}
+	}
+
+	@keyframes joy {
+		0% {
+			opacity: 0;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		10% {
+			opacity: 100%;
+		}
+
+		25%,
+		55% {
+			translate: 0 -35%;
+		}
+
+		40%,
+		70% {
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		78%,
+		94% {
+			rotate: -10deg;
+		}
+
+		86% {
+			rotate: 10deg;
+		}
+
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes spark {
+		0%,
+		20% {
+			opacity: 0;
+			translate: 0 0;
+		}
+
+		30% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-xl) * 2) 0;
 		}
 	}
 </style>

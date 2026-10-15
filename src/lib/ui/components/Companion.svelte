@@ -5,6 +5,8 @@
 
 	interface Props {
 		mood: Mood;
+		/** Which dance it does when it cheers: they follow one another (ADR-032). */
+		dance?: number;
 	}
 
 	const LABELS: Readonly<Record<Mood, () => string>> = {
@@ -15,14 +17,26 @@
 	};
 	const SPARKLE_PATH = 'M16 22L18.5 28L25 30.5L18.5 33L16 39L13.5 33L7 30.5L13.5 28Z';
 
-	let { mood }: Props = $props();
+	/** Number of different dances; the first one is the hop of every cheer. */
+	const DANCES = 5;
+
+	let { mood, dance = 0 }: Props = $props();
+
+	const danceIndex = $derived(((dance % DANCES) + DANCES) % DANCES);
 
 	const label = $derived(LABELS[mood]());
 	const armsUp = $derived(mood === 'cheer');
 	const smiling = $derived(mood === 'happy' || mood === 'cheer');
 </script>
 
-<svg class="companion" viewBox="0 0 120 120" role="img" aria-label={label} data-mood={mood}>
+<svg
+	class="companion"
+	viewBox="0 0 120 120"
+	role="img"
+	aria-label={label}
+	data-mood={mood}
+	data-dance={danceIndex}
+>
 	{#if mood === 'cheer'}
 		<path class="sparkle line" d={SPARKLE_PATH} />
 		<path class="sparkle line" d={SPARKLE_PATH} transform="translate(86 -4)" />
@@ -131,6 +145,29 @@
 		animation-iteration-count: 3;
 	}
 
+	[data-mood='cheer'] .dino {
+		transform-box: fill-box;
+		transform-origin: 50% 100%;
+	}
+
+	[data-mood='cheer'][data-dance='1'] .dino {
+		animation-name: spin;
+		animation-iteration-count: 2;
+	}
+
+	[data-mood='cheer'][data-dance='2'] .dino {
+		animation-name: wiggle;
+	}
+
+	[data-mood='cheer'][data-dance='3'] .dino {
+		animation-name: stretch;
+	}
+
+	[data-mood='cheer'][data-dance='4'] .dino {
+		animation-name: slide;
+		animation-iteration-count: 2;
+	}
+
 	[data-mood='oops'] .dino {
 		animation-name: nod;
 		animation-duration: var(--dd-duration-slow);
@@ -153,6 +190,61 @@
 		}
 		50% {
 			translate: 0 calc(var(--dd-space-md) * -1);
+		}
+	}
+
+	@keyframes spin {
+		0% {
+			rotate: 0deg;
+		}
+
+		100% {
+			rotate: 360deg;
+		}
+	}
+
+	@keyframes wiggle {
+		0%,
+		100% {
+			rotate: 0deg;
+		}
+
+		25% {
+			rotate: -12deg;
+		}
+
+		75% {
+			rotate: 12deg;
+		}
+	}
+
+	@keyframes stretch {
+		0%,
+		100% {
+			scale: 1 1;
+		}
+
+		40% {
+			scale: 0.9 1.15;
+		}
+
+		70% {
+			scale: 1.1 0.9;
+		}
+	}
+
+	@keyframes slide {
+		0%,
+		100% {
+			translate: 0 0;
+		}
+
+		25% {
+			translate: calc(var(--dd-space-md) * -1) 0;
+		}
+
+		75% {
+			translate: var(--dd-space-md) 0;
 		}
 	}
 

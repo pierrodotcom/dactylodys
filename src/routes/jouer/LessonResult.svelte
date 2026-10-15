@@ -21,6 +21,8 @@
 		worldDone: boolean;
 		suggestBreak: boolean;
 		saveFailed: boolean;
+		/** Which dance the companion does, in the order of the lessons. */
+		dance: number;
 		/** Calm motion: the stars fade in, no confetti. */
 		still: boolean;
 		sounds: SoundPlayer;
@@ -37,6 +39,7 @@
 		worldDone,
 		suggestBreak,
 		saveFailed,
+		dance,
 		still,
 		sounds,
 		onnext,
@@ -86,7 +89,7 @@
 
 <ScreenFrame title={HEADLINES[stars]?.() ?? ''}>
 	<div class="hero" data-still={still || undefined}>
-		<Companion mood={stars > 0 ? 'cheer' : 'happy'} />
+		<Companion mood={stars > 0 ? 'cheer' : 'happy'} {dance} />
 		<div class="stars-zone">
 			{#if stars > 0 && !still}
 				<Confetti />

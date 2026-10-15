@@ -51,7 +51,7 @@ const EXPECTATIONS: Readonly<Record<string, GameExpectations>> = {
 		progressParam: 'reached',
 		bubblePrefix: 'game_rocket_greeting_',
 		probe: async (page) =>
-			(await page.locator('.rocket').locator('xpath=..').getAttribute('transform')) ?? ''
+			(await page.locator('.flyer').locator('xpath=..').getAttribute('transform')) ?? ''
 	},
 	recipe: {
 		progressKey: 'game_recipe_progress',
@@ -582,5 +582,38 @@ test.describe('game recipe', () => {
 		expect(cuts[0]).toBe(0);
 		expect([...cuts].sort((a, b) => a - b)).toEqual(cuts);
 		expect(cuts[cuts.length - 1]).toBeGreaterThan(0);
+	});
+});
+
+test.describe('surprise scenes', () => {
+	const SCENES = readJson<{ games: Record<string, string[]> }>('content/common/scenes.json');
+
+	test.describe('with motion allowed', () => {
+		test.use({ reducedMotion: 'no-preference' });
+
+		test('plays the first scene of each game on the first group, in the fixed order', async ({
+			page
+		}) => {
+			for (const game of GAMES) {
+				await openChooser(page);
+				await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+				await beginGame(page, gameNamed(game.id));
+				await page.keyboard.type(FIRST_GROUP);
+				await expect(page.locator(`[data-scene="${SCENES.games[game.id]?.[0]}"]`)).toHaveCount(1);
+			}
+		});
+	});
+
+	test.describe('with reduced motion', () => {
+		test.use({ reducedMotion: 'reduce' });
+
+		test('plays no scene, only the calm entrance', async ({ page }) => {
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('hatching'));
+			await page.keyboard.type(FIRST_GROUP);
+			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+			await expect(page.locator('[data-scene]')).toHaveCount(0);
+		});
 	});
 });

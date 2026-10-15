@@ -5,7 +5,7 @@ Réponds par numéro : **oui**, **non**, ou une variante. Les scènes « oui » 
 Règles communes à toutes les scènes :
 
 - elle se joue **après** la dernière frappe du groupe, dure 1,5 à 2 secondes, et ne bloque jamais le jeu ;
-- **ordre fixe**, jamais de hasard ; les nouvelles scènes **se débloquent en réussissant des leçons** (une de plus par jeu toutes les 3 leçons réussies) : la surprise récompense la maîtrise ;
+- **ordre fixe**, jamais de hasard ; les nouvelles scènes **se débloquent en réussissant des leçons** (une de plus par jeu toutes les 2 leçons réussies) : la surprise récompense la maîtrise ;
 - jamais de flash, de clignotement, de bruit fort ni d'effet qui fait sursauter ; sons courts et doux ;
 - en **animations calmes**, la scène est remplacée par un simple fondu de l'image finale.
 

@@ -73,6 +73,7 @@
 				hatched={isRewarded(view)}
 				variant={view.groupIndex}
 				still={view.reducedMotion}
+				scene={view.scene}
 				big
 			/>
 		</div>

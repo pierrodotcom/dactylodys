@@ -135,6 +135,7 @@
 	"dev_games_keyboard_label": "Afficher le clavier à l'écran",
 	"dev_games_reduced_label": "Animations réduites",
 	"dev_games_hand_label": "Main qui montre chaque touche",
+	"dev_games_scenes_label": "Toutes les scènes surprises du jeu, avant les animations communes",
 	"dev_games_play": "Jouer",
 	"dev_games_loading": "Chargement du jeu…",
 	"dev_games_result_heading": "Bilan brut",
