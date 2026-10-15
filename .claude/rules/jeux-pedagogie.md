@@ -93,6 +93,8 @@ Main guide (ADR-031) : `GameSettings.guide` (`mode`, `freshChars`) est décidé 
 
 Avant-leçon et voix (ADR-033) : `GameProps.voice` (facultatif) dit le rappel « regarde l'écran » ; `GameSettings.lookReminderEvery` (règle de jeu `lookReminderEveryGroups`) en fixe la fréquence, `isLookReminderDue` (`games/shared/help`) décide. Chaque jeu a une image `<jeu>/Picture.svelte`, déclarée dans `games/GamePicture.svelte` : un jeu ajouté sans image s'affiche sans dessin.
 
+Scènes surprises (ADR-034) : `GameSettings.scenes` (scènes débloquées du jeu, `unlockedScenes` de `engine/rewards/scenes`) ; `GameView.scene` dit ce que montre le groupe (`sceneForGroup`, scène ou entrée commune 0 à 3, jamais en animations calmes). Une scène est un attribut `data-scene` sur le dessin du jeu et des `@keyframes` dans son composant, durée `--dd-duration-scene` ; une scène ajoutée = un identifiant dans `content/common/scenes.json` + son dessin.
+
 Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
 
 | Fonction | Module | Rôle |

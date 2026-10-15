@@ -34,3 +34,21 @@ export const BABY_PLATES = [
 	'M54 38L60 24L66 38Z',
 	'M64 42L72 30L76 44Z'
 ] as const;
+
+/** Pieces of shell that fly away when an egg bursts, around the middle of the egg. */
+export const SHARDS = [
+	{ angle: -150, path: 'M54 70L62 62L66 74Z' },
+	{ angle: -30, path: 'M58 66L68 70L60 78Z' },
+	{ angle: 40, path: 'M56 84L66 80L64 92Z' },
+	{ angle: 140, path: 'M52 76L60 86L50 88Z' }
+] as const;
+
+/** The bit of shell a baby keeps on its head, like a hat, once its egg has burst. */
+export const HAT_PATH = 'M44 34L50 24L56 32L62 20L68 32L74 24L78 34Z';
+
+/** Little stars that turn around the head of a baby that fell out of its egg. */
+export const DIZZY_STARS = [
+	'M60 34L62 39L67 39L63 42L65 47L60 44L55 47L57 42L53 39L58 39Z',
+	'M38 46L40 50L44 50L41 53L42 57L38 55L34 57L35 53L32 50L36 50Z',
+	'M82 46L84 50L88 50L85 53L86 57L82 55L78 57L79 53L76 50L80 50Z'
+] as const;

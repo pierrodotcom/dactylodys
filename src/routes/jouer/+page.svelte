@@ -6,6 +6,7 @@
 	import { isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
 	import { guideMode } from '$lib/engine/progression/guide';
+	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import type {
 		Exercise,
@@ -40,6 +41,7 @@
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
 	import { gameForLesson, gameOptions } from './game-choice';
 	import { isMotionReduced, toGameSettings } from './game-settings';
+	import { SCENE_SCHEDULE } from './scenes';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
@@ -82,6 +84,7 @@
 	let saveState = $state<'idle' | 'saved' | 'error'>('idle');
 	let systemPrefersReduced = $state(false);
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
+	let activeGameId = $state('');
 	let gameLoadFailed = $state(false);
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
@@ -305,6 +308,7 @@
 				settleWithin(requestBanks(progression), PLAY_RULES.bankLoadTimeoutMs, {})
 			]);
 			ActiveGame = module.default;
+			activeGameId = definition.id;
 			banks = loaded;
 		} catch {
 			gameLoadFailed = true;
@@ -438,7 +442,12 @@
 					profile.settings,
 					systemPrefersReduced,
 					guideFor(profile, lessonId),
-					PLAY_RULES.lookReminderEveryGroups
+					PLAY_RULES.lookReminderEveryGroups,
+					unlockedScenes(
+						SCENE_SCHEDULE,
+						activeGameId,
+						passedLessonCount(progression, profile.progress)
+					)
 				)}
 				{sounds}
 				onComplete={(outcome) => finishGame(lessonId, outcome)}
@@ -456,6 +465,7 @@
 			worldDone={result.worldDone}
 			suggestBreak={result.suggestBreak}
 			saveFailed={result.saveFailed}
+			dance={lessonIds(progression).indexOf(lessonId)}
 			still={isMotionReduced(profile.settings, systemPrefersReduced)}
 			{sounds}
 			onnext={playNext}

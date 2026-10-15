@@ -25,6 +25,8 @@ export interface GameSettings {
 	readonly guide: GameGuide;
 	/** Every so many groups, the child is reminded to look at the screen; 0: never. */
 	readonly lookReminderEvery: number;
+	/** The surprise scenes of this game the child has unlocked, in order (ADR-032). */
+	readonly scenes: readonly string[];
 }
 
 export interface GameOutcome {

@@ -310,6 +310,7 @@
 		"guide-pause": { "$value": "{duration.3000}" },
 		"confetti": { "$value": "{duration.1600}" },
 		"reward": { "$value": "{duration.1400}" },
+		"scene": { "$value": "{duration.2000}" },
 		"celebration": { "$value": "{duration.2800}" },
 		"notice": { "$value": "{duration.1600}" }
 	},
