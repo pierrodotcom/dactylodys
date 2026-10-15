@@ -287,6 +287,9 @@
 		"2800": {
 			"$value": "2800ms"
 		},
+		"3000": {
+			"$value": "3000ms"
+		},
 		"$type": "duration"
 	},
 	"easing": {

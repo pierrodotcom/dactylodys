@@ -13,11 +13,10 @@
 		profile: Profile;
 		progression: ProgressionDefinition;
 		onopen: (lessonId: string) => void;
-		onsettings: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { profile, progression, onopen, onsettings, onchangeplayer }: Props = $props();
+	let { profile, progression, onopen, onchangeplayer }: Props = $props();
 
 	const layout = $derived(layoutMap(progression, profile.progress));
 </script>
@@ -77,11 +76,6 @@
 				</ol>
 			</section>
 		{/each}
-
-		<div class="actions">
-			<Button variant="secondary" onclick={onsettings}>{m.play_settings_open()}</Button>
-			<Button variant="quiet" onclick={onchangeplayer}>{m.play_change_player()}</Button>
-		</div>
 	</ScreenFrame>
 {:else}
 	<ScreenFrame title={m.play_error_content()}>
@@ -241,12 +235,5 @@
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		vector-effect: non-scaling-stroke;
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--dd-space-md);
 	}
 </style>

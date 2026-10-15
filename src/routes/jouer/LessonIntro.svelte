@@ -54,7 +54,9 @@
 	const marked = $derived(presses.map((entry) => entry.press.code));
 	const noTarget: KeyPress | null = null;
 	const hands = $derived(
-		guide === 'none' ? null : { presses: presses.map((entry) => entry.press), trigger: lesson.id }
+		guide === 'none'
+			? null
+			: { presses: presses.map((entry) => entry.press), trigger: lesson.id, repeat: true }
 	);
 </script>
 

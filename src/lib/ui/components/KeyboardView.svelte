@@ -21,7 +21,12 @@
 		/** Further keys to highlight like the target, e.g. the new keys of a lesson. */
 		marked?: readonly KeyCode[];
 		/** Hands drawn over the keys, showing these presses in turn; `null`: no hands. */
-		hands?: { readonly presses: readonly KeyPress[]; readonly trigger: string } | null;
+		hands?: {
+			readonly presses: readonly KeyPress[];
+			readonly trigger: string;
+			/** Shows the presses again and again, after a pause. */
+			readonly repeat?: boolean;
+		} | null;
 		/** Calm motion for the hands: the finger lights up, it does not move. */
 		still?: boolean;
 	}
@@ -83,7 +88,14 @@
 		</div>
 	{/each}
 	{#if hands}
-		<HandGuide {geometry} {fingering} presses={hands.presses} trigger={hands.trigger} {still} />
+		<HandGuide
+			{geometry}
+			{fingering}
+			presses={hands.presses}
+			trigger={hands.trigger}
+			repeat={hands.repeat ?? false}
+			{still}
+		/>
 	{/if}
 </div>
 

@@ -48,6 +48,8 @@ export interface GameProps {
 	readonly ghost?: GhostRun;
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
+	/** Leaves the game for the settings, from the pause; absent where there are none. */
+	readonly onSettings?: () => void;
 }
 
 /** A mini-game as the play flow sees it. Its title and description live in the messages, keyed by `id`. */

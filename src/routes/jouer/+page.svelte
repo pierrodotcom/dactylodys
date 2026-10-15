@@ -50,7 +50,11 @@
 	import SettingsPanel from './SettingsPanel.svelte';
 	import { createProfileSounds } from './sounds';
 	import { summarizeMetrics, type ResultSummary } from './summary';
+	import TopBar from './TopBar.svelte';
 	import WorldMap from './WorldMap.svelte';
+
+	/** Screens with the bar of the player and the settings at the top: never during a game. */
+	const TOP_BAR_SCREENS: ReadonlySet<Screen['name']> = new Set(['map', 'intro', 'result', 'break']);
 
 	interface ResultView {
 		readonly lessonId: string;
@@ -203,6 +207,7 @@
 
 	function openSettings() {
 		saveState = 'idle';
+		if (screen.name === 'game') playClock = stopPlaying(playClock, now());
 		go({ type: 'open-settings' });
 	}
 
@@ -330,6 +335,9 @@
 	<title>{m.play_page_title()}</title>
 </svelte:head>
 
+{#if profile && TOP_BAR_SCREENS.has(screen.name)}
+	<TopBar name={profile.name} onsettings={openSettings} onchangeplayer={changePlayer} />
+{/if}
 <main>
 	{#if screen.name === 'loading'}
 		<p class="loading" role="status">{m.play_loading()}</p>
@@ -354,13 +362,7 @@
 			onchangeplayer={changePlayer}
 		/>
 	{:else if screen.name === 'map'}
-		<WorldMap
-			{profile}
-			{progression}
-			onopen={openLesson}
-			onsettings={openSettings}
-			onchangeplayer={changePlayer}
-		/>
+		<WorldMap {profile} {progression} onopen={openLesson} onchangeplayer={changePlayer} />
 	{:else if screen.name === 'settings'}
 		<SettingsPanel
 			settings={profile.settings}
@@ -403,6 +405,7 @@
 				)}
 				{sounds}
 				onComplete={(outcome) => finishGame(lessonId, outcome)}
+				onSettings={openSettings}
 				onQuit={quitGame}
 			/>
 		{/if}
@@ -415,6 +418,8 @@
 			worldDone={result.worldDone}
 			suggestBreak={result.suggestBreak}
 			saveFailed={result.saveFailed}
+			still={isMotionReduced(profile.settings, systemPrefersReduced)}
+			{sounds}
 			onnext={playNext}
 			onreplay={() => beginGame(lessonId, { type: 'replay' })}
 			onmap={() => go({ type: 'back-to-map' })}

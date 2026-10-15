@@ -139,7 +139,7 @@ describe('azerty-decouverte', () => {
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 4, newKeysUntil: 15 }
+			handGuide: { everyKeyUntil: 11, newKeysUntil: 24 }
 		});
 	});
 
