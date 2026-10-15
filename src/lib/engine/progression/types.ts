@@ -32,7 +32,25 @@ export interface ProgressionRules {
 	 * that would go beyond it is replaced by a suite. Absent: no limit.
 	 */
 	readonly lengthSlack?: number;
+	/** When the hand drawn on the keyboard shows the fingers; absent: never on its own. */
+	readonly handGuide?: HandGuideRules;
 }
+
+/**
+ * Lessons are counted from 1 in the order of the progression. Up to `everyKeyUntil` the hand
+ * shows every key; then, up to `newKeysUntil`, only the new keys of the lesson and the key after
+ * a mistake; after that, nothing.
+ */
+export interface HandGuideRules {
+	readonly everyKeyUntil: number;
+	readonly newKeysUntil: number;
+}
+
+/** The choice of the child or the adult: follow the lessons, always show, never show. */
+export type HandGuidePreference = 'auto' | 'always' | 'off';
+
+/** What the hand shows during one exercise. */
+export type GuideMode = 'every-key' | 'new-keys' | 'none';
 
 /** Relative weights of the three kinds of groups in an exercise; at least one is positive. */
 export interface ExerciseMix {

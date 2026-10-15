@@ -1,4 +1,4 @@
-import type { Finger, FingeringProfile, KeyboardGeometry, KeyCode } from './types';
+import type { Finger, FingeringProfile, KeyCode, KeyPress, KeyboardGeometry } from './types';
 
 const GEOMETRIES: readonly KeyboardGeometry[] = ['iso', 'ansi'];
 const FINGERS: readonly Finger[] = [
@@ -79,4 +79,17 @@ export function parseFingeringProfile(data: unknown): FingeringProfile {
 
 export function fingerForKey(profile: FingeringProfile, code: KeyCode): Finger | null {
 	return Object.hasOwn(profile.fingers, code) ? (profile.fingers[code] ?? null) : null;
+}
+
+const SHIFT_BY_OPPOSITE_HAND = { left: 'ShiftRight', right: 'ShiftLeft' } as const;
+const DEFAULT_SHIFT = 'ShiftLeft';
+const ALTGR = 'AltRight';
+
+/** Modifier keys to hold for a press: Shift on the hand opposite to the typing finger, then AltGr. */
+export function modifierCodes(press: KeyPress, profile: FingeringProfile): KeyCode[] {
+	const needsShift = press.level === 'shift' || press.level === 'shiftAltgr';
+	const needsAltgr = press.level === 'altgr' || press.level === 'shiftAltgr';
+	const hand = fingerForKey(profile, press.code)?.split('-')[0];
+	const shift = hand === 'left' || hand === 'right' ? SHIFT_BY_OPPOSITE_HAND[hand] : DEFAULT_SHIFT;
+	return [...(needsShift ? [shift] : []), ...(needsAltgr ? [ALTGR] : [])];
 }

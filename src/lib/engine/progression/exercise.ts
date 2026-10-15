@@ -1,6 +1,6 @@
 import { toGraphemes } from '../graphemes';
 import { usablePhrases, usableWords } from './banks';
-import { findLesson, learnedChars } from './definition';
+import { findLesson, freshChars, learnedChars } from './definition';
 import { recentErrorRate } from './progress';
 import type {
 	Exercise,
@@ -15,7 +15,6 @@ const SPACE = ' ';
 const MAX_ATTEMPTS = 64;
 const RELAXED_AFTER_ATTEMPT = 16;
 const MAX_IDENTICAL_IN_A_ROW = 2;
-const CAPITAL_PATTERN = /^[A-Z]$/;
 
 type Genre = 'drill' | 'word' | 'phrase';
 
@@ -197,10 +196,6 @@ function chooseGenre(mix: ExerciseMix, hasWords: boolean, hasPhrases: boolean, r
 	);
 }
 
-function capitalsIn(chars: readonly string[]): string[] {
-	return chars.filter((char) => CAPITAL_PATTERN.test(char));
-}
-
 export function generateExercise(
 	progression: ProgressionDefinition,
 	lessonId: string,
@@ -216,10 +211,7 @@ export function generateExercise(
 	const errorRate = (char: string): number =>
 		progress === undefined ? 0 : recentErrorRate(progress, char);
 
-	const fresh = [
-		...lesson.newChars,
-		...(lesson.unlocks.includes('uppercase') ? capitalsIn(learned) : [])
-	];
+	const fresh = freshChars(progression, lessonId);
 	const { lengthSlack } = progression.rules;
 	const settings: Settings = {
 		lesson,

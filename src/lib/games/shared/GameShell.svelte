@@ -10,7 +10,7 @@
 	import { focusOnMount, focusSoon } from '$lib/ui/focus';
 	import KeyboardCaptureField from '$lib/ui/keyboard-capture/KeyboardCaptureField.svelte';
 	import type { GameProps } from '../types';
-	import { readDurationToken } from './duration';
+	import { readDurationToken } from '$lib/ui/motion';
 	import {
 		createGame,
 		exerciseOutcome,
@@ -19,6 +19,7 @@
 		type GameState
 	} from './game-state';
 	import { viewOf, type GameView } from './game-view';
+	import { isGuided } from '$lib/engine/progression/guide';
 	import { needsCapsLockHelp } from './help';
 	import { targetKeyPress } from './target';
 
@@ -88,6 +89,19 @@
 	const target = $derived(typing ? targetKeyPress(charIndex, expected) : null);
 	const capsHelp = $derived(typing && needsCapsLockHelp(capsLock, expected));
 	const announcement = $derived(announce(view));
+	const guide = $derived(settings.guide);
+	const guided = $derived(
+		typing && isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null)
+	);
+	// Each keystroke shows the expected key again, so that a mistake brings the finger back.
+	const hands = $derived(
+		guide.mode === 'none'
+			? null
+			: {
+					presses: guided && target ? [target] : [],
+					trigger: `${game.groupIndex}:${game.session.records.length}`
+				}
+	);
 
 	function dispatch(action: GameAction) {
 		const step = reduce(game, action);
@@ -227,6 +241,8 @@
 				{target}
 				wrongCode={game.wrongCode}
 				showFingers={true}
+				{hands}
+				still={settings.reducedMotion}
 			/>
 		</div>
 	{/if}

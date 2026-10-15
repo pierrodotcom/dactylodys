@@ -86,6 +86,11 @@
 			"text": { "$value": "{color.brown.900}" },
 			"border": { "$value": "{color.brown.900}" }
 		},
+		"hand": {
+			"fill": { "$value": "{color.cream.50}" },
+			"outline": { "$value": "{color.brown.900}" },
+			"active": { "$value": "{color.teal.400}" }
+		},
 		"drawing": {
 			"line": { "$value": "{color.brown.900}" },
 			"ink": { "$value": "{color.brown.900}" }
@@ -285,7 +290,8 @@
 	"opacity": {
 		"$type": "number",
 		"disabled": { "$value": 0.5 },
-		"overlay": { "$value": 0.6 }
+		"overlay": { "$value": 0.6 },
+		"hand": { "$value": 0.55 }
 	},
 	"duration": {
 		"$type": "duration",
@@ -295,6 +301,8 @@
 		"slow": { "$value": "{duration.500}" },
 		"beat": { "$value": "{duration.700}" },
 		"reward-delay": { "$value": "{duration.400}" },
+		"guide-move": { "$value": "{duration.500}" },
+		"guide-hold": { "$value": "{duration.400}" },
 		"reward": { "$value": "{duration.1400}" },
 		"celebration": { "$value": "{duration.2800}" },
 		"notice": { "$value": "{duration.1600}" }
@@ -309,6 +317,7 @@
 		"$type": "number",
 		"base": { "$value": 0 },
 		"raised": { "$value": 10 },
+		"guide": { "$value": 20 },
 		"sticky": { "$value": 100 },
 		"overlay": { "$value": 1000 },
 		"modal": { "$value": 1100 },

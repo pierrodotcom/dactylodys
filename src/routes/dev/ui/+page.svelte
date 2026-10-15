@@ -299,6 +299,19 @@
 					showFingers={true}
 				/>
 			</div>
+			<h3>{m.dev_ui_keyboard_hands()}</h3>
+			<div data-testid="keyboard-hands">
+				<KeyboardView
+					{layout}
+					geometry={data.geometry}
+					fingering={data.fingering}
+					{target}
+					{wrongCode}
+					showFingers={true}
+					hands={{ presses: target ? [target] : [], trigger: targetValue }}
+					still={motion === 'reduced'}
+				/>
+			</div>
 			<h3>{m.dev_ui_legend_heading()}</h3>
 			<FingerLegend />
 		</section>

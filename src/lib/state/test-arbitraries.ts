@@ -70,7 +70,8 @@ export const settingsPatchArb: fc.Arbitrary<Partial<Settings>> = fc.record(
 		motion: fc.constantFrom('system', 'reduced', 'full'),
 		textScale: fc.constantFrom('md', 'lg', 'xl'),
 		textSpacing: fc.constantFrom('normal', 'wide', 'wider'),
-		showKeyboard: fc.boolean()
+		showKeyboard: fc.boolean(),
+		handGuide: fc.constantFrom('auto', 'always', 'off')
 	},
 	{ requiredKeys: [] }
 );

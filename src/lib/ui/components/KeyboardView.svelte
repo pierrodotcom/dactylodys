@@ -7,6 +7,7 @@
 		KeyPress,
 		LayoutDefinition
 	} from '$lib/keyboard/types';
+	import HandGuide from './HandGuide.svelte';
 	import { homeKeyCodes, keyLabel, modifierCodes } from './key-labels';
 	import { keyName } from './names';
 
@@ -19,6 +20,10 @@
 		showFingers: boolean;
 		/** Further keys to highlight like the target, e.g. the new keys of a lesson. */
 		marked?: readonly KeyCode[];
+		/** Hands drawn over the keys, showing these presses in turn; `null`: no hands. */
+		hands?: { readonly presses: readonly KeyPress[]; readonly trigger: string } | null;
+		/** Calm motion for the hands: the finger lights up, it does not move. */
+		still?: boolean;
 	}
 
 	let {
@@ -28,7 +33,9 @@
 		target,
 		wrongCode,
 		showFingers,
-		marked = []
+		marked = [],
+		hands = null,
+		still = false
 	}: Props = $props();
 
 	const markedKeys = $derived(new Set(marked));
@@ -75,10 +82,14 @@
 			{/each}
 		</div>
 	{/each}
+	{#if hands}
+		<HandGuide {geometry} {fingering} presses={hands.presses} trigger={hands.trigger} {still} />
+	{/if}
 </div>
 
 <style>
 	.keyboard {
+		position: relative;
 		display: inline-grid;
 		gap: var(--dd-size-key-gap);
 		max-inline-size: 100%;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { LessonDefinition } from '$lib/engine/progression/types';
+	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
 	import { targetKeyPress } from '$lib/games/shared/target';
 	import type { KeyPress } from '$lib/keyboard/types';
 	import { m } from '$lib/paraglide/messages.js';
@@ -20,6 +20,10 @@
 		/** The games of the world; the child chooses when there are several. */
 		games: readonly GameOption[];
 		gameId: string;
+		/** What the hand on the keyboard shows in this lesson: here, the new keys one after the other. */
+		guide: GuideMode;
+		/** Calm motion: the fingers light up, they do not move. */
+		still: boolean;
 		/** The chosen game could not be loaded. */
 		loadFailed: boolean;
 		onchoose: (gameId: string) => void;
@@ -27,8 +31,19 @@
 		onback: () => void;
 	}
 
-	let { lesson, number, assets, games, gameId, loadFailed, onchoose, onstart, onback }: Props =
-		$props();
+	let {
+		lesson,
+		number,
+		assets,
+		games,
+		gameId,
+		guide,
+		still,
+		loadFailed,
+		onchoose,
+		onstart,
+		onback
+	}: Props = $props();
 
 	const presses = $derived(
 		lesson.newChars.flatMap((char) => {
@@ -38,6 +53,9 @@
 	);
 	const marked = $derived(presses.map((entry) => entry.press.code));
 	const noTarget: KeyPress | null = null;
+	const hands = $derived(
+		guide === 'none' ? null : { presses: presses.map((entry) => entry.press), trigger: lesson.id }
+	);
 </script>
 
 <ScreenFrame title={lesson.title} focusHeading={false} wide>
@@ -56,6 +74,8 @@
 			wrongCode={null}
 			showFingers={true}
 			{marked}
+			{hands}
+			{still}
 		/>
 		<ul class="hints">
 			{#each presses as entry (entry.char)}

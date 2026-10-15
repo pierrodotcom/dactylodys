@@ -74,10 +74,20 @@ function toVersion3(record: StoredRecord): StoredRecord {
 	};
 }
 
+function toVersion4(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { handGuide: 'auto', ...settings } : settings,
+		schemaVersion: 4
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
-	[2, toVersion3]
+	[2, toVersion3],
+	[3, toVersion4]
 ]);
 
 function versionOf(record: StoredRecord): number {

@@ -89,6 +89,8 @@ Règle de progression `lengthSlack` (ADR-030, facultative) : nombre de caractèr
 
 Récompenses d'un jeu (ADR-030) : un élément qui apparaît ou change quand un groupe est fini porte `data-reward` et `data-reward-variant` (0 à 3, `groupIndex % 4`, jamais de hasard) ; `app.css` fournit durée (`--dd-duration-reward`), délai après la dernière frappe (`--dd-duration-reward-delay`) et variante calme (fondu, sans mouvement) quand `data-still` est posé sur l'élément ou un ancêtre. Une touche ne passe la récompense qu'une fois `settled` (délai + durée écoulés, action `settle` du réducteur). `gameForLesson` (`routes/jouer/game-choice`) propose à chaque nouvelle leçon le jeu suivant du monde ; une leçon déjà jouée garde le jeu du monde.
 
+Main guide (ADR-031) : `GameSettings.guide` (`mode`, `freshChars`) est décidé par la route à partir de `guideMode(rules, numéro de leçon, réglage)` (`engine/progression/guide`) ; `GameShell` montre la touche attendue quand `isGuided` le dit, en passant `hands` et `still` à `KeyboardView`. Réglage `Settings.handGuide` (profil version 4).
+
 Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
 
 | Fonction | Module | Rôle |

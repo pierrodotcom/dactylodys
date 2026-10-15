@@ -42,6 +42,11 @@
 		"drawing": {
 			"line": { "$value": "{color.brown.50}" }
 		},
+		"hand": {
+			"fill": { "$value": "{color.charcoal.700}" },
+			"outline": { "$value": "{color.brown.50}" },
+			"active": { "$value": "{color.teal.400}" }
+		},
 		"typing": {
 			"done": { "$value": "{color.brown.400}" },
 			"current-surface": { "$value": "{color.charcoal.700}" },

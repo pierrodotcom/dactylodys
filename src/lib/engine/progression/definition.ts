@@ -1,6 +1,7 @@
 import { toGraphemes } from '../graphemes';
 import type {
 	ExerciseMix,
+	HandGuideRules,
 	LessonDefinition,
 	LessonUnlock,
 	ProgressionDefinition,
@@ -14,6 +15,7 @@ const SLUG_PATTERN = new RegExp(`^${SLUG}$`);
 const LAYOUT_ID_PATTERN = /^[a-z]{2,3}-[a-z]{2}-[a-z0-9]+-[a-z]+$/;
 const CONTROL_PATTERN = /\p{Cc}/u;
 const PLAIN_LETTER_PATTERN = /^[a-z]$/;
+const CAPITAL_PATTERN = /^[A-Z]$/;
 const MAX_PERCENT = 100;
 const MIN_SPACE_GROUP_LENGTH = 3;
 const MAX_IDENTICAL_IN_A_ROW = 2;
@@ -128,7 +130,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'themeBoost',
 			'newCharMinCount',
 			'recentCharWindow',
-			'lengthSlack'
+			'lengthSlack',
+			'handGuide'
 		],
 		path
 	);
@@ -159,6 +162,10 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	if (lengthSlack !== undefined && lengthSlack < 0) {
 		fail(`${path}.lengthSlack`, 'expected an integer of at least 0');
 	}
+	const handGuide =
+		record['handGuide'] === undefined
+			? undefined
+			: parseHandGuide(record['handGuide'], `${path}.handGuide`);
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -167,8 +174,21 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		themeBoost: expectNonNegative(record['themeBoost'], `${path}.themeBoost`),
 		newCharMinCount,
 		recentCharWindow,
-		...(lengthSlack === undefined ? {} : { lengthSlack })
+		...(lengthSlack === undefined ? {} : { lengthSlack }),
+		...(handGuide === undefined ? {} : { handGuide })
 	};
+}
+
+function parseHandGuide(value: unknown, path: string): HandGuideRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['everyKeyUntil', 'newKeysUntil'], path);
+	const everyKeyUntil = expectInteger(record['everyKeyUntil'], `${path}.everyKeyUntil`);
+	const newKeysUntil = expectInteger(record['newKeysUntil'], `${path}.newKeysUntil`);
+	if (everyKeyUntil < 0) fail(`${path}.everyKeyUntil`, 'expected an integer of at least 0');
+	if (newKeysUntil < everyKeyUntil) {
+		fail(`${path}.newKeysUntil`, 'expected at least everyKeyUntil');
+	}
+	return { everyKeyUntil, newKeysUntil };
 }
 
 function parseMix(value: unknown, path: string): ExerciseMix {
@@ -468,4 +488,14 @@ export function learnedChars(progression: ProgressionDefinition, lessonId: strin
 		}
 	}
 	throw new RangeError(`Unknown lesson: ${lessonId}`);
+}
+
+/** Characters a lesson brings: its new characters, and the capitals it unlocks. */
+export function freshChars(progression: ProgressionDefinition, lessonId: string): string[] {
+	const lesson = findLesson(progression, lessonId);
+	if (lesson === undefined) throw new RangeError(`Unknown lesson: ${lessonId}`);
+	const capitals = lesson.unlocks.includes('uppercase')
+		? learnedChars(progression, lessonId).filter((char) => CAPITAL_PATTERN.test(char))
+		: [];
+	return [...lesson.newChars, ...capitals];
 }
