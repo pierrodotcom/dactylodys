@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { isOne } from '$lib/ui/plural';
+	import BlockShape from './BlockShape.svelte';
+	import { blockLook } from './blocks';
 
 	interface Props {
 		total: number;
@@ -9,9 +11,12 @@
 		current: number;
 	}
 
+	/** Size of the mini blocks, in the units of their drawing. */
+	const TILE = { width: 60, height: 20 } as const;
+
 	let { total, done, current }: Props = $props();
 
-	const steps = $derived(Array.from({ length: total }, (_, index) => index));
+	const items = $derived(Array.from({ length: total }, (_, index) => index));
 	const label = $derived(
 		isOne(done)
 			? m.game_tower_progress_one({ done, total })
@@ -19,11 +24,13 @@
 	);
 </script>
 
-<!-- Placeholder: the work package of the game replaces the dots by its own picture. -->
 <div class="row" role="img" aria-label={label}>
-	{#each steps as index (index)}
-		<span class="dot" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}
-		></span>
+	{#each items as index (index)}
+		<span class="item" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}>
+			<svg class="tile" viewBox="-34 -24 68 28" focusable="false" aria-hidden="true">
+				<BlockShape size={TILE} look={blockLook(index)} />
+			</svg>
+		</span>
 	{/each}
 </div>
 
@@ -34,20 +41,30 @@
 		gap: var(--dd-space-sm);
 	}
 
-	.dot {
-		inline-size: var(--dd-size-egg-mini);
-		block-size: var(--dd-size-egg-mini);
-		border-width: var(--dd-border-width-thick);
-		border-style: solid;
-		border-color: var(--dd-color-border-strong);
+	.item {
+		display: block;
+		position: relative;
+		inline-size: calc(var(--dd-size-ingredient-mini) * 1.5);
+		padding-block-end: var(--dd-space-sm);
+	}
+
+	.tile {
+		display: block;
+		inline-size: 100%;
+		block-size: auto;
+	}
+
+	.item[data-state='next'] {
+		opacity: var(--dd-opacity-disabled);
+	}
+
+	.item[data-state='current']::after {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		block-size: var(--dd-border-width-target);
 		border-radius: var(--dd-radius-pill);
-	}
-
-	.dot[data-state='done'] {
-		background-color: var(--dd-color-star-fill);
-	}
-
-	.dot[data-state='current'] {
-		border-color: var(--dd-color-accent-base);
+		background-color: var(--dd-color-typing-current-frame);
 	}
 </style>
