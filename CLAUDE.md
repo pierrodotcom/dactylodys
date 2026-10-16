@@ -135,6 +135,7 @@ La session principale est **chef d'orchestre** : elle découpe, délègue, véri
 - Le résultat d'un agent est vérifié (diff + `verify`) avant fusion ; son compte rendu n'est pas une preuve.
 - Un champ obligatoire ajouté à un type partagé casse les autres lots en cours : après chaque fusion, fusionner `main` dans les branches encore ouvertes et relancer `npm run check` avant de les fusionner (L-035, L-042).
 - Seul le chef d'orchestre modifie `CLAUDE.md`, `.claude/` et `docs/DECISIONS.md`.
+- Plusieurs sessions écrivent des ADR en parallèle : le numéro se vérifie dans `origin/main` **juste avant d'ouvrir la PR** (et après chaque fusion de `main`), et se renumérote en cas de collision (L-054).
 - **Avant chaque jalon ou lot**, annoncer au porteur du projet le modèle et l'effort recommandés pour la session, et attendre qu'il ait pu en changer.
 - Le porteur valide les **résultats**, pas le code : comptes rendus en termes de comportement observable et de ce qu'il peut essayer lui-même.
 - **Reprise dans une nouvelle session** : lire `docs/SUIVI.md` (état, prochaines actions, attentes côté porteur), puis les règles de `.claude/rules/` du domaine touché. Rien d'utile ne doit rester seulement dans une conversation : toute décision va dans `docs/DECISIONS.md`, toute erreur dans `docs/LECONS.md`.
