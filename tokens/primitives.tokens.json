@@ -293,6 +293,9 @@
 		"3000": {
 			"$value": "3000ms"
 		},
+		"4000": {
+			"$value": "4000ms"
+		},
 		"$type": "duration"
 	},
 	"easing": {

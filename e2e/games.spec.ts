@@ -647,3 +647,41 @@ test.describe('surprise scenes', () => {
 		});
 	});
 });
+
+test.describe('reminder to look at the screen', () => {
+	test.use({ reducedMotion: 'no-preference' });
+
+	/** The reminder is due after the second group of the sample exercise. */
+	async function reachReminder(page: Page, keyboardTops: number[]) {
+		await openChooser(page);
+		await beginGame(page, gameNamed('hatching'));
+		await page.addStyleTag({ content: ':root{--dd-duration-reminder:4000ms}' });
+		const keyboard = page.locator('.keyboard');
+		keyboardTops.push((await keyboard.boundingBox())?.y ?? -1);
+		const game = gameNamed('hatching');
+		for (const [index, group] of GROUPS.slice(0, 2).entries()) {
+			await page.keyboard.type(group);
+			await expectRewardShown(page, message(`${game.bubblePrefix}${index + 1}`));
+			if (index === 0) await page.keyboard.press(SKIP_KEY);
+		}
+	}
+
+	test('says it kindly, and does not move the keyboard when it appears', async ({ page }) => {
+		const tops: number[] = [];
+		await reachReminder(page, tops);
+		await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
+
+		await expect.poll(async () => (await page.locator('.keyboard').boundingBox())?.y).toBe(tops[0]);
+	});
+
+	test('stays long enough to be read: a key does not remove it', async ({ page }) => {
+		await reachReminder(page, []);
+		const reminder = page.getByText(message('game_shared_look_reminder'));
+		await expect(reminder).toBeVisible();
+
+		await page.keyboard.press(SKIP_KEY);
+
+		await expect(reminder).toBeVisible();
+		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+	});
+});

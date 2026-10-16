@@ -131,9 +131,11 @@
 		font-size: var(--dd-font-size-lg);
 	}
 
+	/* Smaller keys, so that the games below stay in view on a laptop screen. */
 	.keys {
+		--dd-size-key-unit: var(--dd-size-key-unit-compact);
 		display: grid;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm);
 		justify-items: center;
 	}
 
@@ -143,8 +145,10 @@
 	}
 
 	.hints {
-		display: grid;
-		gap: var(--dd-space-xs);
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--dd-space-xs) var(--dd-space-xl);
 		margin: 0;
 		padding: 0;
 		list-style: none;
