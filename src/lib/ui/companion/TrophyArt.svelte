@@ -2,16 +2,18 @@
 	/*
 	 * A trophy in a 120 × 120 view box (lot R2): a medal with the symbol of its world, or a key of
 	 * the keyboard with the row or the sign it is about. An unknown `artId` draws nothing. Under an
-	 * ancestor with `data-silhouette`, it is one flat shape without details.
+	 * ancestor with `data-silhouette`, it is one flat shape with its letters or symbol cut out.
 	 */
 	import { checkerPath, starPath } from './geometry';
 	import { TROPHY_ARTS } from './items';
 
 	interface Props {
 		artId: string;
+		/** For a trophy of a row: the keys written on its big keycaps (`trophyKeys`). */
+		keys?: readonly string[];
 	}
 
-	let { artId }: Props = $props();
+	let { artId, keys = [] }: Props = $props();
 
 	const art = $derived(TROPHY_ARTS[artId]);
 
@@ -21,6 +23,12 @@
 	const STAR = starPath(60, 78, 19, 8.5);
 	const BADGE = starPath(94, 24, 13, 6.5);
 	const FLAG_CHECKS = checkerPath(48, 63, 4, 3, 6);
+	/** Big keycaps of a row trophy, standing on a podium: x of each, from the left. */
+	const BIG_KEYS = [7, 43, 79] as const;
+	/** In units of the view box, so that the letter keeps its place whatever the text size setting. */
+	const LETTER_SIZE = 27;
+	const BIG_KEY = { y: 36, width: 34, height: 44, top: 37, inset: 3, baseline: 29 } as const;
+	const isRow = $derived(art?.kind === 'key' && art.sign.endsWith('-row') && keys.length > 0);
 </script>
 
 <g class="trophy" data-art={artId}>
@@ -51,8 +59,10 @@
 			<path class="symbol" d={FLAG_CHECKS} />
 		{/if}
 	{:else if art?.kind === 'key'}
-		<rect class="key-side line" x="22" y="22" width="76" height="82" rx="12" />
-		<rect class="key-top line" x="30" y="26" width="60" height="66" rx="8" />
+		{#if !isRow}
+			<rect class="key-side line" x="22" y="22" width="76" height="82" rx="12" />
+			<rect class="key-top line" x="30" y="26" width="60" height="66" rx="8" />
+		{/if}
 		{#if art.sign === 'accents'}
 			<path
 				class="open stroke-symbol"
@@ -64,6 +74,36 @@
 			<circle class="symbol" cx="51" cy="75" r="3.6" />
 			<path class="open stroke-symbol" d="M73 39V64" />
 			<circle class="symbol" cx="73" cy="75" r="3.6" />
+		{:else if isRow}
+			<!-- Three big keys on a podium: the rows differ by their letters (porteur's choice). -->
+			<rect class="disc line" x="8" y="84" width="104" height="14" rx="4" />
+			<rect class="disc-inner line" x="20" y="98" width="80" height="10" rx="3" />
+			{#each keys.slice(0, BIG_KEYS.length) as key, i (i)}
+				{@const x = BIG_KEYS[i] ?? 0}
+				<rect
+					class="key-side line"
+					{x}
+					y={BIG_KEY.y}
+					width={BIG_KEY.width}
+					height={BIG_KEY.height}
+					rx="6"
+				/>
+				<rect
+					class="key-top line"
+					x={x + BIG_KEY.inset}
+					y={BIG_KEY.y + 1}
+					width={BIG_KEY.width - 2 * BIG_KEY.inset}
+					height={BIG_KEY.top}
+					rx="4"
+				/>
+				<text
+					class="letter"
+					x={x + BIG_KEY.width / 2}
+					y={BIG_KEY.y + BIG_KEY.baseline}
+					font-size={LETTER_SIZE}
+					text-anchor="middle">{key}</text
+				>
+			{/each}
 		{:else}
 			{#each Object.entries(MINI_ROWS) as [row, y] (row)}
 				{#each MINI_KEYS as x (x)}
@@ -128,6 +168,12 @@
 		fill: var(--dd-color-trophy-key-dim);
 	}
 
+	.letter {
+		fill: var(--dd-color-trophy-symbol);
+		font-family: var(--dd-font-family-base);
+		font-weight: var(--dd-font-weight-bold);
+	}
+
 	.key-lit {
 		fill: var(--dd-color-trophy-key-lit);
 	}
@@ -158,5 +204,16 @@
 
 	:global([data-silhouette]) .trophy * {
 		stroke: var(--dd-color-silhouette);
+	}
+
+	/* After the flat silhouette: letters and symbols stay, cut out, so each trophy is recognisable. */
+	:global([data-silhouette]) .trophy .letter,
+	:global([data-silhouette]) .trophy .symbol {
+		fill: var(--dd-color-reward-backdrop);
+		stroke: none;
+	}
+
+	:global([data-silhouette]) .trophy .stroke-symbol {
+		stroke: var(--dd-color-reward-backdrop);
 	}
 </style>

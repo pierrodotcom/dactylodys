@@ -2,6 +2,7 @@
  * Where the drawings of the companion go (lot R2). Coordinates are those of the companion, a
  * 120 × 120 view box; a hand item is drawn around its grip, the point (0, 0) held in the hand.
  */
+import type { RewardDefinition } from '$lib/engine/rewards/types';
 import type { Frame } from './geometry';
 
 /** Slots in drawing order: the back behind the body, then body, neck, feet, face, head, hand. */
@@ -129,3 +130,19 @@ export const TROPHY_ARTS: Readonly<Record<string, TrophyArt>> = {
 	'keys-accents': { kind: 'key', sign: 'accents' },
 	'keys-punctuation': { kind: 'key', sign: 'punctuation' }
 };
+
+/** How many keys a trophy of a row shows, so that the three rows differ at a glance. */
+export const TROPHY_KEY_COUNT = 3;
+
+/**
+ * The keys a trophy of keys shows, as written on the keycaps: the first characters of its
+ * condition, in capitals of the language of the reward (its id is `<language>.reward.<slug>`).
+ * Read from the catalogue, so that no layout is assumed in a drawing.
+ */
+export function trophyKeys(reward: RewardDefinition): readonly string[] {
+	if (reward.condition.kind !== 'chars-mastered') return [];
+	const locale = reward.id.split('.')[0];
+	return reward.condition.chars
+		.slice(0, TROPHY_KEY_COUNT)
+		.map((char) => char.toLocaleUpperCase(locale));
+}

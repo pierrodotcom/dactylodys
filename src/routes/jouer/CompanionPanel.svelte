@@ -7,6 +7,7 @@
 	} from '$lib/engine/rewards';
 	import { m } from '$lib/paraglide/messages.js';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
+	import { trophyKeys } from '$lib/ui/companion/items';
 	import Button from '$lib/ui/components/Button.svelte';
 	import Companion from '$lib/ui/components/Companion.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
@@ -83,6 +84,7 @@
 				kind={reward.kind}
 				owned={false}
 				label={m.play_companion_locked({ title: reward.title })}
+				keys={trophyKeys(reward)}
 			/>
 		</div>
 		<span class="how">{reward.description}</span>
@@ -207,6 +209,7 @@
 							<div class="picture" aria-hidden="true">
 								<RewardPicture
 									artId={trophy.artId}
+									keys={trophyKeys(trophy)}
 									kind={trophy.kind}
 									owned={true}
 									label={trophy.title}
