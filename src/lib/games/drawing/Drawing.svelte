@@ -4,11 +4,14 @@
 	import Bubble from '../shared/Bubble.svelte';
 	import GameShell from '../shared/GameShell.svelte';
 	import { isRewarded, pickCyclic, type GameView } from '../shared/game-view';
+	import { pictureFor } from './draw';
 	import Progress from './Progress.svelte';
 	import Scene from './Scene.svelte';
 	import { QUIPS } from './texts';
 
 	const props: GameProps = $props();
+
+	const picture = $derived(pictureFor(props.exercise.lessonId));
 
 	function quipFor(view: GameView): string {
 		return pickCyclic(QUIPS, view.groupIndex)?.() ?? '';
@@ -47,7 +50,7 @@
 				<Bubble still={view.reducedMotion} compact>{quipFor(view)}</Bubble>
 			{/if}
 		</div>
-		<Scene {view} />
+		<Scene {view} {picture} />
 	</div>
 {/snippet}
 
