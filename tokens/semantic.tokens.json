@@ -58,12 +58,98 @@
 			"current-frame": { "$value": "{color.accent.base}" }
 		},
 		"companion": {
-			"body": { "$value": "{color.jade.300}" },
-			"belly": { "$value": "{color.cream.50}" },
-			"plate": { "$value": "{color.ocean.400}" },
+			"body": { "$value": "{color.companion.green.body}" },
+			"belly": { "$value": "{color.companion.green.belly}" },
+			"plate": { "$value": "{color.companion.green.plate}" },
 			"line": { "$value": "{color.brown.900}" },
 			"eye": { "$value": "{color.cream.50}" },
-			"cheek": { "$value": "{color.clay.400}" }
+			"cheek": { "$value": "{color.companion.green.cheek}" },
+			"shadow": { "$value": "{color.shadow.light}" },
+			"green": {
+				"body": { "$value": "{color.jade.300}" },
+				"belly": { "$value": "{color.cream.50}" },
+				"plate": { "$value": "{color.ocean.400}" },
+				"cheek": { "$value": "{color.clay.400}" }
+			},
+			"sky": {
+				"body": { "$value": "{color.azure.300}" },
+				"belly": { "$value": "{color.azure.50}" },
+				"plate": { "$value": "{color.azure.500}" },
+				"cheek": { "$value": "{color.pink.200}" }
+			},
+			"violet": {
+				"body": { "$value": "{color.plum.300}" },
+				"belly": { "$value": "{color.plum.50}" },
+				"plate": { "$value": "{color.plum.500}" },
+				"cheek": { "$value": "{color.pink.200}" }
+			},
+			"orange": {
+				"body": { "$value": "{color.orange.300}" },
+				"belly": { "$value": "{color.orange.50}" },
+				"plate": { "$value": "{color.orange.500}" },
+				"cheek": { "$value": "{color.orange.600}" }
+			},
+			"pink": {
+				"body": { "$value": "{color.pink.300}" },
+				"belly": { "$value": "{color.pink.50}" },
+				"plate": { "$value": "{color.pink.500}" },
+				"cheek": { "$value": "{color.tomato.300}" }
+			},
+			"yellow": {
+				"body": { "$value": "{color.lemon.300}" },
+				"belly": { "$value": "{color.lemon.50}" },
+				"plate": { "$value": "{color.lemon.500}" },
+				"cheek": { "$value": "{color.orange.600}" }
+			},
+			"turquoise": {
+				"body": { "$value": "{color.lagoon.300}" },
+				"belly": { "$value": "{color.lagoon.50}" },
+				"plate": { "$value": "{color.lagoon.500}" },
+				"cheek": { "$value": "{color.pink.200}" }
+			},
+			"tomato": {
+				"body": { "$value": "{color.tomato.300}" },
+				"belly": { "$value": "{color.tomato.50}" },
+				"plate": { "$value": "{color.tomato.600}" },
+				"cheek": { "$value": "{color.tomato.200}" }
+			}
+		},
+		"wear": {
+			"gold": { "$value": "{color.sunflower.300}" },
+			"jewel": { "$value": "{color.red.300}" },
+			"cream": { "$value": "{color.cream.50}" },
+			"red": { "$value": "{color.tomato.500}" },
+			"blue": { "$value": "{color.azure.500}" },
+			"wool": { "$value": "{color.clay.400}" },
+			"wool-light": { "$value": "{color.cream.200}" },
+			"leather": { "$value": "{color.leather.400}" },
+			"twig": { "$value": "{color.gold.500}" },
+			"metal": { "$value": "{color.slate.300}" },
+			"glass": { "$value": "{color.ice.100}" },
+			"rubber": { "$value": "{color.amber.300}" },
+			"spot": { "$value": "{color.amber.700}" },
+			"cape": { "$value": "{color.violet.400}" },
+			"ring": { "$value": "{color.lavender.300}" },
+			"leaf": { "$value": "{color.green.300}" },
+			"ink": { "$value": "{color.brown.900}" }
+		},
+		"trophy": {
+			"disc": { "$value": "{color.sunflower.300}" },
+			"disc-inner": { "$value": "{color.lemon.50}" },
+			"key-top": { "$value": "{color.cream.50}" },
+			"key-side": { "$value": "{color.cream.300}" },
+			"key-dim": { "$value": "{color.cream.300}" },
+			"key-lit": { "$value": "{color.tomato.500}" },
+			"symbol": { "$value": "{color.brown.900}" },
+			"ribbon-dinosaurs": { "$value": "{color.jade.300}" },
+			"ribbon-kitchen": { "$value": "{color.tomato.500}" },
+			"ribbon-zoo": { "$value": "{color.amber.300}" },
+			"ribbon-stars": { "$value": "{color.violet.400}" },
+			"ribbon-racing": { "$value": "{color.azure.300}" }
+		},
+		"silhouette": { "$value": "{color.brown.450}" },
+		"reward": {
+			"backdrop": { "$value": "{color.cream.50}" }
 		},
 		"star": {
 			"fill": { "$value": "{color.sunflower.300}" }
@@ -215,6 +301,8 @@
 		"key-gap": { "$value": "{dimension.4}" },
 		"key-home-mark": { "$value": "{dimension.16}" },
 		"companion": { "$value": "8rem" },
+		"companion-large": { "$value": "20rem" },
+		"reward-picture": { "$value": "7rem" },
 		"egg": { "$value": "11rem" },
 		"egg-mini": { "$value": "2.25rem" },
 		"astre-mini": { "$value": "2.25rem" },
@@ -244,7 +332,8 @@
 		"thin": { "$value": "1px" },
 		"thick": { "$value": "2px" },
 		"focus": { "$value": "3px" },
-		"target": { "$value": "4px" }
+		"target": { "$value": "4px" },
+		"drawing-bold": { "$value": "4px" }
 	},
 	"scale": {
 		"$type": "number",
@@ -295,7 +384,8 @@
 		"$type": "number",
 		"disabled": { "$value": 0.5 },
 		"overlay": { "$value": 0.6 },
-		"hand": { "$value": 0.55 }
+		"hand": { "$value": 0.55 },
+		"glass": { "$value": 0.45 }
 	},
 	"duration": {
 		"$type": "duration",
@@ -312,11 +402,15 @@
 		"reward": { "$value": "{duration.1400}" },
 		"scene": { "$value": "{duration.2000}" },
 		"celebration": { "$value": "{duration.2800}" },
-		"notice": { "$value": "{duration.1600}" }
+		"notice": { "$value": "{duration.1600}" },
+		"trick": { "$value": "{duration.1000}" },
+		"trick-shake": { "$value": "{duration.250}" },
+		"trick-orbit": { "$value": "{duration.1000}" }
 	},
 	"easing": {
 		"$type": "cubicBezier",
 		"standard": { "$value": "{easing.soft}" },
+		"steady": { "$value": "{easing.linear}" },
 		"enter": { "$value": "{easing.out}" },
 		"exit": { "$value": "{easing.in}" }
 	},

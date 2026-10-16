@@ -1,9 +1,15 @@
 <script lang="ts">
 	/*
-	 * Contract (lot R2): the drawing of one reward on its own, for lists and announcements.
-	 * Placeholder until the drawings land: the art package replaces the body, not the props.
+	 * The drawing of one reward on its own, for lists and announcements (lot R2): an item alone,
+	 * centred and enlarged; the companion in the pose of a trick; a trophy. Not owned yet: a
+	 * silhouette, one flat shape without details, with what to master said by the caller.
 	 */
 	import type { RewardKind } from '$lib/engine/rewards/types';
+	import Companion from '$lib/ui/components/Companion.svelte';
+	import CompanionItem from './CompanionItem.svelte';
+	import { squareViewBox } from './geometry';
+	import { ITEM_ARTS, ITEM_LAYERS } from './items';
+	import TrophyArt from './TrophyArt.svelte';
 
 	interface Props {
 		artId: string;
@@ -15,34 +21,61 @@
 	}
 
 	let { artId, kind, owned, label }: Props = $props();
+
+	/** Room around an item drawn alone, in units of its drawing. */
+	const ITEM_MARGIN = 7;
+	const FULL_VIEW_BOX = '0 0 120 120';
+
+	const item = $derived(kind === 'item' ? ITEM_ARTS[artId] : undefined);
+	const viewBox = $derived(item ? squareViewBox(item.frame, ITEM_MARGIN) : FULL_VIEW_BOX);
+	const layers = $derived(item?.pictureLayers ?? ITEM_LAYERS);
 </script>
 
-<svg
+<div
 	class="reward-picture"
-	viewBox="0 0 120 120"
 	role="img"
 	aria-label={label}
 	data-art={artId}
 	data-kind={kind}
 	data-owned={owned}
+	data-silhouette={owned ? undefined : ''}
+	data-still=""
 >
-	<circle class="shape" class:locked={!owned} cx="60" cy="60" r="44" />
-</svg>
+	{#if kind === 'skill'}
+		<div class="pose" aria-hidden="true">
+			<Companion mood="idle" trick={artId} />
+		</div>
+	{:else}
+		<svg {viewBox} aria-hidden="true" focusable="false">
+			{#if kind === 'item'}
+				{#each layers as layer (layer)}
+					<CompanionItem {artId} {layer} />
+				{/each}
+			{:else}
+				<TrophyArt {artId} />
+			{/if}
+		</svg>
+	{/if}
+</div>
 
 <style>
 	.reward-picture {
+		display: grid;
+		inline-size: 100%;
+		aspect-ratio: 1;
+		border-radius: var(--dd-radius-lg);
+		background-color: var(--dd-color-reward-backdrop);
+	}
+
+	svg,
+	.pose :global(.companion) {
+		display: block;
 		inline-size: 100%;
 		block-size: auto;
 	}
 
-	.shape {
-		fill: var(--dd-color-companion-body);
-		stroke: var(--dd-color-companion-line);
-		stroke-width: var(--dd-border-width-thick);
-		vector-effect: non-scaling-stroke;
-	}
-
-	.locked {
-		fill: var(--dd-color-surface-sunken);
+	/* Room for a trick that leaves the view box of the companion (float, cartwheel). */
+	.pose {
+		padding: var(--dd-space-sm);
 	}
 </style>
