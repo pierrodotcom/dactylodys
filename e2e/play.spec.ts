@@ -922,6 +922,50 @@ test.describe('play route', () => {
 		await expect(heading(page, FIRST.title)).toBeVisible();
 	});
 
+	test('helps a child who hesitates in a later lesson, and only then', async ({ page }) => {
+		const third = world.lessons[2] as Lesson;
+		await reachMapAs(page, profileAfter(SECOND.id));
+		await startLesson(page, third);
+
+		const hand = page.locator('[data-hand-guide] [data-active]');
+		// Up to the first key the child already knows: the new keys are shown, a known one is not.
+		for (;;) {
+			const group = await currentGroup(page);
+			const known = [...group].findIndex((char) => !third.newChars.includes(char));
+			if (known >= 0) {
+				await page.keyboard.type(group.slice(0, known));
+				break;
+			}
+			await page.keyboard.type(group);
+			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+			await page.keyboard.press(SKIP_KEY);
+		}
+
+		await expect(hand).toHaveCount(0);
+		await expect(hand).toHaveCount(1);
+	});
+
+	test('draws the next star half full when it was nearly won, and says so kindly', async ({
+		page
+	}) => {
+		const { seed } = exerciseWith(
+			FIRST.id,
+			{ themeId: world.themeId },
+			(group) => group.length > 0
+		);
+		await reachMap(page);
+		await openIntro(page, FIRST);
+		await seedExercise(page, seed);
+		await proposedGame(page).click();
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+
+		await page.keyboard.type(WRONG_KEY + WRONG_KEY);
+		await typeToResult(page, { skipDelay: true });
+
+		await expect(page.getByText(message('play_result_almost'))).toBeVisible();
+		await expect(page.locator('[data-almost]')).toHaveCount(1);
+	});
+
 	test('hides the on-screen keyboard when asked to', async ({ page }) => {
 		await reachMap(page);
 		await button(page, message('play_settings_open')).click();

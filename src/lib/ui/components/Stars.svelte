@@ -6,13 +6,15 @@
 		count: 0 | 1 | 2 | 3;
 		/** Big stars that pop in one after the other, to celebrate a result. */
 		celebrate?: boolean;
+		/** The star after the last full one is drawn half full: it was nearly won. */
+		almost?: boolean;
 	}
 
 	const SLOTS = [0, 1, 2] as const;
 	const STAR_PATH =
 		'M12 2L14.47 8.6L21.51 8.91L16 13.3L17.88 20.09L12 16.2L6.12 20.09L8 13.3L2.49 8.91L9.53 8.6Z';
 
-	let { count, celebrate = false }: Props = $props();
+	let { count, celebrate = false, almost = false }: Props = $props();
 
 	const label = $derived(
 		new Intl.PluralRules(getLocale()).select(count) === 'one'
@@ -28,6 +30,7 @@
 			focusable="false"
 			aria-hidden="true"
 			data-filled={slot < count || undefined}
+			data-almost={(almost && slot === count) || undefined}
 			data-reward={(celebrate && slot < count) || undefined}
 			data-reward-variant={celebrate && slot < count ? '3' : undefined}
 		>
@@ -68,6 +71,13 @@
 
 	[data-celebrate] svg:nth-child(3) {
 		animation-delay: calc(var(--dd-duration-reward-delay) + var(--dd-duration-beat) * 2);
+	}
+
+	/* The star that was nearly won: the same yellow, but pale. */
+	svg[data-almost] path {
+		fill: var(--dd-color-star-fill);
+		fill-opacity: var(--dd-opacity-star-almost);
+		stroke: var(--dd-color-text-primary);
 	}
 
 	svg[data-filled] path {

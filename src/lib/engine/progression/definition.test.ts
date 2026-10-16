@@ -159,9 +159,16 @@ describe('parseProgression', () => {
 	it('reads the optional rules of the hand guide, absent by default', () => {
 		expect(parseProgression(BASE).rules.handGuide).toBeUndefined();
 		const parsed = parseProgression(
-			variant((raw) => (raw.rules['handGuide'] = { everyKeyUntil: 4, newKeysUntil: 15 }))
+			variant(
+				(raw) =>
+					(raw.rules['handGuide'] = { everyKeyUntil: 4, newKeysUntil: 15, hesitationMs: 2500 })
+			)
 		);
-		expect(parsed.rules.handGuide).toEqual({ everyKeyUntil: 4, newKeysUntil: 15 });
+		expect(parsed.rules.handGuide).toEqual({
+			everyKeyUntil: 4,
+			newKeysUntil: 15,
+			hesitationMs: 2500
+		});
 	});
 
 	it('reads the optional length slack, absent by default', () => {

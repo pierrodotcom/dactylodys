@@ -5,14 +5,19 @@
 	"layoutIds": ["fr-fr-azerty-pc", "fr-fr-azerty-mac"],
 	"rules": {
 		"unlockAccuracy": 80,
-		"starThresholds": [80, 90, 97],
+		"starThresholds": [80, 90, 95],
 		"newCharWeight": 0.6,
 		"weakCharBoost": 2,
 		"themeBoost": 2,
 		"newCharMinCount": 5,
 		"recentCharWindow": 30,
 		"lengthSlack": 12,
-		"handGuide": { "everyKeyUntil": 11, "newKeysUntil": 24 }
+		"handGuide": {
+			"everyKeyUntil": 2,
+			"newKeysUntil": 24,
+			"hesitationMs": 3000
+		},
+		"starAlmostMargin": 3
 	},
 	"worlds": [
 		{
@@ -33,7 +38,7 @@
 						"phrases": 0
 					},
 					"unlocks": [],
-					"groupCount": 12,
+					"groupCount": 8,
 					"targetLength": 24,
 					"groupLength": [2, 4]
 				},
@@ -49,7 +54,7 @@
 						"phrases": 0
 					},
 					"unlocks": [],
-					"groupCount": 12,
+					"groupCount": 8,
 					"targetLength": 24,
 					"groupLength": [3, 4]
 				},
@@ -65,7 +70,7 @@
 						"phrases": 0
 					},
 					"unlocks": [],
-					"groupCount": 12,
+					"groupCount": 8,
 					"targetLength": 24,
 					"groupLength": [2, 4]
 				},
@@ -81,7 +86,7 @@
 						"phrases": 0
 					},
 					"unlocks": [],
-					"groupCount": 12,
+					"groupCount": 8,
 					"targetLength": 24,
 					"groupLength": [3, 5]
 				},
@@ -117,9 +122,9 @@
 						"phrases": 0
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.rugissement-r-u",
@@ -165,9 +170,9 @@
 						"phrases": 0
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				}
 			]
 		},
@@ -189,9 +194,9 @@
 						"phrases": 1
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.gateau-a-o",
@@ -205,9 +210,9 @@
 						"phrases": 1
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.bras-q-m",
@@ -221,9 +226,9 @@
 						"phrases": 1
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.casserole-c-p",
@@ -237,9 +242,9 @@
 						"phrases": 1
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.epices-accent-apostrophe",
@@ -253,9 +258,9 @@
 						"phrases": 1
 					},
 					"unlocks": [],
-					"groupCount": 20,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				}
 			]
 		},
@@ -277,9 +282,9 @@
 						"phrases": 2
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.vache-v-b",
@@ -293,9 +298,9 @@
 						"phrases": 2
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.yak-y-x",
@@ -309,9 +314,9 @@
 						"phrases": 2
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.zebre-z-w",
@@ -325,9 +330,9 @@
 						"phrases": 2
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				}
 			]
 		},
@@ -349,9 +354,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.comete-cedille-u-grave",
@@ -365,9 +370,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.grandes-majuscules",
@@ -381,9 +386,9 @@
 						"phrases": 5
 					},
 					"unlocks": ["uppercase"],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.virgule-point",
@@ -397,9 +402,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				}
 			]
 		},
@@ -421,9 +426,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.tiret-deux-points",
@@ -437,9 +442,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.chapeau-circonflexe",
@@ -453,9 +458,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.casque-circonflexe",
@@ -469,9 +474,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				},
 				{
 					"id": "fr.lesson.trema",
@@ -485,9 +490,9 @@
 						"phrases": 5
 					},
 					"unlocks": [],
-					"groupCount": 24,
+					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [3, 5]
+					"groupLength": [4, 6]
 				}
 			]
 		}

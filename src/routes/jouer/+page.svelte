@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { createVoicePlayer, loadVoiceManifest, type VoicePlayer } from '$lib/audio';
 	import { voiceLocale } from '$lib/audio/voice-texts';
-	import { isLessonUnlocked } from '$lib/engine/progression/progress';
+	import { almostNextStar, isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
@@ -44,7 +44,7 @@
 	import BreakScreen from './BreakScreen.svelte';
 	import {
 		createPlayClock,
-		playedMsAt,
+		finishPlaying,
 		shouldSuggestBreak,
 		startPlaying,
 		stopPlaying
@@ -101,6 +101,8 @@
 		readonly hasOpenNext: boolean;
 		readonly worldDone: boolean;
 		readonly suggestBreak: boolean;
+		/** Stopped just short of the next star. */
+		readonly almost: boolean;
 		readonly saveFailed: boolean;
 		/** What this play earned, announced one card after the other. */
 		readonly rewards: readonly RewardDefinition[];
@@ -388,11 +390,12 @@
 
 	/** What the hand on the keyboard shows in this lesson, for this child. */
 	function guideFor(current: Profile, lessonId: string): GameGuide {
-		if (!progression) return { mode: 'none', freshChars: [] };
+		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
 		const number = lessonIds(progression).indexOf(lessonId) + 1;
 		return {
 			mode: guideMode(progression.rules, number, current.settings.handGuide),
-			freshChars: freshChars(progression, lessonId)
+			freshChars: freshChars(progression, lessonId),
+			hesitationMs: progression.rules.handGuide?.hesitationMs ?? 0
 		};
 	}
 
@@ -452,7 +455,7 @@
 
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
-		playClock = stopPlaying(playClock, now());
+		playClock = finishPlaying(playClock, now());
 		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, Date.now());
 		const { evaluation } = recorded;
 		const { profile: next, announced } = earnRewards(recorded.profile, catalogue, progression);
@@ -467,7 +470,12 @@
 			summary: summarizeMetrics(outcome.metrics),
 			hasOpenNext,
 			worldDone: followingId === null && ids.includes(lessonId) && evaluation.unlocksNext,
-			suggestBreak: shouldSuggestBreak(playedMsAt(playClock, now()), PLAY_RULES),
+			suggestBreak: shouldSuggestBreak(playClock, now(), PLAY_RULES),
+			almost: almostNextStar(
+				progression.rules,
+				(100 * outcome.metrics.correctKeystrokes) / Math.max(1, outcome.metrics.totalKeystrokes),
+				evaluation.stars
+			),
 			saveFailed: false,
 			rewards: announced,
 			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater)
@@ -672,6 +680,7 @@
 			hasOpenNext={result.hasOpenNext}
 			worldDone={result.worldDone}
 			suggestBreak={result.suggestBreak}
+			almost={result.almost}
 			saveFailed={result.saveFailed}
 			dance={lessonIds(progression).indexOf(lessonId)}
 			date={new Date()}

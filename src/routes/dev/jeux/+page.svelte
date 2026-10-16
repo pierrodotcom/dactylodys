@@ -39,7 +39,11 @@
 		reducedMotion,
 		showKeyboard,
 		errorPolicy: 'retry' as const,
-		guide: { mode: showHand ? ('every-key' as const) : ('none' as const), freshChars: [] },
+		guide: {
+			mode: showHand ? ('every-key' as const) : ('none' as const),
+			freshChars: [],
+			hesitationMs: 0
+		},
 		lookReminderEvery: LOOK_REMINDER_EVERY,
 		scenes: showScenes ? (SCENE_SCHEDULE.games[gameId] ?? []) : []
 	});
