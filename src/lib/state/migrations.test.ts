@@ -14,7 +14,7 @@ import {
 	withProgress
 } from './profile';
 import { firstVersionProfileArb, profileArb } from './test-arbitraries';
-import { asVersion1, asVersion2, asVersion3 } from './test-support';
+import { asVersion1, asVersion2, asVersion3, asVersion4 } from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
@@ -140,6 +140,36 @@ function profileOfVersion2(): Profile {
 	);
 }
 
+/** Written by hand as well: what version 4 really left on devices (no reward kept, no help quest). */
+const STORED_BY_VERSION_4 = {
+	schemaVersion: 4,
+	id: 'p-4',
+	name: 'Zoé',
+	createdAt: 1_760_000_000_000,
+	calibrated: true,
+	settings: {
+		layoutId: 'fr-fr-azerty-pc',
+		fingeringProfileId: 'ten-fingers-iso',
+		soundEnabled: true,
+		voiceEnabled: true,
+		theme: 'dark',
+		motion: 'system',
+		textScale: 'md',
+		textSpacing: 'normal',
+		showKeyboard: true,
+		handGuide: 'always'
+	},
+	progress: {
+		lessons: {
+			'fr.lesson.x': { bestAccuracy: 96.5, stars: 2, attempts: 3, lastPlayedAt: 5 }
+		},
+		chars: { f: { attempts: 40, errors: 9, recent: [{ attempts: 30, errors: 6 }] } }
+	},
+	companion: { name: 'Biscotte', colorId: 'blue', wornItemIds: ['fr.reward.scarf'] },
+	lastGameByWorld: { 'fr.world.x': 'rocket' },
+	ghosts: {}
+};
+
 /** What the step to version 3 gives a character, computed apart from the code under test. */
 function migratedChar({ attempts, errors }: Pick<CharProgress, 'attempts' | 'errors'>) {
 	if (attempts === 0) return { attempts, errors, recent: [] };
@@ -182,6 +212,35 @@ describe('migrateProfile', () => {
 		expect(migrated.settings.soundEnabled).toBe(false);
 	});
 
+	it('gives a migrated profile no earned reward and no help quest, from any older version', () => {
+		for (const stored of [STORED_BY_VERSION_1, STORED_BY_VERSION_2, STORED_BY_VERSION_4]) {
+			const migrated = parseProfile(migrateProfile(stored));
+			expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
+			expect(migrated.earnedRewardIds).toEqual([]);
+			expect(migrated.helpQuest).toBeNull();
+		}
+	});
+
+	it('brings a version 4 profile to the current version with nothing lost', () => {
+		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
+			...STORED_BY_VERSION_4,
+			schemaVersion: 5,
+			earnedRewardIds: [],
+			helpQuest: null
+		});
+	});
+
+	it('keeps the rewards and the help quest of a record that already holds them', () => {
+		const stored = {
+			...STORED_BY_VERSION_4,
+			earnedRewardIds: ['fr.reward.a'],
+			helpQuest: { char: 'f', lessonPlays: 4 }
+		};
+		const migrated = parseProfile(migrateProfile(stored));
+		expect(migrated.earnedRewardIds).toEqual(['fr.reward.a']);
+		expect(migrated.helpQuest).toEqual({ char: 'f', lessonPlays: 4 });
+	});
+
 	it('brings a version 2 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_2))).toEqual(profileOfVersion2());
 	});
@@ -209,7 +268,7 @@ describe('migrateProfile', () => {
 	});
 
 	it('does not alter the record it is given', () => {
-		for (const record of [STORED_BY_VERSION_1, STORED_BY_VERSION_2]) {
+		for (const record of [STORED_BY_VERSION_1, STORED_BY_VERSION_2, STORED_BY_VERSION_4]) {
 			const stored = structuredClone(record);
 			migrateProfile(stored);
 			expect(stored).toEqual(record);
@@ -219,6 +278,13 @@ describe('migrateProfile', () => {
 	it('describes version 1 and version 2 the way the test support does', () => {
 		expect(asVersion1(playedProfile())).toEqual(STORED_BY_VERSION_1);
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
+		const profileOfVersion4 = parseProfile({
+			...STORED_BY_VERSION_4,
+			schemaVersion: 5,
+			earnedRewardIds: [],
+			helpQuest: null
+		});
+		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
 	});
 
 	it('keeps the id, the name, the date, the settings, the lessons and the totals of any version 1 profile', () => {
@@ -246,7 +312,9 @@ describe('migrateProfile', () => {
 				expect(migrated).toEqual({
 					...profile,
 					settings: { ...profile.settings, handGuide: 'auto' },
-					progress: migratedProgress(profile.progress)
+					progress: migratedProgress(profile.progress),
+					earnedRewardIds: [],
+					helpQuest: null
 				});
 				for (const [char, stats] of Object.entries(migrated.progress.chars)) {
 					expect(stats.recent.length).toBeLessThanOrEqual(1);
@@ -268,8 +336,31 @@ describe('migrateProfile', () => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion3(profile))));
 				expect(migrated).toEqual({
 					...profile,
-					settings: { ...profile.settings, handGuide: 'auto' }
+					settings: { ...profile.settings, handGuide: 'auto' },
+					earnedRewardIds: [],
+					helpQuest: null
 				});
+			})
+		);
+	});
+
+	it('changes nothing but the rewards kept and the help quest of any version 4 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion4(profile))));
+				expect(migrated).toEqual({ ...profile, earnedRewardIds: [], helpQuest: null });
+			})
+		);
+	});
+
+	it('brings any version 1 profile to the current version, with nothing earned yet', () => {
+		fc.assert(
+			fc.property(firstVersionProfileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion1(profile))));
+				expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
+				expect(migrated.earnedRewardIds).toEqual([]);
+				expect(migrated.helpQuest).toBeNull();
+				expect(migrated.companion).toEqual({ name: '', colorId: null, wornItemIds: [] });
 			})
 		);
 	});
@@ -287,7 +378,12 @@ describe('migrateProfile', () => {
 	it('changes nothing when applied twice', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
-				for (const stored of [asVersion1(profile), asVersion2(profile), asVersion3(profile)]) {
+				for (const stored of [
+					asVersion1(profile),
+					asVersion2(profile),
+					asVersion3(profile),
+					asVersion4(profile)
+				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);
 				}
@@ -305,6 +401,18 @@ describe('migrateProfile', () => {
 		for (const data of [withExtra, withBadCompanion, withBadSetting]) {
 			expect(() => parseProfile(migrateProfile(data))).toThrow();
 		}
+	});
+
+	it('does not make valid a version 4 record that carries something unknown or damaged', () => {
+		const damaged = [
+			{ ...STORED_BY_VERSION_4, coins: 12 },
+			{ ...STORED_BY_VERSION_4, earnedRewardIds: ['a', 'a'] },
+			{ ...STORED_BY_VERSION_4, earnedRewardIds: 'a' },
+			{ ...STORED_BY_VERSION_4, helpQuest: { char: 'f' } },
+			{ ...STORED_BY_VERSION_4, helpQuest: { char: 'f', lessonPlays: 1, at: 2 } },
+			{ ...STORED_BY_VERSION_4, helpQuest: 'f' }
+		];
+		for (const data of damaged) expect(() => parseProfile(migrateProfile(data))).toThrow();
 	});
 
 	it('does not make valid a version 2 record whose characters carry something unknown or damaged', () => {

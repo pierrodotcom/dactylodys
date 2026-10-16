@@ -101,3 +101,16 @@ export function asVersion3(profile: Profile): Record<string, unknown> {
 		ghosts: structuredClone(profile.ghosts)
 	};
 }
+
+/** The record version 4 of the app stored for this profile: version 3 plus the hand guide. */
+export function asVersion4(profile: Profile): Record<string, unknown> {
+	const stored = asVersion3(profile);
+	return {
+		...stored,
+		schemaVersion: 4,
+		settings: {
+			...(stored['settings'] as Record<string, unknown>),
+			handGuide: profile.settings.handGuide
+		}
+	};
+}
