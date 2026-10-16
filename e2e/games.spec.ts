@@ -631,6 +631,32 @@ test.describe('surprise scenes', () => {
 			}
 		});
 
+		test('plays the next drawing scenes group after group, in the order of the list', async ({
+			page
+		}) => {
+			const order = SCENES.games['drawing'] ?? [];
+			const props: Record<string, string> = {
+				flourish: '.loop',
+				sparkle: '.spark',
+				'dino-photobomb': '.dino',
+				wobble: '.wobbler',
+				'pencil-dance': '.pencil',
+				'rocket-trace': '.flyer',
+				'eraser-peek': '.eraser',
+				'color-drop': '.drop'
+			};
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('drawing'));
+			for (const [index, group] of GROUPS.entries()) {
+				await page.keyboard.type(group);
+				const scene = page.locator(`[data-scene="${order[index]}"]`);
+				await expect(scene).toHaveCount(1);
+				await expect(scene.locator(props[order[index] ?? ''] ?? '.scene').first()).toBeAttached();
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
 		test('plays the next hatching scene on each group, in the order of the list', async ({
 			page
 		}) => {

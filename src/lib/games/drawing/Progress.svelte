@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { isOne } from '$lib/ui/plural';
+	import { SQUIGGLES } from './shapes';
 
 	interface Props {
 		total: number;
@@ -19,11 +20,17 @@
 	);
 </script>
 
-<!-- Placeholder: the work package of the game replaces the dots by its own picture. -->
 <div class="row" role="img" aria-label={label}>
 	{#each steps as index (index)}
-		<span class="dot" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}
-		></span>
+		<svg
+			class="squiggle"
+			viewBox="0 0 36 36"
+			focusable="false"
+			aria-hidden="true"
+			data-state={index < done ? 'done' : index === current ? 'current' : 'next'}
+		>
+			<path d={SQUIGGLES[index % SQUIGGLES.length]} />
+		</svg>
 	{/each}
 </div>
 
@@ -34,20 +41,23 @@
 		gap: var(--dd-space-sm);
 	}
 
-	.dot {
+	.squiggle {
 		inline-size: var(--dd-size-egg-mini);
 		block-size: var(--dd-size-egg-mini);
-		border-width: var(--dd-border-width-thick);
-		border-style: solid;
-		border-color: var(--dd-color-border-strong);
-		border-radius: var(--dd-radius-pill);
+		fill: transparent;
+		stroke: var(--dd-color-border-strong);
+		stroke-width: var(--dd-border-width-thick);
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 
-	.dot[data-state='done'] {
-		background-color: var(--dd-color-star-fill);
+	.squiggle[data-state='current'] {
+		stroke: var(--dd-color-accent-base);
+		stroke-width: var(--dd-border-width-target);
 	}
 
-	.dot[data-state='current'] {
-		border-color: var(--dd-color-accent-base);
+	.squiggle[data-state='done'] {
+		stroke: var(--dd-color-drawing-line);
+		stroke-width: var(--dd-border-width-target);
 	}
 </style>
