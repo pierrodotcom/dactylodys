@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import type { ProgressionDefinition } from '$lib/engine/progression/types';
 	import type { Profile } from '$lib/state/types';
 	import { m } from '$lib/paraglide/messages.js';
@@ -12,20 +13,42 @@
 	interface Props {
 		profile: Profile;
 		progression: ProgressionDefinition;
+		/** The key the companion asks help for, as named to the child; `null`: no help quest. */
+		helpKey: string | null;
 		onopen: (lessonId: string) => void;
+		onhelp: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { profile, progression, onopen, onchangeplayer }: Props = $props();
+	let { profile, progression, helpKey, onopen, onhelp, onchangeplayer }: Props = $props();
+
+	/** "Later" hides the bubble until the map is shown again. */
+	let helpLater = $state(false);
+	let hero = $state<HTMLElement | null>(null);
+
+	async function postponeHelp() {
+		helpLater = true;
+		await tick();
+		hero?.focus();
+	}
 
 	const layout = $derived(layoutMap(progression, profile.progress));
 </script>
 
 {#if layout.worlds.length > 0}
 	<ScreenFrame title={m.play_map_title()}>
-		<div class="hero">
+		<div class="hero" tabindex="-1" bind:this={hero}>
 			<Companion mood="idle" />
 			<p class="greeting">{m.play_map_greeting({ name: profile.name })}</p>
+			{#if helpKey !== null && !helpLater}
+				<section class="help" aria-labelledby="help-ask">
+					<p id="help-ask" class="ask">{m.play_help_ask({ key: helpKey })}</p>
+					<div class="help-actions">
+						<Button onclick={onhelp}>{m.play_help_yes()}</Button>
+						<Button variant="secondary" onclick={postponeHelp}>{m.play_help_later()}</Button>
+					</div>
+				</section>
+			{/if}
 		</div>
 
 		{#each layout.worlds as world (world.id)}
@@ -92,9 +115,40 @@
 		gap: var(--dd-space-md);
 	}
 
+	.hero:focus {
+		outline: none;
+	}
+
 	.greeting {
 		font-size: var(--dd-font-size-xl);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	/* A speech bubble of the companion. */
+	.help {
+		display: grid;
+		gap: var(--dd-space-sm);
+		justify-items: center;
+		max-inline-size: var(--dd-size-panel-max);
+		padding: var(--dd-space-md) var(--dd-space-lg);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-bubble-border);
+		border-radius: var(--dd-radius-lg);
+		background-color: var(--dd-color-bubble-surface);
+		color: var(--dd-color-bubble-text);
+	}
+
+	.ask {
+		font-size: var(--dd-font-size-xl);
+		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.help-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--dd-space-md);
 	}
 
 	.world {

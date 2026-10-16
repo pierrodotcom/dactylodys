@@ -141,7 +141,7 @@
 	}
 
 	.picture {
-		inline-size: calc(var(--dd-size-companion) * 0.75);
+		inline-size: var(--dd-size-reward-picture);
 	}
 
 	.won {
