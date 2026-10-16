@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { SoundPlayer } from '$lib/audio';
 	import type { StarCount } from '$lib/engine/progression/types';
 	import { m } from '$lib/paraglide/messages.js';
@@ -32,6 +33,8 @@
 		/** Calm motion: the stars fade in, no confetti. */
 		still: boolean;
 		sounds: SoundPlayer;
+		/** What was just earned, between the stars and the buttons. */
+		news?: Snippet;
 		onnext: () => void;
 		onreplay: () => void;
 		onmap: () => void;
@@ -50,6 +53,7 @@
 		worldLessons,
 		still,
 		sounds,
+		news,
 		onnext,
 		onreplay,
 		onmap,
@@ -131,6 +135,8 @@
 	{:else if !hasOpenNext}
 		<p class="encourage">{m.play_result_retry()}</p>
 	{/if}
+
+	{@render news?.()}
 
 	{#if saveFailed}
 		<p class="warning" role="alert">{m.play_result_save_error()}</p>

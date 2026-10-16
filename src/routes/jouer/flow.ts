@@ -8,14 +8,23 @@ export type Screen =
 	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'game'; readonly lessonId: string }
 	| { readonly name: 'result'; readonly lessonId: string }
-	| { readonly name: 'break' };
+	| { readonly name: 'break' }
+	| { readonly name: 'companion'; readonly back: SettingsOrigin }
+	/** The short game of a help quest: no lesson, no stars. */
+	| { readonly name: 'help-game' }
+	/** The companion says thank you after a help quest. */
+	| { readonly name: 'help-done' };
 
-/** Screens the settings open from, and come back to. A game left for the settings comes back to its lesson. */
+/**
+ * Screens with the bar at the top, that the settings and the companion open from and come back
+ * to. A game left for the settings comes back to its lesson, a help quest to the map.
+ */
 export type SettingsOrigin =
 	| { readonly name: 'map' }
 	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'result'; readonly lessonId: string }
-	| { readonly name: 'break' };
+	| { readonly name: 'break' }
+	| { readonly name: 'help-done' };
 
 export type FlowEvent =
 	| { readonly type: 'profiles-loaded' }
@@ -25,6 +34,9 @@ export type FlowEvent =
 	| { readonly type: 'keyboard-checked' }
 	| { readonly type: 'open-settings' }
 	| { readonly type: 'close-settings' }
+	| { readonly type: 'open-companion' }
+	| { readonly type: 'close-companion' }
+	| { readonly type: 'start-help' }
 	| { readonly type: 'change-player' }
 	| { readonly type: 'open-lesson'; readonly lessonId: string; readonly unlocked: boolean }
 	| { readonly type: 'start' }
@@ -44,21 +56,36 @@ const CAN_CHANGE_PLAYER: ReadonlySet<Screen['name']> = new Set([
 	'intro',
 	'result',
 	'break',
-	'keyboard-check'
+	'keyboard-check',
+	'companion',
+	'help-done'
 ]);
 
-function openSettings(screen: Screen): Screen {
+function originOf(screen: Screen): SettingsOrigin | null {
 	switch (screen.name) {
 		case 'map':
 		case 'intro':
 		case 'result':
 		case 'break':
-			return { name: 'settings', back: screen };
-		case 'game':
-			return { name: 'settings', back: { name: 'intro', lessonId: screen.lessonId } };
-		default:
+		case 'help-done':
 			return screen;
+		default:
+			return null;
 	}
+}
+
+function openSettings(screen: Screen): Screen {
+	if (screen.name === 'game') {
+		return { name: 'settings', back: { name: 'intro', lessonId: screen.lessonId } };
+	}
+	if (screen.name === 'help-game') return { name: 'settings', back: { name: 'map' } };
+	const back = originOf(screen);
+	return back === null ? screen : { name: 'settings', back };
+}
+
+function openCompanion(screen: Screen): Screen {
+	const back = originOf(screen);
+	return back === null ? screen : { name: 'companion', back };
 }
 
 /** Pure screen automaton. An event that makes no sense on the current screen changes nothing. */
@@ -68,6 +95,7 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 	}
 
 	if (event.type === 'open-settings') return openSettings(screen);
+	if (event.type === 'open-companion') return openCompanion(screen);
 
 	switch (screen.name) {
 		case 'loading':
@@ -94,9 +122,12 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			if (event.type === 'open-lesson' && event.unlocked) {
 				return { name: 'intro', lessonId: event.lessonId };
 			}
+			if (event.type === 'start-help') return { name: 'help-game' };
 			return screen;
 		case 'settings':
 			return event.type === 'close-settings' ? screen.back : screen;
+		case 'companion':
+			return event.type === 'close-companion' ? screen.back : screen;
 		case 'intro':
 			if (event.type === 'start') return { name: 'game', lessonId: screen.lessonId };
 			if (event.type === 'back-to-map') return { name: 'map' };
@@ -112,6 +143,12 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			if (event.type === 'take-break') return { name: 'break' };
 			return screen;
 		case 'break':
+			return event.type === 'back-to-map' ? { name: 'map' } : screen;
+		case 'help-game':
+			if (event.type === 'quit') return { name: 'map' };
+			if (event.type === 'completed') return { name: 'help-done' };
+			return screen;
+		case 'help-done':
 			return event.type === 'back-to-map' ? { name: 'map' } : screen;
 	}
 }

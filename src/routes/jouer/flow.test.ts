@@ -98,7 +98,8 @@ describe('screen automaton', () => {
 			{ name: 'map' },
 			{ name: 'intro', lessonId: LESSON },
 			{ name: 'result', lessonId: LESSON },
-			{ name: 'break' }
+			{ name: 'break' },
+			{ name: 'help-done' }
 		];
 		for (const origin of origins) {
 			const screen = transition(origin, { type: 'open-settings' });
@@ -133,13 +134,75 @@ describe('screen automaton', () => {
 			{ name: 'intro', lessonId: LESSON },
 			{ name: 'result', lessonId: LESSON },
 			{ name: 'break' },
-			{ name: 'keyboard-check' }
+			{ name: 'keyboard-check' },
+			{ name: 'companion', back: { name: 'map' } },
+			{ name: 'help-done' }
 		];
 		for (const screen of allowed) {
 			expect(transition(screen, { type: 'change-player' })).toEqual({ name: 'players' });
 		}
-		const game: Screen = { name: 'game', lessonId: LESSON };
-		expect(transition(game, { type: 'change-player' })).toBe(game);
+		for (const game of [{ name: 'game', lessonId: LESSON }, { name: 'help-game' }] as Screen[]) {
+			expect(transition(game, { type: 'change-player' })).toBe(game);
+		}
+	});
+
+	it('opens the companion from every screen with the bar at the top, and comes back there', () => {
+		const origins: SettingsOrigin[] = [
+			{ name: 'map' },
+			{ name: 'intro', lessonId: LESSON },
+			{ name: 'result', lessonId: LESSON },
+			{ name: 'break' },
+			{ name: 'help-done' }
+		];
+		for (const origin of origins) {
+			const screen = transition(origin, { type: 'open-companion' });
+			expect(screen).toEqual({ name: 'companion', back: origin });
+			expect(transition(screen, { type: 'close-companion' })).toEqual(origin);
+		}
+	});
+
+	it('does not open the companion during a game, before a player is chosen, or from the settings', () => {
+		for (const screen of [
+			INITIAL_SCREEN,
+			{ name: 'players' },
+			{ name: 'new-player' },
+			{ name: 'keyboard-check' },
+			{ name: 'game', lessonId: LESSON },
+			{ name: 'help-game' },
+			{ name: 'settings', back: { name: 'map' } }
+		] as Screen[]) {
+			expect(transition(screen, { type: 'open-companion' })).toBe(screen);
+		}
+	});
+
+	it('plays a help quest from the map up to the thanks, then goes back to the map', () => {
+		const game = transition({ name: 'map' }, { type: 'start-help' });
+		expect(game).toEqual({ name: 'help-game' });
+		const thanks = transition(game, { type: 'completed' });
+		expect(thanks).toEqual({ name: 'help-done' });
+		expect(transition(thanks, { type: 'back-to-map' })).toEqual({ name: 'map' });
+	});
+
+	it('leaves a help quest for the map when the child quits it', () => {
+		expect(transition({ name: 'help-game' }, { type: 'quit' })).toEqual({ name: 'map' });
+	});
+
+	it('leaves a paused help quest for the settings, and comes back to the map', () => {
+		const screen = transition({ name: 'help-game' }, { type: 'open-settings' });
+		expect(screen).toEqual({ name: 'settings', back: { name: 'map' } });
+		expect(transition(screen, { type: 'close-settings' })).toEqual({ name: 'map' });
+	});
+
+	it('starts a help quest from the map only', () => {
+		for (const screen of [
+			{ name: 'intro', lessonId: LESSON },
+			{ name: 'result', lessonId: LESSON },
+			{ name: 'break' },
+			{ name: 'help-done' },
+			{ name: 'companion', back: { name: 'map' } }
+		] as Screen[]) {
+			expect(transition(screen, { type: 'start-help' })).toBe(screen);
+		}
 	});
 
 	it('ignores an event that makes no sense on the current screen', () => {
