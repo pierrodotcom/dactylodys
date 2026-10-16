@@ -600,6 +600,13 @@ test.describe('game recipe', () => {
 
 test.describe('surprise scenes', () => {
 	const SCENES = readJson<{ games: Record<string, string[]> }>('content/common/scenes.json');
+	/** The prop each recipe scene draws besides the ingredient, when it has one. */
+	const RECIPE_SCENE_PROPS: Record<string, string> = {
+		slide: ' .ladle',
+		'dino-snatch': ' .dino',
+		'rocket-delivery': ' .delivery-rocket',
+		'giraffe-guest': ' .neck'
+	};
 
 	test.describe('with motion allowed', () => {
 		test.use({ reducedMotion: 'no-preference' });
@@ -625,7 +632,7 @@ test.describe('surprise scenes', () => {
 			await beginGame(page, gameNamed('recipe'));
 			for (const [index, group] of GROUPS.entries()) {
 				await page.keyboard.type(group);
-				const prop = scenes[index] === 'slide' ? ' .ladle' : '';
+				const prop = RECIPE_SCENE_PROPS[scenes[index] ?? ''] ?? '';
 				await expect(page.locator(`[data-scene="${scenes[index]}"]${prop}`)).toHaveCount(1);
 				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 			}
