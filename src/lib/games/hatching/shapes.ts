@@ -82,3 +82,75 @@ export const WAVES = [
 	'M-6 134Q4 128 14 134T34 134T54 134T74 134T94 134T114 134T134 134',
 	'M4 146Q14 140 24 146T44 146T64 146T84 146T104 146T124 146'
 ] as const;
+
+/** Chef's hat of a baby that cooks, in the coordinates of its head. */
+export const TOQUE_PUFF =
+	'M40 44A9 9 0 0 1 38 28A10 10 0 0 1 52 19A9 9 0 0 1 68 19A10 10 0 0 1 82 28A9 9 0 0 1 80 44Z';
+
+export const TOQUE_BAND = { x: 36, y: 43, width: 48, height: 10, radius: 3 } as const;
+
+export const TOQUE_FOLDS = 'M50 26V42M60 24V42M70 26V42';
+
+/** The small dish, drawn where it ends up once put down on the shell. */
+export const DISH_PLATE = { cx: 60, cy: 128, rx: 25, ry: 6 } as const;
+
+export const DISH_FOOD = 'M42 126C42 108 78 108 78 126Z';
+
+export const DISH_CHERRY = { cx: 60, cy: 113, radius: 3.5 } as const;
+
+export const DISH_PEAS = [
+	{ x: 51, y: 121 },
+	{ x: 69, y: 120 },
+	{ x: 60, y: 124 }
+] as const;
+
+export const DISH_HANDS = [
+	{ side: 'left', cx: 33, cy: 127 },
+	{ side: 'right', cx: 87, cy: 127 }
+] as const;
+
+export const STEAM_WISPS = [
+	'M50 106C46 100 54 96 50 90',
+	'M60 104C56 98 64 94 60 88',
+	'M70 106C66 100 74 96 70 90'
+] as const;
+
+/** A flying saucer that hovers at the top of the picture, and the soft beam under it. */
+export const SAUCER_DOME = 'M46 10C46 1 74 1 74 10Z';
+
+export const SAUCER_BODY = { cx: 60, cy: 12, rx: 30, ry: 7 } as const;
+
+export const SAUCER_LIGHTS = [
+	{ x: 44, y: 13 },
+	{ x: 60, y: 15 },
+	{ x: 76, y: 13 }
+] as const;
+
+export const BEAM_PATH = 'M46 18L74 18L108 148L12 148Z';
+
+/** A small car that stops in front of the egg, drawn at its stopping place and facing right. */
+export const CAR_CABIN = 'M45 125L51 112H71L77 125Z';
+
+export const CAR_WINDOW = 'M50 123L54 115H68L72 123Z';
+
+export const CAR_BODY = 'M34 138V130A5 5 0 0 1 39 125H81A5 5 0 0 1 86 130V138Z';
+
+export const CAR_HEADLIGHT = { cx: 84, cy: 130, radius: 2.5 } as const;
+
+export const CAR_WHEELS = [
+	{ cx: 44, cy: 140, spoke: 'M44 135V145M39 140H49' },
+	{ cx: 76, cy: 140, spoke: 'M76 135V145M71 140H81' }
+] as const;
+
+export const CAR_WHEEL_RADIUS = 6;
+
+/** The honk, drawn as a bubble with an exclamation mark and a few strokes of sound. */
+export const HONK_BUBBLE =
+	'M88 90H110A4 4 0 0 1 114 94V110A4 4 0 0 1 110 114H96L82 124L88 114A4 4 0 0 1 84 110V94A4 4 0 0 1 88 90Z';
+
+export const HONK_MARK = {
+	bar: { x: 97.5, y: 95, width: 3, height: 10, radius: 1.5 },
+	dot: { cx: 99, cy: 109, radius: 2 }
+} as const;
+
+export const HONK_LINES = 'M92 129L99 127M93 134L101 134M92 139L99 141';

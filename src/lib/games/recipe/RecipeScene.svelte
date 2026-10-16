@@ -6,7 +6,10 @@
 		BALLOON,
 		BURP_BUBBLE,
 		CATAPULT,
+		DELIVERY_ROCKET,
+		DINO,
 		DIVING_BOARD,
+		GIRAFFE,
 		KITCHEN,
 		LADLE,
 		LID,
@@ -166,6 +169,84 @@
 		</g>
 	{/if}
 
+	{#if sceneId === 'dino-snatch'}
+		<g transform={placeTransform(DINO.rest)}>
+			<g class="dino">
+				<path class="dino-skin" d={DINO.tailPath} />
+				{#each DINO.platePaths as plate (plate)}
+					<path class="dino-plate" d={plate} />
+				{/each}
+				{#each DINO.feetPaths as foot (foot)}
+					<path class="dino-skin" d={foot} />
+				{/each}
+				<path class="dino-skin" d={DINO.bodyPath} />
+				<circle class="eye" cx={DINO.eye.x} cy={DINO.eye.y} r={DINO.eye.radius} />
+				<circle class="pupil" cx={DINO.pupil.x} cy={DINO.pupil.y} r={DINO.pupil.radius} />
+				<path class="cord" d={DINO.smilePath} />
+				<g class="dino-arm">
+					<path class="dino-skin" d={DINO.armPath} />
+					<circle class="dino-skin" cx={DINO.hand.x} cy={DINO.hand.y} r={DINO.hand.radius} />
+				</g>
+			</g>
+		</g>
+	{/if}
+
+	{#if sceneId === 'rocket-delivery'}
+		<g transform={placeTransform(DELIVERY_ROCKET.rest)}>
+			<g class="delivery-rocket">
+				<path class="flame-outer" d={DELIVERY_ROCKET.flameOuterPath} />
+				<path class="flame-inner" d={DELIVERY_ROCKET.flameInnerPath} />
+				{#each DELIVERY_ROCKET.finPaths as fin (fin)}
+					<path class="rocket-fin" d={fin} />
+				{/each}
+				<path class="rocket-body" d={DELIVERY_ROCKET.bodyPath} />
+				<circle
+					class="rocket-window"
+					cx={DELIVERY_ROCKET.window.x}
+					cy={DELIVERY_ROCKET.window.y}
+					r={DELIVERY_ROCKET.window.radius}
+				/>
+				{#each DELIVERY_ROCKET.clawPaths as claw (claw)}
+					<path class="rocket-fin" d={claw} />
+				{/each}
+			</g>
+		</g>
+	{/if}
+
+	{#if sceneId === 'giraffe-guest'}
+		<g transform={GIRAFFE.transform}>
+			<g class="neck">
+				<path class="giraffe-skin" d={GIRAFFE.neckPath} />
+				{#each GIRAFFE.spots as spot (spot.x)}
+					<circle class="giraffe-spot" cx={spot.x} cy={spot.y} r={spot.radius} />
+				{/each}
+			</g>
+			<g class="head">
+				<g transform={GIRAFFE.headTransform}>
+					{#each GIRAFFE.hornPaths as horn (horn)}
+						<path class="line" d={horn} />
+					{/each}
+					{#each GIRAFFE.hornTips as tip (tip.x)}
+						<circle class="giraffe-spot" cx={tip.x} cy={tip.y} r={tip.radius} />
+					{/each}
+					<path class="giraffe-skin" d={GIRAFFE.earPath} />
+					<path class="giraffe-skin" d={GIRAFFE.headPath} />
+					<circle
+						class="giraffe-spot"
+						cx={GIRAFFE.cheek.x}
+						cy={GIRAFFE.cheek.y}
+						r={GIRAFFE.cheek.radius}
+					/>
+					<circle class="pupil" cx={GIRAFFE.eye.x} cy={GIRAFFE.eye.y} r={GIRAFFE.eye.radius} />
+					<path class="cord" d={GIRAFFE.smilePath} />
+				</g>
+				<g class="held" transform={GIRAFFE.heldTransform}>
+					<IngredientShape variant={view.groupIndex} {stage} />
+				</g>
+			</g>
+		</g>
+	{/if}
+
 	{#if sceneId === 'steam-shape'}
 		<g class="steam-shape">
 			{#each steamShape as wisp (wisp)}
@@ -276,7 +357,17 @@
 	.balloon-body,
 	.glove,
 	.eye,
-	.hump {
+	.hump,
+	.dino-skin,
+	.dino-plate,
+	.rocket-body,
+	.rocket-fin,
+	.rocket-window,
+	.flame-outer,
+	.flame-inner,
+	.giraffe-skin,
+	.giraffe-spot,
+	.line {
 		stroke: var(--dd-color-drawing-line);
 		stroke-width: var(--dd-border-width-thick);
 		stroke-linejoin: round;
@@ -307,6 +398,46 @@
 
 	.hump {
 		fill: var(--dd-color-pot-soup);
+	}
+
+	.dino-skin {
+		fill: var(--dd-color-baby-a);
+	}
+
+	.dino-plate {
+		fill: var(--dd-color-baby-c);
+	}
+
+	.rocket-body {
+		fill: var(--dd-color-rocket-body);
+	}
+
+	.rocket-fin {
+		fill: var(--dd-color-rocket-fin);
+	}
+
+	.rocket-window {
+		fill: var(--dd-color-rocket-window);
+	}
+
+	.flame-outer {
+		fill: var(--dd-color-rocket-flame-outer);
+	}
+
+	.flame-inner {
+		fill: var(--dd-color-rocket-flame-inner);
+	}
+
+	.giraffe-skin {
+		fill: var(--dd-color-food-a);
+	}
+
+	.giraffe-spot {
+		fill: var(--dd-color-pot-soup);
+	}
+
+	.line {
+		fill: transparent;
 	}
 
 	.cord,
@@ -345,6 +476,12 @@
 	[data-scene] .balloon-string,
 	[data-scene] .arm,
 	[data-scene] .lid,
+	[data-scene] .dino,
+	[data-scene] .dino-arm,
+	[data-scene] .delivery-rocket,
+	[data-scene] .neck,
+	[data-scene] .head,
+	[data-scene] .held,
 	[data-scene] .ola,
 	[data-scene] .steam-shape,
 	[data-scene] .wisp,
@@ -455,6 +592,44 @@
 	[data-scene='float'] .arm {
 		transform-origin: 0% 100%;
 		animation-name: wave-hello;
+	}
+
+	[data-scene='dino-snatch'] .diver {
+		animation-name: snatched;
+	}
+
+	[data-scene='dino-snatch'] .dino {
+		animation-name: dino-leaps;
+	}
+
+	[data-scene='dino-snatch'] .dino-arm {
+		transform-origin: 0% 50%;
+		animation-name: dino-waves;
+	}
+
+	[data-scene='rocket-delivery'] .diver {
+		animation-name: delivered;
+	}
+
+	[data-scene='rocket-delivery'] .delivery-rocket {
+		animation-name: rocket-passes;
+	}
+
+	[data-scene='giraffe-guest'] .diver {
+		animation-name: fed;
+	}
+
+	[data-scene='giraffe-guest'] .neck {
+		transform-origin: 100% 50%;
+		animation-name: neck-grows;
+	}
+
+	[data-scene='giraffe-guest'] .head {
+		animation-name: head-slides;
+	}
+
+	[data-scene='giraffe-guest'] .held {
+		animation-name: held-lets-go;
 	}
 
 	[data-scene='steam-shape'] .diver {
@@ -1133,6 +1308,284 @@
 			opacity: 100%;
 			translate: 0 0;
 			rotate: 0deg;
+		}
+	}
+
+	@keyframes snatched {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -1.95) calc(var(--dd-space-3xl) * -1.29);
+			rotate: 0deg;
+		}
+
+		6% {
+			opacity: 100%;
+		}
+
+		16% {
+			translate: calc(var(--dd-space-3xl) * -1.95) calc(var(--dd-space-3xl) * -1.41);
+		}
+
+		32% {
+			translate: calc(var(--dd-space-3xl) * -1.95) calc(var(--dd-space-3xl) * -1.29);
+		}
+
+		42% {
+			translate: calc(var(--dd-space-3xl) * -1.68) calc(var(--dd-space-3xl) * -1.21);
+			rotate: 0deg;
+		}
+
+		50% {
+			translate: calc(var(--dd-space-3xl) * -0.94) calc(var(--dd-space-3xl) * -1.48);
+			rotate: 180deg;
+		}
+
+		56% {
+			translate: calc(var(--dd-space-3xl) * -0.27) calc(var(--dd-space-3xl) * -0.9);
+			rotate: 300deg;
+		}
+
+		62%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 360deg;
+		}
+	}
+
+	@keyframes dino-leaps {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -0.87) 0;
+			rotate: 0deg;
+		}
+
+		8% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * -0.87) 0;
+		}
+
+		22% {
+			translate: calc(var(--dd-space-3xl) * -0.03) calc(var(--dd-space-3xl) * -0.78);
+			rotate: -20deg;
+		}
+
+		32% {
+			translate: calc(var(--dd-space-3xl) * 0.91) calc(var(--dd-space-3xl) * -1.22);
+			rotate: 0deg;
+		}
+
+		42% {
+			translate: calc(var(--dd-space-3xl) * 1.13) calc(var(--dd-space-3xl) * -1.16);
+		}
+
+		56% {
+			translate: calc(var(--dd-space-3xl) * 1.06) calc(var(--dd-space-3xl) * -0.62);
+			scale: 1 1;
+		}
+
+		72% {
+			translate: 0 0;
+			scale: 1.15 0.85;
+		}
+
+		78% {
+			scale: 1 1;
+		}
+
+		92% {
+			opacity: 100%;
+			translate: 0 0;
+		}
+
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -1.44) 0;
+			scale: 1 1;
+		}
+	}
+
+	@keyframes dino-waves {
+		0%,
+		72% {
+			rotate: 0deg;
+		}
+
+		78%,
+		86% {
+			rotate: -55deg;
+		}
+
+		82%,
+		90% {
+			rotate: -30deg;
+		}
+
+		96%,
+		100% {
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes delivered {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -5.74) calc(var(--dd-space-3xl) * -1.33);
+			rotate: 0deg;
+		}
+
+		6% {
+			opacity: 100%;
+		}
+
+		44%,
+		46% {
+			translate: 0 calc(var(--dd-space-3xl) * -1.33);
+			rotate: 0deg;
+		}
+
+		56%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 360deg;
+		}
+	}
+
+	@keyframes rocket-passes {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -4.59) 0;
+			rotate: 0deg;
+		}
+
+		6% {
+			opacity: 100%;
+		}
+
+		44%,
+		46% {
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		56% {
+			translate: calc(var(--dd-space-3xl) * 0.09) calc(var(--dd-space-3xl) * -0.25);
+			rotate: -14deg;
+		}
+
+		70% {
+			translate: calc(var(--dd-space-3xl) * 3.84) calc(var(--dd-space-3xl) * -0.37);
+			rotate: -16deg;
+		}
+
+		80% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * 6.97) calc(var(--dd-space-3xl) * -0.72);
+			rotate: -18deg;
+		}
+
+		82%,
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 6.97) calc(var(--dd-space-3xl) * -0.72);
+			rotate: -18deg;
+		}
+	}
+
+	@keyframes fed {
+		0%,
+		48% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 0.05) calc(var(--dd-space-3xl) * -0.9);
+			rotate: 0deg;
+		}
+
+		49% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * 0.05) calc(var(--dd-space-3xl) * -0.9);
+			rotate: 0deg;
+		}
+
+		62%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 360deg;
+		}
+	}
+
+	@keyframes neck-grows {
+		0% {
+			opacity: 0;
+			scale: 0.1 1;
+		}
+
+		6% {
+			opacity: 100%;
+		}
+
+		40%,
+		52% {
+			scale: 1 1;
+		}
+
+		84% {
+			opacity: 100%;
+			scale: 0.1 1;
+		}
+
+		92%,
+		100% {
+			opacity: 0;
+			scale: 0.1 1;
+		}
+	}
+
+	@keyframes head-slides {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 3.12) 0;
+			rotate: 0deg;
+		}
+
+		6% {
+			opacity: 100%;
+		}
+
+		40%,
+		52% {
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		62% {
+			rotate: 14deg;
+		}
+
+		84% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * 3.12) 0;
+			rotate: 14deg;
+		}
+
+		92%,
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 3.12) 0;
+			rotate: 14deg;
+		}
+	}
+
+	@keyframes held-lets-go {
+		0%,
+		48% {
+			opacity: 100%;
+		}
+
+		49%,
+		100% {
+			opacity: 0;
 		}
 	}
 

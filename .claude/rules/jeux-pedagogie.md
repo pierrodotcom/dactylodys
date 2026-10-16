@@ -95,6 +95,8 @@ Avant-leçon et voix (ADR-033) : `GameProps.voice` (facultatif) dit le rappel «
 
 Scènes surprises (ADR-034) : `GameSettings.scenes` (scènes débloquées du jeu, `unlockedScenes` de `engine/rewards/scenes`) ; `GameView.scene` dit ce que montre le groupe (`sceneForGroup`, scène ou entrée commune 0 à 3, jamais en animations calmes). Une scène est un attribut `data-scene` sur le dessin du jeu et des `@keyframes` dans son composant, durée `--dd-duration-scene` ; une scène ajoutée = un identifiant dans `content/common/scenes.json` + son dessin.
 
+Nouveaux jeux et mondes mêlés (ADR-040) : un jeu = un dossier `games/<id>/` avec `<Nom>.svelte`, `Scene.svelte`, `Progress.svelte`, `Picture.svelte`, `texts.ts`, ses clés `game_<id>_*` (titre, description, pause, progress_one/other, announce_group/last, quip_1..10) ; il s'enregistre dans `registry.ts`, `labels.ts`, `GamePicture.svelte`, la table d'attentes d'`e2e/games.spec.ts` (`data-probe` = étape du dessin) et les `gameIds` des mondes. Les scènes d'un jeu sont dans `content/common/scenes.json` ; une visite d'un autre monde y figure aux positions 3, 6 et 9.
+
 Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. Depuis la version 5 (ADR-027, ADR-037), le profil garde aussi les récompenses obtenues (`earnedRewardIds`, ajout seul) : possédé = cette liste ∪ ce que la progression débloque.
 
 | Fonction | Module | Rôle |

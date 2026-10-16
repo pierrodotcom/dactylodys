@@ -5,8 +5,8 @@ import { GAMES, findGame, gamesForWorld } from './registry';
 const ids = (games: readonly { id: string }[]) => games.map((game) => game.id);
 
 describe('GAMES', () => {
-	it('offers the three mini-games, the egg first', () => {
-		expect(ids(GAMES)).toEqual(['hatching', 'rocket', 'recipe']);
+	it('offers the six mini-games, the egg first', () => {
+		expect(ids(GAMES)).toEqual(['hatching', 'rocket', 'recipe', 'drawing', 'train', 'tower']);
 	});
 
 	it('has unique identifiers', () => {

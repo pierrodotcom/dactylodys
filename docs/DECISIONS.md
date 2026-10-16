@@ -192,7 +192,14 @@ Décisions du porteur (« oui à tout ») sur les retours du deuxième test.
 - **Pause** : proposée après **4 exercices terminés** (`breakAfterExercises`), en plus des 12 minutes ; l'enfant peut continuer.
 - **Rappel** : « Regarde toujours l'écran, jamais tes doigts ;-) » (amende l'ADR-036 : « toujours » au lieu de « seulement », que l'enfant prenait pour le prochain texte seulement).
 
-## 040 — Pouce gauche retiré de la main guide, trophées des rangées (2026-10-16, acceptée)
+## 040 — Nouveaux jeux et mondes mêlés (2026-10-16, acceptée)
+Réponse du porteur à la lassitude des dinos et des aliments à chaque monde (« 4b directement », plus des visites d'un monde dans un autre). Remplace le choix de jeux par monde de l'ADR-020.
+- **Trois jeux de plus**, chacun avec ses 8 scènes surprises (6 propres et 2 visites) : **le dessin magique** (un dessin se trace trait après trait, 6 sujets fixes, puis se colore), **le train qui s'allonge** (un wagon par groupe, le train part à la fin) et **la tour de blocs** (un bloc par groupe, un drapeau tout en haut). Même contrat que les autres : `data-probe`, progression en `role="img"`, répliques `game_<id>_quip_<n>`, entrées communes puis scènes débloquées ; ils tiennent avec 5 à 10 groupes.
+- **Deux jeux par monde, de son thème** : dinosaures — éclosion, dessin ; cuisine — recette, tour ; animaux — dessin, tour ; espace — fusée, tour ; véhicules — train, fusée. L'œuf ne sort plus des dinos, la marmite de la cuisine.
+- **Visites d'un autre monde**, toutes les trois scènes dans chaque jeu (positions 3, 6 et 9 de la liste, donc vues dès la 6ᵉ leçon réussie) : éclosion — bébé en toque, soucoupe, voiture qui klaxonne ; recette — dino qui attrape l'ingrédient au vol, fusée livreuse, girafe ; fusée — dino qui monte à bord, planète-cuisine, voiture ; dessin — dino derrière la feuille, fusée qui suit le trait ; train — dino à la fenêtre, fusée sur le toit ; tour — dino qui cale le bloc, fusée-grue.
+- Chaque jeu a **douze à quinze scènes** (liste dans `content/common/scenes.json`), débloquées toutes les 2 leçons réussies.
+
+## 041 — Pouce gauche retiré de la main guide, trophées des rangées (2026-10-16, acceptée)
 Deux demandes du porteur après avoir vu R2 et la main guide.
 - **Un seul pouce sur la barre d'espace** (amende l'ADR-031) : seul un pouce qui a une touche de repos dans le profil de doigté est dessiné ; en dix doigts, c'est le pouce droit. Deux pouces sur l'espace laissaient croire que les deux pouvaient la frapper. La main gauche montre ses quatre doigts.
 - **Trophées des rangées** (amende l'ADR-037, option 1 sur 3 proposées) : trois grosses touches sur une estrade, avec les trois premières lettres de la rangée lues dans le catalogue (« Q S D », « A Z E », « W X C » en AZERTY, aucune lettre écrite dans le dessin). Dans la silhouette d'un trophée pas encore gagné, les lettres et les symboles restent découpés : chaque trophée se reconnaît avant d'être gagné.
