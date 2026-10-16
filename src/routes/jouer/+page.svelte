@@ -8,25 +8,37 @@
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
+	import {
+		generateHelpExercise,
+		helpQuestFor,
+		ownedRewards,
+		resolveCompanion,
+		type CompanionChoice,
+		type HelpQuest,
+		type RewardDefinition
+	} from '$lib/engine/rewards';
 	import type {
 		Exercise,
 		ProgressionDefinition,
 		StarCount,
 		WorldDefinition
 	} from '$lib/engine/progression/types';
-	import type { GameGuide, GameOutcome, GameProps } from '$lib/games/types';
+	import type { GameDefinition, GameGuide, GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { applySettings } from '$lib/state/apply-settings';
 	import {
 		createProfile,
 		defaultSettings,
 		markCalibrated,
 		updateSettings,
+		withCompanion,
 		withLastGame
 	} from '$lib/state/profile';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
+	import { provideCompanionAppearance } from '$lib/ui/companion/appearance';
 	import { loadKeyboardAssets, type KeyboardAssets } from './assets';
 	import { loadBanks, settleWithin, type LoadedBanks } from './banks';
 	import BreakScreen from './BreakScreen.svelte';
@@ -37,9 +49,20 @@
 		startPlaying,
 		stopPlaying
 	} from './break';
+	import {
+		appearanceOf,
+		earnRewards,
+		keyLabel,
+		prizeOfLesson,
+		recordHelpOutcome,
+		shouldAskName,
+		wearItem
+	} from './companion';
+	import CompanionPanel from './CompanionPanel.svelte';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
 	import { gameForLesson, gameOptions } from './game-choice';
+	import HelpThanks from './HelpThanks.svelte';
 	import { isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
 	import { findGame } from '$lib/games/registry';
@@ -53,6 +76,8 @@
 	import { platformFromUserAgent } from './player';
 	import PlayerSelect from './PlayerSelect.svelte';
 	import { PLAY_RULES } from './play-rules';
+	import RewardNews from './RewardNews.svelte';
+	import { HELP_QUEST_RULES, rewardCatalogueFor } from './rewards';
 	import SettingsPanel from './SettingsPanel.svelte';
 	import { createProfileSounds } from './sounds';
 	import { summarizeMetrics, type ResultSummary } from './summary';
@@ -60,7 +85,14 @@
 	import WorldMap from './WorldMap.svelte';
 
 	/** Screens with the bar of the player and the settings at the top: never during a game. */
-	const TOP_BAR_SCREENS: ReadonlySet<Screen['name']> = new Set(['map', 'intro', 'result', 'break']);
+	const TOP_BAR_SCREENS: ReadonlySet<Screen['name']> = new Set([
+		'map',
+		'intro',
+		'result',
+		'break',
+		'help-done'
+	]);
+	const NO_REWARDS: ReadonlySet<string> = new Set();
 
 	interface ResultView {
 		readonly lessonId: string;
@@ -69,6 +101,16 @@
 		readonly hasOpenNext: boolean;
 		readonly worldDone: boolean;
 		readonly suggestBreak: boolean;
+		readonly saveFailed: boolean;
+		/** What this play earned, announced one card after the other. */
+		readonly rewards: readonly RewardDefinition[];
+		/** The lesson is passed and the companion has no name yet. */
+		readonly askName: boolean;
+	}
+
+	interface HelpDoneView {
+		readonly rewards: readonly RewardDefinition[];
+		readonly dance: number;
 		readonly saveFailed: boolean;
 	}
 
@@ -87,9 +129,40 @@
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let activeGameId = $state('');
 	let gameLoadFailed = $state(false);
+	/** The help quest being played. */
+	let helpRun = $state.raw<HelpQuest | null>(null);
+	let helpDone = $state.raw<HelpDoneView | null>(null);
+	/** "Later" to the name of the companion: not asked again during this visit. */
+	let nameLater = $state(false);
+	let companionSaveFailed = $state(false);
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
+	const catalogue = $derived(progression ? rewardCatalogueFor(progression) : undefined);
+	/** What the child owns: what the profile kept, and what the progress earns (ADR-027). */
+	const owned = $derived(
+		profile && progression && catalogue
+			? ownedRewards(catalogue, progression, profile.progress, profile.earnedRewardIds)
+			: NO_REWARDS
+	);
+	const look = $derived(
+		profile && catalogue ? resolveCompanion(catalogue, owned, profile.companion) : null
+	);
+	const wornIds = $derived(look?.items.map((item) => item.id) ?? []);
+	const appearance = $derived(appearanceOf(look));
+	// Every companion of the route, on every screen and in every game, wears the same things.
+	provideCompanionAppearance(() => appearance);
+	const helpQuest = $derived(
+		profile && progression
+			? helpQuestFor(progression, profile.progress, HELP_QUEST_RULES, profile.helpQuest)
+			: null
+	);
+	const askNameNow = $derived(
+		result !== null &&
+			result.askName &&
+			profile !== null &&
+			shouldAskName(true, profile.companion.name, nameLater)
+	);
 
 	let banksRequest: { progression: ProgressionDefinition; ready: Promise<LoadedBanks> } | null =
 		null;
@@ -192,10 +265,20 @@
 			loadFailed = true;
 			return false;
 		}
-		profile = chosen;
+		profile = withEarnedSoFar(chosen);
 		writeLastPlayerId(chosen.id);
 		go({ type: 'player-chosen', calibrated: chosen.calibrated });
 		return true;
+	}
+
+	/**
+	 * What the progress already earns goes into the profile without being announced. It is kept
+	 * in memory and stored with the next change: opening a profile never rewrites its record.
+	 */
+	function withEarnedSoFar(chosen: Profile): Profile {
+		const source = progressionFor(chosen.settings.layoutId);
+		if (!source) return chosen;
+		return earnRewards(chosen, rewardCatalogueFor(source), source).profile;
 	}
 
 	async function createPlayer(name: string): Promise<boolean> {
@@ -210,6 +293,8 @@
 	}
 
 	function changePlayer() {
+		nameLater = false;
+		helpRun = null;
 		profile = null;
 		assets = null;
 		saveState = 'idle';
@@ -243,6 +328,31 @@
 		saveState = 'idle';
 		if (screen.name === 'game') playClock = stopPlaying(playClock, now());
 		go({ type: 'open-settings' });
+	}
+
+	function openCompanion() {
+		companionSaveFailed = false;
+		go({ type: 'open-companion' });
+	}
+
+	/** Every choice about the companion is kept at once. */
+	async function saveCompanion(choice: CompanionChoice) {
+		if (!profile) return;
+		let next: Profile;
+		try {
+			next = withCompanion(profile, choice);
+		} catch {
+			return;
+		}
+		companionSaveFailed = !(await commit(next));
+	}
+
+	function wear(item: RewardDefinition) {
+		if (profile && catalogue) void saveCompanion(wearItem(profile.companion, catalogue, item.id));
+	}
+
+	function nameCompanion(name: string) {
+		if (profile) void saveCompanion({ ...profile.companion, name });
 	}
 
 	function openLesson(lessonId: string) {
@@ -286,6 +396,26 @@
 		};
 	}
 
+	/** Loads the game and the banks; `null` when the game could not be loaded. */
+	async function loadGame(
+		definition: GameDefinition,
+		source: ProgressionDefinition
+	): Promise<LoadedBanks | null> {
+		try {
+			const [module, loaded] = await Promise.all([
+				definition.load(),
+				settleWithin(requestBanks(source), PLAY_RULES.bankLoadTimeoutMs, {})
+			]);
+			ActiveGame = module.default;
+			activeGameId = definition.id;
+			gameLoadFailed = false;
+			return loaded;
+		} catch {
+			gameLoadFailed = true;
+			return null;
+		}
+	}
+
 	/** `gameId`: the picture the child took; without it (a replay) the game proposed for the lesson. */
 	async function beginGame(lessonId: string, event: FlowEvent, gameId?: string) {
 		if (!profile || !progression) return;
@@ -300,21 +430,11 @@
 		) {
 			void commit(withGames(profile, world.id, lessonId, definition.id));
 		}
-		let banks: LoadedBanks;
-		try {
-			const [module, loaded] = await Promise.all([
-				definition.load(),
-				settleWithin(requestBanks(progression), PLAY_RULES.bankLoadTimeoutMs, {})
-			]);
-			ActiveGame = module.default;
-			activeGameId = definition.id;
-			banks = loaded;
-		} catch {
-			gameLoadFailed = true;
+		const banks = await loadGame(definition, progression);
+		if (banks === null) {
 			if (event.type === 'replay') go({ type: 'back-to-map' });
 			return;
 		}
-		gameLoadFailed = false;
 		exercise = generateExercise(progression, lessonId, Math.random, {
 			...banks,
 			progress: profile.progress,
@@ -333,13 +453,9 @@
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
 		playClock = stopPlaying(playClock, now());
-		const { profile: next, evaluation } = recordLessonOutcome(
-			profile,
-			progression.rules,
-			lessonId,
-			outcome,
-			Date.now()
-		);
+		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, Date.now());
+		const { evaluation } = recorded;
+		const { profile: next, announced } = earnRewards(recorded.profile, catalogue, progression);
 		const progress = next.progress;
 		const followingId = nextLessonId(progression, lessonId);
 		const hasOpenNext =
@@ -352,10 +468,57 @@
 			hasOpenNext,
 			worldDone: followingId === null && ids.includes(lessonId) && evaluation.unlocksNext,
 			suggestBreak: shouldSuggestBreak(playedMsAt(playClock, now()), PLAY_RULES),
-			saveFailed: false
+			saveFailed: false,
+			rewards: announced,
+			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater)
 		};
 		go({ type: 'completed' });
 		if (!(await commit(next)) && result) result = { ...result, saveFailed: true };
+	}
+
+	/** "Yes!" to the companion: a short game on the key it lost, in the game of the lesson of that key. */
+	async function startHelp() {
+		if (!profile || !progression || !helpQuest) return;
+		const quest = helpQuest;
+		const world = worldOfLesson(progression, quest.lessonId);
+		const definition = world ? gameFor(world, quest.lessonId, profile) : undefined;
+		if (!world || !definition) return;
+		const banks = await loadGame(definition, progression);
+		if (banks === null) return;
+		try {
+			exercise = generateHelpExercise(progression, quest, HELP_QUEST_RULES, Math.random, {
+				...banks,
+				progress: profile.progress,
+				themeId: world.themeId,
+				maxLevel: PLAY_RULES.maxWordLevel
+			});
+		} catch {
+			return;
+		}
+		helpRun = quest;
+		playClock = startPlaying(playClock, now());
+		go({ type: 'start-help' });
+	}
+
+	/** Whatever the result, the companion thanks the child: no stars, no lesson, no ghost. */
+	async function finishHelp(outcome: GameOutcome) {
+		if (!profile || !progression || !helpRun) return;
+		const quest = helpRun;
+		playClock = stopPlaying(playClock, now());
+		const { profile: next, announced } = recordHelpOutcome(
+			profile,
+			progression,
+			catalogue,
+			quest,
+			outcome.metrics
+		);
+		helpDone = {
+			rewards: announced,
+			dance: lessonIds(progression).indexOf(quest.lessonId),
+			saveFailed: false
+		};
+		go({ type: 'completed' });
+		if (!(await commit(next)) && helpDone) helpDone = { ...helpDone, saveFailed: true };
 	}
 
 	function takeBreak() {
@@ -370,12 +533,57 @@
 	}
 </script>
 
+{#snippet playing(current: Profile, lessonId: string, oncomplete: (outcome: GameOutcome) => void)}
+	{#if exercise && ActiveGame && assets && progression}
+		<ActiveGame
+			{exercise}
+			layout={assets.layout}
+			charIndex={assets.charIndex}
+			geometry={assets.geometry}
+			fingering={assets.fingering}
+			settings={toGameSettings(
+				current.settings,
+				systemPrefersReduced,
+				guideFor(current, lessonId),
+				PLAY_RULES.lookReminderEveryGroups,
+				unlockedScenes(
+					SCENE_SCHEDULE,
+					activeGameId,
+					passedLessonCount(progression, current.progress)
+				)
+			)}
+			{sounds}
+			onComplete={oncomplete}
+			onSettings={openSettings}
+			{voice}
+			onQuit={quitGame}
+		/>
+	{/if}
+{/snippet}
+
+{#snippet rewardNews(rewards: readonly RewardDefinition[], askName: boolean)}
+	<RewardNews
+		{rewards}
+		{wornIds}
+		{askName}
+		suggestions={catalogue?.nameSuggestions ?? []}
+		onwear={wear}
+		onname={nameCompanion}
+		onlater={() => (nameLater = true)}
+	/>
+{/snippet}
+
 <svelte:head>
 	<title>{m.play_page_title()}</title>
 </svelte:head>
 
 {#if profile && TOP_BAR_SCREENS.has(screen.name)}
-	<TopBar name={profile.name} onsettings={openSettings} onchangeplayer={changePlayer} />
+	<TopBar
+		name={profile.name}
+		oncompanion={catalogue ? openCompanion : undefined}
+		onsettings={openSettings}
+		onchangeplayer={changePlayer}
+	/>
 {/if}
 <main>
 	{#if screen.name === 'loading'}
@@ -401,7 +609,14 @@
 			onchangeplayer={changePlayer}
 		/>
 	{:else if screen.name === 'map'}
-		<WorldMap {profile} {progression} onopen={openLesson} onchangeplayer={changePlayer} />
+		<WorldMap
+			{profile}
+			{progression}
+			helpKey={helpQuest ? keyLabel(helpQuest.char, m.ui_key_space(), getLocale()) : null}
+			onopen={openLesson}
+			onhelp={startHelp}
+			onchangeplayer={changePlayer}
+		/>
 	{:else if screen.name === 'settings'}
 		<SettingsPanel
 			settings={profile.settings}
@@ -409,6 +624,18 @@
 			onchange={changeSettings}
 			onback={() => go({ type: 'close-settings' })}
 		/>
+	{:else if screen.name === 'companion'}
+		{#if catalogue}
+			<CompanionPanel
+				{catalogue}
+				{owned}
+				choice={profile.companion}
+				{wornIds}
+				saveFailed={companionSaveFailed}
+				onchange={saveCompanion}
+				onback={() => go({ type: 'close-companion' })}
+			/>
+		{/if}
 	{:else if screen.name === 'intro'}
 		{@const lesson = findLesson(progression, screen.lessonId)}
 		{@const lessonId = screen.lessonId}
@@ -424,39 +651,21 @@
 				still={isMotionReduced(profile.settings, systemPrefersReduced)}
 				{voice}
 				loadFailed={gameLoadFailed}
+				prize={prizeOfLesson(catalogue, lessonId, owned)}
 				onplay={(gameId) => playLesson(world.id, lessonId, gameId)}
 				onback={() => go({ type: 'back-to-map' })}
 			/>
 		{/if}
 	{:else if screen.name === 'game'}
 		{@const lessonId = screen.lessonId}
-		{#if exercise && ActiveGame}
-			<ActiveGame
-				{exercise}
-				layout={assets.layout}
-				charIndex={assets.charIndex}
-				geometry={assets.geometry}
-				fingering={assets.fingering}
-				settings={toGameSettings(
-					profile.settings,
-					systemPrefersReduced,
-					guideFor(profile, lessonId),
-					PLAY_RULES.lookReminderEveryGroups,
-					unlockedScenes(
-						SCENE_SCHEDULE,
-						activeGameId,
-						passedLessonCount(progression, profile.progress)
-					)
-				)}
-				{sounds}
-				onComplete={(outcome) => finishGame(lessonId, outcome)}
-				onSettings={openSettings}
-				{voice}
-				onQuit={quitGame}
-			/>
+		{@render playing(profile, lessonId, (outcome) => finishGame(lessonId, outcome))}
+	{:else if screen.name === 'help-game'}
+		{#if helpRun}
+			{@render playing(profile, helpRun.lessonId, finishHelp)}
 		{/if}
 	{:else if screen.name === 'result' && result}
 		{@const lessonId = screen.lessonId}
+		{@const view = result}
 		<LessonResult
 			stars={result.stars}
 			summary={result.summary}
@@ -473,9 +682,24 @@
 			onreplay={() => beginGame(lessonId, { type: 'replay' })}
 			onmap={() => go({ type: 'back-to-map' })}
 			onbreak={takeBreak}
-		/>
+		>
+			{#snippet news()}
+				{@render rewardNews(view.rewards, askNameNow)}
+			{/snippet}
+		</LessonResult>
 	{:else if screen.name === 'break'}
 		<BreakScreen onreturn={() => go({ type: 'back-to-map' })} />
+	{:else if screen.name === 'help-done' && helpDone}
+		{@const done = helpDone}
+		<HelpThanks
+			dance={done.dance}
+			saveFailed={done.saveFailed}
+			onmap={() => go({ type: 'back-to-map' })}
+		>
+			{#snippet news()}
+				{@render rewardNews(done.rewards, false)}
+			{/snippet}
+		</HelpThanks>
 	{/if}
 </main>
 
