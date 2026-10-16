@@ -77,15 +77,18 @@
 </script>
 
 <ScreenFrame title={lesson.title} focusHeading={false} wide>
-	<p class="number">{m.play_lesson_number({ number })}</p>
-	{#if prize}
-		<div class="prize" data-prize={prize.id}>
-			<div class="prize-picture" aria-hidden="true">
-				<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
+	<!-- The prize shares the line of the number: the pictures of the games stay in view on a laptop. -->
+	<div class="head">
+		<p class="number">{m.play_lesson_number({ number })}</p>
+		{#if prize}
+			<div class="prize" data-prize={prize.id}>
+				<div class="prize-picture" aria-hidden="true">
+					<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
+				</div>
+				<p>{m.play_reward_prize({ title: prize.title })}</p>
 			</div>
-			<p>{m.play_reward_prize({ title: prize.title })}</p>
-		</div>
-	{/if}
+		{/if}
+	</div>
 	<div class="say">
 		<ListenButton text={lesson.intro} player={voice} />
 		<p class="intro">{lesson.intro}</p>
@@ -127,6 +130,14 @@
 </ScreenFrame>
 
 <style>
+	.head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-md);
+	}
+
 	.number {
 		color: var(--dd-color-text-secondary);
 		font-weight: var(--dd-font-weight-bold);

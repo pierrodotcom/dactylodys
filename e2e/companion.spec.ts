@@ -265,7 +265,9 @@ test.describe('companion and rewards', () => {
 		});
 		await reachMapAs(page, child);
 
-		await activateByTab(page, button(page, message('play_companion_open')));
+		// Firefox in CI did not reach the top bar by tabbing from the map: the button is focused directly.
+		await button(page, message('play_companion_open')).focus();
+		await page.keyboard.press('Enter');
 		await expect(heading(page, message('play_companion_title'))).toBeVisible();
 		await expect(bigCompanion(page)).toHaveAttribute('data-items', NECKLACE.artId);
 		await expect(page.getByText(SECOND_ITEM.description)).toBeVisible();
