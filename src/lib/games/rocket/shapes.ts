@@ -151,3 +151,74 @@ export const SUNGLASSES_LENS_PATHS = [
 ] as const;
 export const SUNGLASSES_BRIDGE_PATH = 'M-0.8 -2.2L0.8 -2.2';
 export const SUNGLASSES_GLINT_PATH = 'M-4.6 -1.8L-3.4 -1.8';
+
+/** A baby dino in a 40 x 40 box, feet on the bottom edge: it climbs aboard the rocket. */
+export const DINO = {
+	scale: 1,
+	feet: { x: 20, y: 38 },
+	tailPath: 'M30 30Q39 30 40 37Q33 37 29 34Z',
+	body: { cx: 20, cy: 29, rx: 11, ry: 9 },
+	footEllipses: [
+		{ cx: 14, cy: 37.5, rx: 4.2, ry: 2.3 },
+		{ cx: 26, cy: 37.5, rx: 4.2, ry: 2.3 }
+	],
+	restingArmPath: 'M29 27C32 27 34.5 29 35 32C33 33 30 32 28 30Z',
+	wavingArmPath: 'M11 27C6 26 3 21 3 16C3 13 7 13 7 16C7 20 9 22 12 23Z',
+	platePaths: ['M13 8L15 1.5L19 6.5Z', 'M18 5L21 -1L24 5Z', 'M23 6.5L26 1.5L28 8Z'],
+	head: { cx: 20, cy: 14, radius: 9.5 },
+	eyes: [
+		{ x: 15.5, y: 13 },
+		{ x: 24.5, y: 13 }
+	],
+	cheeks: [
+		{ x: 11.5, y: 18 },
+		{ x: 28.5, y: 18 }
+	],
+	mouthPath: 'M17 18Q20 21.5 23 18'
+} as const;
+
+/**
+ * Where the baby dino sits, in the drawing of the rocket: on its roof in flight, on its right fin once
+ * landed (the roof is out of the sky).
+ */
+export const DINO_SEATS = { flying: { x: -15, y: -2 }, landed: { x: 17, y: 14 } } as const;
+
+/** The hat of a cook, in the 60 x 60 box of an inhabitant: it covers the antennas. */
+export const TOQUE = {
+	puffs: [
+		{ cx: 20, cy: 9, radius: 6.5 },
+		{ cx: 30, cy: 4, radius: 8 },
+		{ cx: 40, cy: 9, radius: 6.5 }
+	],
+	bandPath: 'M20 21L40 21L39 11L21 11Z'
+} as const;
+
+/** A small hot dish, centered on the middle of its plate; the steam is three puffs above it. */
+export const DISH = {
+	spot: { x: 428, y: 101 },
+	plate: { cx: 0, cy: 0, rx: 15, ry: 5 },
+	foodPath: 'M-10.5 -0.7Q-10.5 -12.6 0 -12.6Q10.5 -12.6 10.5 -0.7Z',
+	garnish: { cx: 0, cy: -12.6, radius: 2.6 },
+	steamPuffs: [
+		{ x: -4, y: -21, radius: 3.4 },
+		{ x: 4, y: -28, radius: 2.9 },
+		{ x: -1, y: -35, radius: 2.4 }
+	]
+} as const;
+
+/** A little car facing right, centered on the middle of its body; it starts left of the sky. */
+export const CAR = {
+	scale: 1.4,
+	start: { x: -56, y: 186 },
+	bodyPath: 'M-18 7L-18 0Q-18 -3 -14 -3L-9 -3L-5 -9L6 -9L11 -3L16 -3Q20 -3 20 1L20 7Z',
+	windowPaths: ['M-4.5 -3.5L-1.5 -7.2L2 -7.2L2 -3.5Z', 'M4 -3.5L4 -7.2L6 -7.2L9 -3.5Z'],
+	headlight: { cx: 18.5, cy: 0.5, radius: 1.8 },
+	wheels: [
+		{ cx: -10, cy: 7 },
+		{ cx: 11, cy: 7 }
+	],
+	wheelRadius: 4.5,
+	hubRadius: 1.4,
+	spokePath: 'M-3 0L3 0',
+	trailPaths: ['M-23 -1L-38 -1', 'M-23 3.5L-46 3.5', 'M-23 8L-35 8']
+} as const;
