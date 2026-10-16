@@ -946,7 +946,11 @@ test.describe('play route', () => {
 
 		const hands = page.locator('.keyboard [data-hand-guide]');
 		await expect(hands).toBeVisible();
-		await expect(hands.locator('[data-finger]')).toHaveCount(10);
+		// One drawn finger per home key: in ten fingers, the left thumb has none and is not drawn.
+		const homeKeys = readJson<{ homeKeys: Record<string, string> }>(
+			'layouts/fingering/ten-fingers-iso.json'
+		).homeKeys;
+		await expect(hands.locator('[data-finger]')).toHaveCount(Object.keys(homeKeys).length);
 		await expect(hands.locator('[data-active]')).toHaveCount(1);
 		await page.keyboard.type(await currentGroup(page));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
@@ -1033,7 +1037,9 @@ test.describe('play route', () => {
 		await expect(progressPicture(page, DEFAULT_GAME, 0)).toHaveCount(0);
 	});
 
-	test('finds the game chosen in a world again at the next visit', async ({ page }) => {
+	test('remembers the game of a lesson, and proposes another one when it is played again', async ({
+		page
+	}) => {
 		const profile = profileAfter(lastLessonOf(world).id);
 		await reachMapAs(page, profile);
 		await openIntro(page, NEXT_FIRST);
@@ -1049,10 +1055,10 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await openIntro(page, NEXT_FIRST);
-		await expect(proposedGame(page)).toHaveAttribute('data-game', OTHER_GAME);
+		await expect(proposedGame(page)).toHaveAttribute('data-game', DEFAULT_GAME);
 		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
+		await expect(progressPicture(page, DEFAULT_GAME, 0)).toBeVisible();
 	});
 
 	test('puts real words of the banks in the groups of a lesson that asks for words', async ({
