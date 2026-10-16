@@ -183,3 +183,11 @@ Réalise le lot R2 (ADR-022, ADR-027) avec le catalogue validé par le porteur (
 Retours du deuxième test avec un enfant (voir `docs/SUIVI.md`).
 - **Un jeu différent à chaque fois** : une leçon jamais jouée propose le jeu de sa place dans le monde ; une leçon déjà jouée propose le **jeu qui suit** celui avec lequel elle a été jouée en dernier (amende l'ADR-032, point « le jeu choisi est retrouvé »). Cause du constat « toujours des œufs » : une leçon déjà jouée reproposait le jeu mémorisé du monde. L'enfant peut toujours prendre l'autre image ; l'image cliquée est celle qui démarre.
 - **Délai de l'animation** : 0,6 s après la dernière frappe au lieu de 0,4 s (`--dd-duration-reward-delay`).
+
+## 039 — Suite du deuxième test : exercices, étoiles, main, pause (2026-10-16, acceptée)
+Décisions du porteur (« oui à tout ») sur les retours du deuxième test.
+- **Exercices à 8 étapes au plus** : `groupCount` 8 pour toutes les leçons et groupes de 4 à 6 caractères à partir de la leçon 5 ; un exercice mesure 34 à 47 caractères (jusqu'à 18 pour les deux premières leçons), 6 à 8 étapes. Le minimum de 5 frappes par signe nouveau tient.
+- **Étoiles** : la 3ᵉ étoile s'obtient à **95 %** (97 % avant). Quand il manquait peu (3 points, `starAlmostMargin`), l'étoile suivante est dessinée à moitié pleine et le bilan dit « Tu y es presque : l'étoile suivante n'est pas loin ! ». La précision seule compte toujours.
+- **Main guide** (amende l'ADR-031) : chaque touche seulement aux **2 premières leçons** ; ensuite la main montre les touches nouvelles, la touche qui suit une erreur et la touche attendue après **3 secondes sans frappe** (`hesitationMs`), jusqu'à la leçon 24. L'enfant lit d'abord le texte, la main l'aide ensuite.
+- **Pause** : proposée après **4 exercices terminés** (`breakAfterExercises`), en plus des 12 minutes ; l'enfant peut continuer.
+- **Rappel** : « Regarde toujours l'écran, jamais tes doigts ;-) » (amende l'ADR-036 : « toujours » au lieu de « seulement », que l'enfant prenait pour le prochain texte seulement).
