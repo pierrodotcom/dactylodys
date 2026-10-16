@@ -52,19 +52,32 @@ describe('restingHands', () => {
 		}
 	});
 
-	it('rests both thumbs on the space bar, apart from each other', () => {
+	it('rests on the space bar only the thumb the fingering gives it to', () => {
 		const space = boxes.get('Space');
-		const thumbs = hands.map((hand) =>
-			hand.fingers.find((shape) => shape.finger.endsWith('thumb'))
+		const thumbs = hands.flatMap((hand) =>
+			hand.fingers.filter((shape) => shape.finger.endsWith('thumb'))
 		);
-		const [left, right] = thumbs.map((shape) => shape?.tip);
-		expect(left?.y).toBe(space?.center.y);
-		expect(right?.y).toBe(space?.center.y);
-		expect(left?.x).toBeLessThan(right?.x ?? 0);
-		for (const tip of [left, right]) {
-			expect(tip?.x).toBeGreaterThan(space?.left ?? Infinity);
-			expect(tip?.x).toBeLessThan(space?.right ?? -Infinity);
-		}
+		expect(thumbs.map((shape) => shape.finger)).toEqual(['right-thumb']);
+		const tip = thumbs[0]?.tip;
+		expect(tip?.y).toBe(space?.center.y);
+		expect(tip?.x).toBeGreaterThan(space?.left ?? Infinity);
+		expect(tip?.x).toBeLessThan(space?.right ?? -Infinity);
+	});
+
+	it('draws the left thumb instead when the fingering gives it the space bar', () => {
+		const data = JSON.parse(readFileSync('layouts/fingering/ten-fingers-iso.json', 'utf8'));
+		const homeKeys = Object.fromEntries(
+			Object.entries(fingering.homeKeys).filter(([finger]) => finger !== 'right-thumb')
+		);
+		const leftThumb = parseFingeringProfile({
+			...data,
+			fingers: { ...data.fingers, Space: 'left-thumb' },
+			homeKeys: { ...homeKeys, 'left-thumb': 'Space' }
+		});
+		const thumbs = restingHands(geometry, leftThumb).flatMap((hand) =>
+			hand.fingers.filter((shape) => shape.finger.endsWith('thumb'))
+		);
+		expect(thumbs.map((shape) => shape.finger)).toEqual(['left-thumb']);
 	});
 
 	it('gives each hand a palm of four corners under its knuckles', () => {

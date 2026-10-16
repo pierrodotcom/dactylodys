@@ -946,7 +946,11 @@ test.describe('play route', () => {
 
 		const hands = page.locator('.keyboard [data-hand-guide]');
 		await expect(hands).toBeVisible();
-		await expect(hands.locator('[data-finger]')).toHaveCount(10);
+		// One drawn finger per home key: in ten fingers, the left thumb has none and is not drawn.
+		const homeKeys = readJson<{ homeKeys: Record<string, string> }>(
+			'layouts/fingering/ten-fingers-iso.json'
+		).homeKeys;
+		await expect(hands.locator('[data-finger]')).toHaveCount(Object.keys(homeKeys).length);
 		await expect(hands.locator('[data-active]')).toHaveCount(1);
 		await page.keyboard.type(await currentGroup(page));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
