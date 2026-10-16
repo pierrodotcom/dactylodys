@@ -12,15 +12,31 @@ import { generateExercise } from '../../src/lib/engine/progression/exercise';
 import { emptyProgress } from '../../src/lib/engine/progression/progress';
 import { seededRng } from '../../src/lib/engine/progression/test-support';
 import { findGame } from '../../src/lib/games/registry';
+import {
+	generateHelpExercise,
+	parseHelpQuestRules,
+	parseRewardCatalogue,
+	validateRewardCatalogue
+} from '../../src/lib/engine/rewards';
 import { PLAY_RULES } from '../../src/routes/jouer/play-rules';
 
 const PROGRESSION_FILE = 'content/fr/progression/azerty-decouverte.json';
 const WORDS_FILE = 'content/fr/words/base.json';
 const PHRASES_FILE = 'content/fr/phrases/base.json';
+const REWARDS_FILE = 'content/fr/rewards/azerty-decouverte.json';
+const HELP_QUEST_FILE = 'content/common/help-quest.json';
+const CONDITION_KINDS = [
+	'lesson-passed',
+	'lesson-stars',
+	'world-passed',
+	'world-stars',
+	'chars-mastered'
+];
 const MIN_USABLE_WORDS = 8;
 const MIN_USABLE_PHRASES = 6;
 const MIN_PHRASES_PER_NEW_CHAR = 6;
 const SEED_COUNT = 20;
+const HELP_SEED_COUNT = 8;
 
 function readJson(path: string): unknown {
 	return JSON.parse(readFileSync(path, 'utf8'));
@@ -160,6 +176,90 @@ describe('progression and banks together', () => {
 						progression.rules.newCharMinCount
 					);
 				}
+			}
+		}
+	);
+});
+
+describe('reward catalogue and progression together', () => {
+	const catalogue = parseRewardCatalogue(readJson(REWARDS_FILE));
+	const ofKind = (kind: string, key: 'lessonId' | 'worldId', id: string) =>
+		catalogue.rewards.filter(
+			({ condition }) =>
+				condition.kind === kind && (condition as Record<string, unknown>)[key] === id
+		);
+
+	it('is coherent with the progression it names', () => {
+		expect(validateRewardCatalogue(catalogue, progression)).toEqual([]);
+		expect(catalogue.progressionId).toBe(progression.id);
+	});
+
+	it.each(entries.map(({ lesson }) => lesson.id))(
+		'gives %s exactly one item for passing it',
+		(id) => {
+			const rewards = ofKind('lesson-passed', 'lessonId', id);
+			expect(rewards).toHaveLength(1);
+			expect(rewards[0]?.kind).toBe('item');
+		}
+	);
+
+	it.each(progression.worlds.map((world) => world.id))(
+		'gives %s one skill for passing it and one trophy for its stars',
+		(id) => {
+			const passed = ofKind('world-passed', 'worldId', id);
+			const starred = ofKind('world-stars', 'worldId', id);
+			expect(passed.map(({ kind }) => kind)).toEqual(['skill']);
+			expect(starred.map(({ kind }) => kind)).toEqual(['trophy']);
+		}
+	);
+
+	it('draws every reward with its own picture', () => {
+		const artIds = catalogue.rewards.map((reward) => reward.artId);
+		expect(new Set(artIds).size).toBe(artIds.length);
+	});
+
+	it('asks nothing about time, days, plays or speed', () => {
+		for (const reward of catalogue.rewards) {
+			expect(CONDITION_KINDS, reward.id).toContain(reward.condition.kind);
+		}
+	});
+
+	it('parses the rules of the help quest', () => {
+		const rules = parseHelpQuestRules(readJson(HELP_QUEST_FILE));
+		expect(rules.minRecentAttempts).toBeLessThanOrEqual(progression.rules.recentCharWindow);
+		expect(rules.minCharCount).toBeLessThanOrEqual(rules.targetLength);
+	});
+});
+
+describe('help quest exercises over the shipped content', () => {
+	const rules = parseHelpQuestRules(readJson(HELP_QUEST_FILE));
+	const keys = entries.flatMap(({ world, lesson }) =>
+		lesson.newChars.map((char) => [lesson.id, char, world.themeId] as const)
+	);
+
+	it.each(keys)(
+		'builds a typable exercise for the key of %s "%s" over the seeds',
+		(lessonId, char, themeId) => {
+			const allowed = new Set(learnedChars(progression, lessonId));
+			for (let seed = 1; seed <= HELP_SEED_COUNT; seed++) {
+				const exercise = generateHelpExercise(
+					progression,
+					{ char, lessonId },
+					rules,
+					seededRng(seed),
+					{ words, themeId, maxLevel: PLAY_RULES.maxWordLevel }
+				);
+				const asked = exercise.groups.flatMap((group) => toGraphemes(group));
+				const label = `${lessonId} "${char}" seed ${seed}: ${exercise.groups.join(' | ')}`;
+				expect(exercise.lessonId, label).toBe(lessonId);
+				expect(asked.length, label).toBeGreaterThanOrEqual(rules.targetLength);
+				expect(asked.filter((grapheme) => grapheme === char).length, label).toBeGreaterThanOrEqual(
+					rules.minCharCount
+				);
+				expect(
+					asked.filter((grapheme) => !allowed.has(grapheme)),
+					label
+				).toEqual([]);
 			}
 		}
 	);

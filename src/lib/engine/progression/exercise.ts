@@ -44,7 +44,7 @@ interface Settings {
 	readonly rng: Rng;
 }
 
-function between(min: number, max: number, rng: Rng): number {
+export function between(min: number, max: number, rng: Rng): number {
 	return min + Math.min(max - min, Math.floor(rng() * (max - min + 1)));
 }
 
@@ -108,7 +108,7 @@ function isValidSequence(sequence: readonly string[]): boolean {
 	});
 }
 
-function placeForced(
+export function placeForced(
 	natural: readonly string[],
 	forced: readonly string[],
 	rng: Rng

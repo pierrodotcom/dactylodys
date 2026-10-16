@@ -12,11 +12,13 @@ import {
 	renameProfile,
 	updateSettings,
 	withCompanion,
+	withEarnedRewards,
 	withGhost,
+	withHelpQuest,
 	withLastGame,
 	withProgress
 } from './profile';
-import type { CompanionChoice, Profile, Settings } from './types';
+import type { CompanionChoice, HelpQuestRecord, Profile, Settings } from './types';
 
 const LESSON = 'fr.lesson.home-row-01';
 const WORLD = 'fr.world.garden';
@@ -58,6 +60,9 @@ const SAMPLE_COMPANION: CompanionChoice = {
 	wornItemIds: ['fr.reward.scarf', 'fr.reward.hat']
 };
 
+const SAMPLE_EARNED = ['fr.reward.egg-necklace', 'fr.reward.rain-boots'];
+const SAMPLE_HELP_QUEST: HelpQuestRecord = { char: 'f', lessonPlays: 12 };
+
 function sampleProfile(name = 'Léa'): Profile {
 	return createProfile({ id: 'p-1', name, now: 1_700_000_000_000, platform: 'pc' });
 }
@@ -65,7 +70,8 @@ function sampleProfile(name = 'Léa'): Profile {
 function fullProfile(): Profile {
 	const played = withProgress(sampleProfile(), SAMPLE_PROGRESS);
 	const dressed = withCompanion(played, SAMPLE_COMPANION);
-	return withGhost(withLastGame(dressed, WORLD, 'rocket'), LESSON, SAMPLE_GHOST);
+	const played2 = withGhost(withLastGame(dressed, WORLD, 'rocket'), LESSON, SAMPLE_GHOST);
+	return withHelpQuest(withEarnedRewards(played2, SAMPLE_EARNED), SAMPLE_HELP_QUEST);
 }
 
 type Json = { [key: string]: unknown };
@@ -112,7 +118,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 4,
+			schemaVersion: 5,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -121,7 +127,9 @@ describe('createProfile', () => {
 			progress: { lessons: {}, chars: {} },
 			companion: { name: '', colorId: null, wornItemIds: [] },
 			lastGameByWorld: {},
-			ghosts: {}
+			ghosts: {},
+			earnedRewardIds: [],
+			helpQuest: null
 		});
 	});
 
@@ -280,6 +288,47 @@ describe('profile updates', () => {
 		expect(second.ghosts).toEqual({ [LESSON]: later, 'fr.lesson.other': SAMPLE_GHOST });
 	});
 
+	it('keeps the rewards earned, adding the new ones after the others', () => {
+		const first = withEarnedRewards(sampleProfile(), ['a', 'b']);
+		const second = withEarnedRewards(first, ['c', 'a', 'd']);
+		expect(first.earnedRewardIds).toEqual(['a', 'b']);
+		expect(second.earnedRewardIds).toEqual(['a', 'b', 'c', 'd']);
+	});
+
+	it('never removes an earned reward nor repeats one', () => {
+		const profile = withEarnedRewards(sampleProfile(), ['a', 'b']);
+		expect(withEarnedRewards(profile, ['b']).earnedRewardIds).toEqual(['a', 'b']);
+		expect(withEarnedRewards(profile, []).earnedRewardIds).toEqual(['a', 'b']);
+		expect(withEarnedRewards(profile, ['c', 'c']).earnedRewardIds).toEqual(['a', 'b', 'c']);
+	});
+
+	it('returns the very same profile when no earned reward is new', () => {
+		const profile = withEarnedRewards(sampleProfile(), ['a', 'b']);
+		expect(withEarnedRewards(profile, [])).toBe(profile);
+		expect(withEarnedRewards(profile, ['b', 'a'])).toBe(profile);
+	});
+
+	it('rejects an earned reward that could not be stored', () => {
+		expect(() => withEarnedRewards(sampleProfile(), [''])).toThrow();
+	});
+
+	it('records the help quest finished, replacing the previous one', () => {
+		const first = withHelpQuest(sampleProfile(), SAMPLE_HELP_QUEST);
+		const second = withHelpQuest(first, { char: 'é', lessonPlays: 30 });
+		expect(first.helpQuest).toEqual(SAMPLE_HELP_QUEST);
+		expect(second.helpQuest).toEqual({ char: 'é', lessonPlays: 30 });
+	});
+
+	it.each([
+		['an empty key', { char: '', lessonPlays: 1 }],
+		['a negative count', { char: 'f', lessonPlays: -1 }],
+		['a fractional count', { char: 'f', lessonPlays: 1.5 }],
+		['an unknown property', { char: 'f', lessonPlays: 1, at: 5 }],
+		['a missing count', { char: 'f' }]
+	])('rejects a help quest with %s', (_label, record) => {
+		expect(() => withHelpQuest(sampleProfile(), record as unknown as HelpQuestRecord)).toThrow();
+	});
+
 	it('rejects a ghost that could not be stored', () => {
 		expect(() => withGhost(sampleProfile(), LESSON, { ...SAMPLE_GHOST, charCount: 3 })).toThrow();
 	});
@@ -305,7 +354,9 @@ describe('profile updates', () => {
 			markCalibrated(profile),
 			withCompanion(profile, SAMPLE_COMPANION),
 			withLastGame(profile, WORLD, 'rocket'),
-			withGhost(profile, LESSON, SAMPLE_GHOST)
+			withGhost(profile, LESSON, SAMPLE_GHOST),
+			withEarnedRewards(profile, SAMPLE_EARNED),
+			withHelpQuest(profile, SAMPLE_HELP_QUEST)
 		];
 		for (const result of results) expect(result).not.toBe(profile);
 		expect(profile).toEqual(snapshot);
@@ -338,8 +389,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 3, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 5, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 4, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 6, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -419,7 +470,23 @@ describe('parseProfile', () => {
 		['ghosts that are a list', ['ghosts'], [], /profile\.ghosts/],
 		['a ghost that is not an object', ['ghosts', LESSON], 12, /profile\.ghosts\./],
 		['a ghost without points', ['ghosts', LESSON, 'points'], [], /profile\.ghosts\..*points/],
-		['a ghost with an unknown property', ['ghosts', LESSON, 'text'], 'fj', /ghosts\..*text/]
+		['a ghost with an unknown property', ['ghosts', LESSON, 'text'], 'fj', /ghosts\..*text/],
+		['missing earned rewards', ['earnedRewardIds'], REMOVE, /profile\.earnedRewardIds/],
+		['earned rewards that are not a list', ['earnedRewardIds'], 'a', /profile\.earnedRewardIds/],
+		['an empty earned reward', ['earnedRewardIds'], [''], /earnedRewardIds\[0\]/],
+		['a numeric earned reward', ['earnedRewardIds'], ['a', 2], /earnedRewardIds\[1\]/],
+		['a reward earned twice', ['earnedRewardIds'], ['a', 'b', 'a'], /earnedRewardIds\[2\]/],
+		['a missing help quest', ['helpQuest'], REMOVE, /profile\.helpQuest/],
+		['a help quest that is a list', ['helpQuest'], [], /profile\.helpQuest/],
+		['a help quest that is a string', ['helpQuest'], 'f', /profile\.helpQuest/],
+		['an unknown help quest property', ['helpQuest', 'mood'], 'happy', /helpQuest\.mood/],
+		['a help quest without key', ['helpQuest', 'char'], REMOVE, /helpQuest\.char/],
+		['an empty help quest key', ['helpQuest', 'char'], '', /helpQuest\.char/],
+		['a numeric help quest key', ['helpQuest', 'char'], 3, /helpQuest\.char/],
+		['a help quest without count', ['helpQuest', 'lessonPlays'], REMOVE, /helpQuest\.lessonPlays/],
+		['a negative help quest count', ['helpQuest', 'lessonPlays'], -1, /helpQuest\.lessonPlays/],
+		['a fractional help quest count', ['helpQuest', 'lessonPlays'], 2.5, /helpQuest\.lessonPlays/],
+		['a string help quest count', ['helpQuest', 'lessonPlays'], '4', /helpQuest\.lessonPlays/]
 	])('rejects %s', (_label, path, value, message) => {
 		expect(() => parseProfile(mutate(path, value))).toThrow(message);
 	});

@@ -4,6 +4,7 @@ import { computeAccuracy } from '../accuracy';
 import type { CharStats, SessionMetrics } from '../types';
 import { parseProgression } from './definition';
 import {
+	applyCharResults,
 	applyLessonResult,
 	emptyProgress,
 	evaluateLesson,
@@ -509,6 +510,47 @@ describe('recent results per character', () => {
 				}
 			)
 		);
+	});
+});
+
+describe('applyCharResults', () => {
+	it('updates the characters exactly as applyLessonResult does and leaves the lessons alone', () => {
+		fc.assert(
+			fc.property(
+				fc.array(fc.dictionary(fc.constantFrom('f', 'j', 'é', ' '), playArb, { maxKeys: 4 }), {
+					maxLength: 12
+				}),
+				windowArb,
+				(plays, recentCharWindow) => {
+					const rules: ProgressionRules = { ...RULES, recentCharWindow };
+					let viaLesson = emptyProgress();
+					let viaChars = emptyProgress();
+					for (const perChar of plays) {
+						const result = resultOf('fr.lesson.a', 90, {}, perChar);
+						viaLesson = applyLessonResult(viaLesson, result, rules);
+						viaChars = applyCharResults(viaChars, result.metrics, rules);
+					}
+					expect(viaChars.chars).toEqual(viaLesson.chars);
+					expect(viaChars.lessons).toEqual({});
+				}
+			)
+		);
+	});
+
+	it('keeps the lessons of the progress it receives', () => {
+		const played = applyResult(emptyProgress(), resultOf('fr.lesson.a', 90));
+		const next = applyCharResults(played, metricsWith({ perChar: { f: stats(5, 1) } }), RULES);
+		expect(next.lessons).toBe(played.lessons);
+		expect(recentCharStats(next, 'f')).toEqual({ attempts: 5, errors: 1 });
+	});
+
+	it('does not mutate the progress it receives', () => {
+		const before = deepFreeze(
+			applyResult(emptyProgress(), resultOf('fr.lesson.a', 90, {}, { f: stats(4, 1) }))
+		);
+		const snapshot = structuredClone(before);
+		applyCharResults(before, deepFreeze(metricsWith({ perChar: { f: stats(5, 1) } })), RULES);
+		expect(before).toEqual(snapshot);
 	});
 });
 

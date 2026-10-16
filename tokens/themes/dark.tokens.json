@@ -42,6 +42,10 @@
 		"drawing": {
 			"line": { "$value": "{color.brown.50}" }
 		},
+		"silhouette": { "$value": "{color.brown.550}" },
+		"reward": {
+			"backdrop": { "$value": "{color.brown.100}" }
+		},
 		"hand": {
 			"fill": { "$value": "{color.charcoal.700}" },
 			"outline": { "$value": "{color.brown.50}" },

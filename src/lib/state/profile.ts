@@ -19,6 +19,7 @@ import {
 import type { LayoutPlatform } from '../keyboard/types';
 import type {
 	CompanionChoice,
+	HelpQuestRecord,
 	MotionPreference,
 	Profile,
 	Settings,
@@ -52,7 +53,7 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 4;
+export const PROFILE_SCHEMA_VERSION = 5;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -69,7 +70,9 @@ const PROFILE_KEYS = [
 	'progress',
 	'companion',
 	'lastGameByWorld',
-	'ghosts'
+	'ghosts',
+	'earnedRewardIds',
+	'helpQuest'
 ] as const satisfies readonly (keyof Profile)[];
 const SETTINGS_KEYS = [
 	'layoutId',
@@ -96,6 +99,10 @@ const COMPANION_KEYS = [
 	'colorId',
 	'wornItemIds'
 ] as const satisfies readonly (keyof CompanionChoice)[];
+const HELP_QUEST_KEYS = [
+	'char',
+	'lessonPlays'
+] as const satisfies readonly (keyof HelpQuestRecord)[];
 const UNNAMED = '';
 
 export interface NewProfileInput {
@@ -144,7 +151,9 @@ export function createProfile(input: NewProfileInput): Profile {
 		progress: emptyProgress(),
 		companion: { name: UNNAMED, colorId: null, wornItemIds: [] },
 		lastGameByWorld: {},
-		ghosts: {}
+		ghosts: {},
+		earnedRewardIds: [],
+		helpQuest: null
 	};
 }
 
@@ -184,6 +193,22 @@ export function withLastGame(profile: Profile, worldId: string, gameId: string):
 /** Replaces the ghost of the lesson: only the last passed play is raced against. */
 export function withGhost(profile: Profile, lessonId: string, run: GhostRun): Profile {
 	return { ...profile, ghosts: { ...profile.ghosts, [lessonId]: parseGhostRun(run) } };
+}
+
+/** Adds the identifiers not yet kept, after the others: an earned reward is never removed (ADR-027). */
+export function withEarnedRewards(profile: Profile, rewardIds: readonly string[]): Profile {
+	const added = rewardIds.filter(
+		(id, index) => !profile.earnedRewardIds.includes(id) && rewardIds.indexOf(id) === index
+	);
+	if (added.length === 0) return profile;
+	return {
+		...profile,
+		earnedRewardIds: parseEarnedRewards([...profile.earnedRewardIds, ...added], 'earnedRewardIds')
+	};
+}
+
+export function withHelpQuest(profile: Profile, record: HelpQuestRecord): Profile {
+	return { ...profile, helpQuest: parseHelpQuest(record, 'helpQuest') };
 }
 
 function fail(path: string, message: string): never {
@@ -345,6 +370,27 @@ function parseCompanion(data: unknown, path: string): CompanionChoice {
 	};
 }
 
+function parseEarnedRewards(data: unknown, path: string): string[] {
+	if (!Array.isArray(data)) fail(path, 'expected an array');
+	const ids: string[] = [];
+	data.forEach((raw: unknown, index) => {
+		const id = expectIdentifier(raw, `${path}[${index}]`);
+		if (ids.includes(id)) fail(`${path}[${index}]`, `duplicate reward "${id}"`);
+		ids.push(id);
+	});
+	return ids;
+}
+
+function parseHelpQuest(data: unknown, path: string): HelpQuestRecord | null {
+	if (data === null) return null;
+	const record = expectRecord(data, path);
+	expectExactKeys(record, HELP_QUEST_KEYS, path);
+	return {
+		char: expectIdentifier(record['char'], `${path}.char`),
+		lessonPlays: expectCount(record['lessonPlays'], `${path}.lessonPlays`)
+	};
+}
+
 /** Strict, and only for the current version: stored data goes through `readProfile` instead. */
 export function parseProfile(data: unknown): Profile {
 	const root = expectRecord(data, 'profile');
@@ -378,6 +424,8 @@ export function parseProfile(data: unknown): Profile {
 			'profile.lastGameByWorld',
 			expectIdentifier
 		),
-		ghosts: parseRecordOf(root['ghosts'], 'profile.ghosts', parseGhostRun)
+		ghosts: parseRecordOf(root['ghosts'], 'profile.ghosts', parseGhostRun),
+		earnedRewardIds: parseEarnedRewards(root['earnedRewardIds'], 'profile.earnedRewardIds'),
+		helpQuest: parseHelpQuest(root['helpQuest'], 'profile.helpQuest')
 	};
 }

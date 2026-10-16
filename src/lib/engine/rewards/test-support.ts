@@ -1,7 +1,14 @@
+import fc from 'fast-check';
 import { parseProgression } from '../progression/definition';
 import { applyLessonResult, evaluateLesson } from '../progression/progress';
-import type { ProgressionDefinition, ProgressionRules, ProgressState } from '../progression/types';
+import type {
+	ProgressionDefinition,
+	ProgressionRules,
+	ProgressState,
+	StarCount
+} from '../progression/types';
 import type { CharStats, SessionMetrics } from '../types';
+import type { HelpQuestRules } from './types';
 
 export const RULES: ProgressionRules = {
 	unlockAccuracy: 80,
@@ -88,6 +95,7 @@ export function catalogueData(
 			{ id: 'green', title: 'Green' },
 			{ id: 'blue', title: 'Blue' }
 		],
+		nameSuggestions: ['Pipo'],
 		rewards,
 		...extra
 	};
@@ -119,3 +127,93 @@ export function playLesson(
 		RULES
 	);
 }
+
+function helpLesson(
+	id: string,
+	newChars: string[],
+	words: string[] = [],
+	groupLength: [number, number] = [2, 4]
+) {
+	return { ...lesson(id, newChars), words, groupLength };
+}
+
+export const HELP_LESSON_HOME = 'fr.lesson.home';
+export const HELP_LESSON_SPACE = 'fr.lesson.space';
+export const HELP_LESSON_WORDS = 'fr.lesson.words';
+export const HELP_LESSON_LATE = 'fr.lesson.late';
+export const HELP_LESSON_IDS = [
+	HELP_LESSON_HOME,
+	HELP_LESSON_SPACE,
+	HELP_LESSON_WORDS,
+	HELP_LESSON_LATE
+] as const;
+
+/** Four lessons with a space and some words: enough to build help quests on any kind of key. */
+export const HELP_PROGRESSION: ProgressionDefinition = parseProgression({
+	schemaVersion: 1,
+	id: 'fr.progression.help',
+	locale: 'fr-FR',
+	layoutIds: ['fr-fr-azerty-pc'],
+	rules: RULES,
+	worlds: [
+		{
+			id: 'fr.world.first',
+			title: 'First',
+			themeId: 'dinos',
+			gameIds: ['hatching'],
+			lessons: [
+				helpLesson(HELP_LESSON_HOME, ['f', 'j']),
+				helpLesson(HELP_LESSON_SPACE, [' '], [], [3, 4])
+			]
+		},
+		{
+			id: 'fr.world.second',
+			title: 'Second',
+			themeId: 'dinos',
+			gameIds: ['hatching'],
+			lessons: [
+				helpLesson(HELP_LESSON_WORDS, ['d', 'k'], ['fkd', 'jdk', 'dkf', 'kdj', 'fd jk']),
+				helpLesson(HELP_LESSON_LATE, ['s', 'l'], ['sdl', 'lks', 'fsj'], [3, 5])
+			]
+		}
+	]
+});
+
+export const HELP_RULES: HelpQuestRules = {
+	schemaVersion: 1,
+	minRecentAttempts: 10,
+	maxErrorRate: 0.2,
+	targetLength: 20,
+	minCharCount: 6
+};
+
+export const HELP_CHARS = ['f', 'j', ' ', 'd', 'k', 's', 'l'] as const;
+
+const lessonProgressArb = fc.record({
+	bestAccuracy: fc.integer({ min: 0, max: 100 }),
+	stars: fc.constantFrom<StarCount>(0, 1, 2, 3),
+	attempts: fc.integer({ min: 1, max: 20 }),
+	lastPlayedAt: fc.constant(0)
+});
+
+const charProgressArb = fc.record({
+	attempts: fc.integer({ min: 1, max: 100 }),
+	errors: fc.constant(0),
+	recent: fc.array(
+		fc.integer({ min: 1, max: 30 }).chain((attempts) =>
+			fc.record({
+				attempts: fc.constant(attempts),
+				errors: fc.integer({ min: 0, max: attempts })
+			})
+		),
+		{ maxLength: 4 }
+	)
+});
+
+/** Any progress over `HELP_PROGRESSION`: lessons played or not, keys easy or hard. */
+export const helpProgressArb: fc.Arbitrary<ProgressState> = fc.record({
+	lessons: fc
+		.dictionary(fc.constantFrom(...HELP_LESSON_IDS), lessonProgressArb)
+		.map((lessons) => lessons as ProgressState['lessons']),
+	chars: fc.dictionary(fc.constantFrom(...HELP_CHARS), charProgressArb)
+});
