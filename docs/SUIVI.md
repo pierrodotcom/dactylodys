@@ -18,7 +18,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
 2. **Voix** : voix humaine (ADR-028). Outillage livré (PR 29) : page `/dev/voix`, lecteur, bouton « Écouter » (branché sur l'avant-leçon depuis T3, consigne dite à l'ouverture), outil `tools/voice/import.js` (mode d'emploi dans `tools/voice/README.md`). **Attendu du porteur** : enregistrer depuis son ordinateur les 24 consignes de leçon sur la page en ligne, en commençant par deux ou trois pour juger du résultat, puis déposer `voix-fr__<date>.zip` dans `docs/voix/`. Le chef d'orchestre lance alors l'import et ouvre la PR. Jamais essayé avec un vrai micro ; `ffmpeg` absent du poste (fichiers WAV tant qu'il n'est pas installé). Les textes du récit s'y ajouteront quand ils seront écrits.
-3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9).
+3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9) : courriel prêt dans `docs/COURRIEL_LEXIQUE.md`, **à envoyer par le porteur**.
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » est petite ; un profil d'avant J3 voit sa leçon `q m` reverrouillée tant que les leçons insérées avant ne sont pas passées ; la ligature `œ` n'est enseignée nulle part ; le point-virgule et les guillemets ne sont dans aucune leçon.
 5. Dette plus ancienne : `GameSettings.soundEnabled` inutilisé ; validation du pseudo en double. La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
@@ -151,3 +151,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-15** — PR 37 fusionnée (T3). Lot A1, premier paquet de scènes surprises (ADR-034).
 - **2026-10-16** — PR 38 fusionnée (A1). Le porteur accepte les 40 scènes ; lot A2 réalisé par trois sous-agents en parallèle (un par jeu) et le chef d'orchestre (fin d'exercice). Session R2 proposée.
 - **2026-10-16** — Parcours complet vérifié sur le site en ligne avant le deuxième test avec un enfant ; trois défauts corrigés (ADR-036) : image de l'œuf qui déborde, jeux coupés sur un portable, rappel trop court et qui décalait le clavier.
+- **2026-10-16** — Brouillon du récit (`docs/RECIT_BROUILLON.md`, 34 textes numérotés) envoyé au porteur pour validation par numéros : lot S2 à construire ensuite. Grille du test de ce soir : `docs/TEST_SOIR.md`.
