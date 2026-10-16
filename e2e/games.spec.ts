@@ -666,6 +666,22 @@ test.describe('surprise scenes', () => {
 			}
 		});
 
+		test('plays the next rocket scenes group after group, with the baby dino on its scene', async ({
+			page
+		}) => {
+			const scenes = SCENES.games['rocket'] ?? [];
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('rocket'));
+			for (const [index, group] of GROUPS.entries()) {
+				expect(await currentGroup(page)).toBe(group);
+				await page.keyboard.type(group);
+				const prop = scenes[index] === 'dino-aboard' ? ' .dino' : '';
+				await expect(page.locator(`[data-scene="${scenes[index]}"]${prop}`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
 		test('plays the next hatching scene on each group, in the order of the list', async ({
 			page
 		}) => {
