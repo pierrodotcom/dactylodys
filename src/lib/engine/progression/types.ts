@@ -34,6 +34,11 @@ export interface ProgressionRules {
 	readonly lengthSlack?: number;
 	/** When the hand drawn on the keyboard shows the fingers; absent: never on its own. */
 	readonly handGuide?: HandGuideRules;
+	/**
+	 * Points of accuracy below the next star within which the result says the child is nearly there
+	 * and draws that star half full; absent: never.
+	 */
+	readonly starAlmostMargin?: number;
 }
 
 /**
@@ -44,6 +49,11 @@ export interface ProgressionRules {
 export interface HandGuideRules {
 	readonly everyKeyUntil: number;
 	readonly newKeysUntil: number;
+	/**
+	 * In the new-keys mode, milliseconds without a key after which the hand shows the expected one
+	 * anyway: a child who hesitates is helped. Absent or 0: never.
+	 */
+	readonly hesitationMs?: number;
 }
 
 /** The choice of the child or the adult: follow the lessons, always show, never show. */

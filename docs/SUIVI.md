@@ -62,6 +62,15 @@ Caractères par exercice, moyenne (plafond après) · frappes minimales par sign
 
 Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, minimum de 5 frappes par signe, tous les signes demandés connus (tests de `tests/schemas/content-coherence.test.ts`). Les phrases restent présentes mais moins nombreuses : une phrase de 32 caractères médiane tient mal dans 35 (voir ADR-030).
 
+## Retours du deuxième test avec un enfant (2026-10-16, observés par le porteur)
+
+- **Écran de leçon** : il clique tout de suite, sur le jeu proposé, sans se demander s'il pouvait choisir. Il regarde les mains du clavier virtuel et plus les lettres à taper.
+- **Frappe** : il regarde l'écran (le clavier virtuel), plus ses mains ; les index sont bien placés, les autres doigts moins. Il trouve que l'animation pourrait venir un peu plus tard après la dernière frappe (délai passé de 0,4 à 0,6 s).
+- **Rappel** : vu, mais pris pour une consigne qui ne vaut que pour le prochain texte.
+- **Lassitude** : les dinos et les aliments, même au 3ᵉ monde ; « toujours des œufs de dinosaure » (cause trouvée : une leçon déjà jouée reproposait toujours le jeu mémorisé du monde ; corrigé, ADR-037).
+- **Étoiles** : il a vu que le bilan avait changé, mais s'est senti frustré avec 2 étoiles pour 26 sur 28.
+- **Durée** : « c'est long » sur un exercice de plus de 10 étapes ; il décroche au bout d'environ 4 exercices (5 minutes). Pas de touche pressée par accident.
+
 ## Grille d'observation pour le test J2
 
 À observer sans aider, pendant 10 minutes : l'enfant comprend-il seul quoi faire à chaque écran ? regarde-t-il le clavier à l'écran ou ses mains ? que fait-il après une erreur (s'énerve, réessaie, ne remarque pas) ? le délai d'une seconde entre deux œufs lui paraît-il long ? rit-il ou sourit-il, et à quel moment ? à quel moment décroche-t-il ? veut-il rejouer ? Noter aussi tout mot incompris et toute touche Tab, Entrée ou Verr. Maj pressée par accident.
@@ -153,4 +162,5 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-16** — PR 38 fusionnée (A1). Le porteur accepte les 40 scènes ; lot A2 réalisé par trois sous-agents en parallèle (un par jeu) et le chef d'orchestre (fin d'exercice). Session R2 proposée.
 - **2026-10-16** — Parcours complet vérifié sur le site en ligne avant le deuxième test avec un enfant ; trois défauts corrigés (ADR-036) : image de l'œuf qui déborde, jeux coupés sur un portable, rappel trop court et qui décalait le clavier.
 - **2026-10-16** — Brouillon du récit (`docs/RECIT_BROUILLON.md`, 34 textes numérotés) envoyé au porteur pour validation par numéros : lot S2 à construire ensuite. Grille du test de ce soir : `docs/TEST_SOIR.md`.
+- **2026-10-16** — Deuxième test avec un enfant (retours ci-dessus) : corrections de l'ADR-037 (jeux variés, délai 0,6 s) et de l'ADR-039 (8 étapes, 3ᵉ étoile à 95 %, main sur hésitation, pause après 4 exercices, rappel « toujours »). Lot « mondes mêlés et nouveaux jeux » (dessin, train, tour, visites d'autres mondes) confié à six agents en parallèle.
 - **2026-10-16** — PR 39 (A2, autre session) fusionnée. Lot R2 en trois lots parallèles (moteur, dessins, écrans) après contrats figés : récompenses acquises pour toujours, compagnon habillé, quête d'aide (ADR-037). Leçons L-053 à L-057.

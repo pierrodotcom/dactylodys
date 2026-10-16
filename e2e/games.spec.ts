@@ -675,7 +675,13 @@ test.describe('reminder to look at the screen', () => {
 		for (const [index, group] of GROUPS.slice(0, 2).entries()) {
 			await page.keyboard.type(group);
 			await expectRewardShown(page, message(`${game.bubblePrefix}${index + 1}`));
-			if (index === 0) await page.keyboard.press(SKIP_KEY);
+			if (index === 0) {
+				// A key skips the reward only once it is settled: press again until the next group shows.
+				await expect(async () => {
+					await page.keyboard.press(SKIP_KEY);
+					await expect(groupLabel(page)).toHaveText(GROUP_LABEL, { timeout: 500 });
+				}).toPass();
+			}
 		}
 	}
 

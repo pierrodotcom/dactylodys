@@ -387,6 +387,7 @@
 		"disabled": { "$value": 0.5 },
 		"overlay": { "$value": 0.6 },
 		"hand": { "$value": 0.55 },
+		"star-almost": { "$value": 0.4 },
 		"glass": { "$value": 0.45 }
 	},
 	"duration": {
@@ -396,7 +397,7 @@
 		"base": { "$value": "{duration.250}" },
 		"slow": { "$value": "{duration.500}" },
 		"beat": { "$value": "{duration.700}" },
-		"reward-delay": { "$value": "{duration.400}" },
+		"reward-delay": { "$value": "{duration.600}" },
 		"guide-move": { "$value": "{duration.500}" },
 		"guide-hold": { "$value": "{duration.400}" },
 		"guide-pause": { "$value": "{duration.3000}" },

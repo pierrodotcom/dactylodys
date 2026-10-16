@@ -132,14 +132,15 @@ describe('azerty-decouverte', () => {
 	it('uses the agreed rules', () => {
 		expect(progression.rules).toEqual({
 			unlockAccuracy: 80,
-			starThresholds: [80, 90, 97],
+			starThresholds: [80, 90, 95],
 			newCharWeight: 0.6,
 			weakCharBoost: 2,
 			themeBoost: 2,
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 11, newKeysUntil: 24 }
+			handGuide: { everyKeyUntil: 2, newKeysUntil: 24, hesitationMs: 3000 },
+			starAlmostMargin: 3
 		});
 	});
 
@@ -260,10 +261,11 @@ describe('azerty-decouverte', () => {
 		expect(lessons[4]?.words).toEqual(expect.arrayContaining(['je', 'de', 'il', 'le', 'les']));
 	});
 
-	it('keeps groups short', () => {
+	it('keeps groups short, and few: at most 8 steps in an exercise (ADR-039)', () => {
 		for (const lesson of lessons) {
 			expect(lesson.groupLength[0]).toBeGreaterThanOrEqual(2);
-			expect(lesson.groupLength[1]).toBeLessThanOrEqual(5);
+			expect(lesson.groupLength[1]).toBeLessThanOrEqual(6);
+			expect(lesson.groupCount).toBeLessThanOrEqual(8);
 		}
 	});
 });

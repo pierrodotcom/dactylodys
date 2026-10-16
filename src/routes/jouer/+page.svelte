@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { createVoicePlayer, loadVoiceManifest, type VoicePlayer } from '$lib/audio';
 	import { voiceLocale } from '$lib/audio/voice-texts';
-	import { isLessonUnlocked } from '$lib/engine/progression/progress';
+	import { almostNextStar, isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
@@ -44,7 +44,7 @@
 	import BreakScreen from './BreakScreen.svelte';
 	import {
 		createPlayClock,
-		playedMsAt,
+		finishPlaying,
 		shouldSuggestBreak,
 		startPlaying,
 		stopPlaying
@@ -65,6 +65,7 @@
 	import HelpThanks from './HelpThanks.svelte';
 	import { isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
+	import { findGame } from '$lib/games/registry';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
@@ -100,6 +101,8 @@
 		readonly hasOpenNext: boolean;
 		readonly worldDone: boolean;
 		readonly suggestBreak: boolean;
+		/** Stopped just short of the next star. */
+		readonly almost: boolean;
 		readonly saveFailed: boolean;
 		/** What this play earned, announced one card after the other. */
 		readonly rewards: readonly RewardDefinition[];
@@ -373,7 +376,7 @@
 	/** A picture of a game was chosen on the lesson screen: it is kept, and the lesson starts with it. */
 	function playLesson(worldId: string, lessonId: string, gameId: string) {
 		chooseGame(worldId, lessonId, gameId);
-		void beginGame(lessonId, { type: 'start' });
+		void beginGame(lessonId, { type: 'start' }, gameId);
 	}
 
 	/** The game is kept for the world and for the lesson, so that a return finds it. */
@@ -382,21 +385,17 @@
 	}
 
 	function gameFor(world: WorldDefinition, lessonId: string, current: Profile) {
-		return gameForLesson(
-			world,
-			lessonId,
-			current.lastGameByWorld,
-			Object.hasOwn(current.progress.lessons, lessonId)
-		);
+		return gameForLesson(world, lessonId, current.lastGameByWorld);
 	}
 
 	/** What the hand on the keyboard shows in this lesson, for this child. */
 	function guideFor(current: Profile, lessonId: string): GameGuide {
-		if (!progression) return { mode: 'none', freshChars: [] };
+		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
 		const number = lessonIds(progression).indexOf(lessonId) + 1;
 		return {
 			mode: guideMode(progression.rules, number, current.settings.handGuide),
-			freshChars: freshChars(progression, lessonId)
+			freshChars: freshChars(progression, lessonId),
+			hesitationMs: progression.rules.handGuide?.hesitationMs ?? 0
 		};
 	}
 
@@ -420,10 +419,13 @@
 		}
 	}
 
-	async function beginGame(lessonId: string, event: FlowEvent) {
+	/** `gameId`: the picture the child took; without it (a replay) the game proposed for the lesson. */
+	async function beginGame(lessonId: string, event: FlowEvent, gameId?: string) {
 		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
-		const definition = world ? gameFor(world, lessonId, profile) : undefined;
+		const definition = world
+			? ((gameId === undefined ? undefined : findGame(gameId)) ?? gameFor(world, lessonId, profile))
+			: undefined;
 		if (!world || !definition) return;
 		if (
 			profile.lastGameByWorld[world.id] !== definition.id ||
@@ -453,7 +455,7 @@
 
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
-		playClock = stopPlaying(playClock, now());
+		playClock = finishPlaying(playClock, now());
 		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, Date.now());
 		const { evaluation } = recorded;
 		const { profile: next, announced } = earnRewards(recorded.profile, catalogue, progression);
@@ -468,7 +470,12 @@
 			summary: summarizeMetrics(outcome.metrics),
 			hasOpenNext,
 			worldDone: followingId === null && ids.includes(lessonId) && evaluation.unlocksNext,
-			suggestBreak: shouldSuggestBreak(playedMsAt(playClock, now()), PLAY_RULES),
+			suggestBreak: shouldSuggestBreak(playClock, now(), PLAY_RULES),
+			almost: almostNextStar(
+				progression.rules,
+				(100 * outcome.metrics.correctKeystrokes) / Math.max(1, outcome.metrics.totalKeystrokes),
+				evaluation.stars
+			),
 			saveFailed: false,
 			rewards: announced,
 			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater)
@@ -673,6 +680,7 @@
 			hasOpenNext={result.hasOpenNext}
 			worldDone={result.worldDone}
 			suggestBreak={result.suggestBreak}
+			almost={result.almost}
 			saveFailed={result.saveFailed}
 			dance={lessonIds(progression).indexOf(lessonId)}
 			date={new Date()}

@@ -69,7 +69,6 @@ const SHAPE = {
 
 const FINGER_ORDER: readonly Exclude<FingerName, 'thumb'>[] = ['pinky', 'ring', 'middle', 'index'];
 const HANDS: readonly Hand[] = ['left', 'right'];
-const SPACE: KeyCode = 'Space';
 
 /** Every key of the drawing with its place, in key pitches. */
 export function keyBoxes(geometry: KeyboardGeometryDefinition): ReadonlyMap<KeyCode, KeyBox> {
@@ -105,8 +104,7 @@ function inward(hand: Hand): number {
 function handShape(
 	hand: Hand,
 	boxes: ReadonlyMap<KeyCode, KeyBox>,
-	fingering: FingeringProfile,
-	height: number
+	fingering: FingeringProfile
 ): HandShape | null {
 	const side = inward(hand);
 	const fingers: FingerShape[] = [];
@@ -126,13 +124,16 @@ function handShape(
 	const index = fingers.find((shape) => shape.finger === `${hand}-index`);
 	if (outer === undefined || index === undefined) return null;
 
-	const thumbKey = fingering.homeKeys[`${hand}-thumb`] ?? SPACE;
-	const thumbRow = boxes.get(thumbKey)?.center.y ?? height - 0.5;
-	fingers.push({
-		finger: `${hand}-thumb`,
-		tip: { x: index.tip.x + side * SHAPE.thumbReach, y: thumbRow },
-		base: { x: index.base.x, y: index.base.y + SHAPE.thumbRootDrop }
-	});
+	// Only a thumb with a home key is drawn: two thumbs on the space bar left a child unsure which one presses it.
+	const thumbKey = fingering.homeKeys[`${hand}-thumb`];
+	const thumbBox = thumbKey === undefined ? undefined : boxes.get(thumbKey);
+	if (thumbBox !== undefined) {
+		fingers.push({
+			finger: `${hand}-thumb`,
+			tip: { x: index.tip.x + side * SHAPE.thumbReach, y: thumbBox.center.y },
+			base: { x: index.base.x, y: index.base.y + SHAPE.thumbRootDrop }
+		});
+	}
 
 	const wristY = (point: Point) => point.y + SHAPE.wristDrop;
 	return {
@@ -147,14 +148,13 @@ function handShape(
 	};
 }
 
-/** The two hands at rest: each fingertip on its home key, the thumbs on the bottom row. */
+/** The two hands at rest: each fingertip on its home key, a thumb only where the fingering puts one. */
 export function restingHands(
 	geometry: KeyboardGeometryDefinition,
 	fingering: FingeringProfile
 ): readonly HandShape[] {
 	const boxes = keyBoxes(geometry);
-	const { height } = keyboardSize(geometry);
-	return HANDS.flatMap((hand) => handShape(hand, boxes, fingering, height) ?? []);
+	return HANDS.flatMap((hand) => handShape(hand, boxes, fingering) ?? []);
 }
 
 function clamp(value: number, min: number, max: number): number {

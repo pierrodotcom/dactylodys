@@ -130,3 +130,18 @@ export function isLessonUnlocked(
 	if (index === 0) return true;
 	return isLessonPassed(progression.rules, progress, ids[index - 1] as string);
 }
+
+/**
+ * Whether a result stopped just short of the next star: fewer than three stars, and within
+ * `starAlmostMargin` points of the threshold of the next one.
+ */
+export function almostNextStar(
+	rules: ProgressionRules,
+	accuracy: number,
+	stars: StarCount
+): boolean {
+	const margin = rules.starAlmostMargin;
+	if (margin === undefined || stars === 3) return false;
+	const next = rules.starThresholds[stars];
+	return next !== undefined && accuracy < next && accuracy >= next - margin;
+}

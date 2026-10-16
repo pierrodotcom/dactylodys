@@ -6,6 +6,8 @@ import rulesData from '../../../content/common/play-rules.json';
 export interface PlayRules {
 	/** Cumulated play time after which a break is suggested. */
 	readonly breakAfterMinutes: number;
+	/** Finished exercises since the page was opened after which a break is suggested; 0: never. */
+	readonly breakAfterExercises: number;
 	/** Highest level of the words and phrases of the banks that an exercise may use. */
 	readonly maxWordLevel: WordLevel;
 	/** Longest wait for the banks when a game starts; after that the child plays without them. */
@@ -45,6 +47,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 			![
 				'schemaVersion',
 				'breakAfterMinutes',
+				'breakAfterExercises',
 				'maxWordLevel',
 				'bankLoadTimeoutMs',
 				'ghostPaceFactor',
@@ -60,6 +63,15 @@ export function parsePlayRules(data: unknown): PlayRules {
 	const minutes = data['breakAfterMinutes'];
 	if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) {
 		fail('playRules.breakAfterMinutes', 'expected a positive number');
+	}
+
+	const breakAfterExercises = data['breakAfterExercises'];
+	if (
+		typeof breakAfterExercises !== 'number' ||
+		!Number.isSafeInteger(breakAfterExercises) ||
+		breakAfterExercises < 0
+	) {
+		fail('playRules.breakAfterExercises', 'expected an integer of at least 0');
 	}
 
 	const maxWordLevel = WORD_LEVELS.find((level) => level === data['maxWordLevel']);
@@ -109,6 +121,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 
 	return {
 		breakAfterMinutes: minutes,
+		breakAfterExercises,
 		maxWordLevel,
 		bankLoadTimeoutMs,
 		ghostPaceFactor,
