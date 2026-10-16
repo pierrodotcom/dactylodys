@@ -264,19 +264,20 @@
 			loadFailed = true;
 			return false;
 		}
-		profile = chosen;
+		profile = withEarnedSoFar(chosen);
 		writeLastPlayerId(chosen.id);
-		keepEarnedRewards(chosen);
 		go({ type: 'player-chosen', calibrated: chosen.calibrated });
 		return true;
 	}
 
-	/** What the progress already earns goes into the profile without being announced. */
-	function keepEarnedRewards(chosen: Profile) {
+	/**
+	 * What the progress already earns goes into the profile without being announced. It is kept
+	 * in memory and stored with the next change: opening a profile never rewrites its record.
+	 */
+	function withEarnedSoFar(chosen: Profile): Profile {
 		const source = progressionFor(chosen.settings.layoutId);
-		if (!source) return;
-		const { profile: earned } = earnRewards(chosen, rewardCatalogueFor(source), source);
-		if (earned !== chosen) void commit(earned);
+		if (!source) return chosen;
+		return earnRewards(chosen, rewardCatalogueFor(source), source).profile;
 	}
 
 	async function createPlayer(name: string): Promise<boolean> {

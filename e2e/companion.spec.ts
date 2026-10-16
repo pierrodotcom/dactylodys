@@ -320,10 +320,8 @@ test.describe('companion and rewards', () => {
 		const child = advancedProfile({ name: 'Ada', passed: passedThrough(firstWorld.lessons) });
 		await reachMapAs(page, child, 'version-4');
 
-		const earned = firstWorld.lessons.map((lesson) => itemOf(lesson.id).id);
-		await expect
-			.poll(async () => (await stored(page, child)).earnedRewardIds)
-			.toEqual(expect.arrayContaining([...earned, FIRST_WORLD_SKILL?.id]));
+		// Opening a profile never rewrites its record: what it earned is stored with the next play.
+		expect((await stored(page, child)).schemaVersion).toBe(4);
 
 		await button(page, message('play_companion_open')).click();
 		await expect(heading(page, message('play_companion_title'))).toBeVisible();
@@ -340,6 +338,10 @@ test.describe('companion and rewards', () => {
 		await page.locator('button[data-proposed]').click();
 		await typeToEnd(page, message('play_result_map'));
 		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
+		const earned = firstWorld.lessons.map((lesson) => itemOf(lesson.id).id);
+		await expect
+			.poll(async () => (await stored(page, child)).earnedRewardIds)
+			.toEqual(expect.arrayContaining([...earned, FIRST_WORLD_SKILL?.id]));
 	});
 
 	test('asks for help on a key that became hard, plays the quest up to the thanks, then stops asking', async ({
