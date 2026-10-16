@@ -171,3 +171,8 @@ Le porteur accepte les 40 propositions de `docs/SCENES_SURPRISES.md` ; le lot A2
 - **Rappel** : le texte devient « Regarde seulement l'écran, pas tes doigts ;-) » (amende l'ADR-033). Il reste **4 secondes** (`--dd-duration-reminder`) et une touche ne le raccourcit pas ; la voix le dira avec le nouveau texte (à enregistrer tel quel).
 - **Rien ne bouge quand un message apparaît** : le doigt à utiliser, le rappel et l'aide Verr. Maj partagent une seule case de hauteur fixe sous le texte à taper (`.slot` de `GameShell`) ; le clavier ne descend plus. Règle : tout message qui vient et qui part dans un jeu se place dans cette case, jamais dans le flux de la page.
 - **Écran de leçon compact** : touches du clavier plus petites (`--dd-size-key-unit-compact`), liste des touches sur une ligne, images de jeu plus petites ; les jeux restent entièrement visibles sur un portable de 720 px de haut (test). L'image de l'œuf ne déborde plus sur son titre.
+
+## 037 — Jeux variés et animation plus tardive (2026-10-16, acceptée)
+Retours du deuxième test avec un enfant (voir `docs/SUIVI.md`).
+- **Un jeu différent à chaque fois** : une leçon jamais jouée propose le jeu de sa place dans le monde ; une leçon déjà jouée propose le **jeu qui suit** celui avec lequel elle a été jouée en dernier (amende l'ADR-032, point « le jeu choisi est retrouvé »). Cause du constat « toujours des œufs » : une leçon déjà jouée reproposait le jeu mémorisé du monde. L'enfant peut toujours prendre l'autre image ; l'image cliquée est celle qui démarre.
+- **Délai de l'animation** : 0,6 s après la dernière frappe au lieu de 0,4 s (`--dd-duration-reward-delay`).

@@ -40,23 +40,21 @@ export function gameOptions(world: WorldGames): readonly GameOption[] {
 }
 
 /**
- * The game proposed for a lesson. A lesson the child already started keeps its game, so that a
- * replay or a return finds what the child had. A new lesson gets the next game of the world, in
- * the order of its `gameIds` and the place of the lesson in the world: two lessons in a row never
- * look the same, and nothing is drawn at random. `played` is for profiles saved before a game was
- * kept per lesson: they fall back on the game last played in the world.
+ * The game proposed for a lesson, never the same one twice in a row: a lesson not started yet
+ * gets the game of its place in the world (the games in turn along the lessons), a lesson played
+ * before gets the game that follows the one it was last played with. The child can always take
+ * another picture. Nothing is drawn at random.
  */
 export function gameForLesson(
 	world: WorldLessons,
 	lessonId: string,
-	choices: ChosenGames,
-	played: boolean
+	choices: ChosenGames
 ): GameDefinition | undefined {
 	const games = gamesForWorld(world);
+	if (games.length === 0) return undefined;
 	const kept = Object.hasOwn(choices, lessonId) ? choices[lessonId] : undefined;
-	const keptGame = games.find((game) => game.id === kept);
-	if (keptGame !== undefined) return keptGame;
-	const index = world.lessons?.findIndex((lesson) => lesson.id === lessonId) ?? -1;
-	if (played || index < 0 || games.length === 0) return selectedGame(world, choices);
-	return games[index % games.length];
+	const keptIndex = games.findIndex((game) => game.id === kept);
+	if (keptIndex >= 0) return games[(keptIndex + 1) % games.length];
+	const place = world.lessons?.findIndex((lesson) => lesson.id === lessonId) ?? -1;
+	return place < 0 ? selectedGame(world, choices) : games[place % games.length];
 }

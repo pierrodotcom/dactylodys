@@ -1033,7 +1033,9 @@ test.describe('play route', () => {
 		await expect(progressPicture(page, DEFAULT_GAME, 0)).toHaveCount(0);
 	});
 
-	test('finds the game chosen in a world again at the next visit', async ({ page }) => {
+	test('remembers the game of a lesson, and proposes another one when it is played again', async ({
+		page
+	}) => {
 		const profile = profileAfter(lastLessonOf(world).id);
 		await reachMapAs(page, profile);
 		await openIntro(page, NEXT_FIRST);
@@ -1049,10 +1051,10 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await openIntro(page, NEXT_FIRST);
-		await expect(proposedGame(page)).toHaveAttribute('data-game', OTHER_GAME);
+		await expect(proposedGame(page)).toHaveAttribute('data-game', DEFAULT_GAME);
 		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(progressPicture(page, OTHER_GAME, 0)).toBeVisible();
+		await expect(progressPicture(page, DEFAULT_GAME, 0)).toBeVisible();
 	});
 
 	test('puts real words of the banks in the groups of a lesson that asks for words', async ({
