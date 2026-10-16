@@ -162,6 +162,11 @@ Réalise le point 5 de l'ADR-032 avec le premier paquet conseillé de `docs/SCEN
 - **Durée** : 2 secondes (`--dd-duration-scene`) après le délai de 0,4 s ; une touche ne passe la scène qu'une fois finie. En animations calmes, pas de scène : l'entrée commune en fondu.
 - La page d'essai `/dev/jeux` montre toutes les scènes du jeu d'emblée (case à cocher), pour les voir sans avoir réussi de leçon.
 
+## 035 — Toutes les scènes surprises (2026-10-16, acceptée)
+Le porteur accepte les 40 propositions de `docs/SCENES_SURPRISES.md` ; le lot A2 réalise les 27 qui restaient après l'ADR-034.
+- **Douze scènes par jeu** (`content/common/scenes.json`, dans l'ordre de déblocage) : les quatre de l'ADR-034, puis éclosion — bouchon, toupie, culotte de coquille, bateau, haltérophile, bâillement, jumeaux, roulade ; recette — toboggan, catapulte, parachute, ballon, couvercle gourmand, planche, vapeur en forme (cœur, étoile ou dino selon le groupe), vague ; fusée — créneau, cache-cache, cerceau, comète, vache de l'espace, fumée en cœur, cadeau, lunettes de soleil. Toujours une scène de plus par jeu toutes les 2 leçons réussies : toutes sont débloquées à la fin du parcours (24 leçons).
+- **Fin d'exercice** : la scène du bilan est présentée comme une **photo souvenir** (cadre, date du jour) ; à la fin d'un monde, les bébés dinos **défilent** (un par leçon du monde) ; un groupe tapé **sans erreur** fait s'échapper une **note de musique** de sa dernière touche sur le clavier à l'écran. Rien de tout cela en animations calmes, sauf la photo, immobile.
+
 ## 036 — Récompenses et compagnon (2026-10-16, acceptée)
 Réalise le lot R2 (ADR-022, ADR-027) avec le catalogue validé par le porteur (`docs/RECOMPENSES.md`, réponse « oui pour tout »).
 - **Catalogue en données** (`content/fr/rewards/azerty-decouverte.json`) : 24 objets à porter, un par leçon réussie, regroupés en une tenue par monde, sur 7 emplacements (tête, visage, cou, corps, dos, main, pieds ; un objet par emplacement) ; 5 tours appris, un par monde terminé ; 10 trophées : une médaille par monde quand chaque leçon a au moins 2 étoiles (90 %), et 5 « touches apprivoisées » (rangées du milieu, du haut, du bas, accents, ponctuation : au moins 20 frappes récentes de chaque touche, au plus 1 erreur sur 10). 8 couleurs au choix dès le départ et 8 idées de nom ; l'enfant tape le nom qu'il veut.

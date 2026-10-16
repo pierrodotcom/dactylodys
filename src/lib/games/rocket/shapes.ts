@@ -85,3 +85,69 @@ export const STARS = [
 	{ x: 104, y: 120, radius: 1 },
 	{ x: 478, y: 176, radius: 1.5 }
 ] as const;
+
+/** A five-pointed star centered on (0, 0), outer radius 10. */
+export const STAR_PATH =
+	'M0 -10L2.9 -4L9.5 -3.1L4.8 1.5L5.9 8.1L0 5L-5.9 8.1L-4.8 1.5L-9.5 -3.1L-2.9 -4Z';
+
+/** The ring of an astre cut in two, centered on (0, 0): the far half goes behind the planet. */
+export const HOOP_BACK_PATH = `M${-ASTRE_RING.rx} 0A${ASTRE_RING.rx} ${ASTRE_RING.ry} 0 0 1 ${ASTRE_RING.rx} 0`;
+export const HOOP_FRONT_PATH = `M${ASTRE_RING.rx} 0A${ASTRE_RING.rx} ${ASTRE_RING.ry} 0 0 1 ${-ASTRE_RING.rx} 0`;
+
+/** A puff of smoke shaped like a heart, centered on (0, 0), and two little puffs leading to it. */
+export const HEART_PATH =
+	'M0 12C-10 6 -17 0 -17 -7C-17 -13 -12 -16 -8 -16C-4 -16 -1 -13 0 -10C1 -13 4 -16 8 -16C12 -16 17 -13 17 -7C17 0 10 6 0 12Z';
+export const HEART_PUFFS = [
+	{ x: 22, y: 8, radius: 4 },
+	{ x: 30, y: 13, radius: 2.5 }
+] as const;
+
+/** A comet with a sleepy face, head on (0, 0), tail towards the top right. */
+export const COMET_TAIL_PATH = 'M2 -7Q32 -16 66 -20Q46 -9 70 -6Q44 0 62 9Q32 7 2 7Z';
+export const COMET_HEAD_RADIUS = 8;
+export const COMET_EYE_PATHS = ['M-4 -1Q-2.5 0.5 -1 -1', 'M1 -1Q2.5 0.5 4 -1'] as const;
+export const COMET_MOUTH_PATH = 'M-2 2.5Q0 4 2 2.5';
+
+/** A cow in a space helmet, facing right, centered on (0, 0). */
+export const COW = {
+	tailPath: 'M-22 -4Q-32 -3 -31 -14',
+	tuft: { x: -31, y: -15, radius: 3 },
+	legPaths: ['M-15 10L-18 20', 'M-6 11L-6 21', 'M7 11L7 21', 'M15 10L18 20'],
+	hooves: [
+		{ x: -18, y: 21 },
+		{ x: -6, y: 22 },
+		{ x: 7, y: 22 },
+		{ x: 18, y: 21 }
+	],
+	bodyPath: 'M-22 -6Q-22 -16 -10 -16L12 -16Q22 -16 22 -4L22 3Q22 12 12 12L-12 12Q-22 12 -22 2Z',
+	spotPaths: [
+		'M-15 -13Q-8 -15 -6 -9Q-8 -2 -14 -4Q-19 -8 -15 -13Z',
+		'M3 0Q10 -3 13 3Q11 10 4 9Q-1 5 3 0Z'
+	],
+	earPath: 'M21 -17L14 -21L19 -12Z',
+	hornPaths: ['M24 -21L22 -26', 'M32 -21L34 -26'],
+	head: { cx: 28, cy: -14, rx: 9, ry: 8 },
+	snout: { cx: 33, cy: -9, rx: 6, ry: 4.5 },
+	nostrils: [
+		{ x: 31, y: -9 },
+		{ x: 35, y: -9 }
+	],
+	eye: { x: 27, y: -17 },
+	helmet: { cx: 28, cy: -13, radius: 16 },
+	glintPath: 'M18 -21Q21 -26 27 -27',
+	collarPath: 'M16 -4Q28 6 40 -4'
+} as const;
+
+/** The star of the sky that puts on sunglasses (one of `STARS`); its face is in the units of `STAR_PATH`. */
+export const COOL_STAR = { x: 262, y: 34, scale: 2.7 } as const;
+export const COOL_STAR_EYE_PATHS = [
+	'M-3.8 -0.8Q-2.6 -2.2 -1.4 -0.8',
+	'M1.4 -0.8Q2.6 -2.2 3.8 -0.8'
+] as const;
+export const COOL_STAR_MOUTH_PATH = 'M-2 2.6Q0 4.4 2 2.6';
+export const SUNGLASSES_LENS_PATHS = [
+	'M-5.8 -2.8L-0.8 -2.8L-1.2 0.6Q-3.2 2.4 -5.2 0.6Z',
+	'M0.8 -2.8L5.8 -2.8L5.2 0.6Q3.2 2.4 1.2 0.6Z'
+] as const;
+export const SUNGLASSES_BRIDGE_PATH = 'M-0.8 -2.2L0.8 -2.2';
+export const SUNGLASSES_GLINT_PATH = 'M-4.6 -1.8L-3.4 -1.8';

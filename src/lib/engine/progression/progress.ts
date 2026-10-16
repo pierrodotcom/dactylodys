@@ -48,6 +48,30 @@ function coveringWindow(samples: readonly CharSample[], window: number): readonl
 	return samples.slice(start);
 }
 
+/**
+ * Adds the per-character results of a play to the progress and keeps only the recent ones that
+ * cover `rules.recentCharWindow`. It touches `chars` alone: a help quest uses it without playing a lesson.
+ */
+export function applyCharResults(
+	progress: ProgressState,
+	metrics: SessionMetrics,
+	rules: ProgressionRules
+): ProgressState {
+	const chars: Record<string, CharProgress> = { ...progress.chars };
+	for (const [char, stats] of Object.entries(metrics.perChar)) {
+		const before = ownEntry(progress.chars, char);
+		const recent = before?.recent ?? [];
+		const sample: CharSample = { attempts: stats.attempts, errors: stats.errors };
+		chars[char] = {
+			attempts: (before?.attempts ?? 0) + stats.attempts,
+			errors: (before?.errors ?? 0) + stats.errors,
+			recent:
+				stats.attempts > 0 ? coveringWindow([...recent, sample], rules.recentCharWindow) : recent
+		};
+	}
+	return { lessons: progress.lessons, chars };
+}
+
 export function applyLessonResult(
 	progress: ProgressState,
 	result: LessonResult,
@@ -60,20 +84,7 @@ export function applyLessonResult(
 		attempts: (previous?.attempts ?? 0) + 1,
 		lastPlayedAt: result.completedAt
 	};
-
-	const chars: Record<string, CharProgress> = { ...progress.chars };
-	for (const [char, stats] of Object.entries(result.metrics.perChar)) {
-		const before = ownEntry(progress.chars, char);
-		const recent = before?.recent ?? [];
-		const sample: CharSample = { attempts: stats.attempts, errors: stats.errors };
-		chars[char] = {
-			attempts: (before?.attempts ?? 0) + stats.attempts,
-			errors: (before?.errors ?? 0) + stats.errors,
-			recent:
-				stats.attempts > 0 ? coveringWindow([...recent, sample], rules.recentCharWindow) : recent
-		};
-	}
-
+	const { chars } = applyCharResults(progress, result.metrics, rules);
 	return { lessons: { ...progress.lessons, [result.lessonId]: lesson }, chars };
 }
 

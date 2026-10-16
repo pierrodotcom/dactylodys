@@ -2,8 +2,47 @@
 	"schemaVersion": 1,
 	"unlockEveryLessons": 2,
 	"games": {
-		"hatching": ["fall-out", "burst", "triple-jump", "peek"],
-		"recipe": ["somersault", "rim-bounce", "diving-board", "burp"],
-		"rocket": ["looping", "barrel-roll", "inhabitant-joy", "fireworks"]
+		"hatching": [
+			"fall-out",
+			"burst",
+			"triple-jump",
+			"peek",
+			"cork",
+			"spin-top",
+			"shell-pants",
+			"boat",
+			"weightlifter",
+			"yawn",
+			"twins",
+			"roll"
+		],
+		"recipe": [
+			"somersault",
+			"rim-bounce",
+			"diving-board",
+			"burp",
+			"slide",
+			"catapult",
+			"parachute",
+			"balloon",
+			"hungry-lid",
+			"float",
+			"steam-shape",
+			"wave"
+		],
+		"rocket": [
+			"looping",
+			"barrel-roll",
+			"inhabitant-joy",
+			"fireworks",
+			"parking",
+			"hide-and-seek",
+			"hula-hoop",
+			"comet",
+			"space-cow",
+			"heart-smoke",
+			"gift",
+			"sunglasses"
+		]
 	}
 }

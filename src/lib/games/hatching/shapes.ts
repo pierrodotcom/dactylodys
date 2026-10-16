@@ -52,3 +52,33 @@ export const DIZZY_STARS = [
 	'M38 46L40 50L44 50L41 53L42 57L38 55L34 57L35 53L32 50L36 50Z',
 	'M82 46L84 50L88 50L85 53L86 57L82 55L78 57L79 53L76 50L80 50Z'
 ] as const;
+
+/** The two small babies that come out of one egg: the usual baby, shrunk and moved aside. */
+export const TWINS = [
+	{ side: 'left', transform: 'translate(-1.6 16.8) scale(0.66)' },
+	{ side: 'right', transform: 'translate(42.4 16.8) scale(0.66)' }
+] as const;
+
+/** Arms a baby raises above its head, drawn behind the head. */
+export const ARMS = [
+	{ side: 'left', path: 'M33 80C30 64 27 46 26 30C26 24 34 24 34 30C35 46 38 62 41 78Z' },
+	{ side: 'right', path: 'M87 80C90 64 93 46 94 30C94 24 86 24 86 30C85 46 82 62 79 78Z' }
+] as const;
+
+/** Feet that show under the bit of shell a baby walks in, like pants. */
+export const FEET = [
+	{ side: 'left', cx: 46, cy: 148 },
+	{ side: 'right', cx: 74, cy: 148 }
+] as const;
+
+/** The little spoon a baby rows with, and the hand that holds it. */
+export const SPOON_PATH =
+	'M86 80L90 78L118 118L114 120ZM116 116C123 115 127 126 123 133C119 139 111 134 111 126C111 120 112 117 116 116Z';
+
+export const SPOON_HAND = { cx: 89, cy: 81, radius: 5 } as const;
+
+/** Ripples in front of a shell that floats like a boat. */
+export const WAVES = [
+	'M-6 134Q4 128 14 134T34 134T54 134T74 134T94 134T114 134T134 134',
+	'M4 146Q14 140 24 146T44 146T64 146T84 146T104 146T124 146'
+] as const;

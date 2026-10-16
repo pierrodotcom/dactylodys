@@ -9,9 +9,11 @@
 		variant: number;
 		/** Reached: in color, with rays. Not yet: grey and dashed. */
 		lit: boolean;
+		/** The ring is drawn by the scene that spins it like a hoop. */
+		ringHidden?: boolean;
 	}
 
-	let { variant, lit }: Props = $props();
+	let { variant, lit, ringHidden = false }: Props = $props();
 
 	const look = $derived(astreVariant(variant));
 </script>
@@ -26,14 +28,16 @@
 	{/if}
 	<circle class="planet" cx="50" cy="50" r="30" />
 	{#if look === 0}
-		<ellipse
-			class="ring"
-			cx={ASTRE_RING.cx}
-			cy={ASTRE_RING.cy}
-			rx={ASTRE_RING.rx}
-			ry={ASTRE_RING.ry}
-			transform="rotate({ASTRE_RING.angle} {ASTRE_RING.cx} {ASTRE_RING.cy})"
-		/>
+		{#if !ringHidden}
+			<ellipse
+				class="ring"
+				cx={ASTRE_RING.cx}
+				cy={ASTRE_RING.cy}
+				rx={ASTRE_RING.rx}
+				ry={ASTRE_RING.ry}
+				transform="rotate({ASTRE_RING.angle} {ASTRE_RING.cx} {ASTRE_RING.cy})"
+			/>
+		{/if}
 	{:else if look === 1}
 		{#each ASTRE_CRATERS as crater (crater.x)}
 			<circle class="mark" cx={crater.x} cy={crater.y} r={crater.radius} />

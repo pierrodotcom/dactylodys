@@ -7,11 +7,13 @@ import {
 	markCalibrated,
 	updateSettings,
 	withCompanion,
+	withEarnedRewards,
 	withGhost,
+	withHelpQuest,
 	withLastGame,
 	withProgress
 } from './profile';
-import type { CompanionChoice, Profile, Settings } from './types';
+import type { CompanionChoice, HelpQuestRecord, Profile, Settings } from './types';
 
 const NAME_UNITS = [
 	'a',
@@ -105,6 +107,15 @@ export const ghostArb: fc.Arbitrary<GhostRun> = fc
 	})
 	.filter((run): run is GhostRun => run !== null);
 
+export const earnedRewardsArb: fc.Arbitrary<string[]> = fc.uniqueArray(identifierArb, {
+	maxLength: 6
+});
+
+export const helpQuestRecordArb: fc.Arbitrary<HelpQuestRecord> = fc.record({
+	char: identifierArb,
+	lessonPlays: countArb
+});
+
 /** A profile that holds nothing of what version 2 added. */
 export const firstVersionProfileArb: fc.Arbitrary<Profile> = fc
 	.record({
@@ -129,9 +140,11 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 		base: firstVersionProfileArb,
 		companion: companionArb,
 		games: fc.dictionary(fc.string({ maxLength: 12 }), identifierArb, { maxKeys: 3 }),
-		ghosts: fc.dictionary(fc.string({ maxLength: 12 }), ghostArb, { maxKeys: 3 })
+		ghosts: fc.dictionary(fc.string({ maxLength: 12 }), ghostArb, { maxKeys: 3 }),
+		earned: earnedRewardsArb,
+		helpQuest: fc.option(helpQuestRecordArb, { nil: null })
 	})
-	.map(({ base, companion, games, ghosts }) => {
+	.map(({ base, companion, games, ghosts, earned, helpQuest }) => {
 		let profile = withCompanion(base, companion);
 		for (const [worldId, gameId] of Object.entries(games)) {
 			profile = withLastGame(profile, worldId, gameId);
@@ -139,5 +152,6 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 		for (const [lessonId, run] of Object.entries(ghosts)) {
 			profile = withGhost(profile, lessonId, run);
 		}
-		return profile;
+		profile = withEarnedRewards(profile, earned);
+		return helpQuest === null ? profile : withHelpQuest(profile, helpQuest);
 	});

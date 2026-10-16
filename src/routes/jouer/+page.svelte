@@ -466,6 +466,8 @@
 			suggestBreak={result.suggestBreak}
 			saveFailed={result.saveFailed}
 			dance={lessonIds(progression).indexOf(lessonId)}
+			date={new Date()}
+			worldLessons={worldOfLesson(progression, lessonId)?.lessons.length ?? 0}
 			still={isMotionReduced(profile.settings, systemPrefersReduced)}
 			{sounds}
 			onnext={playNext}

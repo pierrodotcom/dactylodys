@@ -29,6 +29,8 @@
 		} | null;
 		/** Calm motion for the hands: the finger lights up, it does not move. */
 		still?: boolean;
+		/** A music note flies out of this key: the group typed without a mistake ended on it. */
+		noteCode?: KeyCode | null;
 	}
 
 	let {
@@ -40,8 +42,11 @@
 		showFingers,
 		marked = [],
 		hands = null,
-		still = false
+		still = false,
+		noteCode = null
 	}: Props = $props();
+
+	const NOTE_PATHS = ['M9 3V15', 'M9 3L17 5V9L9 7'] as const;
 
 	const markedKeys = $derived(new Set(marked));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
@@ -82,6 +87,14 @@
 					<span class="label" data-long={key.isLong || undefined}>{key.label}</span>
 					{#if homeKeys.has(key.code)}
 						<span class="home-mark"></span>
+					{/if}
+					{#if noteCode === key.code && !still}
+						<svg class="note" viewBox="0 0 20 20" focusable="false" aria-hidden="true">
+							<ellipse cx="6" cy="15" rx="4" ry="3" />
+							{#each NOTE_PATHS as path (path)}
+								<path d={path} />
+							{/each}
+						</svg>
 					{/if}
 				</span>
 			{/each}
@@ -183,6 +196,42 @@
 	.label,
 	.home-mark {
 		grid-area: 1 / 1;
+	}
+
+	/* A note flies up out of the last key of a group typed without a mistake. */
+	.note {
+		position: absolute;
+		inset-block-end: 100%;
+		inline-size: var(--dd-size-key-unit);
+		block-size: var(--dd-size-key-unit);
+		fill: var(--dd-color-star-fill);
+		stroke: var(--dd-color-drawing-line);
+		stroke-width: var(--dd-border-width-thick);
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+		pointer-events: none;
+		animation-name: note-flies;
+		animation-duration: var(--dd-duration-reward);
+		animation-timing-function: var(--dd-easing-enter);
+		animation-fill-mode: both;
+	}
+
+	@keyframes note-flies {
+		0% {
+			opacity: 0;
+			translate: 0 var(--dd-size-key-unit);
+			rotate: 0deg;
+		}
+
+		20% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-size-key-unit) * -1);
+			rotate: 15deg;
+		}
 	}
 
 	.label[data-long] {
