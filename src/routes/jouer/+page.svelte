@@ -65,6 +65,7 @@
 	import HelpThanks from './HelpThanks.svelte';
 	import { isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
+	import { findGame } from '$lib/games/registry';
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
@@ -373,7 +374,7 @@
 	/** A picture of a game was chosen on the lesson screen: it is kept, and the lesson starts with it. */
 	function playLesson(worldId: string, lessonId: string, gameId: string) {
 		chooseGame(worldId, lessonId, gameId);
-		void beginGame(lessonId, { type: 'start' });
+		void beginGame(lessonId, { type: 'start' }, gameId);
 	}
 
 	/** The game is kept for the world and for the lesson, so that a return finds it. */
@@ -382,12 +383,7 @@
 	}
 
 	function gameFor(world: WorldDefinition, lessonId: string, current: Profile) {
-		return gameForLesson(
-			world,
-			lessonId,
-			current.lastGameByWorld,
-			Object.hasOwn(current.progress.lessons, lessonId)
-		);
+		return gameForLesson(world, lessonId, current.lastGameByWorld);
 	}
 
 	/** What the hand on the keyboard shows in this lesson, for this child. */
@@ -420,10 +416,13 @@
 		}
 	}
 
-	async function beginGame(lessonId: string, event: FlowEvent) {
+	/** `gameId`: the picture the child took; without it (a replay) the game proposed for the lesson. */
+	async function beginGame(lessonId: string, event: FlowEvent, gameId?: string) {
 		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
-		const definition = world ? gameFor(world, lessonId, profile) : undefined;
+		const definition = world
+			? ((gameId === undefined ? undefined : findGame(gameId)) ?? gameFor(world, lessonId, profile))
+			: undefined;
 		if (!world || !definition) return;
 		if (
 			profile.lastGameByWorld[world.id] !== definition.id ||

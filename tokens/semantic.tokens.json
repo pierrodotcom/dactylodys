@@ -396,7 +396,7 @@
 		"base": { "$value": "{duration.250}" },
 		"slow": { "$value": "{duration.500}" },
 		"beat": { "$value": "{duration.700}" },
-		"reward-delay": { "$value": "{duration.400}" },
+		"reward-delay": { "$value": "{duration.600}" },
 		"guide-move": { "$value": "{duration.500}" },
 		"guide-hold": { "$value": "{duration.400}" },
 		"guide-pause": { "$value": "{duration.3000}" },

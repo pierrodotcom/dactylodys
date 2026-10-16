@@ -77,41 +77,43 @@ describe('gameForLesson', () => {
 
 	it('proposes the games of a world in turn, one per new lesson, without any chance', () => {
 		const proposed = WORLD.lessons.map(
-			(lesson) => gameForLesson(WORLD, lesson.id, NO_CHOSEN_GAMES, false)?.id
+			(lesson) => gameForLesson(WORLD, lesson.id, NO_CHOSEN_GAMES)?.id
 		);
 
 		expect(proposed).toEqual(['rocket', 'recipe', 'hatching', 'rocket']);
 	});
 
-	it('does not look at the game used last when the lesson is new', () => {
-		expect(gameForLesson(WORLD, 'l.2', chosenIn(WORLD.id, 'hatching'), false)?.id).toBe('recipe');
+	it('does not look at the game last played in the world for a lesson not started yet', () => {
+		expect(gameForLesson(WORLD, 'l.2', chosenIn(WORLD.id, 'hatching'))?.id).toBe('recipe');
 	});
 
-	it('keeps the game chosen last in the world for a lesson already played', () => {
-		expect(gameForLesson(WORLD, 'l.2', chosenIn(WORLD.id, 'hatching'), true)?.id).toBe('hatching');
-		expect(gameForLesson(WORLD, 'l.2', NO_CHOSEN_GAMES, true)?.id).toBe('rocket');
+	it('proposes the game after the one a lesson was last played with, so a replay changes', () => {
+		expect(gameForLesson(WORLD, 'l.2', { 'l.2': 'rocket' })?.id).toBe('recipe');
+		expect(gameForLesson(WORLD, 'l.2', { 'l.2': 'recipe' })?.id).toBe('hatching');
+		expect(gameForLesson(WORLD, 'l.2', { 'l.2': 'hatching' })?.id).toBe('rocket');
 	});
 
-	it('keeps the game of a lesson the child started, whatever was played since', () => {
-		const choices = { ...chosenIn(WORLD.id, 'hatching'), 'l.2': 'rocket' };
-
-		expect(gameForLesson(WORLD, 'l.2', choices, false)?.id).toBe('rocket');
-		expect(gameForLesson(WORLD, 'l.2', choices, true)?.id).toBe('rocket');
+	it('never proposes the game just played when the world has another one', () => {
+		for (const lesson of WORLD.lessons) {
+			for (const game of WORLD.gameIds) {
+				expect(gameForLesson(WORLD, lesson.id, { [lesson.id]: game })?.id).not.toBe(game);
+			}
+		}
 	});
 
 	it('forgets the game of a lesson that the world no longer offers', () => {
-		expect(gameForLesson(WORLD, 'l.2', { 'l.2': 'unknown' }, false)?.id).toBe('recipe');
+		expect(gameForLesson(WORLD, 'l.2', { 'l.2': 'unknown' })?.id).toBe('recipe');
 	});
 
 	it('falls back on the choice of the world for a lesson it does not list', () => {
-		expect(gameForLesson(WORLD, 'l.x', chosenIn(WORLD.id, 'recipe'), false)?.id).toBe('recipe');
-		expect(gameForLesson({ id: 'w.old' }, 'l.1', NO_CHOSEN_GAMES, false)?.id).toBe('hatching');
+		expect(gameForLesson(WORLD, 'l.x', chosenIn(WORLD.id, 'recipe'))?.id).toBe('recipe');
+		expect(gameForLesson({ id: 'w.old' }, 'l.1', NO_CHOSEN_GAMES)?.id).toBe('hatching');
 	});
 
 	it('proposes the only game of a world for every lesson', () => {
 		const single = { ...ONE, lessons: [{ id: 'a' }, { id: 'b' }] };
 
-		expect(gameForLesson(single, 'a', NO_CHOSEN_GAMES, false)?.id).toBe('recipe');
-		expect(gameForLesson(single, 'b', NO_CHOSEN_GAMES, false)?.id).toBe('recipe');
+		expect(gameForLesson(single, 'a', NO_CHOSEN_GAMES)?.id).toBe('recipe');
+		expect(gameForLesson(single, 'b', { b: 'recipe' })?.id).toBe('recipe');
 	});
 });
