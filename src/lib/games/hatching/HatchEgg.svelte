@@ -4,17 +4,39 @@
 		ARMS,
 		BABY_PLATES,
 		BABY_VARIANTS,
+		BEAM_PATH,
+		CAR_BODY,
+		CAR_CABIN,
+		CAR_HEADLIGHT,
+		CAR_WHEEL_RADIUS,
+		CAR_WHEELS,
+		CAR_WINDOW,
 		CRACKS,
+		DISH_CHERRY,
+		DISH_FOOD,
+		DISH_HANDS,
+		DISH_PEAS,
+		DISH_PLATE,
 		DIZZY_STARS,
 		EGG_PATH,
 		FEET,
 		HAT_PATH,
+		HONK_BUBBLE,
+		HONK_LINES,
+		HONK_MARK,
+		SAUCER_BODY,
+		SAUCER_DOME,
+		SAUCER_LIGHTS,
 		SHARDS,
 		SHELL_BOTTOM_PATH,
 		SHELL_TOP_PATH,
 		SPOON_HAND,
 		SPOON_PATH,
 		SPOTS,
+		STEAM_WISPS,
+		TOQUE_BAND,
+		TOQUE_FOLDS,
+		TOQUE_PUFF,
 		TWINS,
 		WAVES
 	} from './shapes';
@@ -50,7 +72,9 @@
 	const wholeOnTop = $derived(
 		sceneId === 'burst' || sceneId === 'triple-jump' || sceneId === 'spin-top' || sceneId === 'roll'
 	);
-	const armsUp = $derived(sceneId === 'weightlifter' || sceneId === 'yawn');
+	const armsUp = $derived(
+		sceneId === 'weightlifter' || sceneId === 'yawn' || sceneId === 'ufo-visit'
+	);
 </script>
 
 <svg
@@ -89,15 +113,34 @@
 			<circle class="cheek" cx="40" cy="78" r="4" />
 			<circle class="cheek" cx="80" cy="78" r="4" />
 			<path class="open line" d="M52 79Q60 87 68 79" />
-			{#if sceneId === 'yawn'}
+			{#if sceneId === 'yawn' || sceneId === 'car-honk'}
 				<ellipse class="yawn ink" cx="60" cy="82" rx="8" ry="10" />
 			{/if}
 			{#if sceneId === 'burst'}
 				<path class="shell line" d={HAT_PATH} />
 			{/if}
+			{#if sceneId === 'chef-baby'}
+				<g class="toque">
+					<path class="toque-part line" d={TOQUE_PUFF} />
+					<path class="fold" d={TOQUE_FOLDS} />
+					<rect
+						class="toque-part line"
+						x={TOQUE_BAND.x}
+						y={TOQUE_BAND.y}
+						width={TOQUE_BAND.width}
+						height={TOQUE_BAND.height}
+						rx={TOQUE_BAND.radius}
+					/>
+				</g>
+			{/if}
 		</g>
 	{/snippet}
 	{#if hatched}
+		{#if sceneId === 'ufo-visit'}
+			<g class="beam">
+				<path class="beam-light" d={BEAM_PATH} />
+			</g>
+		{/if}
 		<g class="pair">
 			{#if sceneId === 'twins'}
 				{#each TWINS as twin (twin.side)}
@@ -148,6 +191,87 @@
 		<g class="cap">
 			<path class="shell line" d={SHELL_TOP_PATH} />
 		</g>
+		{#if sceneId === 'chef-baby'}
+			<g class="dish">
+				<ellipse
+					class="platter line"
+					cx={DISH_PLATE.cx}
+					cy={DISH_PLATE.cy}
+					rx={DISH_PLATE.rx}
+					ry={DISH_PLATE.ry}
+				/>
+				<path class="food line" d={DISH_FOOD} />
+				{#each DISH_PEAS as pea (pea.x)}
+					<circle class="pea" cx={pea.x} cy={pea.y} r="2" />
+				{/each}
+				<circle
+					class="cherry line"
+					cx={DISH_CHERRY.cx}
+					cy={DISH_CHERRY.cy}
+					r={DISH_CHERRY.radius}
+				/>
+				{#each DISH_HANDS as hand (hand.side)}
+					<circle class="body line" cx={hand.cx} cy={hand.cy} r="5" />
+				{/each}
+				<g class="steam">
+					{#each STEAM_WISPS as wisp (wisp)}
+						<path class="wisp" d={wisp} />
+					{/each}
+				</g>
+			</g>
+		{/if}
+		{#if sceneId === 'ufo-visit'}
+			<g class="saucer">
+				<path class="dome line" d={SAUCER_DOME} />
+				<ellipse
+					class="saucer-body line"
+					cx={SAUCER_BODY.cx}
+					cy={SAUCER_BODY.cy}
+					rx={SAUCER_BODY.rx}
+					ry={SAUCER_BODY.ry}
+				/>
+				{#each SAUCER_LIGHTS as light (light.x)}
+					<circle class="light" cx={light.x} cy={light.y} r="2" />
+				{/each}
+			</g>
+		{/if}
+		{#if sceneId === 'car-honk'}
+			<g class="car">
+				<path class="car-body line" d={CAR_CABIN} />
+				<path class="glass line" d={CAR_WINDOW} />
+				<path class="car-body line" d={CAR_BODY} />
+				<circle
+					class="headlight line"
+					cx={CAR_HEADLIGHT.cx}
+					cy={CAR_HEADLIGHT.cy}
+					r={CAR_HEADLIGHT.radius}
+				/>
+				{#each CAR_WHEELS as wheel (wheel.cx)}
+					<g class="wheel">
+						<circle class="tire line" cx={wheel.cx} cy={wheel.cy} r={CAR_WHEEL_RADIUS} />
+						<path class="spoke" d={wheel.spoke} />
+					</g>
+				{/each}
+			</g>
+			<g class="honk">
+				<path class="honk-bubble line" d={HONK_BUBBLE} />
+				<rect
+					class="honk-mark"
+					x={HONK_MARK.bar.x}
+					y={HONK_MARK.bar.y}
+					width={HONK_MARK.bar.width}
+					height={HONK_MARK.bar.height}
+					rx={HONK_MARK.bar.radius}
+				/>
+				<circle
+					class="honk-mark"
+					cx={HONK_MARK.dot.cx}
+					cy={HONK_MARK.dot.cy}
+					r={HONK_MARK.dot.radius}
+				/>
+				<path class="honk-line" d={HONK_LINES} />
+			</g>
+		{/if}
 		{#if sceneId === 'fall-out'}
 			<g class="dizzy">
 				{#each DIZZY_STARS as star (star)}
@@ -193,6 +317,12 @@
 
 	/* The egg rolls out of its own frame, not over the text beside it. */
 	.egg[data-scene='roll'] {
+		overflow: hidden;
+	}
+
+	/* The saucer and the car come in from the edge of their own frame, not over the text. */
+	.egg[data-scene='ufo-visit'],
+	.egg[data-scene='car-honk'] {
 		overflow: hidden;
 	}
 
@@ -277,6 +407,88 @@
 		fill: transparent;
 	}
 
+	.honk-line,
+	.fold,
+	.wisp,
+	.spoke {
+		fill: transparent;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.honk-line {
+		stroke: var(--dd-color-egg-line);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.fold {
+		stroke: var(--dd-color-wear-metal);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.wisp {
+		stroke: var(--dd-color-pot-steam);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.spoke {
+		stroke: var(--dd-color-wear-metal);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.toque-part,
+	.platter {
+		fill: var(--dd-color-wear-cream);
+	}
+
+	.food {
+		fill: var(--dd-color-food-a);
+	}
+
+	.cherry {
+		fill: var(--dd-color-food-b);
+	}
+
+	.pea {
+		fill: var(--dd-color-food-d);
+	}
+
+	.beam-light {
+		fill: var(--dd-color-rocket-flame-inner);
+		fill-opacity: var(--dd-opacity-overlay);
+	}
+
+	.dome,
+	.glass {
+		fill: var(--dd-color-wear-glass);
+	}
+
+	.saucer-body {
+		fill: var(--dd-color-wear-metal);
+	}
+
+	.light,
+	.headlight {
+		fill: var(--dd-color-wear-gold);
+	}
+
+	.car-body {
+		fill: var(--dd-color-wear-red);
+	}
+
+	.tire {
+		fill: var(--dd-color-wear-ink);
+	}
+
+	.honk-bubble {
+		fill: var(--dd-color-bubble-surface);
+	}
+
+	.honk-mark {
+		fill: var(--dd-color-bubble-text);
+	}
+
 	[data-big]:not([data-still]):not([data-scene]) .cap {
 		animation-name: lift;
 		animation-duration: var(--dd-duration-reward);
@@ -310,7 +522,15 @@
 	[data-scene] .yawn,
 	[data-scene] .foot,
 	[data-scene] .spoon,
-	[data-scene] .waves {
+	[data-scene] .waves,
+	[data-scene] .toque,
+	[data-scene] .dish,
+	[data-scene] .steam,
+	[data-scene] .beam,
+	[data-scene] .saucer,
+	[data-scene] .car,
+	[data-scene] .wheel,
+	[data-scene] .honk {
 		transform-box: fill-box;
 		animation-duration: var(--dd-duration-scene);
 		animation-delay: var(--dd-duration-reward-delay);
@@ -338,6 +558,26 @@
 
 	[data-scene] .spoon {
 		transform-origin: 5% 0;
+	}
+
+	[data-scene] .toque,
+	[data-scene] .steam,
+	[data-scene] .car {
+		transform-origin: 50% 100%;
+	}
+
+	[data-scene] .dish,
+	[data-scene] .saucer,
+	[data-scene] .wheel {
+		transform-origin: 50% 50%;
+	}
+
+	[data-scene] .beam {
+		transform-origin: 50% 0;
+	}
+
+	[data-scene] .honk {
+		transform-origin: 20% 100%;
 	}
 
 	[data-scene='cork'] .cap,
@@ -437,6 +677,7 @@
 	}
 
 	[data-scene='shell-pants'] .cap,
+	[data-scene='chef-baby'] .cap,
 	[data-scene='boat'] .cap,
 	[data-scene='yawn'] .cap,
 	[data-scene='twins'] .cap {
@@ -529,6 +770,74 @@
 
 	[data-scene='roll'] .cap {
 		animation-name: gone;
+	}
+
+	[data-scene='chef-baby'] .baby {
+		animation-name: chef-rise;
+	}
+
+	[data-scene='chef-baby'] .toque {
+		animation-name: toque-drop;
+	}
+
+	[data-scene='chef-baby'] .dish {
+		animation-name: serve;
+	}
+
+	[data-scene='chef-baby'] .steam {
+		animation-name: steam-rise;
+	}
+
+	[data-scene='ufo-visit'] .saucer {
+		animation-name: saucer-visit;
+	}
+
+	[data-scene='ufo-visit'] .beam {
+		animation-name: beam-on;
+	}
+
+	[data-scene='ufo-visit'] .cap {
+		animation-name: beam-cap;
+	}
+
+	[data-scene='ufo-visit'] .baby {
+		animation-name: beam-baby;
+	}
+
+	[data-scene='ufo-visit'] .arms {
+		animation-name: beam-wave;
+	}
+
+	[data-scene='car-honk'] .car {
+		animation-name: drive-by;
+	}
+
+	[data-scene='car-honk'] .wheel {
+		animation-name: spin-wheel;
+	}
+
+	[data-scene='car-honk'] .honk {
+		animation-name: honk-pop;
+	}
+
+	[data-scene='car-honk'] .pair {
+		animation-name: startle;
+	}
+
+	[data-scene='car-honk'] .cap {
+		animation-name: honk-cap;
+	}
+
+	[data-scene='car-honk'] .baby {
+		animation-name: honk-baby;
+	}
+
+	[data-scene='car-honk'] .eye {
+		animation-name: wide-eyes;
+	}
+
+	[data-scene='car-honk'] .yawn {
+		animation-name: gasp;
 	}
 
 	@keyframes fall {
@@ -1777,6 +2086,470 @@
 		0%,
 		100% {
 			opacity: 0;
+		}
+	}
+
+	@keyframes chef-rise {
+		0%,
+		10% {
+			opacity: 0;
+			translate: 0 30%;
+			rotate: 0deg;
+		}
+
+		14% {
+			opacity: 100%;
+		}
+
+		36% {
+			opacity: 100%;
+			translate: 0 -6%;
+			rotate: 0deg;
+		}
+
+		46% {
+			translate: 0 0;
+		}
+
+		58% {
+			rotate: -3deg;
+		}
+
+		70% {
+			rotate: 3deg;
+		}
+
+		82%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes toque-drop {
+		0%,
+		34% {
+			opacity: 0;
+			translate: 0 -60%;
+		}
+
+		38% {
+			opacity: 100%;
+			translate: 0 -60%;
+		}
+
+		50% {
+			translate: 0 6%;
+		}
+
+		58%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+		}
+	}
+
+	@keyframes serve {
+		0%,
+		30% {
+			opacity: 0;
+			translate: 0 var(--dd-space-sm);
+			scale: 0.8;
+		}
+
+		40% {
+			opacity: 100%;
+			translate: 0 calc(var(--dd-space-sm) * -1);
+			scale: 1;
+		}
+
+		52%,
+		60% {
+			opacity: 100%;
+			translate: 0 calc(var(--dd-space-sm) * -1.5);
+			scale: 1.12;
+		}
+
+		76% {
+			translate: 0 0;
+			scale: 1;
+		}
+
+		88% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 0 0;
+			scale: 1;
+		}
+	}
+
+	@keyframes steam-rise {
+		0%,
+		36% {
+			opacity: 0;
+			translate: 0 0;
+		}
+
+		50% {
+			opacity: 100%;
+			translate: 0 calc(var(--dd-space-xs) * -1);
+		}
+
+		76% {
+			opacity: 100%;
+			translate: 0 calc(var(--dd-space-xs) * -2);
+		}
+
+		92%,
+		100% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-xs) * -3);
+		}
+	}
+
+	@keyframes saucer-visit {
+		0% {
+			opacity: 100%;
+			translate: 0 -150%;
+		}
+
+		18% {
+			translate: 0 0;
+		}
+
+		34%,
+		70% {
+			translate: 0 calc(var(--dd-space-xs) * 0.5);
+		}
+
+		52% {
+			translate: 0 calc(var(--dd-space-xs) * -0.5);
+		}
+
+		78% {
+			opacity: 100%;
+			translate: 0 0;
+			animation-timing-function: var(--dd-easing-exit);
+		}
+
+		92% {
+			opacity: 100%;
+			translate: 0 -150%;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 0 -150%;
+		}
+	}
+
+	@keyframes beam-on {
+		0%,
+		20% {
+			opacity: 0;
+			scale: 1 0.2;
+		}
+
+		34%,
+		66% {
+			opacity: 100%;
+			scale: 1;
+		}
+
+		78%,
+		100% {
+			opacity: 0;
+			scale: 1;
+		}
+	}
+
+	@keyframes beam-cap {
+		0%,
+		30% {
+			opacity: 100%;
+			rotate: 0deg;
+			translate: 0 0;
+		}
+
+		46% {
+			opacity: 100%;
+			rotate: -10deg;
+			translate: -6% -25%;
+		}
+
+		60%,
+		100% {
+			opacity: 0;
+			rotate: -16deg;
+			translate: -10% -45%;
+		}
+	}
+
+	@keyframes beam-baby {
+		0%,
+		36% {
+			opacity: 0;
+			translate: 0 30%;
+		}
+
+		38% {
+			opacity: 100%;
+		}
+
+		60%,
+		72% {
+			opacity: 100%;
+			translate: 0 -5%;
+		}
+
+		86%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+		}
+	}
+
+	@keyframes beam-wave {
+		0%,
+		56% {
+			opacity: 0;
+			scale: 1 0.2;
+			rotate: 0deg;
+		}
+
+		60% {
+			opacity: 100%;
+			scale: 1 0.35;
+		}
+
+		66% {
+			scale: 1;
+			rotate: 0deg;
+		}
+
+		72%,
+		84% {
+			rotate: -8deg;
+		}
+
+		78% {
+			rotate: 8deg;
+		}
+
+		90% {
+			opacity: 100%;
+			scale: 1;
+			rotate: 0deg;
+		}
+
+		94% {
+			opacity: 100%;
+			scale: 1 0.2;
+		}
+
+		96%,
+		100% {
+			opacity: 0;
+			scale: 1 0.2;
+		}
+	}
+
+	@keyframes drive-by {
+		0% {
+			opacity: 100%;
+			translate: -220% 0;
+			rotate: 0deg;
+		}
+
+		22% {
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		26% {
+			rotate: -2deg;
+		}
+
+		30%,
+		40% {
+			translate: 0 calc(var(--dd-space-xs) * -0.75);
+			rotate: 0deg;
+		}
+
+		34%,
+		44% {
+			translate: 0 0;
+		}
+
+		66% {
+			translate: 0 0;
+			animation-timing-function: var(--dd-easing-exit);
+		}
+
+		98% {
+			opacity: 100%;
+			translate: 220% 0;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 220% 0;
+		}
+	}
+
+	@keyframes spin-wheel {
+		0% {
+			rotate: 0deg;
+		}
+
+		22%,
+		66% {
+			rotate: 1080deg;
+		}
+
+		98%,
+		100% {
+			rotate: 2160deg;
+		}
+	}
+
+	@keyframes honk-pop {
+		0%,
+		24% {
+			opacity: 0;
+			scale: 0.3;
+		}
+
+		28%,
+		38% {
+			opacity: 100%;
+			scale: 1.2;
+		}
+
+		32%,
+		42%,
+		62% {
+			opacity: 100%;
+			scale: 1;
+		}
+
+		70%,
+		100% {
+			opacity: 0;
+			scale: 0.8;
+		}
+	}
+
+	@keyframes startle {
+		0%,
+		26%,
+		34%,
+		44%,
+		100% {
+			translate: 0 0;
+		}
+
+		30%,
+		40% {
+			translate: 0 -4%;
+		}
+	}
+
+	@keyframes honk-cap {
+		0%,
+		26%,
+		34%,
+		44% {
+			opacity: 100%;
+			rotate: 0deg;
+			translate: 0 0;
+		}
+
+		30%,
+		40% {
+			opacity: 100%;
+			rotate: 0deg;
+			translate: 0 -4%;
+		}
+
+		46% {
+			opacity: 100%;
+			rotate: 0deg;
+			translate: 0 0;
+		}
+
+		60% {
+			opacity: 100%;
+			rotate: -140deg;
+			translate: -50% -140%;
+		}
+
+		72%,
+		100% {
+			opacity: 0;
+			rotate: -180deg;
+			translate: -60% -120%;
+		}
+	}
+
+	@keyframes honk-baby {
+		0%,
+		46% {
+			opacity: 0;
+			translate: 0 30%;
+			scale: 0.8;
+		}
+
+		48% {
+			opacity: 100%;
+			translate: 0 30%;
+			scale: 0.8;
+		}
+
+		58% {
+			translate: 0 -12%;
+			scale: 1.08;
+		}
+
+		66%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1;
+		}
+	}
+
+	@keyframes wide-eyes {
+		0%,
+		50%,
+		88%,
+		100% {
+			scale: 1;
+		}
+
+		54%,
+		80% {
+			scale: 1.3;
+		}
+	}
+
+	@keyframes gasp {
+		0%,
+		50%,
+		86%,
+		100% {
+			opacity: 0;
+			scale: 0.5;
+		}
+
+		52%,
+		80% {
+			opacity: 100%;
+			scale: 0.5;
 		}
 	}
 </style>
