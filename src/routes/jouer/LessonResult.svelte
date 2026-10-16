@@ -9,6 +9,8 @@
 	import Stars from '$lib/ui/components/Stars.svelte';
 	import { keyName } from '$lib/ui/components/names';
 	import { readDurationToken } from '$lib/ui/motion';
+	import { getLocale } from '$lib/paraglide/runtime.js';
+	import Parade from './Parade.svelte';
 	import { isOne } from '$lib/ui/plural';
 	import type { ResultSummary } from './summary';
 
@@ -23,6 +25,10 @@
 		saveFailed: boolean;
 		/** Which dance the companion does, in the order of the lessons. */
 		dance: number;
+		/** The day of the play, written under the souvenir photo. */
+		date: Date;
+		/** Lessons of the world: as many baby dinos march past when it is done. */
+		worldLessons: number;
 		/** Calm motion: the stars fade in, no confetti. */
 		still: boolean;
 		sounds: SoundPlayer;
@@ -40,6 +46,8 @@
 		suggestBreak,
 		saveFailed,
 		dance,
+		date,
+		worldLessons,
 		still,
 		sounds,
 		onnext,
@@ -61,6 +69,9 @@
 		m.play_result_note_3
 	];
 	const SPACE = ' ';
+	const photoDate = $derived(
+		new Intl.DateTimeFormat(getLocale(), { dateStyle: 'long' }).format(date)
+	);
 	const DELAY_TOKEN = '--dd-duration-reward-delay';
 	const BEAT_TOKEN = '--dd-duration-beat';
 
@@ -88,15 +99,18 @@
 </script>
 
 <ScreenFrame title={HEADLINES[stars]?.() ?? ''}>
-	<div class="hero" data-still={still || undefined}>
-		<Companion mood={stars > 0 ? 'cheer' : 'happy'} {dance} />
-		<div class="stars-zone">
-			{#if stars > 0 && !still}
-				<Confetti />
-			{/if}
-			<Stars count={stars} celebrate />
+	<figure class="photo" data-still={still || undefined}>
+		<div class="hero">
+			<Companion mood={stars > 0 ? 'cheer' : 'happy'} {dance} />
+			<div class="stars-zone">
+				{#if stars > 0 && !still}
+					<Confetti />
+				{/if}
+				<Stars count={stars} celebrate />
+			</div>
 		</div>
-	</div>
+		<figcaption class="date">{m.play_result_photo_date({ date: photoDate })}</figcaption>
+	</figure>
 	<p class="note">{NOTES[stars]?.()}</p>
 
 	<ul class="facts">
@@ -110,6 +124,9 @@
 	</ul>
 
 	{#if worldDone}
+		{#if !still}
+			<Parade count={worldLessons} />
+		{/if}
 		<p class="encourage">{m.play_result_world_done()}</p>
 	{:else if !hasOpenNext}
 		<p class="encourage">{m.play_result_retry()}</p>
@@ -151,6 +168,28 @@
 
 	.stars-zone {
 		position: relative;
+	}
+
+	/* A souvenir photo: a white frame, a little askew, with the day of the play. */
+	.photo {
+		display: grid;
+		justify-items: center;
+		gap: var(--dd-space-xs);
+		margin: 0;
+		padding: var(--dd-space-md) var(--dd-space-md) var(--dd-space-sm);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-border-strong);
+		border-radius: var(--dd-radius-md);
+		background-color: var(--dd-color-surface-raised);
+		box-shadow: var(--dd-shadow-md);
+		rotate: -2deg;
+	}
+
+	.date {
+		color: var(--dd-color-text-secondary);
+		font-size: var(--dd-font-size-lg);
+		font-weight: var(--dd-font-weight-bold);
 	}
 
 	.note {

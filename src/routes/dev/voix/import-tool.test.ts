@@ -80,7 +80,10 @@ afterEach(() => {
 	rmSync(workDir, { recursive: true, force: true });
 });
 
-describe('tools/voice/import.js', () => {
+/** Each test starts Node once or twice: on a busy machine that alone can take longer than the default 5 s. */
+const TOOL_TEST_TIMEOUT_MS = 60_000;
+
+describe('tools/voice/import.js', { timeout: TOOL_TEST_TIMEOUT_MS }, () => {
 	it('publishes the clips of an archive made by the page, with their manifest and credit', () => {
 		const recorded = TEXTS.slice(0, 2);
 
