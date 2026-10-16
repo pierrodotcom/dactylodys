@@ -106,8 +106,10 @@
 	);
 	const lookReminderText = m.game_shared_look_reminder();
 	const guide = $derived(settings.guide);
+	// A child who waits long on a key is helped: the hand shows it, then goes back to the new keys.
+	let hesitated = $state(false);
 	const guided = $derived(
-		typing && isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null)
+		typing && isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null, hesitated)
 	);
 	// Each keystroke shows the expected key again, so that a mistake brings the finger back.
 	const hands = $derived(
@@ -115,7 +117,7 @@
 			? null
 			: {
 					presses: guided && target ? [target] : [],
-					trigger: `${game.groupIndex}:${game.session.records.length}`
+					trigger: `${game.groupIndex}:${game.session.records.length}:${hesitated}`
 				}
 	);
 
@@ -180,6 +182,16 @@
 			() => dispatch({ type: 'settle' }),
 			lookReminder ? Math.max(seen, readDurationToken(REMINDER_TOKEN)) : seen
 		);
+		return () => clearTimeout(timer);
+	});
+
+	$effect(() => {
+		// Each key (or a new group) starts the wait again.
+		void game.groupIndex;
+		void game.session.records.length;
+		hesitated = false;
+		if (!typing || paused || guide.mode !== 'new-keys' || guide.hesitationMs <= 0) return;
+		const timer = setTimeout(() => (hesitated = true), guide.hesitationMs);
 		return () => clearTimeout(timer);
 	});
 

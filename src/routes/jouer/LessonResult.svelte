@@ -23,6 +23,8 @@
 		/** Last lesson of the world, passed. */
 		worldDone: boolean;
 		suggestBreak: boolean;
+		/** Stopped just short of the next star: that star is drawn half full. */
+		almost: boolean;
 		saveFailed: boolean;
 		/** Which dance the companion does, in the order of the lessons. */
 		dance: number;
@@ -47,6 +49,7 @@
 		hasOpenNext,
 		worldDone,
 		suggestBreak,
+		almost,
 		saveFailed,
 		dance,
 		date,
@@ -110,7 +113,7 @@
 				{#if stars > 0 && !still}
 					<Confetti />
 				{/if}
-				<Stars count={stars} celebrate />
+				<Stars count={stars} {almost} celebrate />
 			</div>
 		</div>
 		<figcaption class="date">{m.play_result_photo_date({ date: photoDate })}</figcaption>
@@ -126,6 +129,10 @@
 			<li>{m.play_result_tame({ key: keyText(summary.tameChar) })}</li>
 		{/if}
 	</ul>
+
+	{#if almost}
+		<p class="encourage">{m.play_result_almost()}</p>
+	{/if}
 
 	{#if worldDone}
 		{#if !still}

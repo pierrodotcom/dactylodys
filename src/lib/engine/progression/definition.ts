@@ -131,7 +131,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'newCharMinCount',
 			'recentCharWindow',
 			'lengthSlack',
-			'handGuide'
+			'handGuide',
+			'starAlmostMargin'
 		],
 		path
 	);
@@ -166,6 +167,10 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		record['handGuide'] === undefined
 			? undefined
 			: parseHandGuide(record['handGuide'], `${path}.handGuide`);
+	const starAlmostMargin =
+		record['starAlmostMargin'] === undefined
+			? undefined
+			: expectNonNegative(record['starAlmostMargin'], `${path}.starAlmostMargin`);
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -175,20 +180,28 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		newCharMinCount,
 		recentCharWindow,
 		...(lengthSlack === undefined ? {} : { lengthSlack }),
-		...(handGuide === undefined ? {} : { handGuide })
+		...(handGuide === undefined ? {} : { handGuide }),
+		...(starAlmostMargin === undefined ? {} : { starAlmostMargin })
 	};
 }
 
 function parseHandGuide(value: unknown, path: string): HandGuideRules {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['everyKeyUntil', 'newKeysUntil'], path);
+	rejectUnknown(record, ['everyKeyUntil', 'newKeysUntil', 'hesitationMs'], path);
 	const everyKeyUntil = expectInteger(record['everyKeyUntil'], `${path}.everyKeyUntil`);
 	const newKeysUntil = expectInteger(record['newKeysUntil'], `${path}.newKeysUntil`);
 	if (everyKeyUntil < 0) fail(`${path}.everyKeyUntil`, 'expected an integer of at least 0');
 	if (newKeysUntil < everyKeyUntil) {
 		fail(`${path}.newKeysUntil`, 'expected at least everyKeyUntil');
 	}
-	return { everyKeyUntil, newKeysUntil };
+	const hesitationMs =
+		record['hesitationMs'] === undefined
+			? undefined
+			: expectInteger(record['hesitationMs'], `${path}.hesitationMs`);
+	if (hesitationMs !== undefined && hesitationMs < 0) {
+		fail(`${path}.hesitationMs`, 'expected an integer of at least 0');
+	}
+	return { everyKeyUntil, newKeysUntil, ...(hesitationMs === undefined ? {} : { hesitationMs }) };
 }
 
 function parseMix(value: unknown, path: string): ExerciseMix {
