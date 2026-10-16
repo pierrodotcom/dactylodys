@@ -1,0 +1,7 @@
+{
+	"schemaVersion": 1,
+	"minRecentAttempts": 10,
+	"maxErrorRate": 0.2,
+	"targetLength": 20,
+	"minCharCount": 6
+}

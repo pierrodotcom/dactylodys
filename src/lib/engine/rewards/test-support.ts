@@ -88,6 +88,7 @@ export function catalogueData(
 			{ id: 'green', title: 'Green' },
 			{ id: 'blue', title: 'Blue' }
 		],
+		nameSuggestions: ['Pipo'],
 		rewards,
 		...extra
 	};

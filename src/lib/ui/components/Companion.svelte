@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
+	import { companionAppearance } from '$lib/ui/companion/appearance';
 
 	type Mood = 'idle' | 'happy' | 'oops' | 'cheer';
 
@@ -7,6 +8,12 @@
 		mood: Mood;
 		/** Which dance it does when it cheers: they follow one another (ADR-032). */
 		dance?: number;
+		/** Overrides the colour given by the route (`provideCompanionAppearance`); `null`: its own colour. */
+		colorId?: string | null;
+		/** Overrides the worn items given by the route: `RewardDefinition.artId`, one per slot. */
+		itemArtIds?: readonly string[];
+		/** A learned trick (skill `artId`) played once; re-key the component to play it again. */
+		trick?: string | null;
 	}
 
 	const LABELS: Readonly<Record<Mood, () => string>> = {
@@ -20,7 +27,11 @@
 	/** Number of different dances; the first one is the hop of every cheer. */
 	const DANCES = 5;
 
-	let { mood, dance = 0 }: Props = $props();
+	let { mood, dance = 0, colorId, itemArtIds, trick = null }: Props = $props();
+
+	const appearance = companionAppearance();
+	const color = $derived(colorId === undefined ? appearance().colorId : colorId);
+	const items = $derived(itemArtIds ?? appearance().itemArtIds);
 
 	const danceIndex = $derived(((dance % DANCES) + DANCES) % DANCES);
 
@@ -36,6 +47,9 @@
 	aria-label={label}
 	data-mood={mood}
 	data-dance={danceIndex}
+	data-color={color ?? undefined}
+	data-items={items.join(' ') || undefined}
+	data-trick={trick ?? undefined}
 >
 	{#if mood === 'cheer'}
 		<path class="sparkle line" d={SPARKLE_PATH} />

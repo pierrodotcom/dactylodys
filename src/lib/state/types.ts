@@ -1,6 +1,6 @@
 import type { GhostRun } from '../engine/ghost/types';
 import type { HandGuidePreference, ProgressState } from '../engine/progression/types';
-import type { CompanionChoice } from '../engine/rewards/types';
+import type { CompanionChoice, HelpQuestRecord } from '../engine/rewards/types';
 import type { FingeringProfileId, LayoutId } from '../keyboard/layout-ids';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -25,11 +25,11 @@ export interface Settings {
 	readonly handGuide: HandGuidePreference;
 }
 
-export type { CompanionChoice, HandGuidePreference };
+export type { CompanionChoice, HandGuidePreference, HelpQuestRecord };
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 4;
+	readonly schemaVersion: 5;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;
@@ -38,8 +38,15 @@ export interface Profile {
 	readonly calibrated: boolean;
 	readonly settings: Settings;
 	readonly progress: ProgressState;
-	/** Only the choices of the child: what is unlocked is computed from the progress, never stored. */
+	/** Only the choices of the child; what is worn is filtered by what is owned (`resolveCompanion`). */
 	readonly companion: CompanionChoice;
+	/**
+	 * Rewards unlocked at least once, in the order they were earned (ADR-027): never removed, so a
+	 * key that becomes hard again takes nothing back. Owned = this list ∪ what the progress unlocks.
+	 */
+	readonly earnedRewardIds: readonly string[];
+	/** The last help quest finished, `null` before the first one. */
+	readonly helpQuest: HelpQuestRecord | null;
 	/**
 	 * Mini-game played last in each world (key: the world identifier) and, for a lesson already
 	 * started, the one it was played with (key: the lesson identifier).
