@@ -39,7 +39,7 @@ interface GameExpectations {
 	probe: (page: Page) => Promise<string>;
 }
 
-const EXPECTATIONS: Readonly<Record<string, GameExpectations>> = {
+const EXPECTATIONS_BY_ID: Record<string, GameExpectations> = {
 	hatching: {
 		progressKey: 'game_hatching_progress',
 		progressParam: 'hatched',
@@ -61,8 +61,21 @@ const EXPECTATIONS: Readonly<Record<string, GameExpectations>> = {
 	}
 };
 
+/** The scene of the new games: `data-probe` is the step of the picture, 0 before the first key. */
+const probeOf = async (page: Page) =>
+	String(await page.locator('[data-probe]').first().getAttribute('data-probe'));
+
+for (const id of ['drawing', 'train', 'tower']) {
+	EXPECTATIONS_BY_ID[id] = {
+		progressKey: `game_${id}_progress`,
+		progressParam: 'done',
+		bubblePrefix: `game_${id}_quip_`,
+		probe: probeOf
+	};
+}
+
 const games = GAMES.map((game) => {
-	const expectations = EXPECTATIONS[game.id];
+	const expectations = EXPECTATIONS_BY_ID[game.id];
 	if (!expectations) throw new Error(`Add the expectations of the game "${game.id}" to this spec`);
 	return { id: game.id, title: message(`game_${game.id}_title`), ...expectations };
 });

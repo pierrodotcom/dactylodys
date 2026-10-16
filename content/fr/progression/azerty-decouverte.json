@@ -19,7 +19,7 @@
 			"id": "fr.world.dinosaures",
 			"title": "Au pays des dinosaures",
 			"themeId": "dinos",
-			"gameIds": ["hatching", "recipe"],
+			"gameIds": ["hatching", "drawing"],
 			"lessons": [
 				{
 					"id": "fr.lesson.oeufs-f-j",
@@ -175,7 +175,7 @@
 			"id": "fr.world.cuisine",
 			"title": "La cuisine des gourmands",
 			"themeId": "cuisine",
-			"gameIds": ["recipe", "hatching"],
+			"gameIds": ["recipe", "tower"],
 			"lessons": [
 				{
 					"id": "fr.lesson.tartine-t-n",
@@ -263,7 +263,7 @@
 			"id": "fr.world.animaux",
 			"title": "Le zoo des drôles d'animaux",
 			"themeId": "animaux",
-			"gameIds": ["hatching", "recipe"],
+			"gameIds": ["drawing", "tower"],
 			"lessons": [
 				{
 					"id": "fr.lesson.girafe-g-h",
@@ -335,7 +335,7 @@
 			"id": "fr.world.espace",
 			"title": "Cap sur les étoiles",
 			"themeId": "espace",
-			"gameIds": ["rocket", "recipe", "hatching"],
+			"gameIds": ["rocket", "tower"],
 			"lessons": [
 				{
 					"id": "fr.lesson.lune-accents-graves",
@@ -407,7 +407,7 @@
 			"id": "fr.world.vehicules",
 			"title": "Le grand circuit des bolides",
 			"themeId": "vehicules",
-			"gameIds": ["rocket", "hatching", "recipe"],
+			"gameIds": ["train", "rocket"],
 			"lessons": [
 				{
 					"id": "fr.lesson.klaxon-question-exclamation",
