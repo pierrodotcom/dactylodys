@@ -15,6 +15,7 @@
 	}
 
 	function announce(view: GameView): string {
+		if (view.phase === 'finale') return m.game_train_announce_finale();
 		if (!isRewarded(view)) return '';
 		return view.groupIndex === view.total - 1
 			? m.game_train_announce_last()
@@ -29,6 +30,7 @@
 	arrangement="wide"
 	{progress}
 	{scene}
+	{finale}
 	{announce}
 />
 
@@ -49,6 +51,11 @@
 		</div>
 		<Scene {view} />
 	</div>
+{/snippet}
+
+{#snippet finale()}
+	<h2>{m.game_train_finale_title()}</h2>
+	<p>{m.game_train_finale_intro()}</p>
 {/snippet}
 
 <style>

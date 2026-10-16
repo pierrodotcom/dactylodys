@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { isOne } from '$lib/ui/plural';
+	import LocoShape from './LocoShape.svelte';
+	import { WAGON, wagonLook } from './shapes';
+	import WagonShape from './WagonShape.svelte';
 
 	interface Props {
 		total: number;
@@ -8,6 +11,14 @@
 		/** Index of the group being typed, `-1` between two groups. */
 		current: number;
 	}
+
+	/** Box of a mini wagon: the wagon, its load and the hitch. */
+	const WAGON_BOX = {
+		x: -4,
+		y: -(WAGON.height + 3),
+		width: WAGON.pitch + 6,
+		height: WAGON.height + 6
+	} as const;
 
 	let { total, done, current }: Props = $props();
 
@@ -19,11 +30,22 @@
 	);
 </script>
 
-<!-- Placeholder: the work package of the game replaces the dots by its own picture. -->
 <div class="row" role="img" aria-label={label}>
+	<svg class="loco" viewBox="-6 -76 118 80" focusable="false" aria-hidden="true">
+		<LocoShape puff={false} />
+	</svg>
 	{#each steps as index (index)}
-		<span class="dot" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}
-		></span>
+		{@const look = wagonLook(index)}
+		<span class="item" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}>
+			<svg
+				class="tile"
+				viewBox="{WAGON_BOX.x} {WAGON_BOX.y} {WAGON_BOX.width} {WAGON_BOX.height}"
+				focusable="false"
+				aria-hidden="true"
+			>
+				<WagonShape tone={look.tone} cargo={look.cargo} empty={index >= done} />
+			</svg>
+		</span>
 	{/each}
 </div>
 
@@ -31,23 +53,40 @@
 	.row {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--dd-space-sm);
+		align-items: flex-end;
+		gap: var(--dd-space-xs);
 	}
 
-	.dot {
-		inline-size: var(--dd-size-egg-mini);
-		block-size: var(--dd-size-egg-mini);
-		border-width: var(--dd-border-width-thick);
-		border-style: solid;
-		border-color: var(--dd-color-border-strong);
+	.loco {
+		display: block;
+		inline-size: var(--dd-size-star-large);
+		block-size: auto;
+	}
+
+	.item {
+		display: block;
+		position: relative;
+		inline-size: var(--dd-size-astre-mini);
+		padding-block-end: var(--dd-space-sm);
+	}
+
+	.tile {
+		display: block;
+		inline-size: 100%;
+		block-size: auto;
+	}
+
+	.item[data-state='next'] {
+		opacity: var(--dd-opacity-disabled);
+	}
+
+	.item[data-state='current']::after {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		block-size: var(--dd-border-width-target);
 		border-radius: var(--dd-radius-pill);
-	}
-
-	.dot[data-state='done'] {
-		background-color: var(--dd-color-star-fill);
-	}
-
-	.dot[data-state='current'] {
-		border-color: var(--dd-color-accent-base);
+		background-color: var(--dd-color-typing-current-frame);
 	}
 </style>

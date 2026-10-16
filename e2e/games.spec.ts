@@ -645,6 +645,20 @@ test.describe('surprise scenes', () => {
 			}
 		});
 
+		test('plays the next train scenes group after group, in the order of the list', async ({
+			page
+		}) => {
+			const scenes = SCENES.games['train'] ?? [];
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('train'));
+			for (const [index, group] of GROUPS.entries()) {
+				await page.keyboard.type(group);
+				await expect(page.locator(`[data-scene="${scenes[index]}"]`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
 		test('plays the next hatching scene on each group, in the order of the list', async ({
 			page
 		}) => {
