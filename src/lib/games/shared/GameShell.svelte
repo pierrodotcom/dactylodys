@@ -92,6 +92,13 @@
 	const target = $derived(typing ? targetKeyPress(charIndex, expected) : null);
 	const capsHelp = $derived(typing && needsCapsLockHelp(capsLock, expected));
 	const announcement = $derived(announce(view));
+	// A group typed without a single mistake sends a music note out of its last key.
+	const noteCode = $derived.by(() => {
+		if (phase !== 'celebrating') return null;
+		const done = game.finished[game.finished.length - 1];
+		if (done === undefined || done.errorCount > 0) return null;
+		return targetKeyPress(charIndex, view.group[view.group.length - 1])?.code ?? null;
+	});
 	const lookReminder = $derived(
 		phase === 'celebrating' &&
 			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
@@ -270,6 +277,7 @@
 				showFingers={true}
 				{hands}
 				still={settings.reducedMotion}
+				{noteCode}
 			/>
 		</div>
 	{/if}

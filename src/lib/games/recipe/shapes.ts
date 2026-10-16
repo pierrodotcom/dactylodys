@@ -116,3 +116,83 @@ export const SPLASH = {
 
 /** The big bubble the pot burps once it has swallowed an ingredient. */
 export const BURP_BUBBLE = { cx: 260, cy: 138, r: 26 } as const;
+
+/**
+ * The ladle the ingredient slides down (scene units), on the right: the top left corner is kept
+ * for the speech bubble. Its handle leans on the rim, its bowl in the soup.
+ */
+export const LADLE = {
+	handlePath: 'M456 54L304 134L308 142L460 62Q464 56 456 54Z',
+	bowlPath: 'M268 140A23 12 0 0 0 314 140Z'
+} as const;
+
+/** The spoon that throws the ingredient, on the counter left of the pot (scene units). */
+export const CATAPULT = {
+	pivotPath: 'M56 206L66 189L76 206Z',
+	bowlPath: 'M12 184A19 9 0 0 0 50 184Z',
+	handlePath: 'M48 185L106 182Q111 182 110 187L50 190Z'
+} as const;
+
+/** The napkin parachute, above the ingredient (units of the ingredient in the pot). */
+export const NAPKIN = {
+	canopyPath:
+		'M-44 -62Q-44 -98 0 -98Q44 -98 44 -62Q33 -70 22 -62Q11 -70 0 -62Q-11 -70 -22 -62' +
+		'Q-33 -70 -44 -62Z',
+	foldPaths: ['M-22 -66Q-25 -86 -12 -95', 'M22 -66Q25 -86 12 -95'],
+	cordPaths: ['M-44 -62L-18 -34', 'M44 -62L18 -34', 'M0 -62L0 -40']
+} as const;
+
+/** The balloon the ingredient hangs from (units of the ingredient in the pot). */
+export const BALLOON = {
+	bodyPath: 'M0 -58C-31 -62 -31 -104 0 -104C31 -104 31 -62 0 -58Z',
+	knotPath: 'M-4 -53L0 -58L4 -53Z',
+	shinePath: 'M-14 -86Q-13 -95 -5 -98',
+	stringPath: 'M0 -53Q-4 -47 0 -40'
+} as const;
+
+/** The pot lid with eyes, hinged on its right end (scene units). */
+export const LID = {
+	domePath: 'M134 158Q134 126 260 124Q386 126 386 158Z',
+	knobPath: 'M248 125Q248 112 260 112Q272 112 272 125Z',
+	eyes: [
+		{ x: 222, y: 141, radius: 8 },
+		{ x: 298, y: 141, radius: 8 }
+	],
+	pupils: [
+		{ x: 224, y: 143, radius: 3.5 },
+		{ x: 300, y: 143, radius: 3.5 }
+	]
+} as const;
+
+/** The little arm the floating ingredient waves with (units of the ingredient in the pot). */
+export const WAVING_ARM = {
+	armPath: 'M22 -3L47 -21L52 -15L27 3Z',
+	hand: { x: 52, y: -22, radius: 9 }
+} as const;
+
+/** The steam drawings above the pot (scene units), picked in turn: a heart, a star, a little dino. */
+export const STEAM_SHAPES: readonly (readonly string[])[] = [
+	[
+		'M260 102C226 82 228 52 247 52C255 52 259 58 260 63C261 58 265 52 273 52C292 52 294 82 260 102Z',
+		'M260 132Q252 120 260 108'
+	],
+	[
+		'M260 46L267.6 65.5L288.5 66.7L272.4 80L277.6 100.3L260 89L242.4 100.3L247.6 80L231.5 66.7' +
+			'L252.4 65.5Z',
+		'M260 132Q252 120 260 106'
+	],
+	[
+		'M222 94Q240 66 266 74L276 58Q280 48 292 50Q302 52 300 60Q298 67 284 67L283 80Q287 92 280 98' +
+			'L280 104L273 104L272 97Q262 99 254 97L254 104L247 104L246 95Q234 97 222 94Z',
+		'M288 57L289 58',
+		'M250 132Q242 120 250 108'
+	]
+];
+
+/** The humps of the wave that runs across the soup, left to right (scene units), with their foam. */
+export const OLA_HUMPS: readonly { readonly hump: string; readonly foam: string }[] = [
+	172, 208, 244, 280, 316
+].map((left) => ({
+	hump: `M${left} 160Q${left + 16} 100 ${left + 32} 160`,
+	foam: `M${left + 9} 141Q${left + 16} 128 ${left + 23} 141`
+}));
