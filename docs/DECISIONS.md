@@ -183,3 +183,8 @@ Réalise le lot R2 (ADR-022, ADR-027) avec le catalogue validé par le porteur (
 Retours du deuxième test avec un enfant (voir `docs/SUIVI.md`).
 - **Un jeu différent à chaque fois** : une leçon jamais jouée propose le jeu de sa place dans le monde ; une leçon déjà jouée propose le **jeu qui suit** celui avec lequel elle a été jouée en dernier (amende l'ADR-032, point « le jeu choisi est retrouvé »). Cause du constat « toujours des œufs » : une leçon déjà jouée reproposait le jeu mémorisé du monde. L'enfant peut toujours prendre l'autre image ; l'image cliquée est celle qui démarre.
 - **Délai de l'animation** : 0,6 s après la dernière frappe au lieu de 0,4 s (`--dd-duration-reward-delay`).
+
+## 039 — Pouce gauche retiré de la main guide, trophées des rangées (2026-10-16, acceptée)
+Deux demandes du porteur après avoir vu R2 et la main guide.
+- **Un seul pouce sur la barre d'espace** (amende l'ADR-031) : seul un pouce qui a une touche de repos dans le profil de doigté est dessiné ; en dix doigts, c'est le pouce droit. Deux pouces sur l'espace laissaient croire que les deux pouvaient la frapper. La main gauche montre ses quatre doigts.
+- **Trophées des rangées** (amende l'ADR-037, option 1 sur 3 proposées) : trois grosses touches sur une estrade, avec les trois premières lettres de la rangée lues dans le catalogue (« Q S D », « A Z E », « W X C » en AZERTY, aucune lettre écrite dans le dessin). Dans la silhouette d'un trophée pas encore gagné, les lettres et les symboles restent découpés : chaque trophée se reconnaît avant d'être gagné.
