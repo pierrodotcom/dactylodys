@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const PRIMITIVES_FILE = 'tokens/primitives.tokens.json';
+const CONTENT_DIR = 'content';
 const SEMANTIC_FILE = 'tokens/semantic.tokens.json';
 const THEME_FILES = { dark: 'tokens/themes/dark.tokens.json' } as const;
 
@@ -82,6 +83,23 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	})),
 	{ foreground: 'color.text.primary', background: 'color.typing.current-surface', min: TEXT_MIN }
 ];
+
+/** Every colour the companion can take, in every reward catalogue: each needs its own tokens. */
+const REWARD_CATALOGUES = readdirSync(CONTENT_DIR, { recursive: true, encoding: 'utf8' })
+	.map((path) => path.replaceAll('\\', '/'))
+	.filter((path) => /^[^/]+\/rewards\/[^/]+\.json$/.test(path));
+const COMPANION_COLOR_IDS = [
+	...new Set(
+		REWARD_CATALOGUES.flatMap(
+			(path) =>
+				(JSON.parse(readFileSync(`${CONTENT_DIR}/${path}`, 'utf8')) as { colors: { id: string }[] })
+					.colors
+		).map((color) => color.id)
+	)
+];
+const COMPANION_PARTS = ['body', 'belly', 'plate', 'cheek'];
+/** The line is drawn over these parts: the shape must stay readable on each colour. */
+const OUTLINED_PARTS = ['body', 'belly', 'plate'];
 
 type Token = { value: unknown; type: string | undefined };
 type TokenMap = Map<string, Token>;
@@ -356,6 +374,65 @@ describe.each(contrastThemes)('finger colors in $name theme', ({ overrides }) =>
 
 describe.each(contrastThemes)('contrast in $name theme', ({ overrides }) => {
 	it.each(CONTRAST_PAIRS)(
+		'$foreground on $background reaches at least $min:1',
+		({ foreground, background, min }) => {
+			const ratio = contrastRatio(
+				themeColor(overrides, foreground),
+				themeColor(overrides, background)
+			);
+			expect(ratio).toBeGreaterThanOrEqual(min);
+		}
+	);
+});
+
+describe('companion colours', () => {
+	it('finds the colours of the reward catalogues', () => {
+		expect(COMPANION_COLOR_IDS.length).toBeGreaterThan(0);
+	});
+
+	it.each(COMPANION_COLOR_IDS)('gives the colour %s a token for each part', (id) => {
+		const missing = COMPANION_PARTS.map((part) => `color.companion.${id}.${part}`).filter(
+			(name) => !semantic.tokens.has(name)
+		);
+		expect(missing).toEqual([]);
+	});
+});
+
+const LINE = 'color.companion.line';
+/** Marks drawn on a fill, never under the line. */
+const WEAR_MARKS = ['color.wear.ink', 'color.wear.spot'];
+const WEAR_COLORS = [...semantic.tokens.keys()].filter(
+	(name) => name.startsWith('color.wear.') && !WEAR_MARKS.includes(name)
+);
+const TROPHY_FILLS = [...semantic.tokens.keys()].filter(
+	(name) => name.startsWith('color.trophy.') && name !== 'color.trophy.symbol'
+);
+const DRAWING_PAIRS: ContrastPair[] = [
+	...COMPANION_COLOR_IDS.flatMap((id) =>
+		OUTLINED_PARTS.map((part) => ({
+			foreground: LINE,
+			background: `color.companion.${id}.${part}`,
+			min: NON_TEXT_MIN
+		}))
+	),
+	...WEAR_COLORS.map((background) => ({ foreground: LINE, background, min: NON_TEXT_MIN })),
+	...TROPHY_FILLS.map((background) => ({
+		foreground: 'color.trophy.symbol',
+		background,
+		min: NON_TEXT_MIN
+	})),
+	/** A reward is drawn alone on its backdrop: its outline, or its silhouette, must show. */
+	{ foreground: LINE, background: 'color.reward.backdrop', min: NON_TEXT_MIN },
+	{ foreground: 'color.silhouette', background: 'color.reward.backdrop', min: NON_TEXT_MIN }
+];
+
+describe.each(contrastThemes)('drawing contrast in $name theme', ({ overrides }) => {
+	it('checks the clothes and the trophies', () => {
+		expect(WEAR_COLORS.length).toBeGreaterThan(0);
+		expect(TROPHY_FILLS.length).toBeGreaterThan(0);
+	});
+
+	it.each(DRAWING_PAIRS)(
 		'$foreground on $background reaches at least $min:1',
 		({ foreground, background, min }) => {
 			const ratio = contrastRatio(
