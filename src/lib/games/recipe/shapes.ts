@@ -196,3 +196,67 @@ export const OLA_HUMPS: readonly { readonly hump: string; readonly foam: string 
 	hump: `M${left} 160Q${left + 16} 100 ${left + 32} 160`,
 	foam: `M${left + 9} 141Q${left + 16} 128 ${left + 23} 141`
 }));
+
+/**
+ * The baby dino of the visit (centered on 0 0, feet at y = 34, facing right), standing at `rest`
+ * (scene units) when the visit ends. The near arm holds the ingredient, then waves.
+ */
+export const DINO = {
+	rest: { x: 52, y: 178, scale: 1 },
+	tailPath: 'M-24 14L-44 24L-40 8L-25 0Z',
+	platePaths: ['M-22 -14L-30 -26L-14 -24Z', 'M-12 -24L-14 -38L-2 -28Z', 'M0 -28L4 -41L12 -28Z'],
+	feetPaths: [
+		'M-18 26H-2V30Q-2 34 -6 34H-14Q-18 34 -18 30Z',
+		'M6 26H20V30Q20 34 16 34H10Q6 34 6 30Z'
+	],
+	bodyPath:
+		'M-26 6C-26 -16 -10 -28 8 -28C26 -28 30 -12 30 -2C30 18 16 28 -2 28C-18 28 -26 20 -26 6Z',
+	eye: { x: 16, y: -12, radius: 5 },
+	pupil: { x: 18, y: -11, radius: 2.5 },
+	smilePath: 'M12 4Q19 11 27 4',
+	armPath: 'M16 10L38 6L38 14L16 20Z',
+	hand: { x: 40, y: 10, radius: 6 }
+} as const;
+
+/**
+ * The little rocket of the delivery (nose right, centered on 0 0), at `rest` when it lets go: it
+ * flies level, a claw holds the ingredient 66 in front of it, the pot is under the ingredient.
+ */
+export const DELIVERY_ROCKET = {
+	rest: { x: 194, y: 102, scale: 1 },
+	bodyPath: 'M-30 -11H8C24 -11 34 -5 38 0C34 5 24 11 8 11H-30Z',
+	finPaths: ['M-30 -11L-42 -23L-14 -11Z', 'M-30 11L-42 23L-14 11Z'],
+	window: { x: 8, y: 0, radius: 6 },
+	flameOuterPath: 'M-30 -7Q-60 0 -30 7Z',
+	flameInnerPath: 'M-30 -4Q-47 0 -30 4Z',
+	clawPaths: ['M30 -9H44Q47 -9 47 -18H53Q53 -3 44 -3H30Z', 'M30 9H44Q47 9 47 18H53Q53 3 44 3H30Z']
+} as const;
+
+/**
+ * The giraffe that leans in from the right edge (scene units). Its neck points along -x from the
+ * shoulder (0 0); `transform` places and tilts it so the mouth ends over the pot. The neck grows
+ * from the edge and the head slides with it. The ingredient it holds is drawn in the neck frame
+ * (`heldTransform` cancels the tilt).
+ */
+export const GIRAFFE = {
+	transform: 'translate(548 62) rotate(-8.53)',
+	neckPath: 'M0 -16L-222 -10L-222 10L0 16Z',
+	spots: [
+		{ x: -40, y: -3, radius: 5 },
+		{ x: -90, y: 4, radius: 5 },
+		{ x: -140, y: -4, radius: 4.5 },
+		{ x: -190, y: 3, radius: 4 }
+	],
+	headTransform: 'translate(-222 0) rotate(-12)',
+	headPath: 'M6 -11C-4 -19 -30 -19 -46 -9C-56 -4 -56 6 -46 10C-30 18 -4 16 6 11Z',
+	earPath: 'M2 -10L14 -20L10 -5Z',
+	hornPaths: ['M-6 -16L-8 -27', 'M-15 -16L-18 -26'],
+	hornTips: [
+		{ x: -8, y: -28, radius: 3.5 },
+		{ x: -18, y: -27, radius: 3.5 }
+	],
+	cheek: { x: -8, y: 1, radius: 4 },
+	eye: { x: -30, y: -5, radius: 2.5 },
+	smilePath: 'M-44 6Q-36 10 -28 6',
+	heldTransform: 'translate(-291.6 18.9) rotate(8.53) scale(0.8)'
+} as const;
