@@ -658,9 +658,11 @@ test.describe('reminder to look at the screen', () => {
 		await page.addStyleTag({ content: ':root{--dd-duration-reminder:4000ms}' });
 		const keyboard = page.locator('.keyboard');
 		keyboardTops.push((await keyboard.boundingBox())?.y ?? -1);
-		for (const group of GROUPS.slice(0, 2)) {
+		const game = gameNamed('hatching');
+		for (const [index, group] of GROUPS.slice(0, 2).entries()) {
 			await page.keyboard.type(group);
-			if (group !== GROUPS[1]) await page.keyboard.press(SKIP_KEY);
+			await expectRewardShown(page, message(`${game.bubblePrefix}${index + 1}`));
+			if (index === 0) await page.keyboard.press(SKIP_KEY);
 		}
 	}
 
