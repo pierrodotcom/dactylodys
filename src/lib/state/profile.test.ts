@@ -112,7 +112,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 4,
+			schemaVersion: 5,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -121,7 +121,9 @@ describe('createProfile', () => {
 			progress: { lessons: {}, chars: {} },
 			companion: { name: '', colorId: null, wornItemIds: [] },
 			lastGameByWorld: {},
-			ghosts: {}
+			ghosts: {},
+			earnedRewardIds: [],
+			helpQuest: null
 		});
 	});
 
@@ -338,8 +340,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 3, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 5, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 4, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 6, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],

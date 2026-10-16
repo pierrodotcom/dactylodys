@@ -9,13 +9,24 @@
  *   rewardsOfLesson(catalogue, lessonId): readonly RewardDefinition[]
  *   resolveCompanion(catalogue, unlocked, choice): CompanionLook
  *
- * with `progression: ProgressionDefinition`, `progress`, `before`, `after: ProgressState`,
- * `unlocked: ReadonlySet<string>` (reward identifiers) and `choice: CompanionChoice`.
+ * Lot R2 (ADR-027, ADR-035), in `owned.ts` and `help-quest.ts`:
  *
- * A reward is never stored. What a child has unlocked is a pure function of the progress and of
- * a catalogue kept as data: nothing can be lost, a profile older than the rewards receives what
- * it has already earned, and everything can be announced before it is earned. The profile keeps
- * only what the child chose (`CompanionChoice`).
+ *   ownedRewards(catalogue, progression, progress, earned): ReadonlySet<string>
+ *   withNewlyEarned(catalogue, progression, progress, earned): readonly string[]
+ *   rewardsToAnnounce(catalogue, progression, earned, after): readonly RewardDefinition[]
+ *   parseHelpQuestRules(data: unknown): HelpQuestRules
+ *   lessonPlays(progress): number
+ *   helpQuestFor(progression, progress, rules: HelpQuestRules, last: HelpQuestRecord | null): HelpQuest | null
+ *
+ * with `progression: ProgressionDefinition`, `progress`, `before`, `after: ProgressState`,
+ * `unlocked: ReadonlySet<string>` (reward identifiers), `earned: readonly string[]` (identifiers
+ * kept in the profile) and `choice: CompanionChoice`.
+ *
+ * What a child has unlocked is a pure function of the progress and of a catalogue kept as data:
+ * a profile older than the rewards receives what it has already earned, and everything can be
+ * announced before it is earned. Since ADR-027 what has been unlocked once is also kept in the
+ * profile (`Profile.earnedRewardIds`), so that a key that becomes hard again takes nothing back:
+ * what the child owns is the union of that list and of the computation.
  */
 
 import type { StarCount } from '../progression/types';
@@ -85,7 +96,39 @@ export interface RewardCatalogue {
 	/** The progression whose lessons and worlds the conditions name. */
 	readonly progressionId: string;
 	readonly colors: readonly CompanionColor[];
+	/** Names offered as buttons when the child names the companion; never imposed. */
+	readonly nameSuggestions: readonly string[];
 	readonly rewards: readonly RewardDefinition[];
+}
+
+/**
+ * When the companion asks for help on a key that has become hard again (ADR-027). Data:
+ * `content/common/help-quest.json`.
+ */
+export interface HelpQuestRules {
+	readonly schemaVersion: 1;
+	/** A key is asked about only once its recent results cover at least this many keystrokes. */
+	readonly minRecentAttempts: number;
+	/** …and only when more than this share (0 to 1) of them were wrong. */
+	readonly maxErrorRate: number;
+	/** Length of the short exercise, in characters, like `targetLength` of a lesson. */
+	readonly targetLength: number;
+	/** The key is asked at least this many times in the exercise. */
+	readonly minCharCount: number;
+}
+
+/** The key the companion asks help for. */
+export interface HelpQuest {
+	readonly char: string;
+	/** Lesson that teaches the key: its world gives the game and the theme, its number the hand guide. */
+	readonly lessonId: string;
+}
+
+/** The last help quest the child finished, as stored in the profile. */
+export interface HelpQuestRecord {
+	readonly char: string;
+	/** `lessonPlays(progress)` when it was finished: no new quest before another lesson is played. */
+	readonly lessonPlays: number;
 }
 
 /**

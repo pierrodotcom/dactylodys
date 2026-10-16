@@ -1,0 +1,520 @@
+{
+	"schemaVersion": 1,
+	"id": "fr.rewards.azerty-decouverte",
+	"locale": "fr-FR",
+	"progressionId": "fr.progression.azerty-decouverte",
+	"colors": [
+		{
+			"id": "green",
+			"title": "Vert"
+		},
+		{
+			"id": "sky",
+			"title": "Bleu ciel"
+		},
+		{
+			"id": "violet",
+			"title": "Violet"
+		},
+		{
+			"id": "orange",
+			"title": "Orange"
+		},
+		{
+			"id": "pink",
+			"title": "Rose"
+		},
+		{
+			"id": "yellow",
+			"title": "Jaune"
+		},
+		{
+			"id": "turquoise",
+			"title": "Turquoise"
+		},
+		{
+			"id": "tomato",
+			"title": "Rouge tomate"
+		}
+	],
+	"nameSuggestions": [
+		"Pipo",
+		"Pistache",
+		"Gribouille",
+		"Biscotte",
+		"Tic-Tac",
+		"Zigzag",
+		"Croquette",
+		"Bidule"
+	],
+	"rewards": [
+		{
+			"id": "fr.reward.egg-necklace",
+			"kind": "item",
+			"title": "Le collier de petits œufs",
+			"description": "Réussis la leçon « Les œufs de dinosaure ».",
+			"artId": "egg-necklace",
+			"slot": "neck",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.oeufs-f-j"
+			}
+		},
+		{
+			"id": "fr.reward.springs",
+			"kind": "item",
+			"title": "Les ressorts sous les pattes",
+			"description": "Réussis la leçon « Le saut du diplodocus ».",
+			"artId": "springs",
+			"slot": "feet",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.saut-espace"
+			}
+		},
+		{
+			"id": "fr.reward.nest-backpack",
+			"kind": "item",
+			"title": "Le sac à dos en forme de nid",
+			"description": "Réussis la leçon « Le nid du tricératops ».",
+			"artId": "nest-backpack",
+			"slot": "back",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.nid-d-k"
+			}
+		},
+		{
+			"id": "fr.reward.rain-boots",
+			"kind": "item",
+			"title": "Les bottes de pluie",
+			"description": "Réussis la leçon « La mare du stégosaure ».",
+			"artId": "rain-boots",
+			"slot": "feet",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.mare-s-l"
+			}
+		},
+		{
+			"id": "fr.reward.magnifier",
+			"kind": "item",
+			"title": "La loupe d'explorateur",
+			"description": "Réussis la leçon « Les mots du raptor ».",
+			"artId": "magnifier",
+			"slot": "hand",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.mots-e-i"
+			}
+		},
+		{
+			"id": "fr.reward.crown",
+			"kind": "item",
+			"title": "La couronne du roi des dinos",
+			"description": "Réussis la leçon « Le rugissement du T-rex ».",
+			"artId": "crown",
+			"slot": "head",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.rugissement-r-u"
+			}
+		},
+		{
+			"id": "fr.reward.chef-hat",
+			"kind": "item",
+			"title": "La toque de chef",
+			"description": "Réussis la leçon « La tartine toquée ».",
+			"artId": "chef-hat",
+			"slot": "head",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.tartine-t-n"
+			}
+		},
+		{
+			"id": "fr.reward.cream-moustache",
+			"kind": "item",
+			"title": "La moustache en chantilly",
+			"description": "Réussis la leçon « Le gâteau farfelu ».",
+			"artId": "cream-moustache",
+			"slot": "face",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.gateau-a-o"
+			}
+		},
+		{
+			"id": "fr.reward.checked-apron",
+			"kind": "item",
+			"title": "Le tablier à carreaux",
+			"description": "Réussis la leçon « La quiche qui rigole ».",
+			"artId": "checked-apron",
+			"slot": "body",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.bras-q-m"
+			}
+		},
+		{
+			"id": "fr.reward.ladle-mic",
+			"kind": "item",
+			"title": "La louche-micro",
+			"description": "Réussis la leçon « La casserole qui chante ».",
+			"artId": "ladle-mic",
+			"slot": "hand",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.casserole-c-p"
+			}
+		},
+		{
+			"id": "fr.reward.chili-nose",
+			"kind": "item",
+			"title": "Le nez rouge piment",
+			"description": "Réussis la leçon « Les épices surprises ».",
+			"artId": "chili-nose",
+			"slot": "face",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.epices-accent-apostrophe"
+			}
+		},
+		{
+			"id": "fr.reward.giraffe-bow-tie",
+			"kind": "item",
+			"title": "Le nœud papillon à taches de girafe",
+			"description": "Réussis la leçon « La girafe au long cou ».",
+			"artId": "giraffe-bow-tie",
+			"slot": "neck",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.girafe-g-h"
+			}
+		},
+		{
+			"id": "fr.reward.ball-shoes",
+			"kind": "item",
+			"title": "Les chaussures de bal",
+			"description": "Réussis la leçon « Le bal de la vache ».",
+			"artId": "ball-shoes",
+			"slot": "feet",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.vache-v-b"
+			}
+		},
+		{
+			"id": "fr.reward.yak-beanie",
+			"kind": "item",
+			"title": "Le bonnet en laine de yak",
+			"description": "Réussis la leçon « Le yak mystère ».",
+			"artId": "yak-beanie",
+			"slot": "head",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.yak-y-x"
+			}
+		},
+		{
+			"id": "fr.reward.striped-sweater",
+			"kind": "item",
+			"title": "Le pull à rayures",
+			"description": "Réussis la leçon « Le zèbre à rayures ».",
+			"artId": "striped-sweater",
+			"slot": "body",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.zebre-z-w"
+			}
+		},
+		{
+			"id": "fr.reward.star-glasses",
+			"kind": "item",
+			"title": "Les lunettes en étoiles",
+			"description": "Réussis la leçon « Le café de la Lune ».",
+			"artId": "star-glasses",
+			"slot": "face",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.lune-accents-graves"
+			}
+		},
+		{
+			"id": "fr.reward.comet-cape",
+			"kind": "item",
+			"title": "La cape de comète",
+			"description": "Réussis la leçon « La comète pressée ».",
+			"artId": "comet-cape",
+			"slot": "back",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.comete-cedille-u-grave"
+			}
+		},
+		{
+			"id": "fr.reward.astronaut-helmet",
+			"kind": "item",
+			"title": "Le casque d'astronaute",
+			"description": "Réussis la leçon « Les géantes de la galaxie ».",
+			"artId": "astronaut-helmet",
+			"slot": "head",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.grandes-majuscules"
+			}
+		},
+		{
+			"id": "fr.reward.ring-float",
+			"kind": "item",
+			"title": "La bouée anneau de planète",
+			"description": "Réussis la leçon « Pause sur la planète Virgule ».",
+			"artId": "ring-float",
+			"slot": "body",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.virgule-point"
+			}
+		},
+		{
+			"id": "fr.reward.bulb-horn",
+			"kind": "item",
+			"title": "Le klaxon à poire",
+			"description": "Réussis la leçon « Le klaxon rigolo ».",
+			"artId": "bulb-horn",
+			"slot": "hand",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.klaxon-question-exclamation"
+			}
+		},
+		{
+			"id": "fr.reward.train-cap",
+			"kind": "item",
+			"title": "La casquette de conducteur de train",
+			"description": "Réussis la leçon « Le train aux wagons accrochés ».",
+			"artId": "train-cap",
+			"slot": "head",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.tiret-deux-points"
+			}
+		},
+		{
+			"id": "fr.reward.aviator-goggles",
+			"kind": "item",
+			"title": "Les lunettes d'aviateur",
+			"description": "Réussis la leçon « Le chapeau du pilote ».",
+			"artId": "aviator-goggles",
+			"slot": "face",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.chapeau-circonflexe"
+			}
+		},
+		{
+			"id": "fr.reward.pilot-scarf",
+			"kind": "item",
+			"title": "L'écharpe de pilote",
+			"description": "Réussis la leçon « Le casque du copilote ».",
+			"artId": "pilot-scarf",
+			"slot": "neck",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.casque-circonflexe"
+			}
+		},
+		{
+			"id": "fr.reward.roller-skates",
+			"kind": "item",
+			"title": "Les patins à roulettes",
+			"description": "Réussis la leçon « Le camion aux deux yeux ».",
+			"artId": "roller-skates",
+			"slot": "feet",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.trema"
+			}
+		},
+		{
+			"id": "fr.reward.roar",
+			"kind": "skill",
+			"title": "Rugir",
+			"description": "Réussis toutes les leçons des dinosaures.",
+			"artId": "roar",
+			"condition": {
+				"kind": "world-passed",
+				"worldId": "fr.world.dinosaures"
+			}
+		},
+		{
+			"id": "fr.reward.juggle",
+			"kind": "skill",
+			"title": "Jongler avec trois tomates",
+			"description": "Réussis toutes les leçons de la cuisine.",
+			"artId": "juggle",
+			"condition": {
+				"kind": "world-passed",
+				"worldId": "fr.world.cuisine"
+			}
+		},
+		{
+			"id": "fr.reward.handstand",
+			"kind": "skill",
+			"title": "Faire le poirier",
+			"description": "Réussis toutes les leçons du zoo.",
+			"artId": "handstand",
+			"condition": {
+				"kind": "world-passed",
+				"worldId": "fr.world.animaux"
+			}
+		},
+		{
+			"id": "fr.reward.float",
+			"kind": "skill",
+			"title": "Flotter comme dans l'espace",
+			"description": "Réussis toutes les leçons des étoiles.",
+			"artId": "float",
+			"condition": {
+				"kind": "world-passed",
+				"worldId": "fr.world.espace"
+			}
+		},
+		{
+			"id": "fr.reward.cartwheel",
+			"kind": "skill",
+			"title": "Faire la roue",
+			"description": "Réussis toutes les leçons des bolides.",
+			"artId": "cartwheel",
+			"condition": {
+				"kind": "world-passed",
+				"worldId": "fr.world.vehicules"
+			}
+		},
+		{
+			"id": "fr.reward.medal-dinosaurs",
+			"kind": "trophy",
+			"title": "La médaille des dinosaures",
+			"description": "Gagne au moins 2 étoiles à chaque leçon des dinosaures.",
+			"artId": "medal-dinosaurs",
+			"condition": {
+				"kind": "world-stars",
+				"worldId": "fr.world.dinosaures",
+				"stars": 2
+			}
+		},
+		{
+			"id": "fr.reward.medal-kitchen",
+			"kind": "trophy",
+			"title": "La médaille des gourmands",
+			"description": "Gagne au moins 2 étoiles à chaque leçon de la cuisine.",
+			"artId": "medal-kitchen",
+			"condition": {
+				"kind": "world-stars",
+				"worldId": "fr.world.cuisine",
+				"stars": 2
+			}
+		},
+		{
+			"id": "fr.reward.medal-zoo",
+			"kind": "trophy",
+			"title": "La médaille du zoo",
+			"description": "Gagne au moins 2 étoiles à chaque leçon du zoo.",
+			"artId": "medal-zoo",
+			"condition": {
+				"kind": "world-stars",
+				"worldId": "fr.world.animaux",
+				"stars": 2
+			}
+		},
+		{
+			"id": "fr.reward.medal-stars",
+			"kind": "trophy",
+			"title": "La médaille des étoiles",
+			"description": "Gagne au moins 2 étoiles à chaque leçon des étoiles.",
+			"artId": "medal-stars",
+			"condition": {
+				"kind": "world-stars",
+				"worldId": "fr.world.espace",
+				"stars": 2
+			}
+		},
+		{
+			"id": "fr.reward.medal-racing",
+			"kind": "trophy",
+			"title": "La médaille des bolides",
+			"description": "Gagne au moins 2 étoiles à chaque leçon des bolides.",
+			"artId": "medal-racing",
+			"condition": {
+				"kind": "world-stars",
+				"worldId": "fr.world.vehicules",
+				"stars": 2
+			}
+		},
+		{
+			"id": "fr.reward.keys-home-row",
+			"kind": "trophy",
+			"title": "La rangée du milieu apprivoisée",
+			"description": "Tape les touches de la rangée du milieu presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "keys-home-row",
+			"condition": {
+				"kind": "chars-mastered",
+				"chars": ["q", "s", "d", "f", "g", "h", "j", "k", "l", "m"],
+				"minAttempts": 20,
+				"maxErrorRate": 0.1
+			}
+		},
+		{
+			"id": "fr.reward.keys-top-row",
+			"kind": "trophy",
+			"title": "La rangée du haut apprivoisée",
+			"description": "Tape les touches de la rangée du haut presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "keys-top-row",
+			"condition": {
+				"kind": "chars-mastered",
+				"chars": ["a", "z", "e", "r", "t", "y", "u", "i", "o", "p"],
+				"minAttempts": 20,
+				"maxErrorRate": 0.1
+			}
+		},
+		{
+			"id": "fr.reward.keys-bottom-row",
+			"kind": "trophy",
+			"title": "La rangée du bas apprivoisée",
+			"description": "Tape les touches de la rangée du bas presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "keys-bottom-row",
+			"condition": {
+				"kind": "chars-mastered",
+				"chars": ["w", "x", "c", "v", "b", "n"],
+				"minAttempts": 20,
+				"maxErrorRate": 0.1
+			}
+		},
+		{
+			"id": "fr.reward.keys-accents",
+			"kind": "trophy",
+			"title": "Les accents apprivoisés",
+			"description": "Tape les touches à accent presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "keys-accents",
+			"condition": {
+				"kind": "chars-mastered",
+				"chars": ["é", "è", "à", "ç", "ù", "ê", "â", "î", "ô", "û", "ë", "ï"],
+				"minAttempts": 20,
+				"maxErrorRate": 0.1
+			}
+		},
+		{
+			"id": "fr.reward.keys-punctuation",
+			"kind": "trophy",
+			"title": "La ponctuation apprivoisée",
+			"description": "Tape les touches de ponctuation presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "keys-punctuation",
+			"condition": {
+				"kind": "chars-mastered",
+				"chars": [",", ".", "?", "!", "-", ":", "'"],
+				"minAttempts": 20,
+				"maxErrorRate": 0.1
+			}
+		}
+	]
+}
