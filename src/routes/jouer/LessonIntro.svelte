@@ -3,6 +3,8 @@
 	import { targetKeyPress } from '$lib/games/shared/target';
 	import type { KeyPress } from '$lib/keyboard/types';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
+	import type { RewardDefinition } from '$lib/engine/rewards';
+	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
@@ -30,6 +32,8 @@
 		voice: VoicePlayer;
 		/** The chosen game could not be loaded. */
 		loadFailed: boolean;
+		/** What passing the lesson earns, when the child does not own it yet. */
+		prize: RewardDefinition | null;
 		onplay: (gameId: string) => void;
 		onback: () => void;
 	}
@@ -44,6 +48,7 @@
 		still,
 		voice,
 		loadFailed,
+		prize,
 		onplay,
 		onback
 	}: Props = $props();
@@ -72,7 +77,18 @@
 </script>
 
 <ScreenFrame title={lesson.title} focusHeading={false} wide>
-	<p class="number">{m.play_lesson_number({ number })}</p>
+	<!-- The prize shares the line of the number: the pictures of the games stay in view on a laptop. -->
+	<div class="head">
+		<p class="number">{m.play_lesson_number({ number })}</p>
+		{#if prize}
+			<div class="prize" data-prize={prize.id}>
+				<div class="prize-picture" aria-hidden="true">
+					<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
+				</div>
+				<p>{m.play_reward_prize({ title: prize.title })}</p>
+			</div>
+		{/if}
+	</div>
 	<div class="say">
 		<ListenButton text={lesson.intro} player={voice} />
 		<p class="intro">{lesson.intro}</p>
@@ -114,9 +130,30 @@
 </ScreenFrame>
 
 <style>
+	.head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-md);
+	}
+
 	.number {
 		color: var(--dd-color-text-secondary);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.prize {
+		display: flex;
+		align-items: center;
+		gap: var(--dd-space-sm);
+		color: var(--dd-color-text-secondary);
+		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.prize-picture {
+		flex: none;
+		inline-size: var(--dd-size-touch-target-min);
 	}
 
 	.say {

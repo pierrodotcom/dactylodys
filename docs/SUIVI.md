@@ -11,7 +11,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Critère de sortie atteint au premier test (2026-10-13) | L'enfant a joué environ 15 minutes et voulait recommencer ; il regardait ses mains |
 | J3 Pédagogie complète | Mots et phrases relus par le porteur ; test avec un enfant à faire | 5 mondes, 24 leçons, 926 mots et 216 phrases relus par le porteur, 3 mini-jeux |
-| J4 Aventure | En cours : lot 0 (socle) | Cadrage validé le 2026-10-13 (ADR-022) |
+| J4 Aventure | En cours : R2 livré (récompenses, compagnon, quête d'aide) | Cadrage validé le 2026-10-13 (ADR-022) |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
@@ -35,7 +35,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - **Lot 0c** : fait (PR 19, ADR-025) — seules les parties récentes d'une touche comptent, jusqu'à 30 frappes ; profil version 3 ; leçon des circonflexes en deux (« ê â », puis « î ô û » : « Le casque du copilote ») ; `isLessonPassed` exporté. 21 phrases ajoutées pour les circonflexes et les trémas.
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
    - **Lots R1 et S1** : faits (PR 25 et PR 24) — moteur des récompenses et moteur du récit, fonctions pures, pas encore branchés à l'écran.
-   - **Après le retour du test avec un enfant** : R2 catalogue des récompenses, écrans du compagnon, récompenses acquises pour toujours (profil version 5, la version 4 étant prise par le réglage de la main guide), quête « le compagnon a besoin d'aide » sur une touche redevenue fragile · S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V2 branchement du bouton « Écouter » dans le parcours et enregistrement des textes définitifs · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
+   - **R2** : fait (ADR-037) — catalogue de 39 récompenses validé par le porteur (`docs/RECOMPENSES.md`) : un objet par leçon réussie, un tour par monde terminé, 10 trophées ; écran « Mon compagnon » (nom, 8 couleurs, objets par emplacement, tours, trophées, silhouettes de ce qui reste à gagner) ; carte « Nouveau ! » et question du nom sur le bilan ; « À gagner » sur l'avant-leçon ; profil version 5 (récompenses acquises pour toujours) ; quête « le compagnon a besoin d'aide » sur une touche redevenue fragile ; page d'essai `/dev/compagnon`. **Attendu du porteur** : regarder le compagnon habillé et l'écran « Mon compagnon », dire ce qui gêne (dessins, longueur de l'écran, place de la bulle).
+   - **Ensuite** : S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V2 branchement du bouton « Écouter » dans le parcours et enregistrement des textes définitifs · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
    - **Puis assemblage** dans le parcours `/jouer`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
@@ -152,3 +153,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-16** — PR 38 fusionnée (A1). Le porteur accepte les 40 scènes ; lot A2 réalisé par trois sous-agents en parallèle (un par jeu) et le chef d'orchestre (fin d'exercice). Session R2 proposée.
 - **2026-10-16** — Parcours complet vérifié sur le site en ligne avant le deuxième test avec un enfant ; trois défauts corrigés (ADR-036) : image de l'œuf qui déborde, jeux coupés sur un portable, rappel trop court et qui décalait le clavier.
 - **2026-10-16** — Brouillon du récit (`docs/RECIT_BROUILLON.md`, 34 textes numérotés) envoyé au porteur pour validation par numéros : lot S2 à construire ensuite. Grille du test de ce soir : `docs/TEST_SOIR.md`.
+- **2026-10-16** — PR 39 (A2, autre session) fusionnée. Lot R2 en trois lots parallèles (moteur, dessins, écrans) après contrats figés : récompenses acquises pour toujours, compagnon habillé, quête d'aide (ADR-037). Leçons L-053 à L-057.

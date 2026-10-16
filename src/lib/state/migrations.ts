@@ -83,11 +83,17 @@ function toVersion4(record: StoredRecord): StoredRecord {
 	};
 }
 
+/* Version 5 (ADR-027, ADR-037): nothing earned is kept yet; the route adds what the progress has unlocked. */
+function toVersion5(record: StoredRecord): StoredRecord {
+	return { earnedRewardIds: [], helpQuest: null, ...record, schemaVersion: 5 };
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
 	[2, toVersion3],
-	[3, toVersion4]
+	[3, toVersion4],
+	[4, toVersion5]
 ]);
 
 function versionOf(record: StoredRecord): number {

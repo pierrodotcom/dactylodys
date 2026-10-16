@@ -95,7 +95,7 @@ Avant-leçon et voix (ADR-033) : `GameProps.voice` (facultatif) dit le rappel «
 
 Scènes surprises (ADR-034) : `GameSettings.scenes` (scènes débloquées du jeu, `unlockedScenes` de `engine/rewards/scenes`) ; `GameView.scene` dit ce que montre le groupe (`sceneForGroup`, scène ou entrée commune 0 à 3, jamais en animations calmes). Une scène est un attribut `data-scene` sur le dessin du jeu et des `@keyframes` dans son composant, durée `--dd-duration-scene` ; une scène ajoutée = un identifiant dans `content/common/scenes.json` + son dessin.
 
-Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. **Une récompense n'est jamais stockée** : elle se calcule à partir de la progression et du catalogue.
+Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. Depuis la version 5 (ADR-027, ADR-037), le profil garde aussi les récompenses obtenues (`earnedRewardIds`, ajout seul) : possédé = cette liste ∪ ce que la progression débloque.
 
 | Fonction | Module | Rôle |
 |---|---|---|
@@ -107,8 +107,24 @@ Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, coul
 | `isLessonPassed(rules, progress, lessonId)` | `engine/progression/progress` | Seule définition de « leçon réussie » ; ne pas la recopier |
 | `recentCharStats(progress, char)` / `recentErrorRate(progress, char)` | `engine/progression/progress` | Résultats d'une touche sur ses parties récentes seulement (ADR-025) : c'est ce que lisent la révision des touches fragiles et les récompenses de maîtrise, jamais le cumul à vie |
 
-Livrés depuis (PR 24, 25, 29) : `engine/rewards` (`parseRewardCatalogue`, `validateRewardCatalogue`, `unlockedRewards`, `newlyUnlocked`, `rewardsOfLesson`, `resolveCompanion`), `engine/story` (`parseStory`, `validateStory`, `storyBeforeLesson`, `storyAfterLesson`), `audio` (`voiceKey`, `voiceTexts`, `createVoicePlayer`, `parseVoiceManifest`, `loadVoiceManifest`), composant `ListenButton`. La voix est enregistrée par une personne (ADR-028) ; les récompenses obtenues restent acquises (ADR-027, à réaliser).
+Livrés depuis (PR 24, 25, 29) : `engine/rewards` (`parseRewardCatalogue`, `validateRewardCatalogue`, `unlockedRewards`, `newlyUnlocked`, `rewardsOfLesson`, `resolveCompanion`), `engine/story` (`parseStory`, `validateStory`, `storyBeforeLesson`, `storyAfterLesson`), `audio` (`voiceKey`, `voiceTexts`, `createVoicePlayer`, `parseVoiceManifest`, `loadVoiceManifest`), composant `ListenButton`. La voix est enregistrée par une personne (ADR-028) ; les récompenses obtenues restent acquises (ADR-027, réalisé en R2).
 
 Types d'origine, à ne pas modifier sans passer par le chef d'orchestre : `engine/rewards/types.ts` (`RewardCondition`, `RewardDefinition`, `RewardCatalogue`, `CompanionChoice`, `CompanionLook`), `engine/story/types.ts` (`StoryDefinition`), `audio/voice-types.ts` (`VoiceManifest`, `VoicePlayer`). Les signatures attendues sont en tête de chaque fichier. Aucune condition de récompense ne porte sur le temps, les jours, le nombre de parties ou la vitesse.
 
 À savoir : le temps « actif » d'une partie est la somme des durées de groupes, de la première à la dernière frappe de chaque groupe (le fantôme avance sur cette horloge) ; `ProgressState.chars[c]` porte le cumul à vie (`attempts`, `errors`) et les parties récentes (`recent`) ; `voiceKey` doit être synchrone. Une version de profil déjà fusionnée dans `main` est en ligne : on ne modifie plus son étape de migration, on en ajoute une.
+
+## Récompenses et compagnon (R2, ADR-037)
+
+Catalogue : `content/fr/rewards/<progression>.json` (`nameSuggestions` en plus des couleurs et récompenses) ; règles de la quête d'aide : `content/common/help-quest.json`. Une récompense ajoutée = une entrée du catalogue + son dessin (`src/lib/ui/companion/`, `items.ts` liste les `artId` dessinés ; un test vérifie la correspondance).
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `ownedRewards` / `withNewlyEarned` / `rewardsToAnnounce` | `engine/rewards/owned` | Possédé, liste à garder, ce que le bilan annonce |
+| `helpQuestFor` / `lessonPlays` / `parseHelpQuestRules` | `engine/rewards/help-quest` | Touche d'une leçon réussie redevenue fragile (résultats récents), une seule, pas avant une autre leçon jouée |
+| `generateHelpExercise` | `engine/rewards/help-exercise` | Exercice court de la quête |
+| `applyCharResults` | `engine/progression/progress` | Met à jour les touches sans toucher aux leçons (quête : ni étoile ni fantôme) |
+| `withEarnedRewards` / `withHelpQuest` | `state/profile` | Profil version 5 |
+| `provideCompanionAppearance` / `companionAppearance` | `ui/companion/appearance` | La route `/jouer` habille tous les compagnons de la page ; `Companion` accepte aussi `colorId`, `itemArtIds`, `trick` |
+| `RewardPicture` | `ui/companion/RewardPicture.svelte` | Image d'une récompense, silhouette si non possédée ; racine `div` : jamais dans un `<p>` |
+
+À l'ouverture d'un profil, ce qu'il a déjà mérité est ajouté en mémoire sans annonce et enregistré à la partie suivante (un profil ouvert n'est jamais réécrit sans partie).

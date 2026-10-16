@@ -194,11 +194,21 @@ function parseColors(value: unknown, path: string): CompanionColor[] {
 	return colors;
 }
 
+function parseNameSuggestions(data: unknown, path: string): string[] {
+	const names: string[] = [];
+	expectArray(data, path).forEach((raw, i) => {
+		const name = expectString(raw, `${path}[${i}]`);
+		if (names.includes(name)) fail(`${path}[${i}]`, `duplicate name "${name}"`);
+		names.push(name);
+	});
+	return names;
+}
+
 export function parseRewardCatalogue(data: unknown): RewardCatalogue {
 	const root = expectRecord(data, 'catalogue');
 	rejectUnknown(
 		root,
-		['schemaVersion', 'id', 'locale', 'progressionId', 'colors', 'rewards'],
+		['schemaVersion', 'id', 'locale', 'progressionId', 'colors', 'nameSuggestions', 'rewards'],
 		'catalogue'
 	);
 	if (root['schemaVersion'] !== 1) fail('catalogue.schemaVersion', 'expected 1');
@@ -219,12 +229,16 @@ export function parseRewardCatalogue(data: unknown): RewardCatalogue {
 		'catalogue.progressionId'
 	);
 	const colors = parseColors(root['colors'], 'catalogue.colors');
+	const nameSuggestions = parseNameSuggestions(
+		root['nameSuggestions'],
+		'catalogue.nameSuggestions'
+	);
 
 	const ids = new Set<string>();
 	const rewards = expectArray(root['rewards'], 'catalogue.rewards').map((reward, i) =>
 		parseReward(reward, language, ids, `catalogue.rewards[${i}]`)
 	);
-	return { schemaVersion: 1, id, locale, progressionId, colors, rewards };
+	return { schemaVersion: 1, id, locale, progressionId, colors, nameSuggestions, rewards };
 }
 
 function conditionProblems(

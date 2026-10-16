@@ -8,13 +8,17 @@ import {
 	renameProfile,
 	updateSettings,
 	withCompanion,
+	withEarnedRewards,
 	withGhost,
+	withHelpQuest,
 	withLastGame,
 	withProgress
 } from './profile';
 import {
 	companionArb,
+	earnedRewardsArb,
 	ghostArb,
+	helpQuestRecordArb,
 	nameArb,
 	profileArb,
 	progressArb,
@@ -42,13 +46,17 @@ describe('profile properties', () => {
 				nameArb,
 				companionArb,
 				ghostArb,
-				(profile, patch, progress, name, companion, ghost) => {
+				earnedRewardsArb,
+				helpQuestRecordArb,
+				(profile, patch, progress, name, companion, ghost, earned, helpQuest) => {
 					const snapshot = structuredClone(profile);
 					deepFreeze(profile);
 					deepFreeze(patch);
 					deepFreeze(progress);
 					deepFreeze(companion);
 					deepFreeze(ghost);
+					deepFreeze(earned);
+					deepFreeze(helpQuest);
 					renameProfile(profile, name);
 					updateSettings(profile, patch);
 					withProgress(profile, progress);
@@ -56,6 +64,8 @@ describe('profile properties', () => {
 					withCompanion(profile, companion);
 					withLastGame(profile, name, name);
 					withGhost(profile, name, ghost);
+					withEarnedRewards(profile, earned);
+					withHelpQuest(profile, helpQuest);
 					expect(profile).toEqual(snapshot);
 				}
 			)
@@ -95,6 +105,34 @@ describe('profile properties', () => {
 			fc.property(profileArb, nameArb, (profile, name) => {
 				const once = renameProfile(profile, name);
 				expect(renameProfile(once, once.name).name).toBe(once.name);
+			})
+		);
+	});
+
+	it('never loses an earned reward whatever is added, and keeps them without repeats', () => {
+		fc.assert(
+			fc.property(profileArb, earnedRewardsArb, earnedRewardsArb, (profile, first, second) => {
+				const once = withEarnedRewards(profile, first);
+				const twice = withEarnedRewards(once, second);
+				for (const id of profile.earnedRewardIds) expect(twice.earnedRewardIds).toContain(id);
+				for (const id of [...first, ...second]) expect(twice.earnedRewardIds).toContain(id);
+				expect(new Set(twice.earnedRewardIds).size).toBe(twice.earnedRewardIds.length);
+				expect(twice.earnedRewardIds.slice(0, profile.earnedRewardIds.length)).toEqual(
+					profile.earnedRewardIds
+				);
+				expect(withEarnedRewards(twice, [...first, ...second])).toBe(twice);
+				expect(parseProfile(toJson(twice))).toEqual(twice);
+			})
+		);
+	});
+
+	it('keeps the help quest through a JSON round trip, and replaces it only by a new one', () => {
+		fc.assert(
+			fc.property(profileArb, helpQuestRecordArb, (profile, record) => {
+				const next = withHelpQuest(profile, record);
+				expect(next.helpQuest).toEqual(record);
+				expect(parseProfile(toJson(next))).toEqual(next);
+				expect(next.earnedRewardIds).toBe(profile.earnedRewardIds);
 			})
 		);
 	});
@@ -142,7 +180,9 @@ describe('profile properties', () => {
 			'progress',
 			'companion',
 			'lastGameByWorld',
-			'ghosts'
+			'ghosts',
+			'earnedRewardIds',
+			'helpQuest'
 		];
 		fc.assert(
 			fc.property(

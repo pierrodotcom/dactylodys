@@ -4,16 +4,27 @@
 
 	interface Props {
 		name: string;
+		/** Opens the screen of the companion; no button without it. */
+		oncompanion?: () => void;
 		onsettings: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { name, onsettings, onchangeplayer }: Props = $props();
+	let { name, oncompanion, onsettings, onchangeplayer }: Props = $props();
 </script>
 
 <header class="top-bar">
 	<p class="player">{name}</p>
 	<nav class="actions" aria-label={m.play_top_bar_label()}>
+		{#if oncompanion}
+			<Button variant="secondary" onclick={oncompanion}>
+				<svg class="icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+					<path d="M7 9L8.5 4.5L11 8M11 8L13 3.5L15 8M15 8L17.5 5L18 10" />
+					<circle cx="12" cy="14.5" r="6.5" />
+				</svg>
+				<span>{m.play_companion_open()}</span>
+			</Button>
+		{/if}
 		<Button variant="secondary" onclick={onsettings}>
 			<svg class="gear" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
 				<circle cx="12" cy="12" r="3.2" />
@@ -50,7 +61,8 @@
 		gap: var(--dd-space-sm);
 	}
 
-	.gear {
+	.gear,
+	.icon {
 		inline-size: var(--dd-size-icon);
 		block-size: var(--dd-size-icon);
 		margin-inline-end: var(--dd-space-xs);
