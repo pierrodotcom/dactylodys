@@ -83,7 +83,7 @@ function toVersion4(record: StoredRecord): StoredRecord {
 	};
 }
 
-/* Version 5 (ADR-027, ADR-035): nothing earned is kept yet; the route adds what the progress has unlocked. */
+/* Version 5 (ADR-027, ADR-036): nothing earned is kept yet; the route adds what the progress has unlocked. */
 function toVersion5(record: StoredRecord): StoredRecord {
 	return { earnedRewardIds: [], helpQuest: null, ...record, schemaVersion: 5 };
 }
