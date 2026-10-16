@@ -13,6 +13,7 @@
 	import RocketShape from './RocketShape.svelte';
 	import {
 		ASTRE_RING,
+		CAR,
 		COMET_EYE_PATHS,
 		COMET_HEAD_RADIUS,
 		COMET_MOUTH_PATH,
@@ -22,6 +23,9 @@
 		COOL_STAR_MOUTH_PATH,
 		COUGH_PUFFS,
 		COW,
+		DINO,
+		DINO_SEATS,
+		DISH,
 		HEART_PATH,
 		HEART_PUFFS,
 		HOOP_BACK_PATH,
@@ -31,7 +35,8 @@
 		STAR_PATH,
 		SUNGLASSES_BRIDGE_PATH,
 		SUNGLASSES_GLINT_PATH,
-		SUNGLASSES_LENS_PATHS
+		SUNGLASSES_LENS_PATHS,
+		TOQUE
 	} from './shapes';
 
 	interface Props {
@@ -72,7 +77,15 @@
 	const heart = $derived(pose.landed ? HEART_OFFSET.landed : HEART_OFFSET.flying);
 	const rocketWindow = $derived(rocketPoint(ROCKET_WINDOW.cx, ROCKET_WINDOW.cy));
 	const inhabitantMoves = $derived(
-		sceneId === 'inhabitant-joy' || sceneId === 'hide-and-seek' || sceneId === 'gift'
+		sceneId === 'inhabitant-joy' ||
+			sceneId === 'hide-and-seek' ||
+			sceneId === 'gift' ||
+			sceneId === 'chef-planet'
+	);
+	const dinoSeat = $derived(
+		pose.landed
+			? rocketPoint(DINO_SEATS.landed.x, DINO_SEATS.landed.y)
+			: rocketPoint(DINO_SEATS.flying.x, DINO_SEATS.flying.y)
 	);
 
 	function astreTransform(centerX: number): string {
@@ -181,6 +194,39 @@
 		</g>
 	{/if}
 
+	{#if sceneId === 'car-flyby'}
+		<g transform="translate({CAR.start.x} {CAR.start.y})">
+			<g class="car">
+				<g transform="scale({CAR.scale})">
+					{#each CAR.trailPaths as trail (trail)}
+						<path class="car-trail" d={trail} />
+					{/each}
+					<g class="car-bump">
+						<path class="car-body" d={CAR.bodyPath} />
+						{#each CAR.windowPaths as window (window)}
+							<path class="car-window" d={window} />
+						{/each}
+						<circle
+							class="car-light"
+							cx={CAR.headlight.cx}
+							cy={CAR.headlight.cy}
+							r={CAR.headlight.radius}
+						/>
+						{#each CAR.wheels as wheel (wheel.cx)}
+							<g transform="translate({wheel.cx} {wheel.cy})">
+								<g class="car-wheel">
+									<circle class="car-tire" cx="0" cy="0" r={CAR.wheelRadius} />
+									<path class="car-spoke" d={CAR.spokePath} />
+									<circle class="car-hub" cx="0" cy="0" r={CAR.hubRadius} />
+								</g>
+							</g>
+						{/each}
+					</g>
+				</g>
+			</g>
+		</g>
+	{/if}
+
 	<g transform={astreTransform(FLIGHT.departureX)}>
 		<AstreShape variant={departure ?? HOME_VARIANT} lit={true} />
 	</g>
@@ -216,12 +262,46 @@
 			{#if inhabitantMoves}
 				<g class="inhabitant">
 					<InhabitantShape variant={destinationVariant} />
+					{#if sceneId === 'chef-planet'}
+						<g class="toque">
+							{#each TOQUE.puffs as puff (puff.cx)}
+								<circle class="toque-part" cx={puff.cx} cy={puff.cy} r={puff.radius} />
+							{/each}
+							<path class="toque-part" d={TOQUE.bandPath} />
+						</g>
+					{/if}
 				</g>
 			{:else}
 				<g data-reward data-reward-variant={destinationVariant % REWARD_VARIANTS}>
 					<InhabitantShape variant={destinationVariant} />
 				</g>
 			{/if}
+		</g>
+	{/if}
+
+	{#if sceneId === 'chef-planet'}
+		<g transform="translate({DISH.spot.x} {DISH.spot.y})">
+			<g class="dish">
+				<ellipse
+					class="dish-plate"
+					cx={DISH.plate.cx}
+					cy={DISH.plate.cy}
+					rx={DISH.plate.rx}
+					ry={DISH.plate.ry}
+				/>
+				<path class="dish-food" d={DISH.foodPath} />
+				<circle
+					class="dish-garnish"
+					cx={DISH.garnish.cx}
+					cy={DISH.garnish.cy}
+					r={DISH.garnish.radius}
+				/>
+				<g class="steam">
+					{#each DISH.steamPuffs as puff (puff.y)}
+						<circle class="puff" cx={puff.x} cy={puff.y} r={puff.radius} />
+					{/each}
+				</g>
+			</g>
 		</g>
 	{/if}
 
@@ -271,6 +351,42 @@
 	{#if sceneId === 'gift'}
 		<g transform="translate({rocketWindow.x} {rocketWindow.y}) scale({GIFT_SCALE})">
 			<path class="gift star-body" d={STAR_PATH} />
+		</g>
+	{/if}
+
+	{#if sceneId === 'dino-aboard'}
+		<g transform="translate({dinoSeat.x} {dinoSeat.y})">
+			<g class="dino" data-look={astreVariant(destinationVariant)}>
+				<g transform="scale({DINO.scale}) translate({-DINO.feet.x} {-DINO.feet.y})">
+					<path class="dino-body" d={DINO.tailPath} />
+					<path class="dino-body" d={DINO.restingArmPath} />
+					{#each DINO.footEllipses as foot (foot.cx)}
+						<ellipse class="dino-body" cx={foot.cx} cy={foot.cy} rx={foot.rx} ry={foot.ry} />
+					{/each}
+					<ellipse
+						class="dino-body"
+						cx={DINO.body.cx}
+						cy={DINO.body.cy}
+						rx={DINO.body.rx}
+						ry={DINO.body.ry}
+					/>
+					<g class="dino-arm">
+						<path class="dino-body" d={DINO.wavingArmPath} />
+					</g>
+					{#each DINO.platePaths as plate (plate)}
+						<path class="dino-plate" d={plate} />
+					{/each}
+					<circle class="dino-body" cx={DINO.head.cx} cy={DINO.head.cy} r={DINO.head.radius} />
+					{#each DINO.eyes as eye (eye.x)}
+						<circle class="dino-white" cx={eye.x} cy={eye.y} r="3" />
+						<circle class="dino-ink" cx={eye.x + 0.5} cy={eye.y + 0.5} r="1.5" />
+					{/each}
+					{#each DINO.cheeks as cheek (cheek.x)}
+						<circle class="dino-cheek" cx={cheek.x} cy={cheek.y} r="1.8" />
+					{/each}
+					<path class="dino-mouth" d={DINO.mouthPath} />
+				</g>
+			</g>
 		</g>
 	{/if}
 </svg>
@@ -432,6 +548,111 @@
 		stroke: var(--dd-color-astre-dim);
 	}
 
+	.dino-body,
+	.dino-plate,
+	.dino-white,
+	.dino-mouth,
+	.toque-part,
+	.dish-plate,
+	.dish-food,
+	.dish-garnish,
+	.car-trail,
+	.car-body,
+	.car-window,
+	.car-light,
+	.car-tire,
+	.car-spoke,
+	.car-hub {
+		stroke: var(--dd-color-sky-line);
+		stroke-width: var(--dd-border-width-thick);
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.dino-mouth,
+	.car-trail,
+	.car-spoke {
+		fill: transparent;
+	}
+
+	.dino-mouth {
+		stroke: var(--dd-color-drawing-ink);
+	}
+
+	.dino-body {
+		fill: var(--dd-color-baby-a);
+	}
+
+	[data-look='1'] .dino-body {
+		fill: var(--dd-color-baby-b);
+	}
+
+	[data-look='2'] .dino-body {
+		fill: var(--dd-color-baby-c);
+	}
+
+	[data-look='3'] .dino-body {
+		fill: var(--dd-color-baby-d);
+	}
+
+	.dino-plate {
+		fill: var(--dd-color-companion-plate);
+	}
+
+	.dino-white {
+		fill: var(--dd-color-companion-eye);
+	}
+
+	.dino-ink {
+		fill: var(--dd-color-companion-line);
+	}
+
+	.dino-cheek {
+		fill: var(--dd-color-companion-cheek);
+	}
+
+	.toque-part,
+	.dish-plate {
+		fill: var(--dd-color-wear-cream);
+	}
+
+	.dish-food {
+		fill: var(--dd-color-food-a);
+	}
+
+	.dish-garnish {
+		fill: var(--dd-color-wear-red);
+	}
+
+	.car-trail {
+		opacity: var(--dd-opacity-overlay);
+	}
+
+	.car-body {
+		fill: var(--dd-color-wear-red);
+	}
+
+	.car-window {
+		fill: var(--dd-color-rocket-window);
+	}
+
+	.car-light {
+		fill: var(--dd-color-star-fill);
+	}
+
+	.car-tire {
+		fill: var(--dd-color-drawing-ink);
+	}
+
+	.car-spoke {
+		stroke: var(--dd-color-wear-cream);
+	}
+
+	.car-hub {
+		fill: var(--dd-color-wear-cream);
+	}
+
 	/* Surprise scenes (ADR-032): a moment after the last key, long enough to be seen. */
 	[data-scene] .flyer,
 	[data-scene] .inhabitant,
@@ -444,7 +665,15 @@
 	[data-scene] .cool-star,
 	[data-scene] .shades,
 	[data-scene] .heart,
-	[data-scene] .gift {
+	[data-scene] .gift,
+	[data-scene] .dino,
+	[data-scene] .dino-arm,
+	[data-scene] .toque,
+	[data-scene] .dish,
+	[data-scene] .steam,
+	[data-scene] .car,
+	[data-scene] .car-bump,
+	[data-scene] .car-wheel {
 		transform-box: fill-box;
 		transform-origin: 50% 50%;
 		animation-duration: var(--dd-duration-scene);
@@ -555,6 +784,79 @@
 
 	[data-scene='sunglasses'] .shades {
 		animation-name: shades;
+	}
+
+	/* The baby climbs from the astre: the offsets are where it starts, from the seat it sits on. */
+	[data-scene='dino-aboard'] .dino {
+		transform-origin: 50% 100%;
+		animation-name: dino-ride;
+	}
+
+	[data-scene='dino-aboard'][data-landed] .dino {
+		animation-name: dino-ride-landed;
+	}
+
+	[data-scene='dino-aboard'][data-landed] .flyer {
+		animation-name: dino-weight-landed;
+	}
+
+	[data-scene='chef-planet'][data-landed] .inhabitant {
+		animation-name: chef-lean-landed;
+	}
+
+	[data-scene='chef-planet'][data-landed] .dish {
+		animation-name: dish-landed;
+	}
+
+	[data-scene='dino-aboard'] .dino-arm {
+		transform-origin: 100% 100%;
+		animation-name: dino-wave;
+	}
+
+	[data-scene='dino-aboard'] .flyer {
+		animation-name: dino-weight;
+	}
+
+	[data-scene='chef-planet'] .inhabitant {
+		transform-origin: 50% 100%;
+		animation-name: chef-lean;
+	}
+
+	[data-scene='chef-planet'] .toque {
+		transform-origin: 50% 100%;
+		animation-name: toque;
+	}
+
+	/* The dish goes from the astre to the rocket: the offsets are where it ends. */
+	[data-scene='chef-planet'] .dish {
+		animation-name: dish;
+	}
+
+	[data-scene='chef-planet'] .steam {
+		animation-name: steam;
+		animation-duration: calc(var(--dd-duration-scene) * 0.18);
+		animation-delay: calc(var(--dd-duration-reward-delay) + var(--dd-duration-scene) * 0.26);
+		animation-iteration-count: 3;
+	}
+
+	[data-scene='chef-planet'] .flyer {
+		animation-name: thanks;
+	}
+
+	/* The car crosses the sky at a steady pace; its trails are left of the car, so it goes well past the edge. */
+	[data-scene='car-flyby'] .car {
+		animation-name: car-flyby;
+		animation-timing-function: var(--dd-easing-steady);
+	}
+
+	[data-scene='car-flyby'] .car-bump {
+		animation-name: car-bump;
+		animation-timing-function: var(--dd-easing-steady);
+	}
+
+	[data-scene='car-flyby'] .car-wheel {
+		animation-name: car-wheel;
+		animation-timing-function: var(--dd-easing-steady);
 	}
 
 	@keyframes looping {
@@ -1246,6 +1548,461 @@
 		100% {
 			opacity: 100%;
 			translate: 0 0;
+		}
+	}
+
+	/* Pops out of the astre, hops onto the rocket, sits and waves, then hops back and is gone. */
+	@keyframes dino-ride {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-md) * 3.8) calc(var(--dd-space-md) * 1.25);
+			scale: 0.2;
+			rotate: 0deg;
+		}
+
+		6% {
+			opacity: 100%;
+			scale: 1.15;
+		}
+
+		10% {
+			translate: calc(var(--dd-space-md) * 3.8) calc(var(--dd-space-md) * 1.25);
+			scale: 1;
+			rotate: 0deg;
+		}
+
+		20% {
+			translate: calc(calc(var(--dd-space-md) * 3.8) * 0.5)
+				calc(calc(var(--dd-space-md) * 1.25) * 0.5 - var(--dd-space-lg));
+			scale: 1;
+			rotate: -8deg;
+		}
+
+		30% {
+			translate: 0 0;
+			scale: 1.2 0.8;
+			rotate: 0deg;
+		}
+
+		35% {
+			scale: 1;
+		}
+
+		46% {
+			rotate: calc(0deg - 5deg);
+		}
+
+		56% {
+			rotate: calc(0deg + 5deg);
+		}
+
+		66% {
+			translate: 0 0;
+			scale: 1;
+			rotate: 0deg;
+		}
+
+		70% {
+			translate: 0 0;
+			scale: 1.15 0.85;
+			rotate: 0deg;
+		}
+
+		78% {
+			translate: calc(calc(var(--dd-space-md) * 3.8) * 0.5)
+				calc(calc(var(--dd-space-md) * 1.25) * 0.5 - var(--dd-space-lg));
+			scale: 1;
+			rotate: 8deg;
+		}
+
+		88% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-md) * 3.8) calc(var(--dd-space-md) * 1.25);
+			scale: 1.2 0.8;
+			rotate: 0deg;
+		}
+
+		93% {
+			opacity: 100%;
+			scale: 1;
+		}
+
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-md) * 3.8) calc(var(--dd-space-md) * 1.25);
+			scale: 0.2;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes dino-ride-landed {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-md) * -0.6) calc(var(--dd-space-md) * 2.55);
+			scale: 0.2;
+			rotate: 0deg;
+		}
+
+		6% {
+			opacity: 100%;
+			scale: 1.15;
+		}
+
+		10% {
+			translate: calc(var(--dd-space-md) * -0.6) calc(var(--dd-space-md) * 2.55);
+			scale: 1;
+			rotate: 0deg;
+		}
+
+		20% {
+			translate: calc(calc(var(--dd-space-md) * -0.6) * 0.5)
+				calc(calc(var(--dd-space-md) * 2.55) * 0.5 - var(--dd-space-lg));
+			scale: 1;
+			rotate: -8deg;
+		}
+
+		30% {
+			translate: 0 0;
+			scale: 1.2 0.8;
+			rotate: 28deg;
+		}
+
+		35% {
+			scale: 1;
+		}
+
+		46% {
+			rotate: calc(28deg - 5deg);
+		}
+
+		56% {
+			rotate: calc(28deg + 5deg);
+		}
+
+		66% {
+			translate: 0 0;
+			scale: 1;
+			rotate: 28deg;
+		}
+
+		70% {
+			translate: 0 0;
+			scale: 1.15 0.85;
+			rotate: 28deg;
+		}
+
+		78% {
+			translate: calc(calc(var(--dd-space-md) * -0.6) * 0.5)
+				calc(calc(var(--dd-space-md) * 2.55) * 0.5 - var(--dd-space-lg));
+			scale: 1;
+			rotate: 8deg;
+		}
+
+		88% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-md) * -0.6) calc(var(--dd-space-md) * 2.55);
+			scale: 1.2 0.8;
+			rotate: 0deg;
+		}
+
+		93% {
+			opacity: 100%;
+			scale: 1;
+		}
+
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-md) * -0.6) calc(var(--dd-space-md) * 2.55);
+			scale: 0.2;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes dino-wave {
+		0%,
+		36%,
+		70%,
+		100% {
+			rotate: 0deg;
+		}
+
+		42%,
+		54%,
+		64% {
+			rotate: -30deg;
+		}
+
+		48%,
+		59% {
+			rotate: 14deg;
+		}
+	}
+
+	/* The rocket takes the weight of the baby when it lands and when it jumps off. */
+	@keyframes dino-weight {
+		0%,
+		26%,
+		40%,
+		68%,
+		78%,
+		100% {
+			scale: 1 1;
+		}
+
+		31%,
+		71% {
+			scale: 0.95 1.03;
+		}
+	}
+
+	@keyframes dino-weight-landed {
+		0%,
+		26%,
+		40%,
+		68%,
+		78%,
+		100% {
+			scale: 1 1;
+		}
+
+		31%,
+		71% {
+			scale: 1.03 0.95;
+		}
+	}
+
+	/* The inhabitant stands, then leans towards the rocket to serve the dish. */
+	@keyframes chef-lean {
+		0% {
+			opacity: 0;
+			rotate: 0deg;
+		}
+
+		10%,
+		50% {
+			opacity: 100%;
+			rotate: 0deg;
+		}
+
+		58%,
+		76% {
+			opacity: 100%;
+			rotate: -12deg;
+		}
+
+		88%,
+		100% {
+			opacity: 100%;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes chef-lean-landed {
+		0% {
+			opacity: 0;
+			rotate: 0deg;
+		}
+
+		10%,
+		50% {
+			opacity: 100%;
+			rotate: 0deg;
+		}
+
+		58%,
+		76% {
+			opacity: 100%;
+			rotate: 12deg;
+		}
+
+		88%,
+		100% {
+			opacity: 100%;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes toque {
+		0%,
+		12% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-md) * -1);
+			scale: 1;
+			rotate: -12deg;
+		}
+
+		22% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1.1 0.85;
+			rotate: 4deg;
+		}
+
+		28%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1;
+			rotate: 0deg;
+		}
+	}
+
+	/* Lands on the astre, waits and steams, then travels to the rocket and is eaten. */
+	@keyframes dish {
+		0%,
+		18% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-md) * -1.5);
+			scale: 0.6;
+		}
+
+		26% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1.15 0.85;
+		}
+
+		32%,
+		54% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1;
+		}
+
+		62% {
+			translate: calc(calc(var(--dd-space-md) * -2.4) * 0.3)
+				calc(calc(var(--dd-space-md) * 0.9) * 0.3 - var(--dd-space-sm));
+		}
+
+		74% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-md) * -2.4) calc(var(--dd-space-md) * 0.9);
+			scale: 1;
+		}
+
+		82% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-md) * -2.4) calc(var(--dd-space-md) * 0.9);
+			scale: 0.6;
+		}
+
+		88%,
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-md) * -2.4) calc(var(--dd-space-md) * 0.9);
+			scale: 0.2;
+		}
+	}
+
+	@keyframes dish-landed {
+		0%,
+		18% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-md) * -1.5);
+			scale: 0.6;
+		}
+
+		26% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1.15 0.85;
+		}
+
+		32%,
+		54% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1;
+		}
+
+		62% {
+			translate: calc(calc(var(--dd-space-md) * 0.9) * 0.3)
+				calc(calc(var(--dd-space-md) * -2) * 0.3 - var(--dd-space-sm));
+		}
+
+		74% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-md) * 0.9) calc(var(--dd-space-md) * -2);
+			scale: 1;
+		}
+
+		82% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-md) * 0.9) calc(var(--dd-space-md) * -2);
+			scale: 0.6;
+		}
+
+		88%,
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-md) * 0.9) calc(var(--dd-space-md) * -2);
+			scale: 0.2;
+		}
+	}
+
+	@keyframes steam {
+		0% {
+			opacity: 0;
+			translate: 0 0;
+			scale: 0.6;
+		}
+
+		35% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-sm) * -1);
+			scale: 1.3;
+		}
+	}
+
+	@keyframes car-flyby {
+		0% {
+			opacity: 100%;
+			translate: 0 0;
+		}
+
+		96% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 10.5) 0;
+		}
+	}
+
+	@keyframes car-bump {
+		0%,
+		12%,
+		28%,
+		44%,
+		60%,
+		76%,
+		92%,
+		100% {
+			translate: 0 0;
+		}
+
+		6%,
+		20%,
+		36%,
+		52%,
+		68%,
+		84% {
+			translate: 0 calc(var(--dd-space-xs) * -0.5);
+		}
+	}
+
+	@keyframes car-wheel {
+		0% {
+			rotate: 0deg;
+		}
+
+		100% {
+			rotate: 1080deg;
 		}
 	}
 </style>

@@ -4,7 +4,10 @@ import type { GameDefinition } from './types';
 export const GAMES: readonly GameDefinition[] = [
 	{ id: 'hatching', load: () => import('./hatching/Hatching.svelte') },
 	{ id: 'rocket', load: () => import('./rocket/Rocket.svelte') },
-	{ id: 'recipe', load: () => import('./recipe/Recipe.svelte') }
+	{ id: 'recipe', load: () => import('./recipe/Recipe.svelte') },
+	{ id: 'drawing', load: () => import('./drawing/Drawing.svelte') },
+	{ id: 'train', load: () => import('./train/Train.svelte') },
+	{ id: 'tower', load: () => import('./tower/Tower.svelte') }
 ];
 
 export function findGame(id: string): GameDefinition | undefined {

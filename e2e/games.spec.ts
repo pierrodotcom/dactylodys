@@ -39,7 +39,7 @@ interface GameExpectations {
 	probe: (page: Page) => Promise<string>;
 }
 
-const EXPECTATIONS: Readonly<Record<string, GameExpectations>> = {
+const EXPECTATIONS_BY_ID: Record<string, GameExpectations> = {
 	hatching: {
 		progressKey: 'game_hatching_progress',
 		progressParam: 'hatched',
@@ -61,8 +61,21 @@ const EXPECTATIONS: Readonly<Record<string, GameExpectations>> = {
 	}
 };
 
+/** The scene of the new games: `data-probe` is the step of the picture, 0 before the first key. */
+const probeOf = async (page: Page) =>
+	String(await page.locator('[data-probe]').first().getAttribute('data-probe'));
+
+for (const id of ['drawing', 'train', 'tower']) {
+	EXPECTATIONS_BY_ID[id] = {
+		progressKey: `game_${id}_progress`,
+		progressParam: 'done',
+		bubblePrefix: `game_${id}_quip_`,
+		probe: probeOf
+	};
+}
+
 const games = GAMES.map((game) => {
-	const expectations = EXPECTATIONS[game.id];
+	const expectations = EXPECTATIONS_BY_ID[game.id];
 	if (!expectations) throw new Error(`Add the expectations of the game "${game.id}" to this spec`);
 	return { id: game.id, title: message(`game_${game.id}_title`), ...expectations };
 });
@@ -587,6 +600,13 @@ test.describe('game recipe', () => {
 
 test.describe('surprise scenes', () => {
 	const SCENES = readJson<{ games: Record<string, string[]> }>('content/common/scenes.json');
+	/** The prop each recipe scene draws besides the ingredient, when it has one. */
+	const RECIPE_SCENE_PROPS: Record<string, string> = {
+		slide: ' .ladle',
+		'dino-snatch': ' .dino',
+		'rocket-delivery': ' .delivery-rocket',
+		'giraffe-guest': ' .neck'
+	};
 
 	test.describe('with motion allowed', () => {
 		test.use({ reducedMotion: 'no-preference' });
@@ -612,8 +632,78 @@ test.describe('surprise scenes', () => {
 			await beginGame(page, gameNamed('recipe'));
 			for (const [index, group] of GROUPS.entries()) {
 				await page.keyboard.type(group);
-				const prop = scenes[index] === 'slide' ? ' .ladle' : '';
+				const prop = RECIPE_SCENE_PROPS[scenes[index] ?? ''] ?? '';
 				await expect(page.locator(`[data-scene="${scenes[index]}"]${prop}`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
+		test('plays the next tower scenes group after group, in the order of the list', async ({
+			page
+		}) => {
+			const scenes = SCENES.games['tower'] ?? [];
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('tower'));
+			for (const [index, group] of GROUPS.entries()) {
+				await page.keyboard.type(group);
+				await expect(page.locator(`[data-scene="${scenes[index]}"]`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
+		test('plays the next train scenes group after group, in the order of the list', async ({
+			page
+		}) => {
+			const scenes = SCENES.games['train'] ?? [];
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('train'));
+			for (const [index, group] of GROUPS.entries()) {
+				await page.keyboard.type(group);
+				await expect(page.locator(`[data-scene="${scenes[index]}"]`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
+		test('plays the next rocket scenes group after group, with the baby dino on its scene', async ({
+			page
+		}) => {
+			const scenes = SCENES.games['rocket'] ?? [];
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('rocket'));
+			for (const [index, group] of GROUPS.entries()) {
+				expect(await currentGroup(page)).toBe(group);
+				await page.keyboard.type(group);
+				const prop = scenes[index] === 'dino-aboard' ? ' .dino' : '';
+				await expect(page.locator(`[data-scene="${scenes[index]}"]${prop}`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			}
+		});
+
+		test('plays the next drawing scenes group after group, in the order of the list', async ({
+			page
+		}) => {
+			const order = SCENES.games['drawing'] ?? [];
+			const props: Record<string, string> = {
+				flourish: '.loop',
+				sparkle: '.spark',
+				'dino-photobomb': '.dino',
+				wobble: '.wobbler',
+				'pencil-dance': '.pencil',
+				'rocket-trace': '.flyer',
+				'eraser-peek': '.eraser',
+				'color-drop': '.drop'
+			};
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, gameNamed('drawing'));
+			for (const [index, group] of GROUPS.entries()) {
+				await page.keyboard.type(group);
+				const scene = page.locator(`[data-scene="${order[index]}"]`);
+				await expect(scene).toHaveCount(1);
+				await expect(scene.locator(props[order[index] ?? ''] ?? '.scene').first()).toBeAttached();
 				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 			}
 		});
@@ -622,6 +712,12 @@ test.describe('surprise scenes', () => {
 			page
 		}) => {
 			const order = SCENES.games['hatching'] ?? [];
+			/** The scenes that visit the egg from another world draw their own props. */
+			const props: Record<string, string> = {
+				'chef-baby': ' .toque',
+				'ufo-visit': ' .saucer',
+				'car-honk': ' .car'
+			};
 			await openChooser(page);
 			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
 			await beginGame(page, gameNamed('hatching'));
@@ -629,7 +725,8 @@ test.describe('surprise scenes', () => {
 			for (const [index, group] of GROUPS.entries()) {
 				expect(await currentGroup(page)).toBe(group);
 				await page.keyboard.type(group);
-				await expect(page.locator(`[data-scene="${order[index]}"]`)).toHaveCount(1);
+				const prop = props[order[index] ?? ''] ?? '';
+				await expect(page.locator(`[data-scene="${order[index]}"]${prop}`)).toHaveCount(1);
 			}
 		});
 	});

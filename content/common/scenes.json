@@ -5,10 +5,13 @@
 		"hatching": [
 			"fall-out",
 			"burst",
+			"chef-baby",
 			"triple-jump",
 			"peek",
+			"ufo-visit",
 			"cork",
 			"spin-top",
+			"car-honk",
 			"shell-pants",
 			"boat",
 			"weightlifter",
@@ -19,10 +22,13 @@
 		"recipe": [
 			"somersault",
 			"rim-bounce",
+			"dino-snatch",
 			"diving-board",
 			"burp",
+			"rocket-delivery",
 			"slide",
 			"catapult",
+			"giraffe-guest",
 			"parachute",
 			"balloon",
 			"hungry-lid",
@@ -33,16 +39,49 @@
 		"rocket": [
 			"looping",
 			"barrel-roll",
+			"dino-aboard",
 			"inhabitant-joy",
 			"fireworks",
+			"chef-planet",
 			"parking",
 			"hide-and-seek",
+			"car-flyby",
 			"hula-hoop",
 			"comet",
 			"space-cow",
 			"heart-smoke",
 			"gift",
 			"sunglasses"
+		],
+		"drawing": [
+			"flourish",
+			"sparkle",
+			"dino-photobomb",
+			"wobble",
+			"pencil-dance",
+			"rocket-trace",
+			"eraser-peek",
+			"color-drop"
+		],
+		"train": [
+			"bounce-hook",
+			"whistle-puff",
+			"dino-passenger",
+			"sliding-stop",
+			"tunnel-peek",
+			"rocket-roof",
+			"cargo-wave",
+			"wagon-flip"
+		],
+		"tower": [
+			"drop-land",
+			"wobble-settle",
+			"dino-stomp",
+			"spin-land",
+			"bounce-land",
+			"rocket-crane",
+			"slide-in",
+			"magnet-snap"
 		]
 	}
 }
