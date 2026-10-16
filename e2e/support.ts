@@ -23,7 +23,8 @@ export async function shortenRewards(page: Page): Promise<void> {
 	await page.addInitScript(() => {
 		document.addEventListener('DOMContentLoaded', () => {
 			const style = document.createElement('style');
-			style.textContent = ':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms}';
+			style.textContent =
+				':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms;--dd-duration-reminder:1ms}';
 			document.head.append(style);
 		});
 	});

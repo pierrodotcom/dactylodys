@@ -95,7 +95,7 @@ Avant-leçon et voix (ADR-033) : `GameProps.voice` (facultatif) dit le rappel «
 
 Scènes surprises (ADR-034) : `GameSettings.scenes` (scènes débloquées du jeu, `unlockedScenes` de `engine/rewards/scenes`) ; `GameView.scene` dit ce que montre le groupe (`sceneForGroup`, scène ou entrée commune 0 à 3, jamais en animations calmes). Une scène est un attribut `data-scene` sur le dessin du jeu et des `@keyframes` dans son composant, durée `--dd-duration-scene` ; une scène ajoutée = un identifiant dans `content/common/scenes.json` + son dessin.
 
-Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. Depuis la version 5 (ADR-027, ADR-036), le profil garde aussi les récompenses obtenues (`earnedRewardIds`, ajout seul) : possédé = cette liste ∪ ce que la progression débloque.
+Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, couleur, objets portés), `lastGameByWorld`, `ghosts` (allure de la dernière partie réussie, par leçon), réglage `voiceEnabled`. Depuis la version 5 (ADR-027, ADR-037), le profil garde aussi les récompenses obtenues (`earnedRewardIds`, ajout seul) : possédé = cette liste ∪ ce que la progression débloque.
 
 | Fonction | Module | Rôle |
 |---|---|---|
@@ -113,7 +113,7 @@ Types d'origine, à ne pas modifier sans passer par le chef d'orchestre : `engin
 
 À savoir : le temps « actif » d'une partie est la somme des durées de groupes, de la première à la dernière frappe de chaque groupe (le fantôme avance sur cette horloge) ; `ProgressState.chars[c]` porte le cumul à vie (`attempts`, `errors`) et les parties récentes (`recent`) ; `voiceKey` doit être synchrone. Une version de profil déjà fusionnée dans `main` est en ligne : on ne modifie plus son étape de migration, on en ajoute une.
 
-## Récompenses et compagnon (R2, ADR-036)
+## Récompenses et compagnon (R2, ADR-037)
 
 Catalogue : `content/fr/rewards/<progression>.json` (`nameSuggestions` en plus des couleurs et récompenses) ; règles de la quête d'aide : `content/common/help-quest.json`. Une récompense ajoutée = une entrée du catalogue + son dessin (`src/lib/ui/companion/`, `items.ts` liste les `artId` dessinés ; un test vérifie la correspondance).
 

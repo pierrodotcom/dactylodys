@@ -9,7 +9,7 @@
  *   rewardsOfLesson(catalogue, lessonId): readonly RewardDefinition[]
  *   resolveCompanion(catalogue, unlocked, choice): CompanionLook
  *
- * Lot R2 (ADR-027, ADR-036), in `owned.ts` and `help-quest.ts`:
+ * Lot R2 (ADR-027, ADR-037), in `owned.ts` and `help-quest.ts`:
  *
  *   ownedRewards(catalogue, progression, progress, earned): ReadonlySet<string>
  *   withNewlyEarned(catalogue, progression, progress, earned): readonly string[]

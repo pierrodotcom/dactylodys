@@ -1,6 +1,6 @@
 import { getContext, setContext } from 'svelte';
 
-/** What the companion wears and its colour, wherever it is drawn (lot R2, ADR-036). */
+/** What the companion wears and its colour, wherever it is drawn (lot R2, ADR-037). */
 export interface CompanionAppearance {
 	/** `CompanionColor.id`; `null`: the colour it comes with. */
 	readonly colorId: string | null;
