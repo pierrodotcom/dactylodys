@@ -62,6 +62,12 @@ describe('isGuided', () => {
 		expect(isGuided('new-keys', 'd', ['f', 'j'], true)).toBe(true);
 	});
 
+	it('shows any key to a child who hesitates, in the new-keys mode only', () => {
+		expect(isGuided('new-keys', 'd', ['f', 'j'], false, true)).toBe(true);
+		expect(isGuided('new-keys', 'd', ['f', 'j'], false, false)).toBe(false);
+		expect(isGuided('none', 'd', ['f', 'j'], false, true)).toBe(false);
+	});
+
 	it('shows nothing when no character is expected', () => {
 		for (const mode of MODES) expect(isGuided(mode, undefined, ['f'], true)).toBe(false);
 	});

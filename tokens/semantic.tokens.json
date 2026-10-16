@@ -387,6 +387,7 @@
 		"disabled": { "$value": 0.5 },
 		"overlay": { "$value": 0.6 },
 		"hand": { "$value": 0.55 },
+		"star-almost": { "$value": 0.4 },
 		"glass": { "$value": 0.45 }
 	},
 	"duration": {

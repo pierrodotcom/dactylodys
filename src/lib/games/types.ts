@@ -15,6 +15,8 @@ export interface GameGuide {
 	readonly mode: GuideMode;
 	/** The characters the lesson brings, shown in the `new-keys` mode. */
 	readonly freshChars: readonly string[];
+	/** Milliseconds without a key after which the new-keys mode shows the expected key; 0: never. */
+	readonly hesitationMs: number;
 }
 
 export interface GameSettings {

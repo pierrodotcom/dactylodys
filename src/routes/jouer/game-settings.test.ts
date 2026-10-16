@@ -4,7 +4,7 @@ import type { GameGuide } from '$lib/games/types';
 import { isMotionReduced, toGameSettings } from './game-settings';
 
 const base = defaultSettings('pc');
-const NO_GUIDE: GameGuide = { mode: 'none', freshChars: [] };
+const NO_GUIDE: GameGuide = { mode: 'none', freshChars: [], hesitationMs: 0 };
 
 describe('toGameSettings', () => {
 	it('passes the sound and keyboard settings through', () => {
@@ -33,7 +33,7 @@ describe('toGameSettings', () => {
 	);
 
 	it('passes the guide of the lesson through', () => {
-		const guide: GameGuide = { mode: 'new-keys', freshChars: ['f', 'j'] };
+		const guide: GameGuide = { mode: 'new-keys', freshChars: ['f', 'j'], hesitationMs: 3000 };
 		expect(toGameSettings(base, false, guide).guide).toBe(guide);
 	});
 

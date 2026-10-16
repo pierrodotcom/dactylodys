@@ -4,6 +4,7 @@ import { computeAccuracy } from '../accuracy';
 import type { CharStats, SessionMetrics } from '../types';
 import { parseProgression } from './definition';
 import {
+	almostNextStar,
 	applyCharResults,
 	applyLessonResult,
 	emptyProgress,
@@ -743,4 +744,26 @@ describe('shipped progressions', () => {
 			expect(Object.keys(progress.lessons)).toEqual(ids);
 		}
 	);
+});
+
+describe('almostNextStar', () => {
+	const rules = { ...RULES, starThresholds: [80, 90, 95] as const, starAlmostMargin: 3 };
+
+	it('is true just under the threshold of the next star', () => {
+		expect(almostNextStar(rules, 92.9, 2)).toBe(true);
+		expect(almostNextStar(rules, 87, 1)).toBe(true);
+		expect(almostNextStar(rules, 77.5, 0)).toBe(true);
+	});
+
+	it('is false when the next star is far, reached, or the last one is won', () => {
+		expect(almostNextStar(rules, 91.9, 2)).toBe(false);
+		expect(almostNextStar(rules, 95, 2)).toBe(false);
+		expect(almostNextStar(rules, 100, 3)).toBe(false);
+	});
+
+	it('is always false without a margin', () => {
+		const { starAlmostMargin: _margin, ...without } = rules;
+		void _margin;
+		expect(almostNextStar(without, 94, 2)).toBe(false);
+	});
 });

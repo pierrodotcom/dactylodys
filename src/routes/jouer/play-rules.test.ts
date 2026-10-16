@@ -5,6 +5,7 @@ import { PLAY_RULES, parsePlayRules } from './play-rules';
 const VALID = {
 	schemaVersion: 1,
 	breakAfterMinutes: 12,
+	breakAfterExercises: 4,
 	maxWordLevel: 3,
 	bankLoadTimeoutMs: 3000,
 	ghostPaceFactor: 0.9,
@@ -23,6 +24,7 @@ describe('parsePlayRules', () => {
 	it('returns the rules as typed data', () => {
 		expect(parsePlayRules(VALID)).toEqual({
 			breakAfterMinutes: 12,
+			breakAfterExercises: 4,
 			maxWordLevel: 3,
 			bankLoadTimeoutMs: 3000,
 			ghostPaceFactor: 0.9,
@@ -46,6 +48,7 @@ describe('parsePlayRules', () => {
 		['a non-object', 'rules'],
 		['an unknown property', { ...VALID, extra: 1 }],
 		['a wrong schema version', { ...VALID, schemaVersion: 2 }],
+		['a negative number of exercises before a break', { ...VALID, breakAfterExercises: -1 }],
 		['a zero break delay', { ...VALID, breakAfterMinutes: 0 }],
 		['a delay that is not a number', { ...VALID, breakAfterMinutes: '12' }],
 		['a level that does not exist', { ...VALID, maxWordLevel: 4 }],

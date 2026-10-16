@@ -19,19 +19,23 @@ export function guideMode(
 	return 'none';
 }
 
-/** Whether the hand shows the expected character now; `afterMistake` while a mistake is shown. */
+/**
+ * Whether the hand shows the expected character now: `afterMistake` while a mistake is shown,
+ * `hesitated` once the child has waited long without a key.
+ */
 export function isGuided(
 	mode: GuideMode,
 	expected: string | undefined,
 	freshChars: readonly string[],
-	afterMistake: boolean
+	afterMistake: boolean,
+	hesitated = false
 ): boolean {
 	if (expected === undefined) return false;
 	switch (mode) {
 		case 'every-key':
 			return true;
 		case 'new-keys':
-			return afterMistake || freshChars.includes(expected);
+			return afterMistake || hesitated || freshChars.includes(expected);
 		case 'none':
 			return false;
 	}
