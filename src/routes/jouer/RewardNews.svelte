@@ -75,7 +75,10 @@
 							label={current.title}
 						/>
 					</div>
-					<p class="won">{m.play_reward_won({ title: current.title })}</p>
+					<p class="won">
+						{m.play_reward_won()}
+						<strong class="title">{current.title}</strong>
+					</p>
 					{#if rewards.length > 1}
 						<p class="count">
 							{m.play_reward_count({ index: index + 1, total: rewards.length })}
@@ -141,10 +144,15 @@
 	}
 
 	.picture {
-		inline-size: var(--dd-size-reward-picture);
+		inline-size: var(--dd-size-reward-picture-large);
 	}
 
 	.won {
+		font-size: var(--dd-font-size-lg);
+	}
+
+	.title {
+		display: block;
 		font-size: var(--dd-font-size-xl);
 		font-weight: var(--dd-font-weight-bold);
 	}

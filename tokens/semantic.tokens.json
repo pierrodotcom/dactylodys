@@ -303,6 +303,7 @@
 		"companion": { "$value": "8rem" },
 		"companion-large": { "$value": "20rem" },
 		"reward-picture": { "$value": "7rem" },
+		"reward-picture-large": { "$value": "12rem" },
 		"egg": { "$value": "11rem" },
 		"egg-mini": { "$value": "2.25rem" },
 		"astre-mini": { "$value": "2.25rem" },

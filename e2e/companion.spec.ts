@@ -199,9 +199,7 @@ test.describe('companion and rewards', () => {
 		await typeToEnd(page, message('play_result_map'));
 
 		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toBeVisible();
-		await expect(
-			page.getByText(message('play_reward_won', { title: NECKLACE.title }))
-		).toBeVisible();
+		await expect(page.getByText(message('play_reward_won'))).toBeVisible();
 		await expect(page.getByRole('img', { name: NECKLACE.title })).toBeVisible();
 		const photo = page.locator('.photo svg.companion');
 		await expect(photo).not.toHaveAttribute('data-items', /./);

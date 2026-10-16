@@ -33,6 +33,8 @@
 	}
 
 	const layout = $derived(layoutMap(progression, profile.progress));
+	/** The map scrolls to the bubble rather than to the lesson, so that the child sees the request. */
+	const asking = $derived(helpKey !== null && !helpLater);
 </script>
 
 {#if layout.worlds.length > 0}
@@ -40,8 +42,8 @@
 		<div class="hero" tabindex="-1" bind:this={hero}>
 			<Companion mood="idle" />
 			<p class="greeting">{m.play_map_greeting({ name: profile.name })}</p>
-			{#if helpKey !== null && !helpLater}
-				<section class="help" aria-labelledby="help-ask">
+			{#if asking && helpKey !== null}
+				<section class="help" aria-labelledby="help-ask" {@attach centerInView}>
 					<p id="help-ask" class="ask">{m.play_help_ask({ key: helpKey })}</p>
 					<div class="help-actions">
 						<Button onclick={onhelp}>{m.play_help_yes()}</Button>
@@ -68,7 +70,7 @@
 							class="stop"
 							data-status={lesson.status}
 							data-side={lesson.side}
-							{@attach lesson.id === layout.focusId ? centerInView : undefined}
+							{@attach lesson.id === layout.focusId && !asking ? centerInView : undefined}
 						>
 							{#if lesson.status === 'locked'}
 								<div class="node">
