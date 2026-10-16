@@ -635,6 +635,12 @@ test.describe('surprise scenes', () => {
 			page
 		}) => {
 			const order = SCENES.games['hatching'] ?? [];
+			/** The scenes that visit the egg from another world draw their own props. */
+			const props: Record<string, string> = {
+				'chef-baby': ' .toque',
+				'ufo-visit': ' .saucer',
+				'car-honk': ' .car'
+			};
 			await openChooser(page);
 			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
 			await beginGame(page, gameNamed('hatching'));
@@ -642,7 +648,8 @@ test.describe('surprise scenes', () => {
 			for (const [index, group] of GROUPS.entries()) {
 				expect(await currentGroup(page)).toBe(group);
 				await page.keyboard.type(group);
-				await expect(page.locator(`[data-scene="${order[index]}"]`)).toHaveCount(1);
+				const prop = props[order[index] ?? ''] ?? '';
+				await expect(page.locator(`[data-scene="${order[index]}"]${prop}`)).toHaveCount(1);
 			}
 		});
 	});
