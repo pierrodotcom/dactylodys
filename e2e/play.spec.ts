@@ -886,6 +886,15 @@ test.describe('play route', () => {
 		await expect(root).toHaveAttribute('data-theme', 'dark');
 	});
 
+	test('keeps the pictures of the games in view on a laptop screen', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 720 });
+		await reachMap(page);
+		await openIntro(page, FIRST);
+
+		for (const game of world.gameIds)
+			await expect(playButton(page, game)).toBeInViewport({ ratio: 1 });
+	});
+
 	test('shows the settings at the top of the map and of a lesson, and from the pause of a game', async ({
 		page
 	}) => {

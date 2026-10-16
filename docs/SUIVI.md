@@ -150,3 +150,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-15** — PR 36 fusionnée (lot A). Lot T3 réalisé (ADR-033).
 - **2026-10-15** — PR 37 fusionnée (T3). Lot A1, premier paquet de scènes surprises (ADR-034).
 - **2026-10-16** — PR 38 fusionnée (A1). Le porteur accepte les 40 scènes ; lot A2 réalisé par trois sous-agents en parallèle (un par jeu) et le chef d'orchestre (fin d'exercice). Session R2 proposée.
+- **2026-10-16** — Parcours complet vérifié sur le site en ligne avant le deuxième test avec un enfant ; trois défauts corrigés (ADR-036) : image de l'œuf qui déborde, jeux coupés sur un portable, rappel trop court et qui décalait le clavier.

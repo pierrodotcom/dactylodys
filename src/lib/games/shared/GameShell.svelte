@@ -45,6 +45,7 @@
 	const REWARD_DELAY_TOKEN = '--dd-duration-reward-delay';
 	const REWARD_TOKEN = '--dd-duration-reward';
 	const SCENE_TOKEN = '--dd-duration-scene';
+	const REMINDER_TOKEN = '--dd-duration-reminder';
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
@@ -160,20 +161,24 @@
 
 	$effect(() => {
 		if (phase !== 'celebrating' || paused) return;
-		const timer = setTimeout(
-			() => dispatch({ type: 'advance' }),
-			readDurationToken(CELEBRATION_TOKEN)
+		// The reminder stays long enough to be read, whatever the reward lasts.
+		const stay = Math.max(
+			readDurationToken(CELEBRATION_TOKEN),
+			lookReminder ? readDurationToken(REMINDER_TOKEN) : 0
 		);
+		const timer = setTimeout(() => dispatch({ type: 'advance' }), stay);
 		return () => clearTimeout(timer);
 	});
 
 	// A key skips the reward only once it has been seen: the child is still typing when it starts.
 	$effect(() => {
 		if (phase !== 'celebrating' || paused) return;
+		const seen =
+			readDurationToken(REWARD_DELAY_TOKEN) +
+			readDurationToken(view.scene.kind === 'scene' ? SCENE_TOKEN : REWARD_TOKEN);
 		const timer = setTimeout(
 			() => dispatch({ type: 'settle' }),
-			readDurationToken(REWARD_DELAY_TOKEN) +
-				readDurationToken(view.scene.kind === 'scene' ? SCENE_TOKEN : REWARD_TOKEN)
+			lookReminder ? Math.max(seen, readDurationToken(REMINDER_TOKEN)) : seen
 		);
 		return () => clearTimeout(timer);
 	});
@@ -224,33 +229,35 @@
 			</div>
 		{:else}
 			<div class="text-zone">
-				{#if lookReminder}
-					<p class="look-reminder" data-reward data-reward-variant="1">
-						<svg class="eyes" viewBox="0 0 48 24" focusable="false" aria-hidden="true">
-							<ellipse cx="12" cy="12" rx="10" ry="8" />
-							<ellipse cx="36" cy="12" rx="10" ry="8" />
-							<circle class="pupil" cx="13" cy="10" r="4" />
-							<circle class="pupil" cx="37" cy="10" r="4" />
-						</svg>
-						<span>{lookReminderText}</span>
-					</p>
-				{/if}
 				<TargetText
 					graphemes={view.group}
 					position={typing ? view.position : view.group.length}
 					errorIndex={view.errorIndex}
 				/>
-				{#if settings.showKeyboard}
-					<div class="hint">
-						{#if typing}
-							<FingerHint {target} {layout} {fingering} />
+				<!-- One place for what comes and goes (finger, reminder, Caps Lock): nothing below it moves. -->
+				<div class="slot">
+					{#if settings.showKeyboard}
+						<div class="hint">
+							{#if typing && !capsHelp}
+								<FingerHint {target} {layout} {fingering} />
+							{/if}
+						</div>
+					{/if}
+					<div role="status" class="alert">
+						{#if lookReminder}
+							<p class="look-reminder" data-reward data-reward-variant="1">
+								<svg class="eyes" viewBox="0 0 48 24" focusable="false" aria-hidden="true">
+									<ellipse cx="12" cy="12" rx="10" ry="8" />
+									<ellipse cx="36" cy="12" rx="10" ry="8" />
+									<circle class="pupil" cx="13" cy="10" r="4" />
+									<circle class="pupil" cx="37" cy="10" r="4" />
+								</svg>
+								<span>{lookReminderText}</span>
+							</p>
+						{:else if capsHelp}
+							<p class="notice">{m.game_shared_caps_lock()}</p>
 						{/if}
 					</div>
-				{/if}
-				<div role="status">
-					{#if capsHelp}
-						<p class="notice">{m.game_shared_caps_lock()}</p>
-					{/if}
 				</div>
 				<div class="dd-visually-hidden">
 					<label for={INPUT_ID}>{m.game_shared_input_label()}</label>
@@ -378,6 +385,20 @@
 		border-radius: var(--dd-radius-md);
 		background-color: var(--dd-color-surface-sunken);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	/* The hint, the reminder and the Caps Lock notice share one cell, as tall as the tallest. */
+	.slot {
+		display: grid;
+		justify-items: center;
+		align-items: center;
+		min-block-size: calc(
+			var(--dd-font-size-xl) * 1.3 + var(--dd-space-sm) * 2 + var(--dd-border-width-thick) * 2
+		);
+	}
+
+	.slot > * {
+		grid-area: 1 / 1;
 	}
 
 	.hint {
