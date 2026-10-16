@@ -2,7 +2,22 @@
 	import type { GameView } from '../shared/game-view';
 	import IngredientShape from './IngredientShape.svelte';
 	import { ingredientPlace, isDishReady, prepStage } from './prep';
-	import { BURP_BUBBLE, DIVING_BOARD, KITCHEN, POT, SCENE, SPLASH } from './shapes';
+	import {
+		BALLOON,
+		BURP_BUBBLE,
+		CATAPULT,
+		DIVING_BOARD,
+		KITCHEN,
+		LADLE,
+		LID,
+		NAPKIN,
+		OLA_HUMPS,
+		POT,
+		SCENE,
+		SPLASH,
+		STEAM_SHAPES,
+		WAVING_ARM
+	} from './shapes';
 
 	interface Props {
 		view: GameView;
@@ -17,6 +32,7 @@
 		place === 'pot' && view.scene.kind === 'scene' ? view.scene.id : undefined
 	);
 	const entrance = $derived(view.scene.kind === 'variant' ? view.scene.index : 0);
+	const steamShape = $derived(STEAM_SHAPES[view.groupIndex % STEAM_SHAPES.length] ?? []);
 
 	function placeTransform(spot: { x: number; y: number; scale: number }): string {
 		return `translate(${spot.x} ${spot.y}) scale(${spot.scale})`;
@@ -40,6 +56,24 @@
 	<ellipse class="inside" cx={POT.rim.cx} cy={POT.rim.cy} rx={POT.rim.rx} ry={POT.rim.ry} />
 	<ellipse class="soup" cx={POT.soup.cx} cy={POT.soup.cy} rx={POT.soup.rx} ry={POT.soup.ry} />
 
+	{#if sceneId === 'wave'}
+		<g class="olas">
+			{#each OLA_HUMPS as wave (wave.hump)}
+				<g class="ola">
+					<path class="hump" d={wave.hump} />
+					<path class="fold" d={wave.foam} />
+				</g>
+			{/each}
+		</g>
+	{/if}
+
+	{#if sceneId === 'slide'}
+		<g class="ladle">
+			<path class="utensil" d={LADLE.bowlPath} />
+			<path class="utensil" d={LADLE.handlePath} />
+		</g>
+	{/if}
+
 	{#if place === 'pot'}
 		<g class="bubbles" data-reward data-reward-variant="0">
 			{#each POT.bubbles as bubble (bubble.x)}
@@ -60,6 +94,34 @@
 			{:else}
 				<g class="diver">
 					<IngredientShape variant={view.groupIndex} {stage} />
+					{#if sceneId === 'parachute'}
+						<g class="napkin">
+							{#each NAPKIN.cordPaths as cord (cord)}
+								<path class="cord" d={cord} />
+							{/each}
+							<path class="canopy" d={NAPKIN.canopyPath} />
+							{#each NAPKIN.foldPaths as fold (fold)}
+								<path class="fold" d={fold} />
+							{/each}
+						</g>
+					{:else if sceneId === 'balloon'}
+						<path class="cord balloon-string" d={BALLOON.stringPath} />
+						<g class="balloon">
+							<path class="balloon-body" d={BALLOON.bodyPath} />
+							<path class="balloon-body" d={BALLOON.knotPath} />
+							<path class="fold" d={BALLOON.shinePath} />
+						</g>
+					{:else if sceneId === 'float'}
+						<g class="arm">
+							<path class="glove" d={WAVING_ARM.armPath} />
+							<circle
+								class="glove"
+								cx={WAVING_ARM.hand.x}
+								cy={WAVING_ARM.hand.y}
+								r={WAVING_ARM.hand.radius}
+							/>
+						</g>
+					{/if}
 				</g>
 			{/if}
 		</g>
@@ -79,6 +141,37 @@
 
 	{#if sceneId === 'burp'}
 		<circle class="burp" cx={BURP_BUBBLE.cx} cy={BURP_BUBBLE.cy} r={BURP_BUBBLE.r} />
+	{/if}
+
+	{#if sceneId === 'catapult'}
+		<g class="catapult">
+			<path class="plank" d={CATAPULT.pivotPath} />
+			<g class="spoon">
+				<path class="utensil" d={CATAPULT.handlePath} />
+				<path class="utensil" d={CATAPULT.bowlPath} />
+			</g>
+		</g>
+	{/if}
+
+	{#if sceneId === 'hungry-lid'}
+		<g class="lid">
+			<path class="pot" d={LID.knobPath} />
+			<path class="pot" d={LID.domePath} />
+			{#each LID.eyes as eye (eye.x)}
+				<circle class="eye" cx={eye.x} cy={eye.y} r={eye.radius} />
+			{/each}
+			{#each LID.pupils as pupil (pupil.x)}
+				<circle class="pupil" cx={pupil.x} cy={pupil.y} r={pupil.radius} />
+			{/each}
+		</g>
+	{/if}
+
+	{#if sceneId === 'steam-shape'}
+		<g class="steam-shape">
+			{#each steamShape as wisp (wisp)}
+				<path class="steam wisp" d={wisp} pathLength="1" />
+			{/each}
+		</g>
 	{/if}
 
 	{#if place === 'board'}
@@ -178,11 +271,83 @@
 		fill: var(--dd-color-pot-bubble);
 	}
 
+	.utensil,
+	.canopy,
+	.balloon-body,
+	.glove,
+	.eye,
+	.hump {
+		stroke: var(--dd-color-drawing-line);
+		stroke-width: var(--dd-border-width-thick);
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.utensil {
+		fill: var(--dd-color-pot-steam);
+	}
+
+	.canopy {
+		fill: var(--dd-color-food-b);
+	}
+
+	.balloon-body {
+		fill: var(--dd-color-food-e);
+	}
+
+	.glove,
+	.eye {
+		fill: var(--dd-color-pot-bubble);
+	}
+
+	.pupil {
+		fill: var(--dd-color-drawing-ink);
+	}
+
+	.hump {
+		fill: var(--dd-color-pot-soup);
+	}
+
+	.cord,
+	.fold {
+		fill: transparent;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.cord {
+		stroke: var(--dd-color-drawing-line);
+		stroke-width: var(--dd-border-width-thin);
+	}
+
+	.fold {
+		stroke: var(--dd-color-pot-bubble);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	/* pathLength="1": the dash covers the whole line, so its offset draws it bit by bit. */
+	.wisp {
+		vector-effect: none;
+		stroke-dasharray: 1;
+	}
+
 	/* Surprise scenes (ADR-032): a moment after the last key, long enough to be seen. */
 	[data-scene] .diver,
 	[data-scene] .diving-board,
 	[data-scene] .drop,
 	[data-scene] .burp,
+	[data-scene] .ladle,
+	[data-scene] .catapult,
+	[data-scene] .spoon,
+	[data-scene] .napkin,
+	[data-scene] .balloon,
+	[data-scene] .balloon-string,
+	[data-scene] .arm,
+	[data-scene] .lid,
+	[data-scene] .ola,
+	[data-scene] .steam-shape,
+	[data-scene] .wisp,
 	[data-scene] .pot-body {
 		transform-box: fill-box;
 		transform-origin: 50% 50%;
@@ -227,6 +392,106 @@
 
 	[data-scene='burp'] .pot-body {
 		animation-name: squash;
+	}
+
+	[data-scene='slide'] .diver {
+		animation-name: slide;
+	}
+
+	[data-scene='slide'] .ladle,
+	[data-scene='catapult'] .catapult {
+		animation-name: prop-shows;
+	}
+
+	[data-scene='catapult'] .diver {
+		animation-name: thrown;
+	}
+
+	[data-scene='catapult'] .spoon {
+		transform-origin: 54% 64%;
+		animation-name: spoon-throws;
+	}
+
+	[data-scene='parachute'] .diver,
+	[data-scene='balloon'] .diver {
+		transform-origin: 50% 0%;
+	}
+
+	[data-scene='parachute'] .diver {
+		animation-name: glide-down;
+	}
+
+	[data-scene='parachute'] .napkin {
+		transform-origin: 50% 100%;
+		animation-name: napkin-folds;
+	}
+
+	[data-scene='balloon'] .diver {
+		animation-name: hang-down;
+	}
+
+	[data-scene='balloon'] .balloon {
+		transform-origin: 50% 100%;
+		animation-name: deflate;
+	}
+
+	[data-scene='balloon'] .balloon-string {
+		animation-name: string-goes;
+	}
+
+	[data-scene='hungry-lid'] .diver {
+		animation-name: jump-in;
+	}
+
+	[data-scene='hungry-lid'] .lid {
+		transform-origin: 100% 100%;
+		animation-name: munch;
+	}
+
+	[data-scene='float'] .diver {
+		animation-name: float;
+	}
+
+	[data-scene='float'] .arm {
+		transform-origin: 0% 100%;
+		animation-name: wave-hello;
+	}
+
+	[data-scene='steam-shape'] .diver {
+		animation-name: drop-in;
+	}
+
+	[data-scene='steam-shape'] .steam-shape {
+		animation-name: steam-rises;
+	}
+
+	[data-scene='steam-shape'] .wisp {
+		animation-name: steam-draws;
+	}
+
+	[data-scene='wave'] .diver {
+		animation-name: ride;
+	}
+
+	[data-scene='wave'] .ola {
+		transform-origin: 50% 100%;
+		animation-name: ola;
+	}
+
+	[data-scene='wave'] .ola:nth-child(2) {
+		animation-delay: calc(var(--dd-duration-reward-delay) + var(--dd-duration-scene) * 0.1);
+	}
+
+	[data-scene='wave'] .ola:nth-child(3) {
+		animation-delay: calc(var(--dd-duration-reward-delay) + var(--dd-duration-scene) * 0.2);
+	}
+
+	[data-scene='wave'] .ola:nth-child(4) {
+		animation-delay: calc(var(--dd-duration-reward-delay) + var(--dd-duration-scene) * 0.3);
+	}
+
+	[data-scene='wave'] .ola:nth-child(5) {
+		animation-delay: calc(var(--dd-duration-reward-delay) + var(--dd-duration-scene) * 0.4);
 	}
 
 	@keyframes somersault {
@@ -396,6 +661,506 @@
 
 		75% {
 			scale: 1.04 0.94;
+		}
+	}
+
+	@keyframes prop-shows {
+		0% {
+			opacity: 0;
+		}
+
+		8%,
+		72% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+		}
+	}
+
+	@keyframes slide {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 3.3) calc(var(--dd-space-3xl) * -2.6);
+			rotate: -28deg;
+		}
+
+		10% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * 3.3) calc(var(--dd-space-3xl) * -2.6);
+		}
+
+		20% {
+			translate: calc(var(--dd-space-3xl) * 3.1) calc(var(--dd-space-3xl) * -2.45);
+			rotate: -28deg;
+		}
+
+		45% {
+			translate: calc(var(--dd-space-3xl) * 0.93) calc(var(--dd-space-3xl) * -1.34);
+			rotate: -28deg;
+		}
+
+		60% {
+			translate: calc(var(--dd-space-3xl) * 0.3) calc(var(--dd-space-3xl) * -1.7);
+			rotate: -200deg;
+		}
+
+		85%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: -360deg;
+		}
+	}
+
+	@keyframes thrown {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -4.45) 0;
+			rotate: 0deg;
+		}
+
+		10%,
+		30% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * -4.45) 0;
+			rotate: 0deg;
+		}
+
+		36% {
+			translate: calc(var(--dd-space-3xl) * -4) calc(var(--dd-space-3xl) * -0.9);
+			rotate: 90deg;
+		}
+
+		46% {
+			translate: calc(var(--dd-space-3xl) * -3.1) calc(var(--dd-space-3xl) * -1.7);
+			rotate: 270deg;
+		}
+
+		58% {
+			translate: calc(var(--dd-space-3xl) * -1.9) calc(var(--dd-space-3xl) * -2);
+			rotate: 450deg;
+		}
+
+		70% {
+			translate: calc(var(--dd-space-3xl) * -0.9) calc(var(--dd-space-3xl) * -1.6);
+			rotate: 600deg;
+		}
+
+		85%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 720deg;
+		}
+	}
+
+	@keyframes spoon-throws {
+		0%,
+		28% {
+			rotate: -8deg;
+		}
+
+		34% {
+			rotate: 26deg;
+		}
+
+		42% {
+			rotate: 16deg;
+		}
+
+		52%,
+		100% {
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes glide-down {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 2.6) calc(var(--dd-space-3xl) * -2.2);
+			rotate: 12deg;
+		}
+
+		10% {
+			opacity: 100%;
+		}
+
+		30% {
+			translate: calc(var(--dd-space-3xl) * 1.9) calc(var(--dd-space-3xl) * -1.4);
+			rotate: -10deg;
+		}
+
+		50% {
+			translate: calc(var(--dd-space-3xl) * 1.1) calc(var(--dd-space-3xl) * -0.85);
+			rotate: 8deg;
+		}
+
+		66% {
+			translate: calc(var(--dd-space-3xl) * 0.45) calc(var(--dd-space-3xl) * -0.4);
+			rotate: -5deg;
+		}
+
+		82%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes napkin-folds {
+		0%,
+		80% {
+			opacity: 100%;
+			scale: 1 1;
+		}
+
+		100% {
+			opacity: 0;
+			scale: 1 0.3;
+		}
+	}
+
+	@keyframes hang-down {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * 3) calc(var(--dd-space-3xl) * -1.3);
+			rotate: -6deg;
+		}
+
+		10% {
+			opacity: 100%;
+		}
+
+		25% {
+			translate: calc(var(--dd-space-3xl) * 2.2) calc(var(--dd-space-3xl) * -1.1);
+			rotate: 6deg;
+		}
+
+		40% {
+			translate: calc(var(--dd-space-3xl) * 1.1) calc(var(--dd-space-3xl) * -0.9);
+			rotate: -4deg;
+		}
+
+		52% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.8);
+			rotate: 0deg;
+		}
+
+		62% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.68);
+			rotate: 3deg;
+		}
+
+		72% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.48);
+			rotate: -3deg;
+		}
+
+		82% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.24);
+			rotate: 2deg;
+		}
+
+		92%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes deflate {
+		0%,
+		52% {
+			opacity: 100%;
+			scale: 1;
+			rotate: 0deg;
+		}
+
+		62% {
+			scale: 0.85;
+			rotate: 10deg;
+		}
+
+		72% {
+			scale: 0.7;
+			rotate: -10deg;
+		}
+
+		82% {
+			scale: 0.55;
+			rotate: 8deg;
+		}
+
+		92% {
+			opacity: 100%;
+			scale: 0.4;
+			rotate: 0deg;
+		}
+
+		100% {
+			opacity: 0;
+			scale: 0.3;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes string-goes {
+		0%,
+		88% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+		}
+	}
+
+	@keyframes jump-in {
+		0% {
+			opacity: 0;
+			translate: calc(var(--dd-space-3xl) * -3.5) calc(var(--dd-space-3xl) * 0.2);
+			rotate: 0deg;
+		}
+
+		10%,
+		18% {
+			opacity: 100%;
+			translate: calc(var(--dd-space-3xl) * -3.5) calc(var(--dd-space-3xl) * 0.2);
+			rotate: 0deg;
+		}
+
+		30% {
+			translate: calc(var(--dd-space-3xl) * -1.8) calc(var(--dd-space-3xl) * -1.4);
+			rotate: -20deg;
+		}
+
+		42%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes munch {
+		0% {
+			opacity: 0;
+			translate: 0 0;
+			rotate: 24deg;
+		}
+
+		10%,
+		40% {
+			opacity: 100%;
+			rotate: 24deg;
+		}
+
+		48%,
+		62%,
+		76% {
+			rotate: 0deg;
+		}
+
+		56%,
+		70% {
+			rotate: 14deg;
+		}
+
+		86% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-3xl) * -0.5);
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes float {
+		0% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-3xl) * -1.6);
+			rotate: 0deg;
+		}
+
+		10% {
+			opacity: 100%;
+		}
+
+		26% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.45);
+			rotate: -90deg;
+		}
+
+		34%,
+		50% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.38);
+			rotate: -86deg;
+		}
+
+		42%,
+		58% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.48);
+			rotate: -93deg;
+		}
+
+		68% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.42);
+			rotate: -90deg;
+		}
+
+		90% {
+			translate: 0 calc(var(--dd-space-3xl) * 0.35);
+			rotate: -30deg;
+		}
+
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes wave-hello {
+		0%,
+		28% {
+			opacity: 0;
+			rotate: 0deg;
+		}
+
+		32% {
+			opacity: 100%;
+			rotate: 0deg;
+		}
+
+		38%,
+		50% {
+			rotate: -35deg;
+		}
+
+		44%,
+		56% {
+			rotate: 15deg;
+		}
+
+		62% {
+			opacity: 100%;
+			rotate: 0deg;
+		}
+
+		68%,
+		100% {
+			opacity: 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes steam-rises {
+		0%,
+		25% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-3xl) * 0.5);
+			scale: 0.6;
+		}
+
+		50% {
+			opacity: 100%;
+			translate: 0 0;
+			scale: 1;
+		}
+
+		80% {
+			opacity: 100%;
+			translate: 0 calc(var(--dd-space-3xl) * -0.1);
+			scale: 1;
+		}
+
+		100% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-3xl) * -0.4);
+			scale: 1.1;
+		}
+	}
+
+	@keyframes steam-draws {
+		0%,
+		25% {
+			stroke-dashoffset: 1;
+		}
+
+		60%,
+		100% {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@keyframes ride {
+		0% {
+			opacity: 0;
+			translate: 0 calc(var(--dd-space-3xl) * -1.5);
+			rotate: 0deg;
+		}
+
+		10% {
+			opacity: 100%;
+		}
+
+		32%,
+		52% {
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		60% {
+			translate: 0 calc(var(--dd-space-3xl) * -0.45);
+			rotate: -12deg;
+		}
+
+		68% {
+			translate: 0 0;
+			rotate: 6deg;
+		}
+
+		76%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	@keyframes ola {
+		0%,
+		28% {
+			opacity: 0;
+			scale: 1 0;
+		}
+
+		32% {
+			opacity: 100%;
+			scale: 1 0.3;
+		}
+
+		40% {
+			scale: 1 1;
+		}
+
+		48% {
+			opacity: 100%;
+			scale: 1 0.3;
+		}
+
+		52%,
+		100% {
+			opacity: 0;
+			scale: 1 0;
 		}
 	}
 </style>
