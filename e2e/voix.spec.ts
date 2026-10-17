@@ -4,9 +4,10 @@ import { readFileSync } from 'node:fs';
 import { voiceKey } from '../src/lib/audio/voice-key';
 import { parseVoiceRecordings } from '../src/lib/audio/voice-recordings';
 import { readWavHeader } from '../src/lib/audio/voice-signal';
-import { LOOK_REMINDER_ID, voiceTexts } from '../src/lib/audio/voice-texts';
+import { inRecordingOrder, LOOK_REMINDER_ID, voiceTexts } from '../src/lib/audio/voice-texts';
 import { readZipEntry } from '../src/lib/audio/zip-test-support';
 import { parseProgression } from '../src/lib/engine/progression/definition';
+import { parseStory } from '../src/lib/engine/story';
 import { linkedPaths, loadMessages, openPage, readJson, reloadPage } from './support';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -19,10 +20,11 @@ const TAKE_SECONDS = 1;
 
 const { message } = loadMessages();
 const config = readJson<{ sampleRate: number }>('content/common/voice.json');
-const TEXTS = voiceTexts(
-	parseProgression(readJson('content/fr/progression/azerty-decouverte.json')),
-	undefined,
-	[{ id: LOOK_REMINDER_ID, text: message('game_shared_look_reminder') }]
+const story = parseStory(readJson('content/fr/story/azerty-decouverte.json'));
+const TEXTS = inRecordingOrder(
+	voiceTexts(parseProgression(readJson('content/fr/progression/azerty-decouverte.json')), story, [
+		{ id: LOOK_REMINDER_ID, text: message('game_shared_look_reminder') }
+	])
 );
 const TOTAL = TEXTS.length;
 const FIRST = TEXTS[0]!;
@@ -181,6 +183,14 @@ test.describe('voice recording page', () => {
 		await consentBox(page).focus();
 		await page.keyboard.press('Space');
 		await expect(consentBox(page)).toBeChecked();
+	});
+
+	test('offers the openings and endings of the story first (ADR-042)', async ({ page }) => {
+		await openRecorder(page);
+		const first = story.worlds[0];
+		await expect(page.getByTestId('voice-text')).toHaveText(first?.opening ?? '');
+		await button(page, 'dev_voix_next').click();
+		await expect(page.getByTestId('voice-text')).toHaveText(first?.ending ?? '');
 	});
 
 	test('stops at both ends of the list of texts', async ({ page }) => {

@@ -11,7 +11,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J1 Moteur de frappe | Validé sur Windows (Chrome, Firefox) | Reste : Mac/Safari, Linux, Chromebook (Q7) |
 | J2 Tranche jouable | Critère de sortie atteint au premier test (2026-10-13) | L'enfant a joué environ 15 minutes et voulait recommencer ; il regardait ses mains |
 | J3 Pédagogie complète | Mots et phrases relus par le porteur ; test avec un enfant à faire | 5 mondes, 24 leçons, 926 mots et 216 phrases relus par le porteur, 3 mini-jeux |
-| J4 Aventure | En cours : R2 livré (récompenses, compagnon, quête d'aide) | Cadrage validé le 2026-10-13 (ADR-022) |
+| J4 Aventure | En cours : R2 (récompenses, compagnon) et S2 (récit dit et illustré) livrés | Cadrage validé le 2026-10-13 (ADR-022) |
 | J5 Version 1.0 | — | |
 
 ## Prochaines actions
@@ -36,7 +36,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - À faire au lot d'assemblage : afficher les profils illisibles et permettre de les supprimer explicitement (aujourd'hui le store refuse de les effacer).
    - **Lots R1 et S1** : faits (PR 25 et PR 24) — moteur des récompenses et moteur du récit, fonctions pures, pas encore branchés à l'écran.
    - **R2** : fait (ADR-037) — catalogue de 39 récompenses validé par le porteur (`docs/RECOMPENSES.md`) : un objet par leçon réussie, un tour par monde terminé, 10 trophées ; écran « Mon compagnon » (nom, 8 couleurs, objets par emplacement, tours, trophées, silhouettes de ce qui reste à gagner) ; carte « Nouveau ! » et question du nom sur le bilan ; « À gagner » sur l'avant-leçon ; profil version 5 (récompenses acquises pour toujours) ; quête « le compagnon a besoin d'aide » sur une touche redevenue fragile ; page d'essai `/dev/compagnon`. **Attendu du porteur** : regarder le compagnon habillé et l'écran « Mon compagnon », dire ce qui gêne (dessins, longueur de l'écran, place de la bulle).
-   - **Ensuite** : S2 textes du récit, écrans, écran « l'histoire jusqu'ici » · V2 branchement du bouton « Écouter » dans le parcours et enregistrement des textes définitifs · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
+   - **S2** : fait (ADR-043) — les 34 textes validés en données (`content/fr/story/`), chacun avec son dessin (34 scènes, page d'essai `/dev/recit`) ; ouverture d'un monde avant sa première leçon, ligne et fin après le bilan quand l'enfant le quitte ; texte dit une fois et « Écouter » ; carnet « L'histoire jusqu'ici » depuis la carte. **Attendu du porteur** : lire et regarder le récit sur `/dev/recit` (dire par numéro ce qui gêne), jouer une leçon d'un monde neuf, puis enregistrer sur `/dev/voix` les 10 ouvertures et fins, proposées en tête de liste.
+   - **Ensuite** : V2 branchement du bouton « Écouter » dans le parcours et enregistrement des textes définitifs · F fantôme (en dernier) · assemblage : carte parcourue aux flèches (ADR-027), profils illisibles.
    - **Puis assemblage** dans le parcours `/jouer`.
 4. Trouver des testeurs Mac/Safari, Linux, Chromebook (Q7) : envoyer le lien de la page `/dev/traces`.
 
@@ -168,3 +169,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-16** — PR 42 (R2) et PR 44 (pouce gauche retiré de la main guide) fusionnées. Trophées des rangées redessinés au choix du porteur (ADR-041).
 - **2026-10-17** — Récit : le porteur valide le brouillon sauf le n° 25, choisit de ne jamais mettre le nom du compagnon dans le récit (la voix enregistrée ne peut pas le dire) et trouve le ton trop « 8 ans ». Version 2 de `docs/RECIT_BROUILLON.md` envoyée : même longueur, humour pince-sans-rire, compagnon gourmand, fil du carnet de voyage. **Attendu du porteur** : réponses par numéro, puis lot S2 dans une nouvelle session.
 - **2026-10-17** — Récit version 2 validée par le porteur (« ok pour tout »), enregistrement d'abord des 10 ouvertures et fins (ADR-042). Prochain lot : S2, dans une nouvelle session (Opus 5.5, effort élevé).
+- **2026-10-17** — Lot S2 : récit en données, écrans et carnet par le chef d'orchestre, 34 dessins par cinq agents en parallèle (un par monde, un fichier chacun) après contrats figés. Choix du porteur : la ligne du récit vient après le bilan (ADR-043). Leçons L-059 à L-061.
