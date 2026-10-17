@@ -5,6 +5,7 @@
  *   validateStory(story, progression): string[]                                 (definition.ts)
  *   storyBeforeLesson(story, progression, progress, lessonId): StoryMoment[]    (moments.ts)
  *   storyAfterLesson(story, progression, before, after, lessonId): StoryMoment[] (moments.ts)
+ *   storySoFar(story, progression, progress): StoryMoment[]                      (moments.ts)
  *
  * The story moves on because the child types, and for no other reason. Which text to show is
  * therefore deduced from the progress before and after a play: no "already seen" flag is stored,
@@ -20,14 +21,18 @@ export interface StoryLessonLine {
 	readonly lessonId: string;
 	/** One sentence told when the lesson is passed. */
 	readonly line: string;
+	/** The picture shown with the line: a drawing of `ui/story`, named like a reward's `artId`. */
+	readonly art: string;
 }
 
 export interface StoryWorld {
 	readonly worldId: string;
 	/** Told when the child enters the world. */
 	readonly opening: string;
+	readonly openingArt: string;
 	/** Told once every lesson of the world is passed. */
 	readonly ending: string;
+	readonly endingArt: string;
 	readonly lessons: readonly StoryLessonLine[];
 }
 
@@ -44,4 +49,10 @@ export interface StoryDefinition {
 export interface StoryMoment {
 	readonly kind: 'opening' | 'line' | 'ending';
 	readonly text: string;
+	/** The picture shown with the text. */
+	readonly art: string;
+	/** The world the moment belongs to: its page in the travel notebook. */
+	readonly worldId: string;
+	/** The lesson of a `line`; `null` for an opening or an ending. */
+	readonly lessonId: string | null;
 }

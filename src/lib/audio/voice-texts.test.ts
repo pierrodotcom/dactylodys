@@ -40,17 +40,21 @@ function story(): StoryDefinition {
 			{
 				worldId: 'fr.world.un',
 				opening: 'Ouverture un.',
+				openingArt: 'un-opening',
 				ending: 'Fin un.',
+				endingArt: 'un-ending',
 				lessons: [
-					{ lessonId: 'fr.lesson.a', line: 'Ligne A.' },
-					{ lessonId: 'fr.lesson.b', line: 'Ligne B.' }
+					{ lessonId: 'fr.lesson.a', line: 'Ligne A.', art: 'line-a' },
+					{ lessonId: 'fr.lesson.b', line: 'Ligne B.', art: 'line-b' }
 				]
 			},
 			{
 				worldId: 'fr.world.deux',
 				opening: 'Ouverture deux.',
+				openingArt: 'deux-opening',
 				ending: 'Fin deux.',
-				lessons: [{ lessonId: 'fr.lesson.c', line: 'Ligne C.' }]
+				endingArt: 'deux-ending',
+				lessons: [{ lessonId: 'fr.lesson.c', line: 'Ligne C.', art: 'line-c' }]
 			}
 		]
 	};
@@ -140,7 +144,14 @@ describe('voiceTexts', () => {
 			...base,
 			worlds: [
 				...base.worlds,
-				{ worldId: 'fr.world.ailleurs', opening: 'Ailleurs.', ending: 'Retour.', lessons: [] }
+				{
+					worldId: 'fr.world.ailleurs',
+					opening: 'Ailleurs.',
+					openingArt: 'ailleurs',
+					ending: 'Retour.',
+					endingArt: 'retour',
+					lessons: []
+				}
 			]
 		};
 

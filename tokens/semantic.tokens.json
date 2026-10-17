@@ -2,345 +2,898 @@
 	"color": {
 		"$type": "color",
 		"surface": {
-			"base": { "$value": "{color.cream.100}" },
-			"raised": { "$value": "{color.cream.50}" },
-			"sunken": { "$value": "{color.cream.200}" }
+			"base": {
+				"$value": "{color.cream.100}"
+			},
+			"raised": {
+				"$value": "{color.cream.50}"
+			},
+			"sunken": {
+				"$value": "{color.cream.200}"
+			}
 		},
 		"text": {
-			"primary": { "$value": "{color.brown.900}" },
-			"secondary": { "$value": "{color.brown.600}" },
-			"on-accent": { "$value": "{color.cream.50}" }
+			"primary": {
+				"$value": "{color.brown.900}"
+			},
+			"secondary": {
+				"$value": "{color.brown.600}"
+			},
+			"on-accent": {
+				"$value": "{color.cream.50}"
+			}
 		},
 		"accent": {
-			"base": { "$value": "{color.teal.600}" },
-			"hover": { "$value": "{color.teal.700}" }
+			"base": {
+				"$value": "{color.teal.600}"
+			},
+			"hover": {
+				"$value": "{color.teal.700}"
+			}
 		},
 		"border": {
-			"subtle": { "$value": "{color.cream.300}" },
-			"strong": { "$value": "{color.brown.500}" }
+			"subtle": {
+				"$value": "{color.cream.300}"
+			},
+			"strong": {
+				"$value": "{color.brown.500}"
+			}
 		},
 		"focus": {
-			"ring": { "$value": "{color.indigo.600}" }
+			"ring": {
+				"$value": "{color.indigo.600}"
+			}
 		},
 		"success": {
-			"text": { "$value": "{color.green.700}" },
-			"surface": { "$value": "{color.green.100}" }
+			"text": {
+				"$value": "{color.green.700}"
+			},
+			"surface": {
+				"$value": "{color.green.100}"
+			}
 		},
 		"error": {
-			"text": { "$value": "{color.red.700}" },
-			"surface": { "$value": "{color.red.100}" }
+			"text": {
+				"$value": "{color.red.700}"
+			},
+			"surface": {
+				"$value": "{color.red.100}"
+			}
 		},
 		"finger": {
-			"left-pinky": { "$value": "{color.turquoise.300}" },
-			"left-ring": { "$value": "{color.lavender.300}" },
-			"left-middle": { "$value": "{color.gold.500}" },
-			"left-index": { "$value": "{color.clay.400}" },
-			"left-thumb": { "$value": "{color.sunflower.300}" },
-			"right-thumb": { "$value": "{color.violet.400}" },
-			"right-index": { "$value": "{color.sage.400}" },
-			"right-middle": { "$value": "{color.mint.200}" },
-			"right-ring": { "$value": "{color.ocean.400}" },
-			"right-pinky": { "$value": "{color.jade.300}" }
+			"left-pinky": {
+				"$value": "{color.turquoise.300}"
+			},
+			"left-ring": {
+				"$value": "{color.lavender.300}"
+			},
+			"left-middle": {
+				"$value": "{color.gold.500}"
+			},
+			"left-index": {
+				"$value": "{color.clay.400}"
+			},
+			"left-thumb": {
+				"$value": "{color.sunflower.300}"
+			},
+			"right-thumb": {
+				"$value": "{color.violet.400}"
+			},
+			"right-index": {
+				"$value": "{color.sage.400}"
+			},
+			"right-middle": {
+				"$value": "{color.mint.200}"
+			},
+			"right-ring": {
+				"$value": "{color.ocean.400}"
+			},
+			"right-pinky": {
+				"$value": "{color.jade.300}"
+			}
 		},
 		"key": {
-			"surface": { "$value": "{color.surface.raised}" },
-			"border": { "$value": "{color.border.strong}" },
-			"text": { "$value": "{color.text.primary}" },
-			"text-on-finger": { "$value": "{color.brown.900}" },
-			"target-outline": { "$value": "{color.text.primary}" }
+			"surface": {
+				"$value": "{color.surface.raised}"
+			},
+			"border": {
+				"$value": "{color.border.strong}"
+			},
+			"text": {
+				"$value": "{color.text.primary}"
+			},
+			"text-on-finger": {
+				"$value": "{color.brown.900}"
+			},
+			"target-outline": {
+				"$value": "{color.text.primary}"
+			}
 		},
 		"oops": {
-			"outline": { "$value": "{color.amber.700}" }
+			"outline": {
+				"$value": "{color.amber.700}"
+			}
 		},
 		"typing": {
-			"done": { "$value": "{color.brown.500}" },
-			"current-surface": { "$value": "{color.surface.raised}" },
-			"current-frame": { "$value": "{color.accent.base}" }
+			"done": {
+				"$value": "{color.brown.500}"
+			},
+			"current-surface": {
+				"$value": "{color.surface.raised}"
+			},
+			"current-frame": {
+				"$value": "{color.accent.base}"
+			}
 		},
 		"companion": {
-			"body": { "$value": "{color.companion.green.body}" },
-			"belly": { "$value": "{color.companion.green.belly}" },
-			"plate": { "$value": "{color.companion.green.plate}" },
-			"line": { "$value": "{color.brown.900}" },
-			"eye": { "$value": "{color.cream.50}" },
-			"cheek": { "$value": "{color.companion.green.cheek}" },
-			"shadow": { "$value": "{color.shadow.light}" },
+			"body": {
+				"$value": "{color.companion.green.body}"
+			},
+			"belly": {
+				"$value": "{color.companion.green.belly}"
+			},
+			"plate": {
+				"$value": "{color.companion.green.plate}"
+			},
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"eye": {
+				"$value": "{color.cream.50}"
+			},
+			"cheek": {
+				"$value": "{color.companion.green.cheek}"
+			},
+			"shadow": {
+				"$value": "{color.shadow.light}"
+			},
 			"green": {
-				"body": { "$value": "{color.jade.300}" },
-				"belly": { "$value": "{color.cream.50}" },
-				"plate": { "$value": "{color.ocean.400}" },
-				"cheek": { "$value": "{color.clay.400}" }
+				"body": {
+					"$value": "{color.jade.300}"
+				},
+				"belly": {
+					"$value": "{color.cream.50}"
+				},
+				"plate": {
+					"$value": "{color.ocean.400}"
+				},
+				"cheek": {
+					"$value": "{color.clay.400}"
+				}
 			},
 			"sky": {
-				"body": { "$value": "{color.azure.300}" },
-				"belly": { "$value": "{color.azure.50}" },
-				"plate": { "$value": "{color.azure.500}" },
-				"cheek": { "$value": "{color.pink.200}" }
+				"body": {
+					"$value": "{color.azure.300}"
+				},
+				"belly": {
+					"$value": "{color.azure.50}"
+				},
+				"plate": {
+					"$value": "{color.azure.500}"
+				},
+				"cheek": {
+					"$value": "{color.pink.200}"
+				}
 			},
 			"violet": {
-				"body": { "$value": "{color.plum.300}" },
-				"belly": { "$value": "{color.plum.50}" },
-				"plate": { "$value": "{color.plum.500}" },
-				"cheek": { "$value": "{color.pink.200}" }
+				"body": {
+					"$value": "{color.plum.300}"
+				},
+				"belly": {
+					"$value": "{color.plum.50}"
+				},
+				"plate": {
+					"$value": "{color.plum.500}"
+				},
+				"cheek": {
+					"$value": "{color.pink.200}"
+				}
 			},
 			"orange": {
-				"body": { "$value": "{color.orange.300}" },
-				"belly": { "$value": "{color.orange.50}" },
-				"plate": { "$value": "{color.orange.500}" },
-				"cheek": { "$value": "{color.orange.600}" }
+				"body": {
+					"$value": "{color.orange.300}"
+				},
+				"belly": {
+					"$value": "{color.orange.50}"
+				},
+				"plate": {
+					"$value": "{color.orange.500}"
+				},
+				"cheek": {
+					"$value": "{color.orange.600}"
+				}
 			},
 			"pink": {
-				"body": { "$value": "{color.pink.300}" },
-				"belly": { "$value": "{color.pink.50}" },
-				"plate": { "$value": "{color.pink.500}" },
-				"cheek": { "$value": "{color.tomato.300}" }
+				"body": {
+					"$value": "{color.pink.300}"
+				},
+				"belly": {
+					"$value": "{color.pink.50}"
+				},
+				"plate": {
+					"$value": "{color.pink.500}"
+				},
+				"cheek": {
+					"$value": "{color.tomato.300}"
+				}
 			},
 			"yellow": {
-				"body": { "$value": "{color.lemon.300}" },
-				"belly": { "$value": "{color.lemon.50}" },
-				"plate": { "$value": "{color.lemon.500}" },
-				"cheek": { "$value": "{color.orange.600}" }
+				"body": {
+					"$value": "{color.lemon.300}"
+				},
+				"belly": {
+					"$value": "{color.lemon.50}"
+				},
+				"plate": {
+					"$value": "{color.lemon.500}"
+				},
+				"cheek": {
+					"$value": "{color.orange.600}"
+				}
 			},
 			"turquoise": {
-				"body": { "$value": "{color.lagoon.300}" },
-				"belly": { "$value": "{color.lagoon.50}" },
-				"plate": { "$value": "{color.lagoon.500}" },
-				"cheek": { "$value": "{color.pink.200}" }
+				"body": {
+					"$value": "{color.lagoon.300}"
+				},
+				"belly": {
+					"$value": "{color.lagoon.50}"
+				},
+				"plate": {
+					"$value": "{color.lagoon.500}"
+				},
+				"cheek": {
+					"$value": "{color.pink.200}"
+				}
 			},
 			"tomato": {
-				"body": { "$value": "{color.tomato.300}" },
-				"belly": { "$value": "{color.tomato.50}" },
-				"plate": { "$value": "{color.tomato.600}" },
-				"cheek": { "$value": "{color.tomato.200}" }
+				"body": {
+					"$value": "{color.tomato.300}"
+				},
+				"belly": {
+					"$value": "{color.tomato.50}"
+				},
+				"plate": {
+					"$value": "{color.tomato.600}"
+				},
+				"cheek": {
+					"$value": "{color.tomato.200}"
+				}
 			}
 		},
 		"wear": {
-			"gold": { "$value": "{color.sunflower.300}" },
-			"jewel": { "$value": "{color.red.300}" },
-			"cream": { "$value": "{color.cream.50}" },
-			"red": { "$value": "{color.tomato.500}" },
-			"blue": { "$value": "{color.azure.500}" },
-			"wool": { "$value": "{color.clay.400}" },
-			"wool-light": { "$value": "{color.cream.200}" },
-			"leather": { "$value": "{color.leather.400}" },
-			"twig": { "$value": "{color.gold.500}" },
-			"metal": { "$value": "{color.slate.300}" },
-			"glass": { "$value": "{color.ice.100}" },
-			"rubber": { "$value": "{color.amber.300}" },
-			"spot": { "$value": "{color.amber.700}" },
-			"cape": { "$value": "{color.violet.400}" },
-			"ring": { "$value": "{color.lavender.300}" },
-			"leaf": { "$value": "{color.green.300}" },
-			"ink": { "$value": "{color.brown.900}" }
+			"gold": {
+				"$value": "{color.sunflower.300}"
+			},
+			"jewel": {
+				"$value": "{color.red.300}"
+			},
+			"cream": {
+				"$value": "{color.cream.50}"
+			},
+			"red": {
+				"$value": "{color.tomato.500}"
+			},
+			"blue": {
+				"$value": "{color.azure.500}"
+			},
+			"wool": {
+				"$value": "{color.clay.400}"
+			},
+			"wool-light": {
+				"$value": "{color.cream.200}"
+			},
+			"leather": {
+				"$value": "{color.leather.400}"
+			},
+			"twig": {
+				"$value": "{color.gold.500}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"glass": {
+				"$value": "{color.ice.100}"
+			},
+			"rubber": {
+				"$value": "{color.amber.300}"
+			},
+			"spot": {
+				"$value": "{color.amber.700}"
+			},
+			"cape": {
+				"$value": "{color.violet.400}"
+			},
+			"ring": {
+				"$value": "{color.lavender.300}"
+			},
+			"leaf": {
+				"$value": "{color.green.300}"
+			},
+			"ink": {
+				"$value": "{color.brown.900}"
+			}
 		},
 		"trophy": {
-			"disc": { "$value": "{color.sunflower.300}" },
-			"disc-inner": { "$value": "{color.lemon.50}" },
-			"key-top": { "$value": "{color.cream.50}" },
-			"key-side": { "$value": "{color.cream.300}" },
-			"key-dim": { "$value": "{color.cream.300}" },
-			"key-lit": { "$value": "{color.tomato.500}" },
-			"symbol": { "$value": "{color.brown.900}" },
-			"ribbon-dinosaurs": { "$value": "{color.jade.300}" },
-			"ribbon-kitchen": { "$value": "{color.tomato.500}" },
-			"ribbon-zoo": { "$value": "{color.amber.300}" },
-			"ribbon-stars": { "$value": "{color.violet.400}" },
-			"ribbon-racing": { "$value": "{color.azure.300}" }
+			"disc": {
+				"$value": "{color.sunflower.300}"
+			},
+			"disc-inner": {
+				"$value": "{color.lemon.50}"
+			},
+			"key-top": {
+				"$value": "{color.cream.50}"
+			},
+			"key-side": {
+				"$value": "{color.cream.300}"
+			},
+			"key-dim": {
+				"$value": "{color.cream.300}"
+			},
+			"key-lit": {
+				"$value": "{color.tomato.500}"
+			},
+			"symbol": {
+				"$value": "{color.brown.900}"
+			},
+			"ribbon-dinosaurs": {
+				"$value": "{color.jade.300}"
+			},
+			"ribbon-kitchen": {
+				"$value": "{color.tomato.500}"
+			},
+			"ribbon-zoo": {
+				"$value": "{color.amber.300}"
+			},
+			"ribbon-stars": {
+				"$value": "{color.violet.400}"
+			},
+			"ribbon-racing": {
+				"$value": "{color.azure.300}"
+			}
 		},
-		"silhouette": { "$value": "{color.brown.450}" },
+		"silhouette": {
+			"$value": "{color.brown.450}"
+		},
 		"reward": {
-			"backdrop": { "$value": "{color.cream.50}" }
+			"backdrop": {
+				"$value": "{color.cream.50}"
+			}
 		},
 		"star": {
-			"fill": { "$value": "{color.sunflower.300}" }
+			"fill": {
+				"$value": "{color.sunflower.300}"
+			}
 		},
 		"egg": {
-			"shell": { "$value": "{color.mint.200}" },
-			"spot": { "$value": "{color.sage.400}" },
-			"inside": { "$value": "{color.cream.50}" },
-			"crack": { "$value": "{color.brown.900}" },
-			"line": { "$value": "{color.brown.900}" }
+			"shell": {
+				"$value": "{color.mint.200}"
+			},
+			"spot": {
+				"$value": "{color.sage.400}"
+			},
+			"inside": {
+				"$value": "{color.cream.50}"
+			},
+			"crack": {
+				"$value": "{color.brown.900}"
+			},
+			"line": {
+				"$value": "{color.brown.900}"
+			}
 		},
 		"baby": {
-			"a": { "$value": "{color.ocean.400}" },
-			"b": { "$value": "{color.clay.400}" },
-			"c": { "$value": "{color.sunflower.300}" },
-			"d": { "$value": "{color.lavender.300}" }
+			"a": {
+				"$value": "{color.ocean.400}"
+			},
+			"b": {
+				"$value": "{color.clay.400}"
+			},
+			"c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"d": {
+				"$value": "{color.lavender.300}"
+			}
 		},
 		"bubble": {
-			"surface": { "$value": "{color.cream.50}" },
-			"text": { "$value": "{color.brown.900}" },
-			"border": { "$value": "{color.brown.900}" }
+			"surface": {
+				"$value": "{color.cream.50}"
+			},
+			"text": {
+				"$value": "{color.brown.900}"
+			},
+			"border": {
+				"$value": "{color.brown.900}"
+			}
 		},
 		"hand": {
-			"fill": { "$value": "{color.cream.50}" },
-			"outline": { "$value": "{color.brown.900}" },
-			"active": { "$value": "{color.teal.400}" }
+			"fill": {
+				"$value": "{color.cream.50}"
+			},
+			"outline": {
+				"$value": "{color.brown.900}"
+			},
+			"active": {
+				"$value": "{color.teal.400}"
+			}
 		},
 		"drawing": {
-			"line": { "$value": "{color.brown.900}" },
-			"ink": { "$value": "{color.brown.900}" }
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"ink": {
+				"$value": "{color.brown.900}"
+			}
 		},
 		"sky": {
-			"base": { "$value": "{color.navy.800}" },
-			"line": { "$value": "{color.cream.50}" },
-			"star": { "$value": "{color.cream.50}" }
+			"base": {
+				"$value": "{color.navy.800}"
+			},
+			"line": {
+				"$value": "{color.cream.50}"
+			},
+			"star": {
+				"$value": "{color.cream.50}"
+			}
 		},
 		"astre": {
-			"a": { "$value": "{color.ocean.400}" },
-			"b": { "$value": "{color.clay.400}" },
-			"c": { "$value": "{color.sunflower.300}" },
-			"d": { "$value": "{color.lavender.300}" },
-			"dim": { "$value": "{color.slate.600}" }
+			"a": {
+				"$value": "{color.ocean.400}"
+			},
+			"b": {
+				"$value": "{color.clay.400}"
+			},
+			"c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"d": {
+				"$value": "{color.lavender.300}"
+			},
+			"dim": {
+				"$value": "{color.slate.600}"
+			}
 		},
 		"rocket": {
-			"body": { "$value": "{color.cream.50}" },
-			"fin": { "$value": "{color.clay.400}" },
-			"window": { "$value": "{color.ocean.400}" },
-			"flame-outer": { "$value": "{color.amber.300}" },
-			"flame-inner": { "$value": "{color.sunflower.300}" },
-			"smoke": { "$value": "{color.cream.200}" }
+			"body": {
+				"$value": "{color.cream.50}"
+			},
+			"fin": {
+				"$value": "{color.clay.400}"
+			},
+			"window": {
+				"$value": "{color.ocean.400}"
+			},
+			"flame-outer": {
+				"$value": "{color.amber.300}"
+			},
+			"flame-inner": {
+				"$value": "{color.sunflower.300}"
+			},
+			"smoke": {
+				"$value": "{color.cream.200}"
+			}
 		},
 		"food": {
-			"a": { "$value": "{color.amber.300}" },
-			"b": { "$value": "{color.red.300}" },
-			"c": { "$value": "{color.sunflower.300}" },
-			"d": { "$value": "{color.jade.300}" },
-			"e": { "$value": "{color.ocean.400}" },
-			"f": { "$value": "{color.lavender.300}" }
+			"a": {
+				"$value": "{color.amber.300}"
+			},
+			"b": {
+				"$value": "{color.red.300}"
+			},
+			"c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"d": {
+				"$value": "{color.jade.300}"
+			},
+			"e": {
+				"$value": "{color.ocean.400}"
+			},
+			"f": {
+				"$value": "{color.lavender.300}"
+			}
 		},
 		"pot": {
-			"body": { "$value": "{color.slate.600}" },
-			"inside": { "$value": "{color.brown.900}" },
-			"soup": { "$value": "{color.clay.400}" },
-			"bubble": { "$value": "{color.cream.50}" },
-			"steam": { "$value": "{color.slate.300}" }
+			"body": {
+				"$value": "{color.slate.600}"
+			},
+			"inside": {
+				"$value": "{color.brown.900}"
+			},
+			"soup": {
+				"$value": "{color.clay.400}"
+			},
+			"bubble": {
+				"$value": "{color.cream.50}"
+			},
+			"steam": {
+				"$value": "{color.slate.300}"
+			}
+		},
+		"story": {
+			"paper": {
+				"$value": "{color.cream.50}"
+			},
+			"page": {
+				"$value": "{color.cream.100}"
+			},
+			"page-edge": {
+				"$value": "{color.cream.300}"
+			},
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"ink": {
+				"$value": "{color.brown.900}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"night": {
+				"$value": "{color.navy.800}"
+			},
+			"water": {
+				"$value": "{color.azure.300}"
+			},
+			"water-deep": {
+				"$value": "{color.ocean.400}"
+			},
+			"grass": {
+				"$value": "{color.mint.200}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"sand": {
+				"$value": "{color.orange.50}"
+			},
+			"rock": {
+				"$value": "{color.brown.100}"
+			},
+			"soil": {
+				"$value": "{color.brown.400}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"white": {
+				"$value": "{color.cream.50}"
+			},
+			"dark": {
+				"$value": "{color.brown.900}"
+			},
+			"star": {
+				"$value": "{color.sunflower.300}"
+			},
+			"spark": {
+				"$value": "{color.amber.300}"
+			},
+			"fur": {
+				"$value": "{color.leather.400}"
+			},
+			"fur-light": {
+				"$value": "{color.lemon.300}"
+			},
+			"spot": {
+				"$value": "{color.clay.400}"
+			},
+			"a": {
+				"$value": "{color.tomato.300}"
+			},
+			"b": {
+				"$value": "{color.ocean.400}"
+			},
+			"c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"d": {
+				"$value": "{color.lavender.300}"
+			},
+			"e": {
+				"$value": "{color.jade.300}"
+			},
+			"f": {
+				"$value": "{color.pink.300}"
+			},
+			"g": {
+				"$value": "{color.orange.300}"
+			},
+			"h": {
+				"$value": "{color.plum.300}"
+			}
 		}
 	},
 	"typing": {
 		"size": {
 			"$type": "dimension",
-			"md": { "$value": "{font.size.48}" },
-			"lg": { "$value": "{font.size.64}" },
-			"xl": { "$value": "{font.size.80}" },
-			"current": { "$value": "{font.size.48}" }
+			"md": {
+				"$value": "{font.size.48}"
+			},
+			"lg": {
+				"$value": "{font.size.64}"
+			},
+			"xl": {
+				"$value": "{font.size.80}"
+			},
+			"current": {
+				"$value": "{font.size.48}"
+			}
 		},
 		"letter-spacing": {
 			"$type": "dimension",
-			"normal": { "$value": "0.05em" },
-			"wide": { "$value": "0.12em" },
-			"wider": { "$value": "0.2em" },
-			"current": { "$value": "0.05em" }
+			"normal": {
+				"$value": "0.05em"
+			},
+			"wide": {
+				"$value": "0.12em"
+			},
+			"wider": {
+				"$value": "0.2em"
+			},
+			"current": {
+				"$value": "0.05em"
+			}
 		},
 		"word-spacing": {
 			"$type": "dimension",
-			"normal": { "$value": "0.15em" },
-			"wide": { "$value": "0.35em" },
-			"wider": { "$value": "0.6em" },
-			"current": { "$value": "0.15em" }
+			"normal": {
+				"$value": "0.15em"
+			},
+			"wide": {
+				"$value": "0.35em"
+			},
+			"wider": {
+				"$value": "0.6em"
+			},
+			"current": {
+				"$value": "0.15em"
+			}
 		}
 	},
 	"font": {
 		"family": {
 			"$type": "fontFamily",
-			"base": { "$value": "{font.family.atkinson}" },
-			"mono": { "$value": "{font.family.system-mono}" }
+			"base": {
+				"$value": "{font.family.atkinson}"
+			},
+			"mono": {
+				"$value": "{font.family.system-mono}"
+			}
 		},
 		"size": {
 			"$type": "dimension",
-			"sm": { "$value": "{font.size.16}" },
-			"base": { "$value": "{font.size.20}" },
-			"lg": { "$value": "{font.size.24}" },
-			"xl": { "$value": "{font.size.30}" },
-			"2xl": { "$value": "{font.size.36}" },
-			"3xl": { "$value": "{font.size.48}" },
-			"key": { "$value": "{font.size.20}" },
-			"key-small": { "$value": "0.875rem" }
+			"sm": {
+				"$value": "{font.size.16}"
+			},
+			"base": {
+				"$value": "{font.size.20}"
+			},
+			"lg": {
+				"$value": "{font.size.24}"
+			},
+			"xl": {
+				"$value": "{font.size.30}"
+			},
+			"2xl": {
+				"$value": "{font.size.36}"
+			},
+			"3xl": {
+				"$value": "{font.size.48}"
+			},
+			"key": {
+				"$value": "{font.size.20}"
+			},
+			"key-small": {
+				"$value": "0.875rem"
+			}
 		},
 		"weight": {
 			"$type": "fontWeight",
-			"regular": { "$value": "{font.weight.400}" },
-			"medium": { "$value": "{font.weight.500}" },
-			"bold": { "$value": "{font.weight.700}" }
+			"regular": {
+				"$value": "{font.weight.400}"
+			},
+			"medium": {
+				"$value": "{font.weight.500}"
+			},
+			"bold": {
+				"$value": "{font.weight.700}"
+			}
 		}
 	},
 	"line-height": {
 		"$type": "number",
-		"tight": { "$value": 1.2 },
-		"base": { "$value": 1.6 },
-		"relaxed": { "$value": 1.8 }
+		"tight": {
+			"$value": 1.2
+		},
+		"base": {
+			"$value": 1.6
+		},
+		"relaxed": {
+			"$value": 1.8
+		}
 	},
 	"letter-spacing": {
 		"$type": "dimension",
-		"base": { "$value": "0.02em" },
-		"wide": { "$value": "0.06em" }
+		"base": {
+			"$value": "0.02em"
+		},
+		"wide": {
+			"$value": "0.06em"
+		}
 	},
 	"word-spacing": {
 		"$type": "dimension",
-		"base": { "$value": "0.08em" },
-		"wide": { "$value": "0.16em" }
+		"base": {
+			"$value": "0.08em"
+		},
+		"wide": {
+			"$value": "0.16em"
+		}
 	},
 	"space": {
 		"$type": "dimension",
-		"xs": { "$value": "{dimension.4}" },
-		"sm": { "$value": "{dimension.8}" },
-		"md": { "$value": "{dimension.16}" },
-		"lg": { "$value": "{dimension.24}" },
-		"xl": { "$value": "{dimension.32}" },
-		"2xl": { "$value": "{dimension.48}" },
-		"3xl": { "$value": "{dimension.64}" }
+		"xs": {
+			"$value": "{dimension.4}"
+		},
+		"sm": {
+			"$value": "{dimension.8}"
+		},
+		"md": {
+			"$value": "{dimension.16}"
+		},
+		"lg": {
+			"$value": "{dimension.24}"
+		},
+		"xl": {
+			"$value": "{dimension.32}"
+		},
+		"2xl": {
+			"$value": "{dimension.48}"
+		},
+		"3xl": {
+			"$value": "{dimension.64}"
+		}
 	},
 	"size": {
 		"$type": "dimension",
-		"touch-target-min": { "$value": "48px" },
-		"content-max": { "$value": "45rem" },
-		"viewport-full": { "$value": "100dvh" },
-		"page-wide": { "$value": "64rem" },
-		"control-min": { "$value": "16rem" },
-		"key-unit": { "$value": "3.25rem" },
-		"key-gap": { "$value": "{dimension.4}" },
-		"key-home-mark": { "$value": "{dimension.16}" },
-		"companion": { "$value": "8rem" },
-		"companion-large": { "$value": "20rem" },
-		"reward-picture": { "$value": "7rem" },
-		"reward-picture-large": { "$value": "12rem" },
-		"egg": { "$value": "11rem" },
-		"egg-mini": { "$value": "2.25rem" },
-		"astre-mini": { "$value": "2.25rem" },
-		"ingredient-mini": { "$value": "2.25rem" },
-		"scene-max": { "$value": "26rem" },
-		"text-zone-min": { "$value": "28rem" },
-		"choice-card-min": { "$value": "14rem" },
-		"lesson-node": { "$value": "4rem" },
-		"panel-max": { "$value": "32rem" },
-		"bubble-tail": { "$value": "{dimension.16}" },
-		"star": { "$value": "2rem" },
-		"star-large": { "$value": "5rem" },
-		"icon": { "$value": "1.25rem" },
-		"game-picture": { "$value": "7rem" },
-		"game-picture-small": { "$value": "4.5rem" },
-		"key-unit-compact": { "$value": "2.5rem" },
-		"visually-hidden": { "$value": "1px" }
+		"touch-target-min": {
+			"$value": "48px"
+		},
+		"content-max": {
+			"$value": "45rem"
+		},
+		"viewport-full": {
+			"$value": "100dvh"
+		},
+		"page-wide": {
+			"$value": "64rem"
+		},
+		"control-min": {
+			"$value": "16rem"
+		},
+		"key-unit": {
+			"$value": "3.25rem"
+		},
+		"key-gap": {
+			"$value": "{dimension.4}"
+		},
+		"key-home-mark": {
+			"$value": "{dimension.16}"
+		},
+		"companion": {
+			"$value": "8rem"
+		},
+		"companion-large": {
+			"$value": "20rem"
+		},
+		"reward-picture": {
+			"$value": "7rem"
+		},
+		"reward-picture-large": {
+			"$value": "12rem"
+		},
+		"egg": {
+			"$value": "11rem"
+		},
+		"egg-mini": {
+			"$value": "2.25rem"
+		},
+		"astre-mini": {
+			"$value": "2.25rem"
+		},
+		"ingredient-mini": {
+			"$value": "2.25rem"
+		},
+		"scene-max": {
+			"$value": "26rem"
+		},
+		"story-picture": {
+			"$value": "36rem"
+		},
+		"story-picture-small": {
+			"$value": "14rem"
+		},
+		"text-zone-min": {
+			"$value": "28rem"
+		},
+		"choice-card-min": {
+			"$value": "14rem"
+		},
+		"lesson-node": {
+			"$value": "4rem"
+		},
+		"panel-max": {
+			"$value": "32rem"
+		},
+		"bubble-tail": {
+			"$value": "{dimension.16}"
+		},
+		"star": {
+			"$value": "2rem"
+		},
+		"star-large": {
+			"$value": "5rem"
+		},
+		"icon": {
+			"$value": "1.25rem"
+		},
+		"game-picture": {
+			"$value": "7rem"
+		},
+		"game-picture-small": {
+			"$value": "4.5rem"
+		},
+		"key-unit-compact": {
+			"$value": "2.5rem"
+		},
+		"visually-hidden": {
+			"$value": "1px"
+		}
 	},
 	"radius": {
 		"$type": "dimension",
-		"sm": { "$value": "{dimension.4}" },
-		"md": { "$value": "{dimension.8}" },
-		"lg": { "$value": "{dimension.16}" },
-		"pill": { "$value": "9999px" }
+		"sm": {
+			"$value": "{dimension.4}"
+		},
+		"md": {
+			"$value": "{dimension.8}"
+		},
+		"lg": {
+			"$value": "{dimension.16}"
+		},
+		"pill": {
+			"$value": "9999px"
+		}
 	},
 	"border-width": {
 		"$type": "dimension",
-		"thin": { "$value": "1px" },
-		"thick": { "$value": "2px" },
-		"focus": { "$value": "3px" },
-		"target": { "$value": "4px" },
-		"drawing-bold": { "$value": "4px" }
+		"thin": {
+			"$value": "1px"
+		},
+		"thick": {
+			"$value": "2px"
+		},
+		"focus": {
+			"$value": "3px"
+		},
+		"target": {
+			"$value": "4px"
+		},
+		"drawing-bold": {
+			"$value": "4px"
+		}
 	},
 	"scale": {
 		"$type": "number",
-		"target": { "$value": 1.12 },
-		"press": { "$value": 0.97 }
+		"target": {
+			"$value": 1.12
+		},
+		"press": {
+			"$value": 0.97
+		}
 	},
 	"shadow": {
 		"$type": "shadow",
@@ -384,55 +937,131 @@
 	},
 	"opacity": {
 		"$type": "number",
-		"disabled": { "$value": 0.5 },
-		"overlay": { "$value": 0.6 },
-		"hand": { "$value": 0.55 },
-		"star-almost": { "$value": 0.4 },
-		"glass": { "$value": 0.45 }
+		"disabled": {
+			"$value": 0.5
+		},
+		"overlay": {
+			"$value": 0.6
+		},
+		"hand": {
+			"$value": 0.55
+		},
+		"star-almost": {
+			"$value": 0.4
+		},
+		"glass": {
+			"$value": 0.45
+		}
 	},
 	"duration": {
 		"$type": "duration",
-		"instant": { "$value": "{duration.1}" },
-		"fast": { "$value": "{duration.150}" },
-		"base": { "$value": "{duration.250}" },
-		"slow": { "$value": "{duration.500}" },
-		"beat": { "$value": "{duration.700}" },
-		"reward-delay": { "$value": "{duration.600}" },
-		"guide-move": { "$value": "{duration.500}" },
-		"guide-hold": { "$value": "{duration.400}" },
-		"guide-pause": { "$value": "{duration.3000}" },
-		"confetti": { "$value": "{duration.1600}" },
-		"reward": { "$value": "{duration.1400}" },
-		"scene": { "$value": "{duration.2000}" },
-		"reminder": { "$value": "{duration.4000}" },
-		"celebration": { "$value": "{duration.2800}" },
-		"notice": { "$value": "{duration.1600}" },
-		"trick": { "$value": "{duration.1000}" },
-		"trick-shake": { "$value": "{duration.250}" },
-		"trick-orbit": { "$value": "{duration.1000}" }
+		"instant": {
+			"$value": "{duration.1}"
+		},
+		"fast": {
+			"$value": "{duration.150}"
+		},
+		"base": {
+			"$value": "{duration.250}"
+		},
+		"slow": {
+			"$value": "{duration.500}"
+		},
+		"beat": {
+			"$value": "{duration.700}"
+		},
+		"reward-delay": {
+			"$value": "{duration.600}"
+		},
+		"guide-move": {
+			"$value": "{duration.500}"
+		},
+		"guide-hold": {
+			"$value": "{duration.400}"
+		},
+		"guide-pause": {
+			"$value": "{duration.3000}"
+		},
+		"confetti": {
+			"$value": "{duration.1600}"
+		},
+		"reward": {
+			"$value": "{duration.1400}"
+		},
+		"scene": {
+			"$value": "{duration.2000}"
+		},
+		"reminder": {
+			"$value": "{duration.4000}"
+		},
+		"celebration": {
+			"$value": "{duration.2800}"
+		},
+		"notice": {
+			"$value": "{duration.1600}"
+		},
+		"trick": {
+			"$value": "{duration.1000}"
+		},
+		"trick-shake": {
+			"$value": "{duration.250}"
+		},
+		"trick-orbit": {
+			"$value": "{duration.1000}"
+		}
 	},
 	"easing": {
 		"$type": "cubicBezier",
-		"standard": { "$value": "{easing.soft}" },
-		"steady": { "$value": "{easing.linear}" },
-		"enter": { "$value": "{easing.out}" },
-		"exit": { "$value": "{easing.in}" }
+		"standard": {
+			"$value": "{easing.soft}"
+		},
+		"steady": {
+			"$value": "{easing.linear}"
+		},
+		"enter": {
+			"$value": "{easing.out}"
+		},
+		"exit": {
+			"$value": "{easing.in}"
+		}
 	},
 	"z-index": {
 		"$type": "number",
-		"base": { "$value": 0 },
-		"raised": { "$value": 10 },
-		"guide": { "$value": 20 },
-		"sticky": { "$value": 100 },
-		"overlay": { "$value": 1000 },
-		"modal": { "$value": 1100 },
-		"toast": { "$value": 1200 }
+		"base": {
+			"$value": 0
+		},
+		"raised": {
+			"$value": 10
+		},
+		"guide": {
+			"$value": 20
+		},
+		"sticky": {
+			"$value": 100
+		},
+		"overlay": {
+			"$value": 1000
+		},
+		"modal": {
+			"$value": 1100
+		},
+		"toast": {
+			"$value": 1200
+		}
 	},
 	"breakpoint": {
 		"$type": "dimension",
-		"sm": { "$value": "30rem" },
-		"md": { "$value": "48rem" },
-		"lg": { "$value": "64rem" },
-		"xl": { "$value": "80rem" }
+		"sm": {
+			"$value": "30rem"
+		},
+		"md": {
+			"$value": "48rem"
+		},
+		"lg": {
+			"$value": "64rem"
+		},
+		"xl": {
+			"$value": "80rem"
+		}
 	}
 }
