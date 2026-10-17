@@ -1,6 +1,6 @@
-# Le récit : brouillon à valider (version 2)
+# Le récit (version 2, validée)
 
-Réponds par numéro : **oui**, **non**, ou ta version du texte. Mêmes numéros que la version 1.
+**Validé par le porteur le 2026-10-17** (« ok pour tout ») : ces 34 textes sont ceux du lot S2 (ADR-042).
 
 **Ce qui change** (demande du porteur : le ton faisait « 8 ans ») : même longueur et mots simples, mais de l'humour pince-sans-rire, un compagnon gourmand et sûr de lui, plus de « petit », « bébé » ni « bravo » (le bilan et les étoiles félicitent déjà), et un fil conducteur : **le carnet de voyage** du compagnon, dont chaque monde remplit une page.
 
@@ -57,6 +57,6 @@ Chaque texte est montré entre deux exercices : l'ouverture quand l'enfant entre
 33. **Le camion aux deux yeux** : « Le camion allume ses deux phares et fait un clin d'œil. » — image : un camion dont un phare se ferme.
 34. **Fin** : « Dernière page du carnet : remplie. La suite, c'est toi qui l'écris. » — image : le carnet fermé, plein à craquer, sur le podium.
 
-## Une chose à décider
+## Enregistrement
 
-A. **Enregistrement** : ces 34 textes s'ajoutent aux 25 déjà à enregistrer (24 consignes et le rappel). Si c'est trop, on enregistre d'abord les 10 ouvertures et fins (numéros 1, 8, 9, 15, 16, 21, 22, 27, 28, 34), et les lignes de leçon restent écrites pour l'instant. Que préfères-tu ?
+Choix du porteur : on enregistre **d'abord les 10 ouvertures et fins** (numéros 1, 8, 9, 15, 16, 21, 22, 27, 28, 34) ; les 24 lignes de leçon restent écrites (et lisibles) en attendant leur enregistrement.
