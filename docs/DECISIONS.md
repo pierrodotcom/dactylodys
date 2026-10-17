@@ -203,3 +203,10 @@ Réponse du porteur à la lassitude des dinos et des aliments à chaque monde (�
 Deux demandes du porteur après avoir vu R2 et la main guide.
 - **Un seul pouce sur la barre d'espace** (amende l'ADR-031) : seul un pouce qui a une touche de repos dans le profil de doigté est dessiné ; en dix doigts, c'est le pouce droit. Deux pouces sur l'espace laissaient croire que les deux pouvaient la frapper. La main gauche montre ses quatre doigts.
 - **Trophées des rangées** (amende l'ADR-037, option 1 sur 3 proposées) : trois grosses touches sur une estrade, avec les trois premières lettres de la rangée lues dans le catalogue (« Q S D », « A Z E », « W X C » en AZERTY, aucune lettre écrite dans le dessin). Dans la silhouette d'un trophée pas encore gagné, les lettres et les symboles restent découpés : chaque trophée se reconnaît avant d'être gagné.
+
+## 042 — Ton et fil du récit (2026-10-17, acceptée)
+Décisions du porteur sur le brouillon du récit (`docs/RECIT_BROUILLON.md`, version 2 validée « ok pour tout »), à réaliser par le lot S2.
+- **Ton des 8-12 ans** : phrases courtes (6 à 12 mots) et mots simples, car beaucoup d'enfants dys ou TDAH lisent en dessous de leur âge ; mais un ton qui ne fait pas « petit » : humour pince-sans-rire, compagnon gourmand et sûr de lui, pas de félicitations dans le récit (le bilan et les étoiles s'en chargent).
+- **Fil conducteur** : le carnet de voyage du compagnon, dont chaque monde remplit une page ; la dernière phrase rend la main à l'enfant (« La suite, c'est toi qui l'écris »).
+- **Le nom du compagnon n'apparaît jamais dans le récit** (option A) : les textes sont dits par une voix enregistrée, qui ne peut pas dire un nom choisi par l'enfant.
+- **Enregistrement** : d'abord les 10 ouvertures et fins de monde ; les 24 lignes de leçon restent écrites en attendant.
