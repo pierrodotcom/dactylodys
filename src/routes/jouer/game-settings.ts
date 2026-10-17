@@ -15,7 +15,6 @@ export function toGameSettings(
 	scenes: readonly string[] = []
 ): GameSettings {
 	return {
-		soundEnabled: settings.soundEnabled,
 		reducedMotion: isMotionReduced(settings, systemPrefersReduced),
 		showKeyboard: settings.showKeyboard,
 		errorPolicy: 'retry',
