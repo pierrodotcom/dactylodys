@@ -28,7 +28,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
    - **Lot A (retours sur T1 et T2, ADR-032)** : fait — réglages en haut, étoiles célébrées, démonstration répétée, main complète au 2ᵉ monde.
    - **T3 Consignes montrées et dites** : fait (ADR-033) — avant-leçon réduit avec les jeux en grandes images qui lancent la partie, consigne dite à l'ouverture (réglage « Voix qui lit les consignes »), rappel « regarde l'écran » tous les 4 groupes. **Attendu du porteur** : enregistrer aussi la phrase du rappel sur `/dev/voix` avec les 24 consignes.
    - **A1 et A2 Scènes surprises** : faits (ADR-034, ADR-035) — les 40 scènes acceptées par le porteur : 12 par jeu, débloquées toutes les 2 leçons réussies, plus photo souvenir, défilé de fin de monde, notes de musique et 5 danses du compagnon.
-   - **Lot R2** (récompenses, compagnon) : proposé dans une nouvelle session le 2026-10-16, à démarrer par le porteur.
+   - **Lot R2** (récompenses, compagnon) : fait (PR 42, ADR-037), puis trophées des rangées redessinés et pouce gauche retiré de la main guide (PR 44 et 46, ADR-041) ; détail au point 7.
    - Puis la suite de J4, en tenant compte du constat : un récit en texte ne sera pas lu ; il doit être dit et illustré, en phrases très courtes.
 7. **J4 Aventure** (ADR-022, acceptée ; en pause derrière le lot 6) :
    - **Lot 0, socle** : fait — minimum de 5 frappes par nouveau signe et retrait de « ü » (PR 16, ADR-024) ; profil version 2 avec migration, profils illisibles conservés et listés, jeu choisi retrouvé à la visite suivante, allure de chaque partie réussie enregistrée, types des récompenses, du récit et de la voix (PR 17). Contrats dans `.claude/rules/jeux-pedagogie.md`.
