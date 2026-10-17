@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { StoryMoment } from '$lib/engine/story';
 import {
 	INITIAL_SCREEN,
 	transition,
@@ -8,6 +9,29 @@ import {
 } from './flow';
 
 const LESSON = 'fr.lesson.one';
+const NEXT = 'fr.lesson.two';
+const LINE: StoryMoment = {
+	kind: 'line',
+	text: 'Line.',
+	art: 'line',
+	worldId: 'fr.world.one',
+	lessonId: LESSON
+};
+const ENDING: StoryMoment = {
+	kind: 'ending',
+	text: 'End.',
+	art: 'end',
+	worldId: 'fr.world.one',
+	lessonId: null
+};
+const OPENING: StoryMoment = {
+	kind: 'opening',
+	text: 'Open.',
+	art: 'open',
+	worldId: 'fr.world.two',
+	lessonId: null
+};
+const RESULT: Screen = { name: 'result', lessonId: LESSON };
 
 function run(events: readonly FlowEvent[], from: Screen = INITIAL_SCREEN): Screen {
 	return events.reduce(transition, from);
@@ -212,5 +236,96 @@ describe('screen automaton', () => {
 		expect(transition(players, { type: 'start' })).toBe(players);
 		expect(transition(map, { type: 'completed' })).toBe(map);
 		expect(transition(INITIAL_SCREEN, { type: 'start' })).toBe(INITIAL_SCREEN);
+	});
+
+	describe('story between two exercises', () => {
+		it('tells the opening of a world before the lesson screen', () => {
+			const screen = transition(
+				{ name: 'map' },
+				{
+					type: 'tell',
+					moments: [OPENING],
+					then: { name: 'intro', lessonId: NEXT }
+				}
+			);
+			expect(screen).toEqual({
+				name: 'story',
+				moments: [OPENING],
+				index: 0,
+				then: { name: 'intro', lessonId: NEXT }
+			});
+			expect(transition(screen, { type: 'story-next' })).toEqual({ name: 'intro', lessonId: NEXT });
+		});
+
+		it('goes straight to the lesson when there is nothing to tell', () => {
+			expect(
+				transition(
+					{ name: 'map' },
+					{ type: 'tell', moments: [], then: { name: 'intro', lessonId: LESSON } }
+				)
+			).toEqual({ name: 'intro', lessonId: LESSON });
+		});
+
+		it('tells each moment in turn after the result, then goes where the child chose', () => {
+			const told = run(
+				[
+					{
+						type: 'tell',
+						moments: [LINE, ENDING, OPENING],
+						then: { name: 'intro', lessonId: NEXT }
+					},
+					{ type: 'story-next' }
+				],
+				RESULT
+			);
+			expect(told).toMatchObject({ name: 'story', index: 1 });
+			expect(run([{ type: 'story-next' }, { type: 'story-next' }], told)).toEqual({
+				name: 'intro',
+				lessonId: NEXT
+			});
+		});
+
+		it('leads to the map or to the break after the story', () => {
+			for (const then of [{ name: 'map' }, { name: 'break' }] as const) {
+				expect(
+					run([{ type: 'tell', moments: [LINE], then }, { type: 'story-next' }], RESULT)
+				).toEqual(then);
+			}
+		});
+
+		it('waits for the game to be loaded before a replay', () => {
+			const story = run(
+				[{ type: 'tell', moments: [LINE], then: { name: 'replay', lessonId: LESSON } }],
+				RESULT
+			);
+			expect(transition(story, { type: 'story-next' })).toEqual(story);
+			expect(transition(story, { type: 'replay' })).toEqual({ name: 'game', lessonId: LESSON });
+		});
+
+		it('ignores a replay while the story leads elsewhere', () => {
+			const story = run([{ type: 'tell', moments: [LINE], then: { name: 'map' } }], RESULT);
+			expect(transition(story, { type: 'replay' })).toEqual(story);
+		});
+
+		it('does not tell from the map what leads anywhere but a lesson', () => {
+			const map: Screen = { name: 'map' };
+			expect(transition(map, { type: 'tell', moments: [LINE], then: { name: 'break' } })).toEqual(
+				map
+			);
+		});
+
+		it('opens the story so far from the map and comes back to it', () => {
+			const notebook = transition({ name: 'map' }, { type: 'open-story-so-far' });
+			expect(notebook).toEqual({ name: 'story-so-far' });
+			expect(transition(notebook, { type: 'back-to-map' })).toEqual({ name: 'map' });
+			expect(transition(notebook, { type: 'change-player' })).toEqual({ name: 'players' });
+		});
+
+		it('opens neither settings nor the companion over the story', () => {
+			const story = run([{ type: 'tell', moments: [LINE], then: { name: 'map' } }], RESULT);
+			expect(transition(story, { type: 'open-settings' })).toEqual(story);
+			expect(transition(story, { type: 'open-companion' })).toEqual(story);
+			expect(transition(story, { type: 'change-player' })).toEqual(story);
+		});
 	});
 });

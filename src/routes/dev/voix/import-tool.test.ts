@@ -8,6 +8,7 @@ import { parseVoiceManifest } from '$lib/audio/voice-player';
 import { encodeWav, readWavHeader } from '$lib/audio/voice-signal';
 import { voiceTexts, type VoiceText } from '$lib/audio/voice-texts';
 import { parseProgression } from '$lib/engine/progression/definition';
+import { parseStory } from '$lib/engine/story';
 import { buildVoiceArchive } from './archive';
 import type { Take } from './take-store';
 
@@ -18,10 +19,12 @@ import type { Take } from './take-store';
 
 const TOOL = 'tools/voice/import.js';
 const SAMPLE_RATE = 22050;
+/** What the tool expects to hear: the sources of `tools/voice/config.json`, story included. */
 const TEXTS = voiceTexts(
 	parseProgression(
 		JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
-	)
+	),
+	parseStory(JSON.parse(readFileSync('content/fr/story/azerty-decouverte.json', 'utf8')))
 );
 const STALE: VoiceText = {
 	key: voiceKey('Une consigne qui a été réécrite.'),

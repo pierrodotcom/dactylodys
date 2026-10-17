@@ -13,6 +13,7 @@ import {
 	reloadPage,
 	shortenRewards,
 	storedRecord,
+	throughStory,
 	type StoredFormat
 } from './support';
 
@@ -141,7 +142,7 @@ async function typeToEnd(page: Page, endButton: string) {
 
 async function playLesson(page: Page, lesson: Lesson) {
 	await page.getByRole('button', { name: lesson.title }).click();
-	await expect(heading(page, lesson.title)).toBeVisible();
+	await throughStory(page, heading(page, lesson.title));
 	await page.locator('button[data-proposed]').click();
 	await typeToEnd(page, message('play_result_map'));
 }
@@ -191,7 +192,7 @@ test.describe('companion and rewards', () => {
 		await reachMapAs(page, child);
 
 		await page.getByRole('button', { name: FIRST.title }).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
+		await throughStory(page, heading(page, FIRST.title));
 		await expect(
 			page.getByText(message('play_reward_prize', { title: NECKLACE.title }))
 		).toBeVisible();
@@ -233,7 +234,7 @@ test.describe('companion and rewards', () => {
 			.toEqual([COMPANION_NAME, [NECKLACE.id], [NECKLACE.id]]);
 
 		await activateByTab(page, button(page, message('play_result_map')));
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		await throughStory(page, heading(page, message('play_map_title')), { keyboard: true });
 		await expect(page.locator('.hero svg.companion')).toHaveAttribute('data-items', NECKLACE.artId);
 	});
 
@@ -247,6 +248,7 @@ test.describe('companion and rewards', () => {
 		).toHaveCount(0);
 
 		await button(page, message('play_result_replay')).click();
+		await throughStory(page, groupLabel(page));
 		await typeToEnd(page, message('play_result_map'));
 		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
 		await expect(
@@ -333,7 +335,7 @@ test.describe('companion and rewards', () => {
 		await button(page, message('play_companion_back')).click();
 
 		await page.getByRole('button', { name: FIRST.title }).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
+		await throughStory(page, heading(page, FIRST.title));
 		await expect(page.locator('[data-prize]')).toHaveCount(0);
 		await page.locator('button[data-proposed]').click();
 		await typeToEnd(page, message('play_result_map'));
@@ -411,7 +413,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			test.slow();
 			await reachMapAs(page, advancedProfile({ name: 'Axel', passed: {} }));
 			await page.getByRole('button', { name: FIRST.title }).click();
-			await expect(page.locator('[data-prize]')).toBeVisible();
+			await throughStory(page, page.locator('[data-prize]'));
 			await expectNoAxeViolation(page);
 
 			await page.locator('button[data-proposed]').click();

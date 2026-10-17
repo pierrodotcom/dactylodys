@@ -4,6 +4,7 @@
 	import { VOICE_CREDIT_MAX_LENGTH } from '$lib/audio/voice-recordings';
 	import { processTake } from '$lib/audio/voice-signal';
 	import {
+		inRecordingOrder,
 		LOOK_REMINDER_ID,
 		parseVoiceOrigin,
 		voiceLocale,
@@ -17,6 +18,7 @@
 	import { isOne } from '$lib/ui/plural';
 	import configData from '../../../../content/common/voice.json';
 	import progressionData from '../../../../content/fr/progression/azerty-decouverte.json';
+	import { STORY } from '../../jouer/story';
 	import { buildVoiceArchive, recordedTexts } from './archive';
 	import {
 		decodeRecording,
@@ -40,9 +42,12 @@
 
 	const config = parseVoiceConfig(configData);
 	const progression = parseProgression(progressionData);
-	const texts = voiceTexts(progression, undefined, [
-		{ id: LOOK_REMINDER_ID, text: m.game_shared_look_reminder() }
-	]);
+	// The story of the shipped progression; its openings and endings come first (ADR-042).
+	const texts = inRecordingOrder(
+		voiceTexts(progression, STORY.progressionId === progression.id ? STORY : undefined, [
+			{ id: LOOK_REMINDER_ID, text: m.game_shared_look_reminder() }
+		])
+	);
 	const titles = new Map([
 		...progression.worlds.flatMap((world): [string, string][] => [
 			[world.id, world.title],

@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { IDBFactory } from 'fake-indexeddb';
 import { readFileSync } from 'node:fs';
 import type { ProgressState, StarCount } from '../src/lib/engine/progression/types';
@@ -28,6 +28,37 @@ export async function shortenRewards(page: Page): Promise<void> {
 			document.head.append(style);
 		});
 	});
+}
+
+const STORY_CONTINUE = '[data-story-continue]';
+const STORY_TIMEOUT = 15_000;
+
+/**
+ * Passes the story told between two exercises (ADR-042) until `next` shows, and says how many
+ * moments were told: a test that is not about the story goes on where it was going. `keyboard`:
+ * Enter on the button once it has the focus, as a child would.
+ */
+export async function throughStory(
+	page: Page,
+	next: Locator,
+	options: { keyboard?: boolean } = {}
+): Promise<number> {
+	const proceed = page.locator(STORY_CONTINUE);
+	let told = 0;
+	await expect(async () => {
+		if (await next.isVisible()) return;
+		if (await proceed.isVisible()) {
+			if (options.keyboard) {
+				await expect(proceed).toBeFocused({ timeout: 1000 });
+				await page.keyboard.press('Enter');
+			} else {
+				await proceed.click();
+			}
+			told += 1;
+		}
+		await expect(next).toBeVisible({ timeout: 500 });
+	}).toPass({ timeout: STORY_TIMEOUT });
+	return told;
 }
 
 export async function openPage(page: Page, url: string): Promise<void> {

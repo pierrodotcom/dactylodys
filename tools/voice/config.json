@@ -1,3 +1,8 @@
 {
-	"sources": [{ "progression": "content/fr/progression/azerty-decouverte.json", "story": null }]
+	"sources": [
+		{
+			"progression": "content/fr/progression/azerty-decouverte.json",
+			"story": "content/fr/story/azerty-decouverte.json"
+		}
+	]
 }
