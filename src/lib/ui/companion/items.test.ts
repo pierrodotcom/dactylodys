@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import catalogueData from '../../../../content/fr/rewards/azerty-decouverte.json';
 import { parseRewardCatalogue } from '$lib/engine/rewards/catalogue';
-import { ITEM_ARTS, ITEM_SLOTS, TRICK_ARMS, TRICKS, TROPHY_ARTS, wornBySlot } from './items';
+import {
+	ITEM_ARTS,
+	ITEM_SLOTS,
+	TRICK_ARMS,
+	TRICKS,
+	TROPHY_ARTS,
+	trophyKeys,
+	wornBySlot
+} from './items';
 
 const catalogue = parseRewardCatalogue(catalogueData);
 const ofKind = (kind: string) => catalogue.rewards.filter((reward) => reward.kind === kind);
@@ -58,5 +66,33 @@ describe('wornBySlot', () => {
 
 	it('lists the slots in drawing order, the back first and the hand last', () => {
 		expect(ITEM_SLOTS).toEqual(['back', 'body', 'neck', 'feet', 'face', 'head', 'hand']);
+	});
+});
+
+describe('trophyKeys', () => {
+	const rows = ['keys-home-row', 'keys-top-row', 'keys-bottom-row'].map((artId) =>
+		catalogue.rewards.find((reward) => reward.artId === artId)
+	);
+
+	it('shows the first keys of each row, in capitals, read from the catalogue', () => {
+		for (const row of rows) {
+			if (!row || row.condition.kind !== 'chars-mastered') throw new Error('missing row');
+			expect(trophyKeys(row)).toEqual(
+				row.condition.chars.slice(0, 3).map((char) => char.toLocaleUpperCase(catalogue.locale))
+			);
+		}
+	});
+
+	it('gives the three rows different keys', () => {
+		const shown = rows.map((row) => (row ? trophyKeys(row).join('') : ''));
+		expect(new Set(shown).size).toBe(3);
+	});
+
+	it('shows no key for a reward that is not about keys', () => {
+		for (const reward of catalogue.rewards.filter(
+			(candidate) => candidate.condition.kind !== 'chars-mastered'
+		)) {
+			expect(trophyKeys(reward)).toEqual([]);
+		}
 	});
 });

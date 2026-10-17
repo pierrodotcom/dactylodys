@@ -3,6 +3,7 @@
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import { m } from '$lib/paraglide/messages.js';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
+	import { trophyKeys } from '$lib/ui/companion/items';
 	import Button from '$lib/ui/components/Button.svelte';
 	import CompanionName from './CompanionName.svelte';
 
@@ -70,6 +71,7 @@
 					<div class="picture">
 						<RewardPicture
 							artId={current.artId}
+							keys={trophyKeys(current)}
 							kind={current.kind}
 							owned={true}
 							label={current.title}

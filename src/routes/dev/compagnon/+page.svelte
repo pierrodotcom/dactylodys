@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { parseRewardCatalogue } from '$lib/engine/rewards/catalogue';
 	import { m } from '$lib/paraglide/messages.js';
-	import { ITEM_SLOTS, type ItemSlot } from '$lib/ui/companion/items';
+	import { ITEM_SLOTS, trophyKeys, type ItemSlot } from '$lib/ui/companion/items';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
 	import Button from '$lib/ui/components/Button.svelte';
 	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
@@ -156,7 +156,13 @@
 		<ul class="pictures" data-testid="pictures-owned">
 			{#each catalogue.rewards as reward (reward.id)}
 				<li>
-					<RewardPicture artId={reward.artId} kind={reward.kind} owned label={reward.title} />
+					<RewardPicture
+						artId={reward.artId}
+						kind={reward.kind}
+						owned
+						label={reward.title}
+						keys={trophyKeys(reward)}
+					/>
 					<span aria-hidden="true">{reward.title}</span>
 				</li>
 			{/each}
@@ -170,6 +176,7 @@
 						kind={reward.kind}
 						owned={false}
 						label={reward.title}
+						keys={trophyKeys(reward)}
 					/>
 					<span aria-hidden="true">{reward.description}</span>
 				</li>

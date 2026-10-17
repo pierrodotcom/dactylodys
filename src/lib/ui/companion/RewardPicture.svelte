@@ -18,9 +18,11 @@
 		owned: boolean;
 		/** Accessible name, usually the title of the reward. */
 		label: string;
+		/** For a trophy of keys: the keys it shows (`trophyKeys`); none otherwise. */
+		keys?: readonly string[];
 	}
 
-	let { artId, kind, owned, label }: Props = $props();
+	let { artId, kind, owned, label, keys = [] }: Props = $props();
 
 	/** Room around an item drawn alone, in units of its drawing. */
 	const ITEM_MARGIN = 7;
@@ -52,7 +54,7 @@
 					<CompanionItem {artId} {layer} />
 				{/each}
 			{:else}
-				<TrophyArt {artId} />
+				<TrophyArt {artId} {keys} />
 			{/if}
 		</svg>
 	{/if}
