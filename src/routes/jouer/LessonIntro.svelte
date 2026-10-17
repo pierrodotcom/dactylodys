@@ -77,9 +77,10 @@
 </script>
 
 <ScreenFrame title={lesson.title} focusHeading={false} wide>
-	<!-- The prize shares the line of the number: the pictures of the games stay in view on a laptop. -->
+	<!-- Number, prize and Listen share one line: the pictures of the games stay in view on a laptop. -->
 	<div class="head">
 		<p class="number">{m.play_lesson_number({ number })}</p>
+		<ListenButton text={lesson.intro} player={voice} />
 		{#if prize}
 			<div class="prize" data-prize={prize.id}>
 				<div class="prize-picture" aria-hidden="true">
@@ -89,10 +90,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="say">
-		<ListenButton text={lesson.intro} player={voice} />
-		<p class="intro">{lesson.intro}</p>
-	</div>
+	<p class="intro">{lesson.intro}</p>
 
 	<section class="keys" aria-labelledby="intro-keys-heading">
 		<h2 id="intro-keys-heading">
@@ -156,16 +154,9 @@
 		inline-size: var(--dd-size-touch-target-min);
 	}
 
-	.say {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: var(--dd-space-md);
-	}
-
 	.intro {
 		font-size: var(--dd-font-size-lg);
+		text-align: center;
 	}
 
 	/* Smaller keys, so that the games below stay in view on a laptop screen. */
