@@ -1,0 +1,111 @@
+{
+	"schemaVersion": 1,
+	"locale": "fr",
+	"voice": {
+		"name": "contribution anonyme",
+		"source": "Enregistrement original réalisé pour le projet, aucune source tierce",
+		"license": "CC BY-SA 4.0"
+	},
+	"clips": {
+		"02705a0c8156aea5": {
+			"file": "02705a0c8156aea5.wav",
+			"durationMs": 3020
+		},
+		"0525b662ee39c1ea": {
+			"file": "0525b662ee39c1ea.wav",
+			"durationMs": 10060
+		},
+		"148219a97c552104": {
+			"file": "148219a97c552104.wav",
+			"durationMs": 6940
+		},
+		"1e9921da34084782": {
+			"file": "1e9921da34084782.wav",
+			"durationMs": 12820
+		},
+		"1ef83e4bf96dd847": {
+			"file": "1ef83e4bf96dd847.wav",
+			"durationMs": 11280
+		},
+		"2a0d6e1404c55c14": {
+			"file": "2a0d6e1404c55c14.wav",
+			"durationMs": 7900
+		},
+		"31ce43f76f5a6c8e": {
+			"file": "31ce43f76f5a6c8e.wav",
+			"durationMs": 10860
+		},
+		"3c7a6d24dc79aa78": {
+			"file": "3c7a6d24dc79aa78.wav",
+			"durationMs": 9620
+		},
+		"5b70babd44e2d37e": {
+			"file": "5b70babd44e2d37e.wav",
+			"durationMs": 9420
+		},
+		"715fffad24f7fa43": {
+			"file": "715fffad24f7fa43.wav",
+			"durationMs": 7700
+		},
+		"72e4923b06d8cd3f": {
+			"file": "72e4923b06d8cd3f.wav",
+			"durationMs": 7020
+		},
+		"7caef43c535eb122": {
+			"file": "7caef43c535eb122.wav",
+			"durationMs": 9200
+		},
+		"823fe7851ad7944d": {
+			"file": "823fe7851ad7944d.wav",
+			"durationMs": 10120
+		},
+		"855e69f7053e838b": {
+			"file": "855e69f7053e838b.wav",
+			"durationMs": 9300
+		},
+		"93650f0b8a1f7aec": {
+			"file": "93650f0b8a1f7aec.wav",
+			"durationMs": 4520
+		},
+		"c44bec17f46a9a55": {
+			"file": "c44bec17f46a9a55.wav",
+			"durationMs": 10660
+		},
+		"c7f6a23decceed5a": {
+			"file": "c7f6a23decceed5a.wav",
+			"durationMs": 8040
+		},
+		"cc6330560dcc3c7b": {
+			"file": "cc6330560dcc3c7b.wav",
+			"durationMs": 8680
+		},
+		"cc8477d7b696b5fb": {
+			"file": "cc8477d7b696b5fb.wav",
+			"durationMs": 8660
+		},
+		"d23140c44687a7b8": {
+			"file": "d23140c44687a7b8.wav",
+			"durationMs": 10260
+		},
+		"d2ec3ce322a56185": {
+			"file": "d2ec3ce322a56185.wav",
+			"durationMs": 5420
+		},
+		"d5a7b1833b6f9dd0": {
+			"file": "d5a7b1833b6f9dd0.wav",
+			"durationMs": 9380
+		},
+		"d9d4605800f5676f": {
+			"file": "d9d4605800f5676f.wav",
+			"durationMs": 9280
+		},
+		"db6430ff94286dce": {
+			"file": "db6430ff94286dce.wav",
+			"durationMs": 12000
+		},
+		"e209b6ffccdd9135": {
+			"file": "e209b6ffccdd9135.wav",
+			"durationMs": 9700
+		}
+	}
+}
