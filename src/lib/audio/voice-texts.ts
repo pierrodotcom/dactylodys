@@ -26,6 +26,8 @@ const KINDS: readonly VoiceTextKind[] = ['intro', 'opening', 'line', 'ending', '
 
 /** Where the reminder to look at the screen comes from, in the list of the texts to record. */
 export const LOOK_REMINDER_ID = 'game.look-reminder';
+/** Message key of that reminder in `messages/<language>.json`: the page and the import tool read it there. */
+export const LOOK_REMINDER_MESSAGE = 'game_shared_look_reminder';
 
 /** A sentence of the games that the voice says, apart from the content: `id` names where it comes from. */
 export interface VoiceReminder {
