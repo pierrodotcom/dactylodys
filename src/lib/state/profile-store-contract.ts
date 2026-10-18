@@ -186,6 +186,33 @@ export function describeProfileStoreContract(
 			expect(await store.listUnreadable()).toEqual(unreadable);
 		});
 
+		it('deletes on request a record it cannot open, and only that one', async () => {
+			const valid = profileAt('c', 30);
+			const store = await createStore([
+				fromLaterVersion(profileAt('a', 10, 'Zoé')),
+				{ id: 'b', garbage: true },
+				valid
+			]);
+
+			await store.removeUnreadable('a');
+
+			expect(await store.listUnreadable()).toEqual([{ id: 'b', name: null, reason: 'invalid' }]);
+			expect(await store.list()).toEqual([valid]);
+		});
+
+		it('refuses to delete as unreadable a profile it can open', async () => {
+			const valid = profileAt('a', 10);
+			const store = await createStore([valid]);
+
+			await expect(store.removeUnreadable('a')).rejects.toThrow(RangeError);
+
+			expect(await store.list()).toEqual([valid]);
+		});
+
+		it('accepts deleting as unreadable an unknown id', async () => {
+			await expect((await createStore()).removeUnreadable('missing')).resolves.toBeUndefined();
+		});
+
 		it('leaves the records it cannot open alone while other profiles come and go', async () => {
 			const store = await createStore([fromLaterVersion(profileAt('a', 10, 'Zoé'))]);
 			await store.list();

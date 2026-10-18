@@ -69,6 +69,13 @@ function assertNotUnreadable(existing: unknown, id: string): void {
 	if (existing !== undefined && !readProfile(existing).ok) throw new UnreadableProfileError(id);
 }
 
+/** `existing` must be a record the app cannot open, or nothing: a readable profile goes through `remove`. */
+function assertUnreadable(existing: unknown, id: string): void {
+	if (existing !== undefined && readProfile(existing).ok) {
+		throw new RangeError(`profile "${id}" can be opened: remove it with remove()`);
+	}
+}
+
 function attempt(work: () => void): Promise<void> {
 	try {
 		work();
@@ -102,7 +109,12 @@ export function createMemoryProfileStore(stored: readonly unknown[] = []): Profi
 				assertNotUnreadable(records.get(id), id);
 				records.delete(id);
 			}),
-		listUnreadable: () => Promise.resolve(readUnreadable([...records.values()]))
+		listUnreadable: () => Promise.resolve(readUnreadable([...records.values()])),
+		removeUnreadable: (id) =>
+			attempt(() => {
+				assertUnreadable(records.get(id), id);
+				records.delete(id);
+			})
 	};
 }
 
@@ -193,6 +205,11 @@ export function createIndexedDbProfileStore(
 		remove: (id) => change(id, (store) => store.delete(id)),
 		listUnreadable: () =>
 			run('readonly', async (store) => readUnreadable(await requestResult(store.getAll()))),
+		removeUnreadable: (id) =>
+			run('readwrite', async (store) => {
+				assertUnreadable(await requestResult(store.get(id)), id);
+				await requestResult(store.delete(id));
+			}),
 		close: release
 	};
 }

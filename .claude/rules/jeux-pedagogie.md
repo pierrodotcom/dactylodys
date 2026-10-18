@@ -102,7 +102,7 @@ Profil version 3 (`state/types.ts`) : `companion` (choix de l'enfant : nom, coul
 | Fonction | Module | Rôle |
 |---|---|---|
 | `migrateProfile(data)` / `readProfile(data)` | `state/migrations` | Chaîne de migrations par version ; tout nouveau champ de profil = une étape de plus, avec ses valeurs par défaut écrites en dur dans l'étape |
-| `ProfileStore.listUnreadable()` | `state/stores` | Enregistrements ni migrables ni lisibles : jamais supprimés, jamais écrasés (`save` et `remove` les refusent) |
+| `ProfileStore.listUnreadable()` / `removeUnreadable(id)` | `state/stores` | Enregistrements ni migrables ni lisibles : jamais écrasés (`save` et `remove` les refusent) ; supprimés seulement à la demande explicite de la personne, après confirmation, par `removeUnreadable` (qui refuse un profil lisible) |
 | `withCompanion` / `withLastGame` / `withGhost` | `state/profile` | Mises à jour sans mutation |
 | `toGhostRun(points, recordedAt)` / `ghostProgress(run, elapsedMs, paceFactor)` / `parseGhostRun(data)` | `engine/ghost/ghost` | Allure d'une partie ; part de l'exercice accomplie par le fantôme, dans [0, 1] |
 | `GameOutcome.pace` / `GameProps.ghost?` | `games/types` | Allure rendue par tout jeu (un point par groupe) ; fantôme facultatif reçu par un jeu |
