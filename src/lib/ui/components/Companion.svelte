@@ -264,8 +264,8 @@
 	/** Where each arm leaves the body, how much its elbow goes out, and how wide its shoulder is. */
 	const SHOULDERS: Readonly<Record<ArmPose, { root: Point; bend: number; half: number }>> = {
 		down: { root: { x: 37, y: 72 }, bend: 3, half: 6.2 },
-		up: { root: { x: 34, y: 77 }, bend: 4, half: 7.4 },
-		ground: { root: { x: 34, y: 77 }, bend: 3, half: 7.6 }
+		up: { root: { x: 39, y: 80 }, bend: 4, half: 7.2 },
+		ground: { root: { x: 39, y: 80 }, bend: 3, half: 7.2 }
 	};
 	/**
 	 * Raised arms grow out of the body: drawn over it and under the head, with no outline where they
@@ -392,6 +392,8 @@
 	const label = $derived(LABELS[mood]());
 	const restArms = $derived<ArmPose>(mood === 'cheer' ? 'up' : 'down');
 	const trickArms = $derived<ArmPose | undefined>(trick === null ? undefined : TRICK_ARMS[trick]);
+	/** Arms raised now or during the trick: body and arms are then drawn as one shape. */
+	const raised = $derived(BEHIND[restArms] || (trickArms !== undefined && BEHIND[trickArms]));
 	const face = $derived(FACES[mood]);
 	const brows = $derived(both(browPath(face.brow.outer, face.brow.inner, face.brow.bend)));
 
@@ -482,14 +484,35 @@
 	<path class="open line" d={oval(c.x, c.y, 7.6, 9)} />
 {/snippet}
 
-{#snippet arms(pose: ArmPose)}
+<!--
+	`under`: the outline of raised arms, drawn under the body twice as thick, so that only its outer
+	half shows and body and arms share one outline, joined at the armpits; `over`: the rest.
+-->
+{#snippet arms(pose: ArmPose, layer: 'under' | 'over')}
 	{#each SIDES as side (side)}
 		{@const arm = ARMS[pose][side]}
-		{#if BEHIND[pose]}
-			<clipPath id={ref(`arm-${pose}-${side}`)}><path d={arm.fill} /></clipPath>
-			<path class="body" d={arm.fill} />
-			<g clip-path={paint('outside-body')}>
+		{#if layer === 'under'}
+			<path class="underlay" d={arm.fill} />
+		{:else}
+			{#if BEHIND[pose]}
+				<clipPath id={ref(`arm-${pose}-${side}`)}><path d={arm.fill} /></clipPath>
+				<path class="body" d={arm.fill} />
+				<g clip-path={paint('outside-body')}>
+					<g clip-path={paint(`arm-${pose}-${side}`)}>
+						<path
+							class="shade"
+							fill-rule="evenodd"
+							d={FRAME + arm.fill}
+							transform="translate(-1.6 -1.6)"
+						/>
+					</g>
+				</g>
+			{:else}
+				{@render form(`arm-${pose}-${side}`, arm.fill, 'body', 1.6, arm.outer)}
+			{/if}
+			{#if sleeves}
 				<g clip-path={paint(`arm-${pose}-${side}`)}>
+					<g transform={arm.hand}><CompanionItem artId={sleeves} layer="sleeve" /></g>
 					<path
 						class="shade"
 						fill-rule="evenodd"
@@ -497,34 +520,20 @@
 						transform="translate(-1.6 -1.6)"
 					/>
 				</g>
-				<path class="open line" d={arm.outer} />
-			</g>
-		{:else}
-			{@render form(`arm-${pose}-${side}`, arm.fill, 'body', 1.6, arm.outer)}
-		{/if}
-		{#if sleeves}
-			<g clip-path={paint(`arm-${pose}-${side}`)}>
-				<g transform={arm.hand}><CompanionItem artId={sleeves} layer="sleeve" /></g>
-				<path
-					class="shade"
-					fill-rule="evenodd"
-					d={FRAME + arm.fill}
-					transform="translate(-1.6 -1.6)"
-				/>
-			</g>
-		{/if}
-		<g clip-path={BEHIND[pose] ? paint('outside-body') : undefined}>
-			{#if sleeves}
-				<path class="open line" d={arm.outer} />
+				{#if !BEHIND[pose]}
+					<path class="open line" d={arm.outer} />
+				{/if}
 			{/if}
-			<path class="open line" d={arm.inner} />
-		</g>
-		<g transform={arm.hand}>
-			{@render form(`hand-${pose}-${side}`, HAND, 'body', 1, HAND_LINE)}
-			<path class="open fine" d={FINGER_LINES} />
-		</g>
+			{#if !BEHIND[pose]}
+				<path class="open line" d={arm.inner} />
+			{/if}
+			<g transform={arm.hand}>
+				{@render form(`hand-${pose}-${side}`, HAND, 'body', 1, HAND_LINE)}
+				<path class="open fine" d={FINGER_LINES} />
+			</g>
+		{/if}
 	{/each}
-	{#if worn.hand}
+	{#if layer === 'over' && worn.hand}
 		<CompanionItem artId={worn.hand} grip={ARM_POSES[pose].grip} />
 		<g transform={ARMS[pose].left.hand}>
 			<path class="body line" d={GRIP_FINGERS} />
@@ -534,16 +543,16 @@
 {/snippet}
 
 <!-- The arms at rest and those of a trick, each drawn behind the body or in front of it. -->
-{#snippet armSet(behind: boolean)}
+{#snippet armSet(behind: boolean, layer: 'under' | 'over' = 'over')}
 	{#if trickArms !== undefined && trickArms !== restArms}
 		{#if BEHIND[restArms] === behind}
-			<g class="arms-rest trick">{@render arms(restArms)}</g>
+			<g class="arms-rest trick">{@render arms(restArms, layer)}</g>
 		{/if}
 		{#if BEHIND[trickArms] === behind}
-			<g class="trick appear">{@render arms(trickArms)}</g>
+			<g class="trick appear">{@render arms(trickArms, layer)}</g>
 		{/if}
 	{:else if BEHIND[restArms] === behind}
-		{@render arms(restArms)}
+		{@render arms(restArms, layer)}
 	{/if}
 {/snippet}
 
@@ -615,7 +624,15 @@
 					{@render plate(p.x, p.y, p.angle, p.h, p.w, `plate-${i}`)}
 				{/each}
 			</g>
-			{@render form('body', BODY, 'body', 5, BODY, [BODY_LIGHT])}
+			{#if raised}
+				<!-- One shape: a single outline under body and arms, the body's shading over both. -->
+				{@render armSet(true, 'under')}
+				<path class="underlay" d={BODY} />
+				{@render armSet(true)}
+				{@render form('body', BODY, 'body', 5, '', [BODY_LIGHT])}
+			{:else}
+				{@render form('body', BODY, 'body', 5, BODY, [BODY_LIGHT])}
+			{/if}
 			{@render form('belly', BELLY, 'belly', 2)}
 			<g clip-path={paint('belly')}>
 				<path class="open fine" d={BELLY_BANDS} />
@@ -623,9 +640,14 @@
 			<g clip-path={paint('body')}>
 				<path class="shade" d={CHIN_SHADE} />
 			</g>
-			{#each SIDES as side (side)}
-				<path class="open line" d={NECK[side]} />
-			{/each}
+			<!-- Raised arms cover the creases of the neck: half hidden, they looked like cuts. -->
+			{#if !BEHIND[restArms]}
+				<g class={trickArms !== undefined && BEHIND[trickArms] ? 'arms-rest trick' : undefined}>
+					{#each SIDES as side (side)}
+						<path class="open line" d={NECK[side]} />
+					{/each}
+				</g>
+			{/if}
 			{#each SIDES as side (side)}
 				{@render form(`thigh-${side}`, THIGH[side], 'body', 2.4, THIGH_LINE[side], [
 					THIGH_LIGHT[side]
@@ -637,7 +659,6 @@
 			{/each}
 			{@render front(worn.body)}
 			{@render front(worn.back)}
-			{@render armSet(true)}
 			{@render form('head', HEAD, 'body', 4.5, HEAD, [HEAD_LIGHT, SNOUT_LIGHT])}
 			<path class="open fine" d={SNOUT_RIDGE} />
 			{#if face.blush}
@@ -752,6 +773,14 @@
 		--dd-companion-belly: var(--dd-color-companion-tomato-belly);
 		--dd-companion-plate: var(--dd-color-companion-tomato-plate);
 		--dd-companion-cheek: var(--dd-color-companion-tomato-cheek);
+	}
+
+	.underlay {
+		fill: var(--dd-color-companion-line);
+		stroke: var(--dd-color-companion-line);
+		stroke-width: calc(var(--dd-border-width-thick) * 2);
+		stroke-linejoin: round;
+		vector-effect: non-scaling-stroke;
 	}
 
 	.line {
