@@ -89,3 +89,26 @@ export function voiceTexts(
 	for (const reminder of reminders) add(reminder.text, reminder.id, 'reminder');
 	return [...texts.values()];
 }
+
+/** The kinds recorded first (ADR-042): the opening and the ending of each world. */
+const RECORDED_FIRST: readonly VoiceTextKind[] = ['opening', 'ending'];
+/** The kinds recorded last: the line of each lesson waits, written, for its recording. */
+const RECORDED_LAST: readonly VoiceTextKind[] = ['line'];
+
+function recordingRank(text: VoiceText): number {
+	const kind = parseVoiceOrigin(text.origin)?.kind;
+	if (kind === undefined) return 1;
+	if (RECORDED_FIRST.includes(kind)) return 0;
+	return RECORDED_LAST.includes(kind) ? 2 : 1;
+}
+
+/**
+ * The texts in the order to record them: the openings and endings of the story, then the
+ * instructions and reminders, then the lines of the lessons; each part in the order of the course.
+ */
+export function inRecordingOrder(texts: readonly VoiceText[]): readonly VoiceText[] {
+	return texts
+		.map((text, index) => ({ text, index, rank: recordingRank(text) }))
+		.sort((a, b) => a.rank - b.rank || a.index - b.index)
+		.map((entry) => entry.text);
+}

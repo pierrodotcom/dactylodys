@@ -180,6 +180,21 @@ describe('parseStory', () => {
 			'story.worlds[0].lessons[0].line: expected a non-empty string'
 		],
 		[
+			'a missing picture for an opening',
+			(data) => delete (data.worlds[0] as Mutable)['openingArt'],
+			'story.worlds[0].openingArt: expected a non-empty string'
+		],
+		[
+			'a picture name that is not in kebab-case',
+			(data) => ((data.worlds[1] as Mutable)['endingArt'] = 'End Two'),
+			'story.worlds[1].endingArt: expected a picture name in kebab-case'
+		],
+		[
+			'a line without a picture',
+			(data) => delete (data.worlds[0]!.lessons[1] as Mutable)['art'],
+			'story.worlds[0].lessons[1].art: expected a non-empty string'
+		],
+		[
 			'a line with a trailing space',
 			(data) => (data.worlds[1]!.lessons[0]!.line = 'Line c. '),
 			'story.worlds[1].lessons[0].line: a text must not start or end with a space'
@@ -220,7 +235,14 @@ describe('validateStory', () => {
 		const story = storyWith((s) => {
 			s.worlds = [
 				...s.worlds,
-				{ worldId: 'fr.world.three', opening: 'o', ending: 'e', lessons: [] }
+				{
+					worldId: 'fr.world.three',
+					opening: 'o',
+					openingArt: 'o',
+					ending: 'e',
+					endingArt: 'e',
+					lessons: []
+				}
 			];
 		});
 		expect(validateStory(story, PROGRESSION)).toEqual([
@@ -235,8 +257,8 @@ describe('validateStory', () => {
 				{
 					...(s.worlds[1] as StoryDefinition['worlds'][number]),
 					lessons: [
-						{ lessonId: 'fr.lesson.c', line: 'Line c.' },
-						{ lessonId: 'fr.lesson.zzz', line: 'Line z.' }
+						{ lessonId: 'fr.lesson.c', line: 'Line c.', art: 'line-c' },
+						{ lessonId: 'fr.lesson.zzz', line: 'Line z.', art: 'line-zzz' }
 					]
 				}
 			];
@@ -252,9 +274,9 @@ describe('validateStory', () => {
 				{
 					...(s.worlds[0] as StoryDefinition['worlds'][number]),
 					lessons: [
-						{ lessonId: 'fr.lesson.a', line: 'Line a.' },
-						{ lessonId: 'fr.lesson.b', line: 'Line b.' },
-						{ lessonId: 'fr.lesson.c', line: 'Line c.' }
+						{ lessonId: 'fr.lesson.a', line: 'Line a.', art: 'line-a' },
+						{ lessonId: 'fr.lesson.b', line: 'Line b.', art: 'line-b' },
+						{ lessonId: 'fr.lesson.c', line: 'Line c.', art: 'line-c' }
 					]
 				},
 				{ ...(s.worlds[1] as StoryDefinition['worlds'][number]), lessons: [] }
@@ -293,7 +315,7 @@ describe('validateStory', () => {
 			s.worlds = [
 				{
 					...(s.worlds[0] as StoryDefinition['worlds'][number]),
-					lessons: [{ lessonId: 'fr.lesson.a', line: 'Line a.' }]
+					lessons: [{ lessonId: 'fr.lesson.a', line: 'Line a.', art: 'line-a' }]
 				},
 				s.worlds[1] as StoryDefinition['worlds'][number]
 			];

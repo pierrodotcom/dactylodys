@@ -1,0 +1,173 @@
+{
+	"schemaVersion": 1,
+	"id": "fr.story.azerty-decouverte",
+	"locale": "fr-FR",
+	"progressionId": "fr.progression.azerty-decouverte",
+	"worlds": [
+		{
+			"worldId": "fr.world.dinosaures",
+			"opening": "Ton dino part en voyage. Son carnet est encore tout vide.",
+			"openingArt": "dino-opening",
+			"ending": "Première page du carnet : remplie. Prochaine étape, la cuisine.",
+			"endingArt": "dino-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.oeufs-f-j",
+					"line": "Les œufs éclosent. Les bébés réclament déjà leur goûter.",
+					"art": "dino-eggs"
+				},
+				{
+					"lessonId": "fr.lesson.saut-espace",
+					"line": "Le diplodocus saute la rivière. Sa queue, elle, reste dans l'eau.",
+					"art": "dino-diplodocus"
+				},
+				{
+					"lessonId": "fr.lesson.nid-d-k",
+					"line": "Pour entrer dans le nid, il faut un mot de passe.",
+					"art": "dino-nest"
+				},
+				{
+					"lessonId": "fr.lesson.mare-s-l",
+					"line": "Le stégosaure plonge dans la mare. La mare est maintenant vide.",
+					"art": "dino-pond"
+				},
+				{
+					"lessonId": "fr.lesson.mots-e-i",
+					"line": "Le raptor écrit son tout premier mot : miam.",
+					"art": "dino-raptor"
+				},
+				{
+					"lessonId": "fr.lesson.rugissement-r-u",
+					"line": "Le T-rex rugit si fort que sa casquette s'envole.",
+					"art": "dino-trex"
+				}
+			]
+		},
+		{
+			"worldId": "fr.world.cuisine",
+			"opening": "Ton dino arrive en cuisine. Il a faim, comme toujours.",
+			"openingArt": "kitchen-opening",
+			"ending": "Ton dino a tout goûté. Deux fois. Page deux : remplie.",
+			"endingArt": "kitchen-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.tartine-t-n",
+					"line": "La tartine porte une toque. Elle se prend pour un chef.",
+					"art": "kitchen-toast"
+				},
+				{
+					"lessonId": "fr.lesson.gateau-a-o",
+					"line": "Le gâteau monte si haut qu'il touche le plafond.",
+					"art": "kitchen-cake"
+				},
+				{
+					"lessonId": "fr.lesson.bras-q-m",
+					"line": "La quiche rigole. Personne ne sait pourquoi, même pas elle.",
+					"art": "kitchen-quiche"
+				},
+				{
+					"lessonId": "fr.lesson.casserole-c-p",
+					"line": "La casserole chante faux. Le chef se bouche les oreilles.",
+					"art": "kitchen-pan"
+				},
+				{
+					"lessonId": "fr.lesson.epices-accent-apostrophe",
+					"line": "Une pincée d'épices, et ton dino éternue des étincelles.",
+					"art": "kitchen-spices"
+				}
+			]
+		},
+		{
+			"worldId": "fr.world.animaux",
+			"opening": "Au zoo, les animaux regardent les visiteurs. Aujourd'hui, c'est ton dino.",
+			"openingArt": "zoo-opening",
+			"ending": "Page trois du carnet : les animaux ont signé. Direction les étoiles.",
+			"endingArt": "zoo-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.girafe-g-h",
+					"line": "La girafe voit tout de là-haut, même ce que tu tapes.",
+					"art": "zoo-giraffe"
+				},
+				{
+					"lessonId": "fr.lesson.vache-v-b",
+					"line": "La vache ouvre le bal. Personne n'ose danser à côté.",
+					"art": "zoo-cow"
+				},
+				{
+					"lessonId": "fr.lesson.yak-y-x",
+					"line": "Le yak cache quelque chose dans sa laine. Ton dino enquête.",
+					"art": "zoo-yak"
+				},
+				{
+					"lessonId": "fr.lesson.zebre-z-w",
+					"line": "Le zèbre compte ses rayures. Il en trouve une de trop.",
+					"art": "zoo-zebra"
+				}
+			]
+		},
+		{
+			"worldId": "fr.world.espace",
+			"opening": "Trois, deux, un… Ton dino décolle, son carnet bien serré.",
+			"openingArt": "space-opening",
+			"ending": "Page quatre : la Terre vue d'en haut. Prochain arrêt, le circuit.",
+			"endingArt": "space-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.lune-accents-graves",
+					"line": "En micropesanteur, le café est bon, mais il flotte.",
+					"art": "space-moon"
+				},
+				{
+					"lessonId": "fr.lesson.comete-cedille-u-grave",
+					"line": "La comète passe si vite qu'elle oublie sa queue.",
+					"art": "space-comet"
+				},
+				{
+					"lessonId": "fr.lesson.grandes-majuscules",
+					"line": "Les géantes de la galaxie se penchent pour mieux te voir.",
+					"art": "space-giants"
+				},
+				{
+					"lessonId": "fr.lesson.virgule-point",
+					"line": "Sur la planète Virgule, tout le monde fait une petite pause.",
+					"art": "space-comma"
+				}
+			]
+		},
+		{
+			"worldId": "fr.world.vehicules",
+			"opening": "Ton dino veut piloter. Petit détail : il n'a pas le permis.",
+			"openingArt": "circuit-opening",
+			"ending": "Dernière page du carnet : remplie. La suite, c'est toi qui l'écris.",
+			"endingArt": "circuit-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.klaxon-question-exclamation",
+					"line": "Le klaxon fait pouet. Tout le circuit éclate de rire.",
+					"art": "circuit-horn"
+				},
+				{
+					"lessonId": "fr.lesson.tiret-deux-points",
+					"line": "Le dernier wagon du train arrive avec une heure de retard.",
+					"art": "circuit-train"
+				},
+				{
+					"lessonId": "fr.lesson.chapeau-circonflexe",
+					"line": "Le pilote refuse de partir sans son chapeau à plume.",
+					"art": "circuit-hat"
+				},
+				{
+					"lessonId": "fr.lesson.casque-circonflexe",
+					"line": "Le copilote a un casque trop grand : il ne voit rien.",
+					"art": "circuit-helmet"
+				},
+				{
+					"lessonId": "fr.lesson.trema",
+					"line": "Le camion allume ses deux phares et fait un clin d'œil.",
+					"art": "circuit-truck"
+				}
+			]
+		}
+	]
+}

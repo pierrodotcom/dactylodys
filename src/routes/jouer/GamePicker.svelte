@@ -1,7 +1,7 @@
 <script lang="ts">
 	import GamePicture from '$lib/games/GamePicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
-	import { focusOnMount } from '$lib/ui/focus';
+	import { centerInView, focusOnMount } from '$lib/ui/focus';
 	import type { GameOption } from './game-choice';
 
 	interface Props {
@@ -20,7 +20,8 @@
 	]);
 </script>
 
-<ul class="games" aria-label={m.play_game_choice_legend()}>
+<!-- The focused picture alone could leave the others cut at the bottom of a laptop screen. -->
+<ul class="games" aria-label={m.play_game_choice_legend()} {@attach centerInView}>
 	{#each ordered as game (game.value)}
 		{@const isProposed = game.value === proposed}
 		<li>

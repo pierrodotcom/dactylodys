@@ -13,6 +13,7 @@ import {
 	type VoiceText
 } from '$lib/audio/voice-texts';
 import { parseProgression } from '$lib/engine/progression/definition';
+import { parseStory } from '$lib/engine/story';
 import { buildVoiceArchive } from './archive';
 import type { Take } from './take-store';
 
@@ -28,7 +29,11 @@ function readProgression() {
 		JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
 	);
 }
-const TEXTS = voiceTexts(readProgression());
+/** What the tool expects to hear: the sources of `tools/voice/config.json`, story included. */
+const TEXTS = voiceTexts(
+	readProgression(),
+	parseStory(JSON.parse(readFileSync('content/fr/story/azerty-decouverte.json', 'utf8')))
+);
 /** The reminder to look at the screen, as the page lists it: read from the messages. */
 const REMINDER: VoiceText = voiceTexts(readProgression(), undefined, [
 	{

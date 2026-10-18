@@ -4,7 +4,13 @@ import { parseProgression } from '../engine/progression/definition';
 import type { ProgressionDefinition } from '../engine/progression/types';
 import type { StoryDefinition } from '../engine/story/types';
 import { voiceKey } from './voice-key';
-import { parseVoiceOrigin, voiceLocale, voiceOrigin, voiceTexts } from './voice-texts';
+import {
+	inRecordingOrder,
+	parseVoiceOrigin,
+	voiceLocale,
+	voiceOrigin,
+	voiceTexts
+} from './voice-texts';
 
 const shipped = parseProgression(
 	JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
@@ -40,17 +46,21 @@ function story(): StoryDefinition {
 			{
 				worldId: 'fr.world.un',
 				opening: 'Ouverture un.',
+				openingArt: 'un-opening',
 				ending: 'Fin un.',
+				endingArt: 'un-ending',
 				lessons: [
-					{ lessonId: 'fr.lesson.a', line: 'Ligne A.' },
-					{ lessonId: 'fr.lesson.b', line: 'Ligne B.' }
+					{ lessonId: 'fr.lesson.a', line: 'Ligne A.', art: 'line-a' },
+					{ lessonId: 'fr.lesson.b', line: 'Ligne B.', art: 'line-b' }
 				]
 			},
 			{
 				worldId: 'fr.world.deux',
 				opening: 'Ouverture deux.',
+				openingArt: 'deux-opening',
 				ending: 'Fin deux.',
-				lessons: [{ lessonId: 'fr.lesson.c', line: 'Ligne C.' }]
+				endingArt: 'deux-ending',
+				lessons: [{ lessonId: 'fr.lesson.c', line: 'Ligne C.', art: 'line-c' }]
 			}
 		]
 	};
@@ -140,7 +150,14 @@ describe('voiceTexts', () => {
 			...base,
 			worlds: [
 				...base.worlds,
-				{ worldId: 'fr.world.ailleurs', opening: 'Ailleurs.', ending: 'Retour.', lessons: [] }
+				{
+					worldId: 'fr.world.ailleurs',
+					opening: 'Ailleurs.',
+					openingArt: 'ailleurs',
+					ending: 'Retour.',
+					endingArt: 'retour',
+					lessons: []
+				}
 			]
 		};
 
@@ -188,5 +205,25 @@ describe('voiceLocale', () => {
 	it('is the language of the content, the folder its voice is published in', () => {
 		expect(shipped.locale).toBe('fr-FR');
 		expect(voiceLocale(shipped)).toBe('fr');
+	});
+});
+
+describe('inRecordingOrder', () => {
+	it('puts the openings and endings first, the lines of the lessons last, each in course order', () => {
+		const texts = inRecordingOrder(
+			voiceTexts(progression(), story(), [{ id: 'game.look-reminder', text: 'Regarde.' }])
+		);
+		const kinds = texts.map((item) => parseVoiceOrigin(item.origin)?.kind);
+		const firstOther = kinds.findIndex((kind) => kind !== 'opening' && kind !== 'ending');
+		const firstLine = kinds.indexOf('line');
+		expect(kinds.slice(0, firstOther).sort()).toEqual(['ending', 'ending', 'opening', 'opening']);
+		expect(kinds.slice(firstLine).every((kind) => kind === 'line')).toBe(true);
+		expect(texts.slice(0, 4).map((item) => item.text)).toEqual([
+			'Ouverture un.',
+			'Fin un.',
+			'Ouverture deux.',
+			'Fin deux.'
+		]);
+		expect(new Set(texts).size).toBe(voiceTexts(progression(), story()).length + 1);
 	});
 });

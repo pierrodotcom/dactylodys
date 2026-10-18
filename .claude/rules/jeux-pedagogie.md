@@ -130,3 +130,16 @@ Catalogue : `content/fr/rewards/<progression>.json` (`nameSuggestions` en plus d
 | `RewardPicture` | `ui/companion/RewardPicture.svelte` | Image d'une récompense, silhouette si non possédée ; racine `div` : jamais dans un `<p>` |
 
 À l'ouverture d'un profil, ce qu'il a déjà mérité est ajouté en mémoire sans annonce et enregistré à la partie suivante (un profil ouvert n'est jamais réécrit sans partie).
+
+## Récit (S2, ADR-043)
+
+Données : `content/<langue>/story/<progression>.json` ; chaque texte nomme son image (`openingArt`, `endingArt`, `art`). Une image ajoutée = son nom dans les données + `STORY_ART_GROUPS` (`ui/story/art-ids.ts`) + son dessin dans `ui/story/art/<Monde>Art.svelte` (`<g data-story-art>`, repère 160 × 100, compagnon par `StoryDino` seulement) ; un test vérifie la correspondance.
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `storySoFar(story, progression, progress)` | `engine/story` | Moments déjà gagnés, pour le carnet ; rien n'est stocké |
+| `StoryMoment.art` / `.worldId` / `.lessonId` | `engine/story/types` | Image, page du carnet, leçon d'une ligne |
+| `storyFor` / `wholeStory` | `routes/jouer/story` | Récit de la progression livrée ; tous ses moments dans l'ordre |
+| `inRecordingOrder` | `audio/voice-texts` | Ordre de `/dev/voix` : ouvertures et fins, consignes, lignes |
+
+Le récit passe entre deux écrans (`tell` dans `routes/jouer/flow`) ; les specs e2e le traversent avec `throughStory` (`e2e/support.ts`).

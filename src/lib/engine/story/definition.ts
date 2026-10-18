@@ -47,6 +47,12 @@ function expectText(value: unknown, path: string): string {
 	return text;
 }
 
+function expectArt(value: unknown, path: string): string {
+	const art = expectString(value, path);
+	if (!new RegExp(`^${SLUG}$`).test(art)) fail(path, 'expected a picture name in kebab-case');
+	return art;
+}
+
 function parseLine(
 	value: unknown,
 	language: string,
@@ -54,11 +60,15 @@ function parseLine(
 	path: string
 ): StoryLessonLine {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['lessonId', 'line'], path);
+	rejectUnknown(record, ['lessonId', 'line', 'art'], path);
 	const lessonId = expectId(record['lessonId'], 'lesson', language, `${path}.lessonId`);
 	if (lessonIds.has(lessonId)) fail(`${path}.lessonId`, `duplicate lesson id "${lessonId}"`);
 	lessonIds.add(lessonId);
-	return { lessonId, line: expectText(record['line'], `${path}.line`) };
+	return {
+		lessonId,
+		line: expectText(record['line'], `${path}.line`),
+		art: expectArt(record['art'], `${path}.art`)
+	};
 }
 
 function parseWorld(
@@ -69,16 +79,22 @@ function parseWorld(
 	path: string
 ): StoryWorld {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['worldId', 'opening', 'ending', 'lessons'], path);
+	rejectUnknown(
+		record,
+		['worldId', 'opening', 'openingArt', 'ending', 'endingArt', 'lessons'],
+		path
+	);
 	const worldId = expectId(record['worldId'], 'world', language, `${path}.worldId`);
 	if (worldIds.has(worldId)) fail(`${path}.worldId`, `duplicate world id "${worldId}"`);
 	worldIds.add(worldId);
 	const opening = expectText(record['opening'], `${path}.opening`);
+	const openingArt = expectArt(record['openingArt'], `${path}.openingArt`);
 	const ending = expectText(record['ending'], `${path}.ending`);
+	const endingArt = expectArt(record['endingArt'], `${path}.endingArt`);
 	const lessons = expectArray(record['lessons'], `${path}.lessons`).map((lesson, i) =>
 		parseLine(lesson, language, lessonIds, `${path}.lessons[${i}]`)
 	);
-	return { worldId, opening, ending, lessons };
+	return { worldId, opening, openingArt, ending, endingArt, lessons };
 }
 
 export function parseStory(data: unknown): StoryDefinition {
