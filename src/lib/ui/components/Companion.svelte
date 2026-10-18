@@ -264,12 +264,12 @@
 	/** Where each arm leaves the body, how much its elbow goes out, and how wide its shoulder is. */
 	const SHOULDERS: Readonly<Record<ArmPose, { root: Point; bend: number; half: number }>> = {
 		down: { root: { x: 37, y: 72 }, bend: 3, half: 6.2 },
-		up: { root: { x: 41, y: 80 }, bend: 4, half: 8 },
-		ground: { root: { x: 38, y: 80 }, bend: 4, half: 8.5 }
+		up: { root: { x: 34, y: 77 }, bend: 4, half: 7.4 },
+		ground: { root: { x: 34, y: 77 }, bend: 3, half: 7.6 }
 	};
 	/**
-	 * Raised arms leave the shoulders behind the body and the head, so that they come out of the
-	 * silhouette like the legs; hanging arms rest in front of the body.
+	 * Raised arms grow out of the body: drawn over it and under the head, with no outline where they
+	 * join it, so that body and arm make one silhouette. Hanging arms rest in front of the body.
 	 */
 	const BEHIND: Readonly<Record<ArmPose, boolean>> = { down: false, up: true, ground: true };
 	const WRIST_HALF = 3.6;
@@ -485,7 +485,23 @@
 {#snippet arms(pose: ArmPose)}
 	{#each SIDES as side (side)}
 		{@const arm = ARMS[pose][side]}
-		{@render form(`arm-${pose}-${side}`, arm.fill, 'body', 1.6, arm.outer)}
+		{#if BEHIND[pose]}
+			<clipPath id={ref(`arm-${pose}-${side}`)}><path d={arm.fill} /></clipPath>
+			<path class="body" d={arm.fill} />
+			<g clip-path={paint('outside-body')}>
+				<g clip-path={paint(`arm-${pose}-${side}`)}>
+					<path
+						class="shade"
+						fill-rule="evenodd"
+						d={FRAME + arm.fill}
+						transform="translate(-1.6 -1.6)"
+					/>
+				</g>
+				<path class="open line" d={arm.outer} />
+			</g>
+		{:else}
+			{@render form(`arm-${pose}-${side}`, arm.fill, 'body', 1.6, arm.outer)}
+		{/if}
 		{#if sleeves}
 			<g clip-path={paint(`arm-${pose}-${side}`)}>
 				<g transform={arm.hand}><CompanionItem artId={sleeves} layer="sleeve" /></g>
@@ -496,9 +512,13 @@
 					transform="translate(-1.6 -1.6)"
 				/>
 			</g>
-			<path class="open line" d={arm.outer} />
 		{/if}
-		<path class="open line" d={arm.inner} />
+		<g clip-path={BEHIND[pose] ? paint('outside-body') : undefined}>
+			{#if sleeves}
+				<path class="open line" d={arm.outer} />
+			{/if}
+			<path class="open line" d={arm.inner} />
+		</g>
 		<g transform={arm.hand}>
 			{@render form(`hand-${pose}-${side}`, HAND, 'body', 1, HAND_LINE)}
 			<path class="open fine" d={FINGER_LINES} />
@@ -561,6 +581,8 @@
 		<path class="sparkle line" d={SPARKLE_PATH} />
 		<path class="sparkle line" d={SPARKLE_PATH} transform="translate(86 -4)" />
 	{/if}
+	<!-- Everything but the body: where a raised arm may show its outline. -->
+	<clipPath id={ref('outside-body')}><path clip-rule="evenodd" d={FRAME + BODY} /></clipPath>
 	<g class="dino">
 		<g class="pose trick">
 			{#if trick === 'juggle'}
@@ -593,7 +615,6 @@
 					{@render plate(p.x, p.y, p.angle, p.h, p.w, `plate-${i}`)}
 				{/each}
 			</g>
-			{@render armSet(true)}
 			{@render form('body', BODY, 'body', 5, BODY, [BODY_LIGHT])}
 			{@render form('belly', BELLY, 'belly', 2)}
 			<g clip-path={paint('belly')}>
@@ -616,6 +637,7 @@
 			{/each}
 			{@render front(worn.body)}
 			{@render front(worn.back)}
+			{@render armSet(true)}
 			{@render form('head', HEAD, 'body', 4.5, HEAD, [HEAD_LIGHT, SNOUT_LIGHT])}
 			<path class="open fine" d={SNOUT_RIDGE} />
 			{#if face.blush}
