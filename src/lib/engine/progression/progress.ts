@@ -128,7 +128,11 @@ export function isLessonUnlocked(
 	const index = ids.indexOf(lessonId);
 	if (index < 0) return false;
 	if (index === 0) return true;
-	return isLessonPassed(progression.rules, progress, ids[index - 1] as string);
+	// A lesson passed once stays open, even when new lessons are later inserted before it.
+	return (
+		isLessonPassed(progression.rules, progress, ids[index - 1] as string) ||
+		isLessonPassed(progression.rules, progress, lessonId)
+	);
 }
 
 /**

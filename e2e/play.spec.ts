@@ -1231,7 +1231,11 @@ test.describe('play route', () => {
 		expect((await storedRecord(page, legacy))?.['schemaVersion']).toBe(1);
 		for (const [index, lesson] of allLessons.entries()) {
 			const earlier = allLessons[index - 1];
-			const open = index === 0 || (earlier !== undefined && earlier.id in LEGACY_LESSON_STARS);
+			// A lesson passed by the first version stays open, even when lessons were inserted before it.
+			const open =
+				index === 0 ||
+				(earlier !== undefined && earlier.id in LEGACY_LESSON_STARS) ||
+				lesson.id in LEGACY_LESSON_STARS;
 			const row = lessonRow(page, lesson);
 			const legacyStars = LEGACY_LESSON_STARS[lesson.id];
 			if (!open) {
