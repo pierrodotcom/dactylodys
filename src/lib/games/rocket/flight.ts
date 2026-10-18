@@ -69,3 +69,46 @@ export function departureIndex(view: GameView): number | null {
 export function destinationLit(view: GameView): boolean {
 	return isRewarded(view);
 }
+
+/** Where the inhabitant of the astre reached stands, top left of its drawing. */
+export const INHABITANT = { x: 372, y: 63, scale: 0.9 } as const;
+
+/**
+ * Where its greeting goes. In flight: the middle of the bottom of the bubble, above its head, high
+ * enough for the jump of joy. Landed, the rocket stands above the astre: the middle of the right
+ * side of the bubble, on its left.
+ */
+export const GREETING = {
+	flying: { x: 399, y: 54 },
+	landed: { x: 380, y: 82 }
+} as const;
+
+export interface Size {
+	readonly width: number;
+	readonly height: number;
+}
+
+/**
+ * Top left corner of the greeting in a frame of `frame` pixels, where the scene is drawn as large as
+ * it fits, in the middle. The bubble never leaves the frame.
+ */
+export function greetingPlace(
+	frame: Size,
+	bubble: Size,
+	landed: boolean
+): { x: number; y: number } {
+	const scale = Math.min(frame.width / SCENE.width, frame.height / SCENE.height);
+	const left = (frame.width - SCENE.width * scale) / 2;
+	const top = (frame.height - SCENE.height * scale) / 2;
+	const anchor = landed ? GREETING.landed : GREETING.flying;
+	const x = left + anchor.x * scale - (landed ? bubble.width : bubble.width / 2);
+	const y = top + anchor.y * scale - (landed ? bubble.height / 2 : bubble.height);
+	return {
+		x: clamp(x, 0, frame.width - bubble.width),
+		y: clamp(y, 0, frame.height - bubble.height)
+	};
+}
+
+function clamp(value: number, min: number, max: number): number {
+	return Math.max(min, Math.min(value, Math.max(min, max)));
+}

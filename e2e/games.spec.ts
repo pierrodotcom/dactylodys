@@ -491,6 +491,29 @@ test.describe('game rocket', () => {
 		await expect(page.locator('.rocket .leg')).not.toHaveCount(0);
 	});
 
+	for (const viewport of [
+		{ width: 1366, height: 768 },
+		{ width: 1280, height: 720 }
+	]) {
+		test(`shows the whole scene across the page, the text and the keyboard together at ${viewport.width}×${viewport.height}`, async ({
+			page
+		}) => {
+			await page.setViewportSize(viewport);
+			await startGame(page, rocket);
+			const sky = page.locator('svg.sky');
+
+			await expect(sky).toBeInViewport({ ratio: 1 });
+			await expect(page.locator('.target-text')).toBeInViewport({ ratio: 1 });
+			await expect(page.locator('.keyboard')).toBeInViewport({ ratio: 1 });
+			const skyBox = await sky.boundingBox();
+			const textBox = await page.locator('.text-zone').boundingBox();
+			expect(skyBox?.width).toBe(textBox?.width);
+			expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(
+				viewport.height
+			);
+		});
+	}
+
 	test('draws the same fixed sky every time', async ({ page }) => {
 		const sky = () =>
 			page

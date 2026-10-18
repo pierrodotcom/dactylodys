@@ -3,6 +3,7 @@
 	import AstreShape from './AstreShape.svelte';
 	import {
 		FLIGHT,
+		INHABITANT,
 		SCENE,
 		astreVariant,
 		departureIndex,
@@ -49,7 +50,6 @@
 	const SPARK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
 	const SPARK_COLORS = 4;
 	const SPARK_RADIUS = 7;
-	const INHABITANT = { x: 372, y: 63, scale: 0.9 } as const;
 	const INHABITANT_TRANSFORM = `translate(${INHABITANT.x} ${INHABITANT.y}) scale(${INHABITANT.scale})`;
 	const ROCKET_SCALE = 1.2;
 	/** Where the smoke of a cough appears, behind the engine. */
@@ -392,11 +392,11 @@
 </svg>
 
 <style>
+	/* The drawing fits the height it is given; the sky goes on to the sides. */
 	.sky {
 		display: block;
 		inline-size: 100%;
-		max-inline-size: var(--dd-size-scene-max);
-		block-size: auto;
+		block-size: 100%;
 		border-radius: var(--dd-radius-lg);
 		background-color: var(--dd-color-sky-base);
 	}
@@ -1958,19 +1958,21 @@
 		}
 	}
 
+	/* The sky is wider than the scene on a wide screen: the car fades in and out where it may be seen. */
 	@keyframes car-flyby {
 		0% {
-			opacity: 100%;
+			opacity: 0;
 			translate: 0 0;
 		}
 
-		96% {
+		6%,
+		94% {
 			opacity: 100%;
 		}
 
 		100% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 10.5) 0;
+			translate: calc(var(--dd-space-3xl) * 14.4) 0;
 		}
 	}
 
