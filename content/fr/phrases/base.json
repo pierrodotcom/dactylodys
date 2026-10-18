@@ -943,6 +943,108 @@
 			"themes": ["cuisine"],
 			"level": 2,
 			"review": "human"
+		},
+		{
+			"text": "Le chat dort ; la souris danse.",
+			"themes": ["animaux", "maison"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "Il pleut ; le canard sourit.",
+			"themes": ["animaux", "nature"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "La soupe est chaude ; on souffle.",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "Le robot tombe ; il se relève.",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "La lune brille ; le loup chante.",
+			"themes": ["espace", "animaux"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le vent souffle ; le chapeau vole.",
+			"themes": ["nature"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "La porte grince ; le chat sursaute.",
+			"themes": ["maison", "animaux"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "La cloche sonne ; la classe sort.",
+			"themes": ["ecole"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le clown glisse ; tout le monde rit.",
+			"themes": ["sport"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le perroquet dit \"bonjour\".",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "Le chien aboie \"ouaf\".",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "Le panneau dit \"attention\".",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human"
+		},
+		{
+			"text": "Sur la porte, on lit \"entrez\".",
+			"themes": ["maison"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le bébé dragon réclame \"encore\".",
+			"themes": ["dinos"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le chat répond \"miaou\" et s'en va.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le klaxon fait \"pouet\" ; tout le monde rit.",
+			"themes": ["vehicules"],
+			"level": 2,
+			"review": "human"
+		},
+		{
+			"text": "Le robot dit \"bip\" puis il s'endort.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "human"
 		}
 	]
 }
