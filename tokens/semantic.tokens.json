@@ -258,6 +258,12 @@
 				"cheek": {
 					"$value": "{color.tomato.200}"
 				}
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
 			}
 		},
 		"wear": {
@@ -987,6 +993,12 @@
 		},
 		"story-light": {
 			"$value": 0.55
+		},
+		"companion-shade": {
+			"$value": 0.16
+		},
+		"companion-light": {
+			"$value": 0.5
 		}
 	},
 	"duration": {
