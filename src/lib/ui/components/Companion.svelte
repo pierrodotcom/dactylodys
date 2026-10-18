@@ -261,13 +261,17 @@
 		{ x: 60, y: 26, angle: 0, h: 22, w: 8 }
 	] as const;
 
-	/** Where each arm leaves the body, and how much its elbow goes out. */
-	const SHOULDERS: Readonly<Record<ArmPose, { root: Point; bend: number }>> = {
-		down: { root: { x: 37, y: 72 }, bend: 3 },
-		up: { root: { x: 32, y: 75 }, bend: 5 },
-		ground: { root: { x: 35, y: 67 }, bend: 1.5 }
+	/** Where each arm leaves the body, how much its elbow goes out, and how wide its shoulder is. */
+	const SHOULDERS: Readonly<Record<ArmPose, { root: Point; bend: number; half: number }>> = {
+		down: { root: { x: 37, y: 72 }, bend: 3, half: 6.2 },
+		up: { root: { x: 41, y: 80 }, bend: 4, half: 8 },
+		ground: { root: { x: 38, y: 80 }, bend: 4, half: 8.5 }
 	};
-	const ARM_ROOT_HALF = 6.2;
+	/**
+	 * Raised arms leave the shoulders behind the body and the head, so that they come out of the
+	 * silhouette like the legs; hanging arms rest in front of the body.
+	 */
+	const BEHIND: Readonly<Record<ArmPose, boolean>> = { down: false, up: true, ground: true };
 	const WRIST_HALF = 3.6;
 	/** The hand around the grip (0, 0), its three fingers along +y, its outer side along +x. */
 	const HAND_LINE =
@@ -280,7 +284,7 @@
 	const KNUCKLES = 'M-1.6 -2.8C-1.4 -0.8 -1.4 0.8 -1.6 2.2M1.8 -2.8C2 -0.8 2 0.8 1.8 2.2';
 
 	function armOf(pose: ArmPose, side: Side): Arm {
-		const { root, bend } = SHOULDERS[pose];
+		const { root, bend, half } = SHOULDERS[pose];
 		const grip = ARM_POSES[pose].grip;
 		const length = Math.hypot(grip.x - root.x, grip.y - root.y);
 		const u = { x: (grip.x - root.x) / length, y: (grip.y - root.y) / length };
@@ -296,10 +300,10 @@
 			return `${round(q.x)} ${round(q.y)}`;
 		};
 		const wrist = at(grip, -4, 0);
-		const outerRoot = at(root, 0, ARM_ROOT_HALF);
+		const outerRoot = at(root, 0, half);
 		const outerWrist = at(wrist, 0, WRIST_HALF);
 		const innerWrist = at(wrist, 0, -WRIST_HALF);
-		const innerRoot = at(root, 0, -ARM_ROOT_HALF);
+		const innerRoot = at(root, 0, -half);
 		const outer = `M${p(outerRoot)}C${p(at(outerRoot, length * 0.35, bend))} ${p(at(outerWrist, -length * 0.3, bend * 0.5))} ${p(outerWrist)}`;
 		const innerCurve = `C${p(at(innerWrist, -length * 0.3, bend * 0.3))} ${p(at(innerRoot, length * 0.35, bend * 0.3))} ${p(innerRoot)}`;
 		const sign = side === 'left' ? 1 : -1;
@@ -509,6 +513,20 @@
 	{/if}
 {/snippet}
 
+<!-- The arms at rest and those of a trick, each drawn behind the body or in front of it. -->
+{#snippet armSet(behind: boolean)}
+	{#if trickArms !== undefined && trickArms !== restArms}
+		{#if BEHIND[restArms] === behind}
+			<g class="arms-rest trick">{@render arms(restArms)}</g>
+		{/if}
+		{#if BEHIND[trickArms] === behind}
+			<g class="trick appear">{@render arms(trickArms)}</g>
+		{/if}
+	{:else if BEHIND[restArms] === behind}
+		{@render arms(restArms)}
+	{/if}
+{/snippet}
+
 {#snippet front(artId: string | undefined)}
 	{#if artId}
 		<CompanionItem {artId} />
@@ -575,6 +593,7 @@
 					{@render plate(p.x, p.y, p.angle, p.h, p.w, `plate-${i}`)}
 				{/each}
 			</g>
+			{@render armSet(true)}
 			{@render form('body', BODY, 'body', 5, BODY, [BODY_LIGHT])}
 			{@render form('belly', BELLY, 'belly', 2)}
 			<g clip-path={paint('belly')}>
@@ -647,12 +666,7 @@
 			{@render front(worn.feet)}
 			{@render front(worn.face)}
 			{@render front(worn.head)}
-			{#if trickArms !== undefined && trickArms !== restArms}
-				<g class="arms-rest trick">{@render arms(restArms)}</g>
-				<g class="trick appear">{@render arms(trickArms)}</g>
-			{:else}
-				{@render arms(restArms)}
-			{/if}
+			{@render armSet(false)}
 		</g>
 	</g>
 </svg>
