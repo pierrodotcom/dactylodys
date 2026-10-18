@@ -97,7 +97,8 @@ export const ARM_POSES: Readonly<Record<ArmPose, { arms: readonly Ellipse[]; gri
 			{ cx: 24, cy: 54, rx: 6, ry: 10 },
 			{ cx: 96, cy: 54, rx: 6, ry: 10 }
 		],
-		grip: { x: 24, y: 47 }
+		// Spread in a V from the shoulders: hugging the head, the arms looked stuck on its sides.
+		grip: { x: 13, y: 45 }
 	},
 	/** Stretched above the head: upside down, the hands reach the ground (handstand). */
 	ground: {
@@ -105,7 +106,7 @@ export const ARM_POSES: Readonly<Record<ArmPose, { arms: readonly Ellipse[]; gri
 			{ cx: 26, cy: 26, rx: 6, ry: 18 },
 			{ cx: 94, cy: 26, rx: 6, ry: 18 }
 		],
-		grip: { x: 26, y: 11 }
+		grip: { x: 17, y: 13 }
 	}
 };
 
