@@ -3,6 +3,7 @@
 	import AstreShape from './AstreShape.svelte';
 	import {
 		FLIGHT,
+		INHABITANT,
 		SCENE,
 		astreVariant,
 		departureIndex,
@@ -49,7 +50,6 @@
 	const SPARK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
 	const SPARK_COLORS = 4;
 	const SPARK_RADIUS = 7;
-	const INHABITANT = { x: 372, y: 63, scale: 0.9 } as const;
 	const INHABITANT_TRANSFORM = `translate(${INHABITANT.x} ${INHABITANT.y}) scale(${INHABITANT.scale})`;
 	const ROCKET_SCALE = 1.2;
 	/** Where the smoke of a cough appears, behind the engine. */

@@ -1,15 +1,29 @@
 <script lang="ts">
+	import type { Attachment } from 'svelte/attachments';
 	import { m } from '$lib/paraglide/messages.js';
 	import type { GameProps } from '../types';
 	import Bubble from '../shared/Bubble.svelte';
 	import GameShell from '../shared/GameShell.svelte';
 	import { isRewarded, pickCyclic, type GameView } from '../shared/game-view';
 	import AstreRow from './AstreRow.svelte';
-	import { isLastLeg } from './flight';
+	import { greetingPlace, isLastLeg } from './flight';
 	import RocketScene from './RocketScene.svelte';
 	import { GREETINGS } from './texts';
 
 	const props: GameProps = $props();
+
+	let frameWidth = $state(0);
+	let frameHeight = $state(0);
+	let bubbleWidth = $state(0);
+	let bubbleHeight = $state(0);
+
+	/** The place comes from the measured frame: the style sheet reads it in two custom properties. */
+	function placeAt(place: { x: number; y: number }): Attachment<HTMLElement> {
+		return (node) => {
+			node.style.setProperty('--dd-greeting-x', `${place.x}px`);
+			node.style.setProperty('--dd-greeting-y', `${place.y}px`);
+		};
+	}
 
 	function greetingFor(view: GameView): string {
 		return pickCyclic(GREETINGS, view.groupIndex)?.() ?? '';
@@ -42,8 +56,19 @@
 {/snippet}
 
 {#snippet scene(view: GameView)}
-	<div class="voyage">
-		<div class="bubble-row">
+	{@const place = greetingPlace(
+		{ width: frameWidth, height: frameHeight },
+		{ width: bubbleWidth, height: bubbleHeight },
+		isRewarded(view) && isLastLeg(view)
+	)}
+	<div class="voyage" bind:clientWidth={frameWidth} bind:clientHeight={frameHeight}>
+		<!-- Next to the inhabitant who speaks, wherever the scene is drawn in its frame. -->
+		<div
+			class="bubble-spot"
+			bind:offsetWidth={bubbleWidth}
+			bind:offsetHeight={bubbleHeight}
+			{@attach placeAt(place)}
+		>
 			{#if isRewarded(view)}
 				<Bubble still={view.reducedMotion} compact>{greetingFor(view)}</Bubble>
 			{/if}
@@ -61,10 +86,15 @@
 		block-size: 100%;
 	}
 
-	.bubble-row {
+	/* Its padding keeps the bubble off the inhabitant and off the edges of the frame. */
+	/* Measured from the top left corner, like the drawing. */
+	.bubble-spot {
 		position: absolute;
-		inset-block-start: var(--dd-space-sm);
-		inset-inline-start: var(--dd-space-sm);
+		top: 0;
+		left: 0;
+		translate: var(--dd-greeting-x) var(--dd-greeting-y);
 		z-index: var(--dd-z-index-raised);
+		padding: var(--dd-space-sm);
+		white-space: nowrap;
 	}
 </style>
