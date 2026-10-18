@@ -244,7 +244,7 @@
 	"play_help_thanks": "Merci ! Je l'ai retrouvée !",
 	"play_help_back": "Retour à la carte",
 	"settings_title": "Réglages",
-	"settings_back": "Revenir",
+	"settings_back": "Fermer",
 	"settings_saved": "C'est enregistré.",
 	"settings_save_error": "Les réglages n'ont pas pu être gardés sur cet appareil. Ils servent encore jusqu'à la fermeture de la page.",
 	"settings_on": "Oui",

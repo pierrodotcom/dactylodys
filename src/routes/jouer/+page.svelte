@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, type Component } from 'svelte';
+	import { onMount, tick, type Component } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { createVoicePlayer, loadVoiceManifest, type VoicePlayer } from '$lib/audio';
 	import { voiceLocale } from '$lib/audio/voice-texts';
@@ -344,10 +344,26 @@
 		go({ type: 'keyboard-checked' });
 	}
 
-	function openSettings() {
+	/**
+	 * Where the screen was scrolled when the settings opened. The settings start at their top and,
+	 * once closed, give the screen back its own position: neither scroll leaks into the other.
+	 */
+	let scrollBeforeSettings = 0;
+
+	async function openSettings() {
 		saveState = 'idle';
+		// A game left for the settings comes back to its lesson screen, which starts at the top.
+		scrollBeforeSettings = screen.name === 'game' ? 0 : window.scrollY;
 		if (screen.name === 'game') playClock = stopPlaying(playClock, now());
 		go({ type: 'open-settings' });
+		await tick();
+		window.scrollTo(0, 0);
+	}
+
+	async function closeSettings() {
+		go({ type: 'close-settings' });
+		await tick();
+		window.scrollTo(0, scrollBeforeSettings);
 	}
 
 	function openCompanion() {
@@ -684,7 +700,7 @@
 			settings={profile.settings}
 			{saveState}
 			onchange={changeSettings}
-			onback={() => go({ type: 'close-settings' })}
+			onback={closeSettings}
 		/>
 	{:else if screen.name === 'companion'}
 		{#if catalogue}

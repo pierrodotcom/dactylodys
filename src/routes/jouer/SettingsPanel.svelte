@@ -62,7 +62,19 @@
 	const flag = (value: boolean) => (value ? YES : NO);
 </script>
 
-<ScreenFrame title={m.settings_title()}>
+<ScreenFrame title={m.settings_title()} wide>
+	<!-- Close comes first: the child leaves the settings without scrolling down to the end. -->
+	<div class="top">
+		<div class="status" role="status">
+			{#if saveState === 'saved'}
+				<p>{m.settings_saved()}</p>
+			{:else if saveState === 'error'}
+				<p class="error">{m.settings_save_error()}</p>
+			{/if}
+		</div>
+		<Button onclick={onback}>{m.settings_back()}</Button>
+	</div>
+
 	<div class="groups">
 		<ChoiceGroup
 			legend={m.settings_sound_label()}
@@ -132,27 +144,43 @@
 			onchange={(value) => onchange({ layoutId: value as LayoutId })}
 		/>
 	</div>
-
-	<div class="status" role="status">
-		{#if saveState === 'saved'}
-			<p>{m.settings_saved()}</p>
-		{:else if saveState === 'error'}
-			<p class="error">{m.settings_save_error()}</p>
-		{/if}
-	</div>
-
-	<Button onclick={onback}>{m.settings_back()}</Button>
 </ScreenFrame>
 
 <style>
+	.top {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: var(--dd-space-md);
+		inline-size: 100%;
+	}
+
+	/* Two columns where there is room: the settings fit in about one screen. */
 	.groups {
 		display: grid;
-		gap: var(--dd-space-xl);
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--dd-size-settings-column)), 1fr));
+		gap: var(--dd-space-lg);
+		align-items: start;
 		inline-size: 100%;
-		justify-items: center;
+	}
+
+	/* Each setting takes its whole column, its choices centred on one line where they fit. */
+	.groups :global(fieldset) {
+		inline-size: 100%;
+	}
+
+	.groups :global(.options) {
+		justify-content: center;
+	}
+
+	/* Narrower choices than elsewhere: three of them fit on one line of a column. */
+	.groups :global(.choice) {
+		padding-inline: var(--dd-space-sm);
 	}
 
 	.sample {
+		grid-column: 1 / -1;
 		display: grid;
 		gap: var(--dd-space-sm);
 		justify-items: center;
