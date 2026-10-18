@@ -250,11 +250,12 @@
 	) as Readonly<Record<ArmPose, Record<Side, Arm>>>;
 
 	const FACES: Readonly<Record<Mood, Face>> = {
+		// Wide open eyes at rest: a heavy lid made it look bored (porteur, 2026-10-18).
 		idle: {
 			look: { x: 0.8, y: 0.4 },
-			lid: -6.8,
+			lid: null,
 			smilingEyes: false,
-			brow: { outer: { x: 40.5, y: 34.4 }, inner: { x: 54.6, y: 33 }, bend: -2.6 },
+			brow: { outer: { x: 40.4, y: 33.2 }, inner: { x: 54.6, y: 31.8 }, bend: -3 },
 			blush: false
 		},
 		happy: {
