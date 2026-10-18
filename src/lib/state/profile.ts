@@ -116,7 +116,11 @@ export function defaultSettings(platform: LayoutPlatform): Settings {
 	return { layoutId: DEFAULT_LAYOUT_BY_PLATFORM[platform], ...DEFAULT_SETTINGS_COMMON };
 }
 
-function normalizeName(name: string): string | null {
+/**
+ * The nickname as it is kept (NFC, trimmed), or `null` when it breaks the rules: the only
+ * definition, used by the screens to explain a refusal before a profile is created.
+ */
+export function normalizeName(name: string): string | null {
 	const text = name.normalize('NFC').trim().normalize('NFC');
 	const length = toGraphemes(text).length;
 	const valid =

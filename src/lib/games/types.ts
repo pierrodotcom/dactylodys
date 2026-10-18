@@ -19,8 +19,8 @@ export interface GameGuide {
 	readonly hesitationMs: number;
 }
 
+/** The sounds are switched on and off by the `SoundPlayer` given to the game (`GameProps.sounds`), not here. */
 export interface GameSettings {
-	readonly soundEnabled: boolean;
 	readonly reducedMotion: boolean;
 	readonly showKeyboard: boolean;
 	readonly errorPolicy: ErrorPolicy;

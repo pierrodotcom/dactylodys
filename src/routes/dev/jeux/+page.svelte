@@ -35,7 +35,6 @@
 
 	const sounds = createSoundPlayer({ isEnabled: () => false });
 	const settings = $derived({
-		soundEnabled: false,
 		reducedMotion,
 		showKeyboard,
 		errorPolicy: 'retry' as const,
