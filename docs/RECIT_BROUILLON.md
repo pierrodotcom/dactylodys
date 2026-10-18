@@ -41,7 +41,7 @@ Chaque texte est montré entre deux exercices : l'ouverture quand l'enfant entre
 ## Cap sur les étoiles
 
 22. **Ouverture** : « Trois, deux, un… Ton dino décolle, son carnet bien serré. » — image : la fusée au départ, le dino au hublot.
-23. **Le café de la Lune** : « Sur la Lune, le café est bon, mais il flotte. » — image : une tasse sur la Lune, le café qui s'échappe en bulles.
+23. **Le café de la Lune** : « En micropesanteur, le café est bon, mais il flotte. » — image : en orbite près de la Lune, le dino en combinaison spatiale à côté d'une tasse dont le café s'échappe en bulles (texte et image changés par le porteur le 2026-10-18).
 24. **La comète pressée** : « La comète passe si vite qu'elle oublie sa queue. » — image : la comète qui file, sa queue restée en arrière.
 25. **Les géantes de la galaxie** : « Les géantes de la galaxie se penchent pour mieux te voir. » — image : de grandes planètes penchées, l'air curieux.
 26. **Pause sur la planète Virgule** : « Sur la planète Virgule, tout le monde fait une petite pause. » — image : des habitants assis sur une planète en forme de virgule.
