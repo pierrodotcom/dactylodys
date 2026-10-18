@@ -121,6 +121,85 @@ export function ellipseBand(
 	return `M${point(cx - upper, top)}L${point(cx + upper, top)}L${point(cx + lower, bottom)}L${point(cx - lower, bottom)}Z`;
 }
 
+/** The point of an ellipse at `degrees`, measured as in SVG: 0 to the right, 90 downwards. */
+export function ovalPoint(cx: number, cy: number, rx: number, ry: number, degrees: number): XY {
+	const angle = (degrees * Math.PI) / 180;
+	return [round(cx + rx * Math.cos(angle)), round(cy + ry * Math.sin(angle))];
+}
+
+/**
+ * Cubic curves along an ellipse from one angle to another (degrees, as in `ovalPoint`), to follow
+ * a point already at the first angle: one curve per quarter turn at most, so it stays round.
+ */
+export function ovalArc(
+	cx: number,
+	cy: number,
+	rx: number,
+	ry: number,
+	from: number,
+	to: number
+): string {
+	const count = Math.max(1, Math.ceil(Math.abs(to - from) / 90));
+	const step = ((to - from) * Math.PI) / 180 / count;
+	const k = (4 / 3) * Math.tan(step / 4);
+	const start = (from * Math.PI) / 180;
+	return Array.from({ length: count }, (_, i) => {
+		const a0 = start + i * step;
+		const a1 = a0 + step;
+		const c1 = point(
+			cx + rx * (Math.cos(a0) - k * Math.sin(a0)),
+			cy + ry * (Math.sin(a0) + k * Math.cos(a0))
+		);
+		const c2 = point(
+			cx + rx * (Math.cos(a1) + k * Math.sin(a1)),
+			cy + ry * (Math.sin(a1) - k * Math.cos(a1))
+		);
+		return `C${c1} ${c2} ${point(cx + rx * Math.cos(a1), cy + ry * Math.sin(a1))}`;
+	}).join('');
+}
+
+/** A whole ellipse drawn with curves, starting on its right. */
+export function ovalPath(cx: number, cy: number, rx: number, ry: number): string {
+	return `M${point(cx + rx, cy)}${ovalArc(cx, cy, rx, ry, 0, 360)}Z`;
+}
+
+/** A rod with round ends between two points, `r` its half thickness: a handle, a bar, a spoke. */
+export function capsulePath(x1: number, y1: number, x2: number, y2: number, r: number): string {
+	const length = Math.hypot(x2 - x1, y2 - y1) || 1;
+	const nx = (-(y2 - y1) / length) * r;
+	const ny = ((x2 - x1) / length) * r;
+	const ux = ((x2 - x1) / length) * r * 1.33;
+	const uy = ((y2 - y1) / length) * r * 1.33;
+	return (
+		`M${point(x1 + nx, y1 + ny)}L${point(x2 + nx, y2 + ny)}` +
+		`C${point(x2 + nx + ux, y2 + ny + uy)} ${point(x2 - nx + ux, y2 - ny + uy)} ${point(x2 - nx, y2 - ny)}` +
+		`L${point(x1 - nx, y1 - ny)}` +
+		`C${point(x1 - nx - ux, y1 - ny - uy)} ${point(x1 + nx - ux, y1 + ny - uy)} ${point(x1 + nx, y1 + ny)}Z`
+	);
+}
+
+/**
+ * A long leaf-like stroke along an arc of a circle, thick in its middle and pointed at both ends:
+ * a sound wave, a trail behind something that turns. Angles in degrees, as in `ovalPoint`.
+ */
+export function crescentPath(
+	cx: number,
+	cy: number,
+	r: number,
+	from: number,
+	to: number,
+	thickness: number
+): string {
+	const middle = (from + to) / 2;
+	const half = (((to - from) / 2) * Math.PI) / 180;
+	const bulge = r / Math.cos(half);
+	const [x1, y1] = ovalPoint(cx, cy, r, r, from);
+	const [x2, y2] = ovalPoint(cx, cy, r, r, to);
+	const outer = ovalPoint(cx, cy, bulge + thickness, bulge + thickness, middle);
+	const inner = ovalPoint(cx, cy, bulge - thickness, bulge - thickness, middle);
+	return `M${point(x1, y1)}Q${point(...outer)} ${point(x2, y2)}Q${point(...inner)} ${point(x1, y1)}Z`;
+}
+
 /** A square view box around a frame, with a margin around it: the drawing alone, centred. */
 export function squareViewBox([x, y, width, height]: Frame, margin: number): string {
 	const side = Math.max(width, height) + 2 * margin;

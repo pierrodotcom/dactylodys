@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+	capsulePath,
 	checkerPath,
+	crescentPath,
 	ellipseBand,
 	ellipseHalfWidth,
 	fluffPath,
+	ovalArc,
+	ovalPath,
+	ovalPoint,
 	pointOnCubic,
 	roundedStarPath,
 	squareViewBox,
@@ -112,5 +117,57 @@ describe('squareViewBox', () => {
 	it('centres a frame in a square with a margin', () => {
 		expect(squareViewBox([10, 20, 40, 20], 5)).toBe('5 5 50 50');
 		expect(squareViewBox([-20, -30, 20, 30], 0)).toBe('-25 -30 30 30');
+	});
+});
+
+describe('ovalPoint', () => {
+	it('measures angles as in SVG: 0 to the right, 90 downwards', () => {
+		expect(ovalPoint(60, 50, 20, 10, 0)).toEqual([80, 50]);
+		expect(ovalPoint(60, 50, 20, 10, 90)).toEqual([60, 60]);
+		expect(ovalPoint(60, 50, 20, 10, 180)).toEqual([40, 50]);
+	});
+});
+
+describe('ovalArc', () => {
+	it('uses one curve per quarter turn and ends on the ellipse', () => {
+		const arc = ovalArc(0, 0, 20, 10, 0, 180);
+		expect(arc.match(/C/g)).toHaveLength(2);
+		expect(arc.endsWith('-20 0')).toBe(true);
+	});
+
+	it('goes the other way when the angles decrease', () => {
+		expect(ovalArc(0, 0, 10, 10, 90, 0).endsWith('10 0')).toBe(true);
+	});
+});
+
+describe('ovalPath', () => {
+	it('closes four curves that stay within the ellipse box', () => {
+		const path = ovalPath(60, 50, 20, 10);
+		expect(path.startsWith('M80 50C')).toBe(true);
+		expect(path.match(/C/g)).toHaveLength(4);
+		const values = numbersOf(path);
+		for (let i = 0; i < values.length; i += 2) {
+			expect(Math.abs((values[i] ?? 0) - 60)).toBeLessThanOrEqual(20.01);
+			expect(Math.abs((values[i + 1] ?? 0) - 50)).toBeLessThanOrEqual(10.01);
+		}
+	});
+});
+
+describe('capsulePath', () => {
+	it('runs along both sides of the rod, `r` away from it', () => {
+		const path = capsulePath(0, 0, 0, 10, 2);
+		expect(path.startsWith('M-2 0L-2 10C')).toBe(true);
+		expect(path).toContain('L2 0C');
+		expect(path.endsWith('Z')).toBe(true);
+	});
+});
+
+describe('crescentPath', () => {
+	it('is pointed on the circle at both ends and thick in its middle', () => {
+		const path = crescentPath(0, 0, 10, 0, 90, 2);
+		expect(path.startsWith('M10 0Q')).toBe(true);
+		expect(path).toContain(' 0 10Q');
+		const [, , outerX = 0, outerY = 0, , , innerX = 0, innerY = 0] = numbersOf(path);
+		expect(Math.hypot(outerX, outerY)).toBeGreaterThan(Math.hypot(innerX, innerY));
 	});
 });

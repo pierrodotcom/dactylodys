@@ -2,9 +2,16 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { companionAppearance } from '$lib/ui/companion/appearance';
 	import CompanionItem from '$lib/ui/companion/CompanionItem.svelte';
-	import { starPath } from '$lib/ui/companion/geometry';
+	import {
+		capsulePath,
+		crescentPath,
+		ovalPath,
+		ovalPoint,
+		roundedStarPath
+	} from '$lib/ui/companion/geometry';
 	import {
 		ARM_POSES,
+		ITEM_ARTS,
 		TRICK_ARMS,
 		wornBySlot,
 		type ArmPose,
@@ -58,12 +65,75 @@
 	const DANCES = 5;
 
 	/** Three tomatoes on a circle around (60, 40) that goes through both raised hands. */
-	const TOMATOES = [
-		{ x: 60, y: 4 },
-		{ x: 91.2, y: 22 },
-		{ x: 28.8, y: 22 }
-	] as const;
-	const TOMATO_LEAVES = TOMATOES.map((tomato) => starPath(tomato.x, tomato.y - 6, 3.6, 1.5));
+	const ORBIT = { x: 60, y: 40, r: 36 } as const;
+	const TOMATOES = [-90, -30, -150].map((deg) => {
+		const [x, y] = ovalPoint(ORBIT.x, ORBIT.y, ORBIT.r, ORBIT.r, deg);
+		const p = (dx: number, dy: number) => `${round(x + dx)} ${round(y + dy)}`;
+		return {
+			x,
+			body:
+				`M${p(0, -5.6)}C${p(3.8, -7.6)} ${p(8, -5.6)} ${p(8.4, -1)}C${p(8.8, 3.8)} ${p(5.2, 8)} ${p(0, 8)}` +
+				`C${p(-5.2, 8)} ${p(-8.8, 3.8)} ${p(-8.4, -1)}C${p(-8, -5.6)} ${p(-3.8, -7.6)} ${p(0, -5.6)}Z`,
+			ribs: `M${p(-2.2, -5.4)}C${p(-3.2, -4.2)} ${p(-3.6, -2.8)} ${p(-3.6, -1.4)}M${p(2.2, -5.4)}C${p(3.2, -4.2)} ${p(3.6, -2.8)} ${p(3.6, -1.4)}`,
+			gloss:
+				ovalPath(round(x - 3.8), round(y - 2), 1.5, 2.1) +
+				ovalPath(round(x - 1.4), round(y - 4.6), 0.7, 0.5),
+			calyx: roundedStarPath(x, round(y - 5.8), 4.6, 1.3, 5, 0.3),
+			stem: capsulePath(x, round(y - 6.4), round(x + 1), round(y - 9.6), 0.75),
+			/* Behind each tomato on the orbit, which turns clockwise. */
+			trail:
+				crescentPath(ORBIT.x, ORBIT.y, ORBIT.r, deg - 54, deg - 13, 2.6) +
+				crescentPath(ORBIT.x, ORBIT.y, ORBIT.r - 5, deg - 40, deg - 16, 0.9) +
+				crescentPath(ORBIT.x, ORBIT.y, ORBIT.r + 5, deg - 34, deg - 15, 0.9)
+		};
+	});
+
+	/** The roar: waves on both sides of the open mouth, curling at their ends. */
+	const ROAR_WAVES = [
+		{ r: 36, span: 19, thickness: 2.6 },
+		{ r: 42.6, span: 23, thickness: 2.2 },
+		{ r: 49.2, span: 26, thickness: 1.8 }
+	];
+	const ROAR_WAVE_LEFT = ROAR_WAVES.map((w) =>
+		crescentPath(60, 64, w.r, 180 - w.span, 180 + w.span, w.thickness)
+	).join('');
+	const ROAR_CURLS_LEFT =
+		'M15.4 42.4C12.6 40.6 12.8 36.8 15.6 36C17.8 35.4 19.4 37.6 18 39.2M15.4 85.6C12.6 87.4 12.8 91.2 15.6 92C17.8 92.6 19.4 90.4 18 88.8';
+
+	/** The wheel: a long stroke on each side, an arrow at its front, turning clockwise. */
+	function wheelStroke(from: number, to: number): string {
+		const stroke = crescentPath(60, 60, 54, from, to, 2.6);
+		const [x, y] = ovalPoint(60, 60, 54, 54, to + 2);
+		const angle = ((to + 2) * Math.PI) / 180;
+		const tangent = [-Math.sin(angle), Math.cos(angle)] as const;
+		const radial = [Math.cos(angle), Math.sin(angle)] as const;
+		const p = (along: number, out: number) =>
+			`${round(x + tangent[0] * along + radial[0] * out)} ${round(y + tangent[1] * along + radial[1] * out)}`;
+		return `${stroke}M${p(5.6, 0)}Q${p(1, 1.4)} ${p(-1.2, 4.2)}Q${p(-0.2, 0)} ${p(-1.2, -4.2)}Q${p(1, -1.4)} ${p(5.6, 0)}Z`;
+	}
+	const WHEEL_STROKES =
+		wheelStroke(196, 254) +
+		wheelStroke(16, 74) +
+		crescentPath(60, 60, 47.6, 206, 244, 0.9) +
+		crescentPath(60, 60, 47.6, 26, 64, 0.9);
+
+	/** Floating: a soft shadow far below, sparkles around, lines under the feet that follow them. */
+	const FLOAT_SPARKLES =
+		roundedStarPath(14.6, 38, 4.6, 1.3, 4, 0.2) +
+		roundedStarPath(104.6, 26.4, 3.8, 1.1, 4, 0.2) +
+		roundedStarPath(103.4, 80.6, 3, 0.9, 4, 0.2) +
+		roundedStarPath(18.4, 88.6, 2.4, 0.8, 4, 0.2);
+	const FLOAT_LIFT = [44, 60, 76]
+		.map((x, i) => capsulePath(x, 118 + (i % 2) * 1.6, x, 123.4 + (i % 2) * 1.6, 0.7))
+		.join('');
+	/** Upside down, the feet wobble: marks beside them, drawn the right way up. */
+	const HANDSTAND_WOBBLE =
+		crescentPath(44, 107, 16, 160, 200, 0.9) +
+		crescentPath(44, 107, 20.4, 164, 196, 0.7) +
+		crescentPath(76, 107, 16, -20, 20, 0.9) +
+		crescentPath(76, 107, 20.4, -16, 16, 0.7);
+	const GROUND_SHADOW = ovalPath(60, 115.6, 30, 3.4);
+	const SOFT_SHADOW = ovalPath(60, 116.4, 26, 3.6) + ovalPath(60, 116.4, 15, 2.2);
 
 	/** The middle of the view box: the right side of the dino is its left side mirrored. */
 	const MIDDLE = 60;
@@ -297,7 +367,8 @@
 		'M44.6 61.4C52 58.6 68 58.6 75.4 61.4C75 71.6 68.6 75.4 60 75.4C51.4 75.4 45 71.6 44.6 61.4Z';
 	const ROAR_TONGUE = 'M50 78C50 71 54.6 69 60 69C65.4 69 70 71 70 78Z';
 	const FANGS = both('M49 60.6C49.4 63.2 50.6 65 51.6 65C52.6 65 53.2 63 53.4 59.8Z');
-	const ROAR_LINES = both('M28 58L19 53M26 66L16 66M28 74L19 79');
+	const ROAR_CURLS = both(ROAR_CURLS_LEFT);
+	const ROAR_WAVE = both(ROAR_WAVE_LEFT);
 
 	let { mood, dance = 0, colorId, itemArtIds, trick = null }: Props = $props();
 
@@ -307,6 +378,10 @@
 	const items = $derived(itemArtIds ?? appearance().itemArtIds);
 	const worn = $derived(wornBySlot(items));
 	const wornIds = $derived(Object.values(worn));
+	/** A worn item that also covers the arms (`ItemArt.sleeves`). */
+	const sleeves = $derived(
+		worn.body !== undefined && ITEM_ARTS[worn.body]?.sleeves ? worn.body : undefined
+	);
 
 	const danceIndex = $derived(((dance % DANCES) + DANCES) % DANCES);
 
@@ -407,6 +482,18 @@
 	{#each SIDES as side (side)}
 		{@const arm = ARMS[pose][side]}
 		{@render form(`arm-${pose}-${side}`, arm.fill, 'body', 1.6, arm.outer)}
+		{#if sleeves}
+			<g clip-path={paint(`arm-${pose}-${side}`)}>
+				<g transform={arm.hand}><CompanionItem artId={sleeves} layer="sleeve" /></g>
+				<path
+					class="shade"
+					fill-rule="evenodd"
+					d={FRAME + arm.fill}
+					transform="translate(-1.6 -1.6)"
+				/>
+			</g>
+			<path class="open line" d={arm.outer} />
+		{/if}
 		<path class="open line" d={arm.inner} />
 		<g transform={arm.hand}>
 			{@render form(`hand-${pose}-${side}`, HAND, 'body', 1, HAND_LINE)}
@@ -440,9 +527,17 @@
 	data-trick={trick ?? undefined}
 >
 	{#if trick === 'float'}
-		<ellipse class="shadow trick appear" cx="60" cy="116" rx="24" ry="3.5" />
+		<g class="trick appear">
+			<path class="shadow" d={SOFT_SHADOW} />
+			<path class="sparkle line" d={FLOAT_SPARKLES} />
+		</g>
 	{:else if trick === 'cartwheel'}
-		<path class="open line trick appear" d="M10 44A52 52 0 0 1 44 9M110 76A52 52 0 0 1 76 111" />
+		<g class="trick appear">
+			<path class="shadow" d={GROUND_SHADOW} />
+			<path class="wave" d={WHEEL_STROKES} />
+		</g>
+	{:else if trick !== null}
+		<path class="shadow trick appear" d={GROUND_SHADOW} />
 	{/if}
 	{#if mood === 'cheer'}
 		<path class="sparkle line" d={SPARKLE_PATH} />
@@ -454,11 +549,19 @@
 				<g class="trick appear">
 					<g class="juggle-orbit">
 						{#each TOMATOES as tomato, i (tomato.x)}
-							<circle class="tomato line" cx={tomato.x} cy={tomato.y} r="7.5" />
-							<path class="leaf line" d={TOMATO_LEAVES[i]} />
+							<path class="trail" d={tomato.trail} />
+							{@render form(`tomato-${i}`, tomato.body, 'tomato', 2.2, tomato.body, [])}
+							<path class="open fine" d={tomato.ribs} />
+							<path class="gloss" d={tomato.gloss} />
+							<path class="leaf line" d={tomato.stem} />
+							{@render form(`calyx-${i}`, tomato.calyx, 'leaf', 0.8, tomato.calyx, [])}
 						{/each}
 					</g>
 				</g>
+			{:else if trick === 'float'}
+				<path class="shadow trick appear" d={FLOAT_LIFT} />
+			{:else if trick === 'handstand'}
+				<path class="wave trick appear" d={HANDSTAND_WOBBLE} />
 			{/if}
 			{#each wornIds as artId (artId)}
 				<CompanionItem {artId} layer="back" />
@@ -535,7 +638,8 @@
 					<g clip-path={paint('roar')}><path class="tongue" d={ROAR_TONGUE} /></g>
 					{#each SIDES as side (side)}
 						<path class="white line" d={FANGS[side]} />
-						<path class="open line bold" d={ROAR_LINES[side]} />
+						<path class="wave" d={ROAR_WAVE[side]} />
+						<path class="open line" d={ROAR_CURLS[side]} />
 					{/each}
 				</g>
 			{/if}
@@ -691,6 +795,19 @@
 
 	.tomato {
 		fill: var(--dd-color-wear-red);
+	}
+
+	.gloss {
+		fill: var(--dd-color-companion-light);
+	}
+
+	.wave {
+		fill: var(--dd-color-companion-line);
+	}
+
+	.trail {
+		fill: var(--dd-color-wear-red);
+		fill-opacity: var(--dd-opacity-companion-light);
 	}
 
 	.leaf {
@@ -1030,5 +1147,10 @@
 
 	:global([data-silhouette]) .companion * {
 		stroke: var(--dd-color-silhouette);
+	}
+
+	/* The shadow on the ground stays a shadow under a silhouette. */
+	:global([data-silhouette]) .companion .shadow {
+		fill: var(--dd-color-companion-shadow);
 	}
 </style>

@@ -88,6 +88,14 @@ describe('trophyKeys', () => {
 		expect(new Set(shown).size).toBe(3);
 	});
 
+	it('keeps accents and punctuation as they are typed', () => {
+		for (const artId of ['keys-accents', 'keys-punctuation']) {
+			const reward = catalogue.rewards.find((candidate) => candidate.artId === artId);
+			if (!reward || reward.condition.kind !== 'chars-mastered') throw new Error('missing signs');
+			expect(trophyKeys(reward)).toEqual(reward.condition.chars.slice(0, 3));
+		}
+	});
+
 	it('shows no key for a reward that is not about keys', () => {
 		for (const reward of catalogue.rewards.filter(
 			(candidate) => candidate.condition.kind !== 'chars-mastered'
