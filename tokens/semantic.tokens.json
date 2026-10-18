@@ -313,6 +313,7 @@
 		"choice-card-min": { "$value": "14rem" },
 		"lesson-node": { "$value": "4rem" },
 		"panel-max": { "$value": "32rem" },
+		"settings-column": { "$value": "22rem" },
 		"bubble-tail": { "$value": "{dimension.16}" },
 		"star": { "$value": "2rem" },
 		"star-large": { "$value": "5rem" },

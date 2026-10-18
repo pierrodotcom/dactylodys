@@ -922,6 +922,30 @@ test.describe('play route', () => {
 		await expect(heading(page, FIRST.title)).toBeVisible();
 	});
 
+	test('opens the settings at their top with Close above them, and gives the map its scroll back', async ({
+		page
+	}) => {
+		await reachMapAs(page, profileAfter(SECOND.id));
+		const scrollY = () => page.evaluate(() => Math.round(window.scrollY));
+		await page.evaluate(() => window.scrollTo(0, 400));
+		const before = await scrollY();
+		expect(before).toBeGreaterThan(0);
+
+		// A click that does not scroll the page first, so that the position kept is the one above.
+		await button(page, message('play_settings_open')).dispatchEvent('click');
+		await expect(heading(page, message('settings_title'))).toBeVisible();
+		await expect.poll(scrollY).toBe(0);
+		const close = button(page, message('settings_back'));
+		const closeBox = await close.boundingBox();
+		const firstGroup = await page.getByRole('group').first().boundingBox();
+		expect(closeBox?.y ?? Infinity).toBeLessThan(firstGroup?.y ?? -Infinity);
+
+		await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+		await close.dispatchEvent('click');
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		await expect.poll(scrollY).toBe(before);
+	});
+
 	test('helps a child who hesitates in a later lesson, and only then', async ({ page }) => {
 		const third = world.lessons[2] as Lesson;
 		await reachMapAs(page, profileAfter(SECOND.id));
