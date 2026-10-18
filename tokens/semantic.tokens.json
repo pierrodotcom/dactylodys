@@ -864,6 +864,9 @@
 		"panel-max": {
 			"$value": "32rem"
 		},
+		"settings-column": {
+			"$value": "22rem"
+		},
 		"bubble-tail": {
 			"$value": "{dimension.16}"
 		},
