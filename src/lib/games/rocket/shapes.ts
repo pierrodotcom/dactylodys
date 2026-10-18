@@ -83,7 +83,42 @@ export const STARS = [
 	{ x: 500, y: 90, radius: 1 },
 	{ x: 36, y: 196, radius: 1 },
 	{ x: 104, y: 120, radius: 1 },
-	{ x: 478, y: 176, radius: 1.5 }
+	{ x: 478, y: 176, radius: 1.5 },
+	// Beyond the scene, for a picture wider than the scene: the sky goes on to the sides.
+	{ x: -18, y: 150, radius: 1 },
+	{ x: -40, y: 46, radius: 1.5 },
+	{ x: -66, y: 112, radius: 1 },
+	{ x: -92, y: 196, radius: 1.5 },
+	{ x: -118, y: 30, radius: 2 },
+	{ x: -140, y: 80, radius: 1 },
+	{ x: -170, y: 164, radius: 1.5 },
+	{ x: -196, y: 14, radius: 1 },
+	{ x: -222, y: 122, radius: 2 },
+	{ x: -248, y: 58, radius: 1 },
+	{ x: -276, y: 200, radius: 1 },
+	{ x: -302, y: 92, radius: 1.5 },
+	{ x: -330, y: 26, radius: 1 },
+	{ x: -356, y: 150, radius: 2 },
+	{ x: -384, y: 66, radius: 1 },
+	{ x: -412, y: 188, radius: 1.5 },
+	{ x: -436, y: 108, radius: 1 },
+	{ x: 538, y: 140, radius: 1.5 },
+	{ x: 556, y: 40, radius: 1 },
+	{ x: 584, y: 196, radius: 1 },
+	{ x: 606, y: 76, radius: 2 },
+	{ x: 632, y: 18, radius: 1 },
+	{ x: 658, y: 128, radius: 1.5 },
+	{ x: 684, y: 182, radius: 1 },
+	{ x: 712, y: 50, radius: 1.5 },
+	{ x: 738, y: 104, radius: 1 },
+	{ x: 764, y: 206, radius: 2 },
+	{ x: 790, y: 28, radius: 1 },
+	{ x: 818, y: 88, radius: 1.5 },
+	{ x: 846, y: 160, radius: 1 },
+	{ x: 872, y: 42, radius: 2 },
+	{ x: 900, y: 120, radius: 1 },
+	{ x: 928, y: 198, radius: 1.5 },
+	{ x: 954, y: 62, radius: 1 }
 ] as const;
 
 /** A five-pointed star centered on (0, 0), outer radius 10. */
@@ -206,10 +241,10 @@ export const DISH = {
 	]
 } as const;
 
-/** A little car facing right, centered on the middle of its body; it starts left of the sky. */
+/** A little car facing right, centered on the middle of its body; it starts left of the scene, out of sight on most screens. */
 export const CAR = {
 	scale: 1.4,
-	start: { x: -56, y: 186 },
+	start: { x: -200, y: 186 },
 	bodyPath: 'M-18 7L-18 0Q-18 -3 -14 -3L-9 -3L-5 -9L6 -9L11 -3L16 -3Q20 -3 20 1L20 7Z',
 	windowPaths: ['M-4.5 -3.5L-1.5 -7.2L2 -7.2L2 -3.5Z', 'M4 -3.5L4 -7.2L6 -7.2L9 -3.5Z'],
 	headlight: { cx: 18.5, cy: 0.5, radius: 1.8 },

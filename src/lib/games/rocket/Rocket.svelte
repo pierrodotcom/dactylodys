@@ -27,7 +27,7 @@
 	{...props}
 	title={m.game_rocket_title()}
 	pauseText={m.game_rocket_pause_text()}
-	arrangement="wide"
+	arrangement="stacked"
 	{progress}
 	{scene}
 	{announce}
@@ -56,8 +56,9 @@
 	.voyage {
 		position: relative;
 		display: grid;
+		grid-template-rows: minmax(0, 1fr);
 		inline-size: 100%;
-		max-inline-size: var(--dd-size-scene-max);
+		block-size: 100%;
 	}
 
 	.bubble-row {
