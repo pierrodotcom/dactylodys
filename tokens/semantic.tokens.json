@@ -603,6 +603,36 @@
 			},
 			"h": {
 				"$value": "{color.plum.300}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"i": {
+				"$value": "{color.azure.500}"
+			},
+			"j": {
+				"$value": "{color.tomato.500}"
+			},
+			"k": {
+				"$value": "{color.teal.600}"
+			},
+			"l": {
+				"$value": "{color.gold.500}"
+			},
+			"m": {
+				"$value": "{color.violet.400}"
+			},
+			"n": {
+				"$value": "{color.sage.400}"
+			},
+			"o": {
+				"$value": "{color.lagoon.300}"
+			},
+			"p": {
+				"$value": "{color.amber.700}"
 			}
 		}
 	},
@@ -951,6 +981,12 @@
 		},
 		"glass": {
 			"$value": 0.45
+		},
+		"story-shade": {
+			"$value": 0.18
+		},
+		"story-light": {
+			"$value": 0.55
 		}
 	},
 	"duration": {
