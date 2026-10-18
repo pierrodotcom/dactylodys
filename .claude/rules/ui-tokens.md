@@ -16,6 +16,7 @@ paths:
 4. Un thème (clair, sombre, calme, contraste élevé, un monde du jeu) est un jeu de valeurs pour les tokens sémantiques. Aucun composant ne teste le thème courant.
 5. Le canvas lit les mêmes tokens via le module TS généré.
 6. Valeur manquante → **ajouter un token**, jamais contourner. Aucun `stylelint-disable` pour une valeur en dur.
+7. Seule exception admise : une **position calculée** à l'exécution à partir de mesures (ex. la bulle de « Décollage », `greetingPlace`) est passée à la feuille de style par une propriété personnalisée posée par une attache (`{@attach}`) ; c'est une donnée de géométrie, comme une coordonnée SVG, jamais une couleur, une taille de design ou une durée.
 
 ## Accessibilité (enfants dys / TDAH)
 

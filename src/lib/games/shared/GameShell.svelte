@@ -28,8 +28,12 @@
 		title: string;
 		/** One kind sentence shown while the game is paused. */
 		pauseText: string;
-		/** `side`: scene, text and aside on one line; `wide`: a wider scene beside the text, above it when the room is short. */
-		arrangement?: 'side' | 'wide';
+		/**
+		 * `side`: scene, text and aside on one line; `wide`: a wider scene beside the text, above it when
+		 * the room is short; `stacked`: the scene across the page, as tall as the screen allows, the text
+		 * below it and the keyboard at the bottom, all on one screen.
+		 */
+		arrangement?: 'side' | 'wide' | 'stacked';
 		/** Next to the pause button: how far the exercise has gone. */
 		progress: Snippet<[GameView]>;
 		/** The picture of the game. */
@@ -211,7 +215,12 @@
 
 <svelte:window onkeydown={onWindowKeydown} onclick={keepFocus} />
 
-<div class="game" inert={paused} data-reduced-motion={settings.reducedMotion || undefined}>
+<div
+	class="game"
+	inert={paused}
+	data-arrangement={arrangement}
+	data-reduced-motion={settings.reducedMotion || undefined}
+>
 	<h1 class="dd-visually-hidden">{title}</h1>
 
 	<header class="top">
@@ -360,6 +369,36 @@
 
 	.stage[data-arrangement='wide'] .scene {
 		flex: 0 1 var(--dd-size-scene-max);
+	}
+
+	/* One screen, without scrolling: the scene takes the height left by the text and the keyboard. */
+	.game[data-arrangement='stacked'] {
+		grid-template-rows: auto minmax(
+				var(--dd-size-scene-stacked-min),
+				var(--dd-size-scene-stacked-max)
+			);
+		align-content: center;
+		gap: var(--dd-space-sm);
+		block-size: var(--dd-size-viewport-full);
+		padding-block: var(--dd-space-sm);
+	}
+
+	.stage[data-arrangement='stacked'] {
+		display: contents;
+	}
+
+	/* A definite row, so that the picture can take the whole height of its cell. */
+	.stage[data-arrangement='stacked'] .scene {
+		display: grid;
+		grid-template-rows: minmax(0, 1fr);
+		min-block-size: 0;
+	}
+
+	/* The finger hint goes beside the text: the line saved goes to the scene. */
+	.stage[data-arrangement='stacked'] .text-zone {
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		padding-block: var(--dd-space-sm);
 	}
 
 	.text-zone,

@@ -849,6 +849,12 @@
 		"scene-max": {
 			"$value": "26rem"
 		},
+		"scene-stacked-min": {
+			"$value": "10rem"
+		},
+		"scene-stacked-max": {
+			"$value": "27rem"
+		},
 		"story-picture": {
 			"$value": "30rem"
 		},

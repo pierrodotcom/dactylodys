@@ -8,9 +8,12 @@ import {
 	astreVariant,
 	departureIndex,
 	destinationLit,
+	GREETING,
+	greetingPlace,
 	isLastLeg,
 	notchWidth,
-	rocketPose
+	rocketPose,
+	SCENE
 } from './flight';
 
 function press(state: GameState, value: string): GameState {
@@ -113,5 +116,40 @@ describe('astres', () => {
 
 		expect(looks.slice(0, ASTRE_VARIANTS)).toEqual(looks.slice(ASTRE_VARIANTS));
 		expect(new Set(looks).size).toBe(ASTRE_VARIANTS);
+	});
+});
+
+describe('greetingPlace', () => {
+	const bubble = { width: 120, height: 40 };
+
+	it('puts the greeting above the inhabitant in flight, in a frame wider than the scene', () => {
+		const frame = { width: SCENE.width * 4, height: SCENE.height * 2 };
+		const left = (frame.width - SCENE.width * 2) / 2;
+
+		const place = greetingPlace(frame, bubble, false);
+
+		expect(place.x + bubble.width / 2).toBe(left + GREETING.flying.x * 2);
+		expect(place.y + bubble.height).toBe(GREETING.flying.y * 2);
+	});
+
+	it('puts the greeting on the left of the inhabitant once landed, in a frame taller than the scene', () => {
+		const frame = { width: SCENE.width, height: SCENE.height * 2 };
+		const top = (frame.height - SCENE.height) / 2;
+
+		const place = greetingPlace(frame, bubble, true);
+
+		expect(place.x + bubble.width).toBe(GREETING.landed.x);
+		expect(place.y + bubble.height / 2).toBe(top + GREETING.landed.y);
+	});
+
+	it('keeps the greeting inside a small frame', () => {
+		const frame = { width: SCENE.width / 4, height: SCENE.height / 4 };
+
+		for (const landed of [false, true]) {
+			const place = greetingPlace(frame, bubble, landed);
+			expect(place.x).toBeGreaterThanOrEqual(0);
+			expect(place.y).toBeGreaterThanOrEqual(0);
+			expect(place.y + bubble.height).toBeLessThanOrEqual(Math.max(frame.height, bubble.height));
+		}
 	});
 });
