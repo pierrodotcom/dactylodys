@@ -652,7 +652,7 @@ describe('isLessonPassed', () => {
 		);
 	});
 
-	it('is what opens the following lesson', () => {
+	it('is what opens the following lesson, and keeps open a lesson passed before', () => {
 		const ids = ['fr.lesson.a', 'fr.lesson.b', 'fr.lesson.c'];
 		const played = fc.record({
 			lessonIndex: fc.integer({ min: 0, max: 2 }),
@@ -666,7 +666,8 @@ describe('isLessonPassed', () => {
 				}
 				ids.slice(1).forEach((id, index) => {
 					expect(isLessonUnlocked(PROGRESSION, progress, id)).toBe(
-						isLessonPassed(PROGRESSION.rules, progress, ids[index] as string)
+						isLessonPassed(PROGRESSION.rules, progress, ids[index] as string) ||
+							isLessonPassed(PROGRESSION.rules, progress, id)
 					);
 				});
 			})
@@ -703,6 +704,17 @@ describe('isLessonUnlocked', () => {
 		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c')).toBe(false);
 		progress = applyResult(progress, resultOf('fr.lesson.b', 90));
 		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c')).toBe(true);
+	});
+
+	it('keeps a passed lesson open when new lessons come before it (nothing is lost)', () => {
+		// A profile that passed lesson c before lesson b was inserted in the progression.
+		const progress = applyResult(emptyProgress(), resultOf('fr.lesson.c', 90));
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c')).toBe(true);
+	});
+
+	it('keeps closed a lesson only played below the unlock accuracy', () => {
+		const progress = applyResult(emptyProgress(), resultOf('fr.lesson.c', 50));
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c')).toBe(false);
 	});
 
 	it('does not open a lesson because a later one was played', () => {
