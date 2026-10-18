@@ -7,13 +7,14 @@ const base = defaultSettings('pc');
 const NO_GUIDE: GameGuide = { mode: 'none', freshChars: [], hesitationMs: 0 };
 
 describe('toGameSettings', () => {
-	it('passes the sound and keyboard settings through', () => {
-		const settings = { ...base, soundEnabled: false, showKeyboard: false };
+	it('passes the keyboard setting through', () => {
+		const settings = { ...base, showKeyboard: false };
 
-		expect(toGameSettings(settings, false, NO_GUIDE)).toMatchObject({
-			soundEnabled: false,
-			showKeyboard: false
-		});
+		expect(toGameSettings(settings, false, NO_GUIDE)).toMatchObject({ showKeyboard: false });
+	});
+
+	it('leaves the sounds to the sound player, which reads the profile itself', () => {
+		expect(toGameSettings(base, false, NO_GUIDE)).not.toHaveProperty('soundEnabled');
 	});
 
 	it('keeps the default error policy, where a wrong key does not move on', () => {
