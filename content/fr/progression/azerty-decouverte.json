@@ -393,8 +393,8 @@
 				{
 					"id": "fr.lesson.virgule-point",
 					"title": "Pause sur la planète Virgule",
-					"intro": "Ton index droit tape la virgule, à droite de N, et pour le point tu tiens Maj sur la touche juste à côté.",
-					"newChars": [",", "."],
+					"intro": "Ton index tape la virgule à droite de N, ton majeur le point-virgule à côté ; avec Maj, cette touche fait le point.",
+					"newChars": [",", ".", ";"],
 					"words": [],
 					"mix": {
 						"drills": 1,
@@ -417,8 +417,8 @@
 				{
 					"id": "fr.lesson.klaxon-question-exclamation",
 					"title": "Le klaxon rigolo",
-					"intro": "Le point d'interrogation se tape avec Maj sur la touche de la virgule, le point d'exclamation tout à droite.",
-					"newChars": ["?", "!"],
+					"intro": "Maj et la virgule donnent le point d'interrogation, le point d'exclamation est tout à droite, les guillemets sur le 3.",
+					"newChars": ["?", "!", "\""],
 					"words": [],
 					"mix": {
 						"drills": 1,

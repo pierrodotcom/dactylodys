@@ -219,3 +219,10 @@ Réalise le lot S2 (ADR-022, ADR-027, ADR-042) avec les 34 textes validés.
 - **Images** : 34 dessins SVG fixes, sans animation, dans le style des jeux et avec les tokens `color.story.*` ; le compagnon y apparaît avec la couleur et les objets choisis par l'enfant (`StoryDino`), jamais son nom. Seuls textes dessinés : « miam » et le « A » d'apprenti, dans `messages/`. Page d'essai `/dev/recit`.
 - **« L'histoire jusqu'ici »** : ouverte depuis la carte, une page par monde avec les moments déjà gagnés, chacun avec son image et « Écouter ». Rien n'est stocké : tout se déduit de la progression (`storySoFar`), donc un enfant qui avait réussi des leçons avant l'arrivée du récit y retrouve ses moments ; une ouverture n'y figure qu'une fois une leçon du monde jouée.
 - **Enregistrement** : `/dev/voix` propose d'abord les 10 ouvertures et fins, puis les consignes et le rappel, puis les 24 lignes ; l'outil d'import connaît le récit (`tools/voice/config.json`).
+
+## 045 — « œ », point-virgule et guillemets (2026-10-18, acceptée)
+Réponses du porteur aux propositions de `docs/PONCTUATION_PROPOSITIONS.md` (« oui à tout », recommandations retenues).
+- **« œ » n'est pas tapé** : il n'a pas de touche sur l'AZERTY de PC (seulement Alt + 0156 au pavé numérique, ou Option + O sur Mac). Les exercices continuent d'éviter les mots qui le contiennent ; il reste écrit dans les titres, que l'enfant ne tape pas. Clôt la leçon L-039.
+- **Point-virgule** : appris dans la leçon *Pause sur la planète Virgule*, avec la virgule et le point ; une espace ordinaire avant, comme pour « ? », « ! » et « : » (étend l'ADR-023).
+- **Guillemets droits "** (touche 3 de l'AZERTY de PC ; les guillemets français « » n'ont pas de touche) : appris dans la leçon *Le klaxon rigolo*, avec « ? » et « ! », sans espace à l'intérieur.
+- 17 phrases ajoutées (relues par le porteur). Les consignes de ces deux leçons changent : leurs enregistrements sont à refaire sur `/dev/voix`.
