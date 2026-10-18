@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { checkerPath, ellipseBand, ellipseHalfWidth, squareViewBox, starPath } from './geometry';
+import {
+	checkerPath,
+	ellipseBand,
+	ellipseHalfWidth,
+	fluffPath,
+	pointOnCubic,
+	roundedStarPath,
+	squareViewBox,
+	starPath,
+	stitchesAlong
+} from './geometry';
 
 function numbersOf(path: string): number[] {
 	return (path.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
@@ -18,6 +28,59 @@ describe('starPath', () => {
 		for (let i = 0; i < values.length; i += 2) {
 			expect(Math.hypot(values[i] ?? 0, values[i + 1] ?? 0)).toBeLessThanOrEqual(10.01);
 		}
+	});
+});
+
+describe('roundedStarPath', () => {
+	it('bends every corner into a curve, inside the outer radius', () => {
+		const path = roundedStarPath(0, 0, 10, 4, 5, 0.2);
+		expect(path.match(/Q/g)).toHaveLength(10);
+		const values = numbersOf(path);
+		for (let i = 0; i < values.length; i += 2) {
+			expect(Math.hypot(values[i] ?? 0, values[i + 1] ?? 0)).toBeLessThanOrEqual(10.01);
+		}
+	});
+
+	it('keeps the tip pointing up as the control point of the first curve', () => {
+		expect(roundedStarPath(60, 50, 10, 4)).toContain('Q60 40 ');
+	});
+});
+
+describe('fluffPath', () => {
+	it('draws one bulging arc per bump, starting at the top', () => {
+		const path = fluffPath(0, 0, 10, 8, 1);
+		expect(path.startsWith('M0 -10Q')).toBe(true);
+		expect(path.match(/Q/g)).toHaveLength(8);
+	});
+});
+
+describe('pointOnCubic', () => {
+	it('goes from the first point to the last one', () => {
+		const curve = [
+			[0, 0],
+			[10, 0],
+			[10, 10],
+			[20, 10]
+		] as const;
+		expect(pointOnCubic(curve, 0)).toEqual([0, 0]);
+		expect(pointOnCubic(curve, 1)).toEqual([20, 10]);
+		expect(pointOnCubic(curve, 0.5)).toEqual([10, 5]);
+	});
+});
+
+describe('stitchesAlong', () => {
+	it('draws the given number of separate dashes', () => {
+		const path = stitchesAlong(
+			[
+				[0, 0],
+				[0, 0],
+				[30, 0],
+				[30, 0]
+			],
+			3
+		);
+		expect(path.match(/M/g)).toHaveLength(3);
+		expect(path.match(/L/g)).toHaveLength(3);
 	});
 });
 
