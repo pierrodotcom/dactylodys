@@ -273,7 +273,11 @@ describe('formatBytes', () => {
 });
 
 describe('updateAttributions', () => {
-	const shipped = readFileSync(ATTRIBUTIONS_PATH, 'utf8');
+	// The shipped file, without the rows of voices already published: each test adds its own.
+	const shipped = readFileSync(ATTRIBUTIONS_PATH, 'utf8')
+		.split('\n')
+		.filter((line) => !line.includes('`static/voice/'))
+		.join('\n');
 
 	function rowsOf(markdown: string): string[] {
 		return markdown.split('\n').filter((line) => line.startsWith('|'));

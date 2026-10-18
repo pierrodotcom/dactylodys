@@ -6,7 +6,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { voiceKey } from '$lib/audio/voice-key';
 import { parseVoiceManifest } from '$lib/audio/voice-player';
 import { encodeWav, readWavHeader } from '$lib/audio/voice-signal';
-import { voiceTexts, type VoiceText } from '$lib/audio/voice-texts';
+import {
+	LOOK_REMINDER_ID,
+	LOOK_REMINDER_MESSAGE,
+	voiceTexts,
+	type VoiceText
+} from '$lib/audio/voice-texts';
 import { parseProgression } from '$lib/engine/progression/definition';
 import { parseStory } from '$lib/engine/story';
 import { buildVoiceArchive } from './archive';
@@ -19,13 +24,25 @@ import type { Take } from './take-store';
 
 const TOOL = 'tools/voice/import.js';
 const SAMPLE_RATE = 22050;
+function readProgression() {
+	return parseProgression(
+		JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
+	);
+}
 /** What the tool expects to hear: the sources of `tools/voice/config.json`, story included. */
 const TEXTS = voiceTexts(
-	parseProgression(
-		JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
-	),
+	readProgression(),
 	parseStory(JSON.parse(readFileSync('content/fr/story/azerty-decouverte.json', 'utf8')))
 );
+/** The reminder to look at the screen, as the page lists it: read from the messages. */
+const REMINDER: VoiceText = voiceTexts(readProgression(), undefined, [
+	{
+		id: LOOK_REMINDER_ID,
+		text: (JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>)[
+			LOOK_REMINDER_MESSAGE
+		] as string
+	}
+]).at(-1) as VoiceText;
 const STALE: VoiceText = {
 	key: voiceKey('Une consigne qui a été réécrite.'),
 	text: 'Une consigne qui a été réécrite.',
@@ -111,7 +128,14 @@ describe('tools/voice/import.js', { timeout: TOOL_TEST_TIMEOUT_MS }, () => {
 		expect(attributions).toContain('Police Atkinson Hyperlegible Next');
 		expect(report).toContain('2 enregistrements importés dans static/voice/fr.');
 		expect(report).toContain('Format : WAV.');
-		expect(report).toContain(`Textes sans enregistrement : ${TEXTS.length - 2}`);
+		// Every text of the page: those of the lessons, and the reminder of the games.
+		expect(report).toContain(`Textes sans enregistrement : ${TEXTS.length + 1 - 2}`);
+		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");
+	});
+
+	it('knows the reminder of the games, so that pruning never removes its clip', () => {
+		const report = runImport(writeArchive([REMINDER], ''), '--prune');
+		expect(Object.keys(manifest().clips)).toEqual([REMINDER.key]);
 		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");
 	});
 
