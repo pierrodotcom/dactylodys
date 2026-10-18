@@ -436,53 +436,86 @@
 
 	// dino-trex
 	const TREX_BODY =
-		'M86 30C94 30 102 36 112 40C126 44 144 38 162 28L162 42C148 50 136 58 126 64C116 72 100 74 92 70C86 66 82 58 80 50C79 44 80 34 86 30Z';
+		'M88 26C96 26 104 30 112 34C124 39 138 36 150 30C154 28 157 26.4 159 26.6C161 27 160.6 29.6 158.6 30.8C150 37 140 46 130 56C124 64 114 72 102 73C92 74 84 68 82 58C80 50 80 40 82 34C83 30 85 27 88 26Z';
+	const TREX_BELLY =
+		'M78 40C80 54 88 64 102 65C114 65.4 122 58.6 128 51.6C136 43 146 36.4 158 30L164 40L164 84L70 84Z';
 	const TREX_SKULL =
-		'M92 36C94 26 92 18 84 14.5C80 13 76 13.4 73 14.6C70 14 66 15 62 16C57 17 53 17 50 18.6C46 20 44 23 45.4 26.4C46.4 28.4 48.4 28.8 51 28.8C58 30.4 66 34 74 38.6C78 41 80 44.6 82 48.4C84 51.8 88.6 51.6 91 48C93 44.4 93 40 92 36Z';
+		'M40 38C36.6 37.6 35 34 35.4 30.6C35.8 27.6 37.4 26.2 40 25.6C47.6 22.6 55.4 20.8 62 19.4C66 18.2 68.4 15.2 72.4 13.6C78 11.6 86 12 91 15.4C96 19 98 26 97.6 32C97 39 93 46 86 48C82 49 79 47.6 77 45.2C70 41.6 58 38.6 46 38.2C43 38.1 41.4 38.1 40 38Z';
 	const TREX_JAW =
-		'M84 44C76 48 64 54 56 57C51 58.6 48 60 48.6 63.4C49.4 66.4 54 67 59 66C68 64.4 78 60.6 85 55.6C89 52.6 89.4 46.6 84 44Z';
-	const TREX_MOUTH = 'M48 27C58 30 68 34 78 40L84 46C74 50 62 55 52 58C53 47 51 36 48 27Z';
+		'M84 46C90 48 92 55 87 59.6C81 64.6 70 69 60 71C54.6 72 50 71.2 49.4 67.6C48.8 64.4 50.6 62.4 54 61.4C62 59 70 55 77.4 50.6C79.6 49 81.6 46.8 84 46Z';
+	const TREX_MOUTH =
+		'M39 36.6C52 37 66 40 80 44.4L88 50C80 53 68 58 53 63.2C46 56 41.4 46 39 36.6Z';
+	const TREX_TONGUE =
+		'M88 53C78 54 68 57.6 60 59.6C55 60.8 52 59.2 52.4 56C52.8 53 55.6 51.8 59 51.6C68 50.8 77 48 86 45.4Z';
+	const TREX_BROW =
+		'M72 20.6C73.6 15.6 83.6 14.4 88.2 18.6C89.2 19.6 88.6 21 87.2 20.8C82.6 19.4 76.6 19.6 72 20.6Z';
+	/** Back stripes: where each starts on the spine, its tilt and its length. */
+	const TREX_STRIPES = [
+		{ x: 99, y: 28.6, tilt: 24, length: 8 },
+		{ x: 107, y: 31.8, tilt: 24, length: 9 },
+		{ x: 115.6, y: 35.4, tilt: 16, length: 9 },
+		{ x: 124.4, y: 37.4, tilt: 2, length: 8 },
+		{ x: 133, y: 36.6, tilt: -12, length: 7 },
+		{ x: 141.4, y: 34, tilt: -22, length: 5.6 },
+		{ x: 149, y: 30, tilt: -28, length: 4 }
+	] as const;
+	const stripePath = (length: number): string =>
+		`M-2.2 -1C-2 ${length * 0.5} -1 ${length * 0.85} 0 ${length}C1 ${length * 0.85} 2 ${length * 0.5} 2.2 -1Z`;
+	/** Belly scales: a short crease across the belly at each point, along its tilt. */
+	const TREX_SCALES = [
+		{ x: 89.4, y: 65.6, tilt: 40 },
+		{ x: 133.4, y: 49.4, tilt: -48 },
+		{ x: 139.6, y: 44, tilt: -42 },
+		{ x: 145.6, y: 39.4, tilt: -36 },
+		{ x: 151.4, y: 35.4, tilt: -32 }
+	] as const;
 	const TREX_LEG = limb(
 		[
 			[114, 56, 13],
-			[101, 70, 6.5],
-			[108, 82, 4],
-			[102, 87.4, 3.4],
-			[93, 88.5, 2.4]
+			[103, 70, 6.5],
+			[110, 82, 4],
+			[104, 87.4, 3.4],
+			[95, 88.5, 2.4]
 		],
 		0
 	);
 	const TREX_LEG_FAR = limb(
 		[
-			[122, 52, 11],
-			[114, 66, 5.5],
-			[124, 78, 3.6],
-			[121, 86, 3],
-			[113, 87.5, 2]
+			[124, 52, 11],
+			[116, 66, 5.5],
+			[126, 78, 3.6],
+			[123, 86, 3],
+			[115, 87.5, 2]
 		],
 		0
 	);
 	const TREX_TOE = limb([
-		[103, 87.6, 2.6],
-		[97, 89.8, 1.8],
-		[94, 90, 1.3]
+		[105, 87.6, 2.6],
+		[99, 89.8, 1.8],
+		[96, 90, 1.3]
 	]);
 	const TREX_ARM = limb([
-		[88, 50, 3.4],
-		[88, 55, 3.4],
-		[91, 61, 2.4],
-		[85, 64, 1.8],
-		[81, 63.5, 1.4]
+		[93, 58, 4],
+		[93, 62, 4],
+		[96, 68, 3],
+		[90, 71, 2.4],
+		[86, 71, 2]
 	]);
-	const TREX_ARM_FAR = limb([
-		[93, 50, 3],
-		[93, 53, 3],
-		[97, 58, 2.2],
-		[92, 61.5, 1.6],
-		[88, 61.5, 1.2]
-	]);
-	const TREX_UPPER_TEETH = fangPath(76, 40.6, 51, 29.6, 5, 4.6);
-	const TREX_LOWER_TEETH = fangPath(55, 57.6, 80, 49.4, 4, 3.8);
+	const TREX_FINGERS = [
+		limb([
+			[86.6, 70, 1.6],
+			[83, 68.4, 1.3],
+			[81.6, 70, 1]
+		]),
+		limb([
+			[86.6, 72.2, 1.6],
+			[83.2, 74, 1.3],
+			[81.8, 72.2, 1]
+		])
+	] as const;
+	const TREX_UPPER_TEETH =
+		fangPath(75, 44, 61, 39.6, 3, 4.4) + fangPath(60, 39.2, 42, 38.2, 3, 4.6);
+	const TREX_LOWER_TEETH = fangPath(55, 61.6, 76, 51.6, 4, 4.4);
 </script>
 
 {#snippet sky(bottom: string)}
@@ -1057,12 +1090,16 @@
 {:else if art === 'dino-trex'}
 	<g data-story-art="dino-trex">
 		{@render sky('stop-paper')}
-		{@render volcano(134, 66, 0.9)}
+		{@render volcano(146, 64, 0.75)}
 		{@render hills(60)}
 		<path class="grass line" d="M-4 84C30 80 70 80 100 82C130 84 146 82 164 81L164 104L-4 104Z" />
-		{@render fern(14, 88, 1.1)}
-		<path class="open line" d="M34 30Q28 37 34 44M26 24Q16 37 26 50M18 18Q4 37 18 56" />
-		<g transform="translate(86 9) rotate(-24)">
+		{@render fern(10, 90, 0.8)}
+		{@render tuft(70, 88, 1.1)}
+		<path
+			class="open line"
+			d="M31 41C27.4 46 27.4 53 31 58M24 36C18.6 43.6 18.6 55.4 24 63M17 31C9.6 41 9.6 58 17 68"
+		/>
+		<g transform="translate(106 11) rotate(26) scale(0.9)">
 			<path class="b line" d="M6 1C12 -0.5 18 0.5 19 4C14 5.5 9 4.5 5 3Z" />
 			<path class="b line" d="M-8 2C-9 -6 -4 -9.5 0 -9.5C5 -9.5 9 -6 8 2C3 3.4 -3 3.4 -8 2Z" />
 			<path class="open thin-line" d="M0 -9.5C-1 -6 -1 -2 0 2.6M-6 -6C-4 -3 -4 0 -4 2.6" />
@@ -1072,41 +1109,67 @@
 				d="M2.6 -4.6L3.5 -2.6L5.6 -2.4L4 -1L4.4 1L2.6 0L0.8 1L1.2 -1L-0.4 -2.4L1.7 -2.6Z"
 			/>
 		</g>
-		<path class="open thin-line" d="M78 14Q76 10 79 6M84 16Q87 12 91 13" />
-		<ellipse class="shade" cx="110" cy="91" rx="26" ry="3.4" />
+		<path class="open thin-line" d="M90 13C92 10 95 8.4 98 8M93 18C96 15.6 99 15 102 15.6" />
+		<path class="open thin-line" d="M80 11.6L79.4 8.6M86 12.4L87.6 9.8M74 13.6L72.4 11.4" />
+		<ellipse class="shade" cx="110" cy="91" rx="24" ry="3.4" />
 		{@render member('trex-leg-far', TREX_LEG_FAR, 'a', true)}
-		{@render member('trex-arm-far', TREX_ARM_FAR, 'a', true)}
+		<path class="white thin-line" d="M113.6 86.4C111.6 86.6 110.6 88.2 111.4 89.8L114 89.4Z" />
 		{#snippet trexInside()}
-			<path class="c" d="M76 46C80 58 90 70 110 70C120 68 128 62 136 56L140 100L70 100Z" />
-			<path
-				class="j-stripe"
-				d="M100 38C101 42 100 45 98 47C97 44 97 41 100 38ZM112 42C113 46 112 49 110 51C109 48 109 45 112 42ZM124 42C125 45 124 48 122 50C121 47 121 45 124 42ZM136 38C137 41 136 44 134 46C133 43 133 41 136 38Z"
-			/>
-			<path class="light" d="M88 32C96 33 106 38 116 42C106 40 96 36 89 35Z" />
+			<path class="c" d={TREX_BELLY} />
+			{#each TREX_SCALES as scale (scale.x)}
+				<path
+					class="open thin-line"
+					transform="translate({scale.x} {scale.y}) rotate({scale.tilt})"
+					d="M0 -2.6Q1 0 0 2.6"
+				/>
+			{/each}
+			{#each TREX_STRIPES as stripe (stripe.x)}
+				<path
+					class="j"
+					transform="translate({stripe.x} {stripe.y}) rotate({stripe.tilt})"
+					d={stripePath(stripe.length)}
+				/>
+			{/each}
+			<path class="light" d="M90 29.6C98 29.6 106 33.6 114 37.4C106 35.6 98 32.4 90 32Z" />
 		{/snippet}
 		{@render form('trex-body', TREX_BODY, 'a', { inside: trexInside, bold: true })}
-		<path class="ink line" d={TREX_MOUTH} />
-		<path class="f line" d="M54 57.4C58 49.6 68 45 80 45.4C78 51 68 56.4 54 59Z" />
+		{@render member('trex-arm', TREX_ARM, 'a')}
+		{#each TREX_FINGERS as finger, i (i)}
+			{@render member(`trex-finger-${i}`, finger, 'a')}
+		{/each}
+		{#snippet mouthInside()}
+			<ellipse class="j" cx="75" cy="47.2" rx="9" ry="5.8" transform="rotate(-22 75 47.2)" />
+			<path class="shade" d="M30 34C50 36 66 39 86 43L86 47.6C68 43 52 40.6 30 40Z" />
+			<path class="a thin-line" d={TREX_TONGUE} />
+			<path class="open thin-line" d="M60 55.8C67 54.2 74 52 80.6 49.8" />
+			<path class="light" d="M56 53.4C61 52.6 66 52 70 51.2C66 52.8 61 53.8 56.6 54.6Z" />
+		{/snippet}
+		{@render form('trex-mouth', TREX_MOUTH, 'f', { inside: mouthInside })}
+		<path
+			class="f thin-line"
+			d="M74.6 43.4C74.4 45.6 74.6 47.6 75.8 48.4C77 47.6 77.2 45.6 77 44Z"
+		/>
 		<path class="white thin-line" d={TREX_UPPER_TEETH} />
 		<path class="white thin-line" d={TREX_LOWER_TEETH} />
 		{#snippet jawInside()}
-			<path class="c" d="M46 64C60 63 76 58 88 51L90 72L40 72Z" />
+			<path class="c" d="M46 67C60 66.4 76 61 91 53L93 76L44 76Z" />
+			<path class="light" d="M55 62.6C62 60.6 69 57.4 76 53.2C70 57.8 62 61.4 56 64Z" />
 		{/snippet}
 		{@render form('trex-jaw', TREX_JAW, 'a', { inside: jawInside, bold: true })}
 		{#snippet skullInside()}
-			<path class="light" d="M50 19.6C56 17.4 64 16 72 15.6C64 16.8 56 18.4 51 21Z" />
+			<path class="light" d="M40 27.6C48 25 56 23 63 21C56 24 48 26.4 41 29.4Z" />
+			<path class="j" transform="translate(91 19.4) rotate(48)" d={stripePath(6)} />
+			<path class="j" transform="translate(94.6 25.6) rotate(70)" d={stripePath(5)} />
 		{/snippet}
 		{@render form('trex-skull', TREX_SKULL, 'a', { inside: skullInside, bold: true })}
-		<circle class="dark" cx="50.6" cy="21.4" r="0.8" />
-		{@render eye(79, 25, 3, -0.9, 0.3)}
-		<path class="a line" d="M75.8 24.6C76 21.4 82 21.4 82.2 24.6C80 23.4 78 23.4 75.8 24.6Z" />
-		<path class="open bold-line" d="M72.6 20.4L83.4 23.6" />
-		<path class="open thin-line" d="M87 30Q89 33 88.6 36.4M83.4 33Q85.4 35.4 84.6 38.6" />
-		<path class="white thin-line" d="M91.6 87.2C89.4 87.4 88.4 89 89.2 90.8L92 90.4Z" />
+		<ellipse class="dark" cx="39.6" cy="29" rx="1.3" ry="0.9" transform="rotate(-14 39.6 29)" />
+		<path class="open thin-line" d="M88.6 32C90.4 35 90.4 39 88.6 42" />
+		{@render eye(80.2, 24.8, 3.6, -1.1, 0.2)}
+		<path class="a line" d={TREX_BROW} />
+		<path class="white thin-line" d="M93.6 87.2C91.4 87.4 90.4 89 91.2 90.8L94 90.4Z" />
 		{@render member('trex-leg', TREX_LEG, 'a')}
-		<path class="white thin-line" d="M94.6 88.6C92.6 88.8 91.8 90.4 92.6 91.6L95 91.2Z" />
+		<path class="white thin-line" d="M96.6 88.6C94.6 88.8 93.8 90.4 94.6 91.6L97 91.2Z" />
 		{@render member('trex-toe', TREX_TOE, 'a')}
-		{@render member('trex-arm', TREX_ARM, 'a')}
 	</g>
 {:else if art === 'dino-ending'}
 	<g data-story-art="dino-ending">
@@ -1321,9 +1384,8 @@
 		vector-effect: non-scaling-stroke;
 	}
 
-	.j-stripe {
+	.j {
 		fill: var(--dd-color-story-j);
-		fill-opacity: var(--dd-opacity-glass);
 	}
 
 	.stop-sky {
