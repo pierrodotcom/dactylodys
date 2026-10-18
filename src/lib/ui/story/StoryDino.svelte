@@ -37,4 +37,9 @@
 		inline-size: 100%;
 		block-size: 100%;
 	}
+
+	/* Story pictures are still: no hop that would leave what it holds or wears behind. */
+	.story-dino :global(*) {
+		animation: none;
+	}
 </style>
