@@ -46,5 +46,6 @@ Puis valider `static\voice\` et `static\ATTRIBUTIONS.md` dans le même commit.
 
 - L'outil n'utilise que Node 24, sans aucune dépendance. Il charge directement les modules TypeScript de l'appli (`src/lib/audio/`) : l'empreinte d'un texte et la liste des textes à dire n'existent qu'à un seul endroit.
 - Les parcours et récits dont il faut dire les textes sont listés dans `tools/voice/config.json`. Ajouter un récit = ajouter son chemin dans `story`.
+- La page `/dev/voix` propose d'abord les ouvertures et les fins de monde du récit (ADR-042), puis les consignes et le rappel, puis les lignes des leçons du récit.
 - Sans `ffmpeg`, compter environ 45 Ko par seconde de voix (WAV) ; avec, environ 8 Ko par seconde (MP3 à 64 kbit/s).
 - La logique (plan d'import, manifeste, rapport, tableau des attributions) est dans `tools/voice/lib/` et testée par `src/lib/audio/voice-import.test.ts` ; l'outil entier est lancé par `src/routes/dev/voix/import-tool.test.ts`.

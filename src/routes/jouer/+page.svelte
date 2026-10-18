@@ -9,6 +9,12 @@
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import {
+		storyAfterLesson,
+		storyBeforeLesson,
+		storySoFar,
+		type StoryMoment
+	} from '$lib/engine/story';
+	import {
 		generateHelpExercise,
 		helpQuestFor,
 		ownedRewards,
@@ -60,7 +66,13 @@
 	} from './companion';
 	import CompanionPanel from './CompanionPanel.svelte';
 	import { progressionFor } from './content';
-	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
+	import {
+		INITIAL_SCREEN,
+		transition,
+		type FlowEvent,
+		type Screen,
+		type StoryDestination
+	} from './flow';
 	import { gameForLesson, gameOptions } from './game-choice';
 	import HelpThanks from './HelpThanks.svelte';
 	import { isMotionReduced, toGameSettings } from './game-settings';
@@ -80,6 +92,9 @@
 	import { HELP_QUEST_RULES, rewardCatalogueFor } from './rewards';
 	import SettingsPanel from './SettingsPanel.svelte';
 	import { createProfileSounds } from './sounds';
+	import { storyFor } from './story';
+	import StoryScreen from './StoryScreen.svelte';
+	import StorySoFar from './StorySoFar.svelte';
 	import { summarizeMetrics, type ResultSummary } from './summary';
 	import TopBar from './TopBar.svelte';
 	import WorldMap from './WorldMap.svelte';
@@ -108,6 +123,8 @@
 		readonly rewards: readonly RewardDefinition[];
 		/** The lesson is passed and the companion has no name yet. */
 		readonly askName: boolean;
+		/** What this play won of the story, told when the child leaves the result (ADR-042). */
+		readonly story: readonly StoryMoment[];
 	}
 
 	interface HelpDoneView {
@@ -141,6 +158,7 @@
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
 	const catalogue = $derived(progression ? rewardCatalogueFor(progression) : undefined);
+	const story = $derived(progression ? storyFor(progression) : undefined);
 	/** What the child owns: what the profile kept, and what the progress earns (ADR-027). */
 	const owned = $derived(
 		profile && progression && catalogue
@@ -376,11 +394,41 @@
 	function openLesson(lessonId: string) {
 		if (!profile || !progression) return;
 		gameLoadFailed = false;
-		go({
-			type: 'open-lesson',
-			lessonId,
-			unlocked: isLessonUnlocked(progression, profile.progress, lessonId)
-		});
+		if (!isLessonUnlocked(progression, profile.progress, lessonId)) return;
+		go({ type: 'tell', moments: openingOf(lessonId), then: { name: 'intro', lessonId } });
+	}
+
+	/** The opening of the world of the lesson, while the child has played none of its lessons. */
+	function openingOf(lessonId: string): readonly StoryMoment[] {
+		if (!profile || !progression || !story) return [];
+		return storyBeforeLesson(story, progression, profile.progress, lessonId);
+	}
+
+	/** Leaves the result: what the play won of the story is told first. */
+	function leaveResult(then: StoryDestination) {
+		const moments = result?.story ?? [];
+		if (then.name === 'replay' && moments.length === 0) {
+			void beginGame(then.lessonId, { type: 'replay' });
+			return;
+		}
+		if (then.name === 'break') playClock = createPlayClock();
+		go({ type: 'tell', moments, then });
+	}
+
+	function continueStory() {
+		if (screen.name !== 'story') return;
+		// "Continue" may have scrolled a small screen: the next screen starts from its top.
+		window.scrollTo({ top: 0 });
+		const last = screen.index + 1 >= screen.moments.length;
+		if (last && screen.then.name === 'replay') {
+			void beginGame(screen.then.lessonId, { type: 'replay' });
+			return;
+		}
+		go({ type: 'story-next' });
+	}
+
+	function worldTitle(worldId: string): string {
+		return progression?.worlds.find((world) => world.id === worldId)?.title ?? '';
 	}
 
 	/** The choice is kept in the profile, so that the child finds the same game at the next visit. */
@@ -476,6 +524,9 @@
 		const { evaluation } = recorded;
 		const { profile: next, announced } = earnRewards(recorded.profile, catalogue, progression);
 		const progress = next.progress;
+		const told = story
+			? storyAfterLesson(story, progression, profile.progress, progress, lessonId)
+			: [];
 		const followingId = nextLessonId(progression, lessonId);
 		const hasOpenNext =
 			followingId !== null && isLessonUnlocked(progression, progress, followingId);
@@ -494,7 +545,8 @@
 			),
 			saveFailed: false,
 			rewards: announced,
-			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater)
+			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater),
+			story: told
 		};
 		go({ type: 'completed' });
 		if (!(await commit(next)) && result) result = { ...result, saveFailed: true };
@@ -545,15 +597,16 @@
 		if (!(await commit(next)) && helpDone) helpDone = { ...helpDone, saveFailed: true };
 	}
 
-	function takeBreak() {
-		playClock = createPlayClock();
-		go({ type: 'take-break' });
-	}
-
 	function playNext() {
 		if (!progression || !result) return;
 		const followingId = nextLessonId(progression, result.lessonId);
-		if (followingId !== null) go({ type: 'next-lesson', lessonId: followingId });
+		if (followingId === null) return;
+		// The ending of a world leads into the opening of the next one.
+		go({
+			type: 'tell',
+			moments: [...result.story, ...openingOf(followingId)],
+			then: { name: 'intro', lessonId: followingId }
+		});
 	}
 </script>
 
@@ -639,6 +692,7 @@
 			helpKey={helpQuest ? keyLabel(helpQuest.char, m.ui_key_space(), getLocale()) : null}
 			onopen={openLesson}
 			onhelp={startHelp}
+			onstory={story ? () => go({ type: 'open-story-so-far' }) : undefined}
 			onchangeplayer={changePlayer}
 		/>
 	{:else if screen.name === 'settings'}
@@ -704,14 +758,33 @@
 			still={isMotionReduced(profile.settings, systemPrefersReduced)}
 			{sounds}
 			onnext={playNext}
-			onreplay={() => beginGame(lessonId, { type: 'replay' })}
-			onmap={() => go({ type: 'back-to-map' })}
-			onbreak={takeBreak}
+			onreplay={() => leaveResult({ name: 'replay', lessonId })}
+			onmap={() => leaveResult({ name: 'map' })}
+			onbreak={() => leaveResult({ name: 'break' })}
 		>
 			{#snippet news()}
 				{@render rewardNews(view.rewards, askNameNow)}
 			{/snippet}
 		</LessonResult>
+	{:else if screen.name === 'story'}
+		{@const moment = screen.moments[screen.index]}
+		{#if moment}
+			{#key `${screen.index}-${moment.art}`}
+				<StoryScreen
+					{moment}
+					worldTitle={worldTitle(moment.worldId)}
+					{voice}
+					oncontinue={continueStory}
+				/>
+			{/key}
+		{/if}
+	{:else if screen.name === 'story-so-far' && story}
+		<StorySoFar
+			moments={storySoFar(story, progression, profile.progress)}
+			{progression}
+			{voice}
+			onback={() => go({ type: 'back-to-map' })}
+		/>
 	{:else if screen.name === 'break'}
 		<BreakScreen onreturn={() => go({ type: 'back-to-map' })} />
 	{:else if screen.name === 'help-done' && helpDone}

@@ -17,10 +17,12 @@
 		helpKey: string | null;
 		onopen: (lessonId: string) => void;
 		onhelp: () => void;
+		/** Opens the travel notebook; absent when the progression has no story. */
+		onstory?: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { profile, progression, helpKey, onopen, onhelp, onchangeplayer }: Props = $props();
+	let { profile, progression, helpKey, onopen, onhelp, onstory, onchangeplayer }: Props = $props();
 
 	/** "Later" hides the bubble until the map is shown again. */
 	let helpLater = $state(false);
@@ -42,6 +44,9 @@
 		<div class="hero" tabindex="-1" bind:this={hero}>
 			<Companion mood="idle" />
 			<p class="greeting">{m.play_map_greeting({ name: profile.name })}</p>
+			{#if onstory}
+				<Button variant="secondary" onclick={onstory}>{m.play_story_so_far_open()}</Button>
+			{/if}
 			{#if asking && helpKey !== null}
 				<section class="help" aria-labelledby="help-ask" {@attach centerInView}>
 					<p id="help-ask" class="ask">{m.play_help_ask({ key: helpKey })}</p>

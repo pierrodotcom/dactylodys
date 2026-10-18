@@ -30,6 +30,7 @@ import {
 	reloadPage,
 	shortenRewards,
 	storedRecord,
+	throughStory,
 	type StoredFormat
 } from './support';
 
@@ -280,7 +281,13 @@ async function reachMapAs(page: Page, profile: Profile, format: StoredFormat = '
 
 async function openIntro(page: Page, lesson: Lesson) {
 	await page.getByRole('button', { name: lesson.title }).click();
-	await expect(heading(page, lesson.title)).toBeVisible();
+	await throughStory(page, heading(page, lesson.title));
+}
+
+/** Leaves the result for the map: a lesson passed for the first time tells its line first. */
+async function resultToMap(page: Page, next: Locator = heading(page, message('play_map_title'))) {
+	await button(page, message('play_result_map')).click();
+	await throughStory(page, next);
 }
 
 /** The picture of a game on the lesson screen: it starts the lesson with that game. */
@@ -425,7 +432,7 @@ test.describe('play route', () => {
 		await expect(button(page, message('play_change_player'))).toBeVisible();
 
 		await page.getByRole('button', { name: FIRST.title }).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
+		expect(await throughStory(page, heading(page, FIRST.title))).toBe(1);
 		await expect(page.getByText(FIRST.intro)).toBeVisible();
 		await expect(
 			page.getByRole('heading', {
@@ -462,8 +469,7 @@ test.describe('play route', () => {
 		await expect(button(page, message('play_result_replay'))).toBeVisible();
 		await expect(page.getByText(message('play_break_suggest'))).toHaveCount(0);
 
-		await button(page, message('play_result_map')).click();
-		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
+		await resultToMap(page, page.getByRole('button', { name: SECOND.title }));
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(3) })).toBeVisible();
 		expect(foreignRequests).toEqual([]);
 	});
@@ -503,6 +509,7 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await activateByTab(page, page.getByRole('button', { name: FIRST.title }));
+		await throughStory(page, heading(page, FIRST.title), { keyboard: true });
 		await expect(playButton(page, FIRST_GAME)).toBeFocused();
 		await page.keyboard.press('Enter');
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
@@ -511,7 +518,7 @@ test.describe('play route', () => {
 		await typeToResult(page, { skipDelay: true });
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
 		await activateByTab(page, button(page, message('play_result_map')));
-		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
+		await throughStory(page, page.getByRole('button', { name: SECOND.title }), { keyboard: true });
 	});
 
 	test('does not move on with a wrong key, flags it, and ends with fewer stars', async ({
@@ -690,7 +697,7 @@ test.describe('play route', () => {
 		page
 	}) => {
 		await reachResult(page);
-		await button(page, message('play_result_map')).click();
+		await resultToMap(page);
 
 		await reloadPage(page);
 
@@ -1062,7 +1069,7 @@ test.describe('play route', () => {
 		await expect(button(page, message('play_result_map'))).toBeVisible();
 
 		await button(page, message('play_break_button')).click();
-		await expect(heading(page, message('play_break_title'))).toBeVisible();
+		await throughStory(page, heading(page, message('play_break_title')));
 		await button(page, message('play_break_return')).click();
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 
@@ -1174,7 +1181,7 @@ test.describe('play route', () => {
 		await expect(
 			page.getByText(plural('play_result_accuracy', typed, { correct: typed, total: typed }))
 		).toBeVisible();
-		await button(page, message('play_result_map')).click();
+		await resultToMap(page);
 		await expect(lessonRow(page, NEXT_SECOND).getByRole('img', { name: stars(3) })).toBeVisible();
 		await expect(page.getByRole('button', { name: NEXT_THIRD.title })).toBeVisible();
 	});
@@ -1248,7 +1255,11 @@ test.describe('play route', () => {
 		expect((await storedRecord(page, legacy))?.['schemaVersion']).toBe(1);
 		for (const [index, lesson] of allLessons.entries()) {
 			const earlier = allLessons[index - 1];
-			const open = index === 0 || (earlier !== undefined && earlier.id in LEGACY_LESSON_STARS);
+			// A lesson passed by the first version stays open, even when lessons were inserted before it.
+			const open =
+				index === 0 ||
+				(earlier !== undefined && earlier.id in LEGACY_LESSON_STARS) ||
+				lesson.id in LEGACY_LESSON_STARS;
 			const row = lessonRow(page, lesson);
 			const legacyStars = LEGACY_LESSON_STARS[lesson.id];
 			if (!open) {
@@ -1385,7 +1396,9 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await button(page, message('settings_back')).click();
 
 			await page.getByRole('button', { name: FIRST.title }).click();
-			await expect(heading(page, FIRST.title)).toBeVisible();
+			await expect(page.locator('[data-story-continue]')).toBeVisible();
+			await expectNoAxeViolation(page);
+			await throughStory(page, heading(page, FIRST.title));
 			await expectNoAxeViolation(page);
 		});
 
@@ -1443,7 +1456,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expect(button(page, message('play_break_button'))).toBeVisible();
 			await expectNoAxeViolation(page);
 			await button(page, message('play_break_button')).click();
-			await expect(heading(page, message('play_break_title'))).toBeVisible();
+			await throughStory(page, heading(page, message('play_break_title')));
 			await expectNoAxeViolation(page);
 		});
 	});

@@ -74,17 +74,21 @@ export const STORY_DATA = {
 		{
 			worldId: 'fr.world.one',
 			opening: 'Open one.',
+			openingArt: 'one-opening',
 			ending: 'End one.',
+			endingArt: 'one-ending',
 			lessons: [
-				{ lessonId: 'fr.lesson.a', line: 'Line a.' },
-				{ lessonId: 'fr.lesson.b', line: 'Line b.' }
+				{ lessonId: 'fr.lesson.a', line: 'Line a.', art: 'line-a' },
+				{ lessonId: 'fr.lesson.b', line: 'Line b.', art: 'line-b' }
 			]
 		},
 		{
 			worldId: 'fr.world.two',
 			opening: 'Open two.',
+			openingArt: 'two-opening',
 			ending: 'End two.',
-			lessons: [{ lessonId: 'fr.lesson.c', line: 'Line c.' }]
+			endingArt: 'two-ending',
+			lessons: [{ lessonId: 'fr.lesson.c', line: 'Line c.', art: 'line-c' }]
 		}
 	]
 };

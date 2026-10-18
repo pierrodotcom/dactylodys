@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { emptyProgress } from '../progression/progress';
 import type { ProgressState } from '../progression/types';
-import { storyAfterLesson, storyBeforeLesson } from './moments';
+import { storyAfterLesson, storyBeforeLesson, storySoFar } from './moments';
 import { FAILING, LESSON_IDS, PASSING, PROGRESSION, STORY, play } from './test-support';
 import type { StoryDefinition, StoryMoment, StoryWorld } from './types';
 
@@ -11,13 +11,57 @@ const A = 'fr.lesson.a';
 const B = 'fr.lesson.b';
 const C = 'fr.lesson.c';
 
-const OPENING_ONE: StoryMoment = { kind: 'opening', text: 'Open one.' };
-const OPENING_TWO: StoryMoment = { kind: 'opening', text: 'Open two.' };
-const LINE_A: StoryMoment = { kind: 'line', text: 'Line a.' };
-const LINE_B: StoryMoment = { kind: 'line', text: 'Line b.' };
-const LINE_C: StoryMoment = { kind: 'line', text: 'Line c.' };
-const ENDING_ONE: StoryMoment = { kind: 'ending', text: 'End one.' };
-const ENDING_TWO: StoryMoment = { kind: 'ending', text: 'End two.' };
+const ONE = 'fr.world.one';
+const TWO = 'fr.world.two';
+const OPENING_ONE: StoryMoment = {
+	kind: 'opening',
+	text: 'Open one.',
+	art: 'one-opening',
+	worldId: ONE,
+	lessonId: null
+};
+const OPENING_TWO: StoryMoment = {
+	kind: 'opening',
+	text: 'Open two.',
+	art: 'two-opening',
+	worldId: TWO,
+	lessonId: null
+};
+const LINE_A: StoryMoment = {
+	kind: 'line',
+	text: 'Line a.',
+	art: 'line-a',
+	worldId: ONE,
+	lessonId: A
+};
+const LINE_B: StoryMoment = {
+	kind: 'line',
+	text: 'Line b.',
+	art: 'line-b',
+	worldId: ONE,
+	lessonId: B
+};
+const LINE_C: StoryMoment = {
+	kind: 'line',
+	text: 'Line c.',
+	art: 'line-c',
+	worldId: TWO,
+	lessonId: C
+};
+const ENDING_ONE: StoryMoment = {
+	kind: 'ending',
+	text: 'End one.',
+	art: 'one-ending',
+	worldId: ONE,
+	lessonId: null
+};
+const ENDING_TWO: StoryMoment = {
+	kind: 'ending',
+	text: 'End two.',
+	art: 'two-ending',
+	worldId: TWO,
+	lessonId: null
+};
 
 function before(progress: ProgressState, lessonId: string) {
 	return storyBeforeLesson(STORY, PROGRESSION, progress, lessonId);
@@ -273,6 +317,77 @@ describe('story moments over a whole play history', () => {
 			fc.property(sessionArbitrary, (session) => {
 				expect(replay(session)).toEqual(replay(session));
 			})
+		);
+	});
+});
+
+describe('storySoFar', () => {
+	function soFar(progress: ProgressState) {
+		return storySoFar(STORY, PROGRESSION, progress);
+	}
+
+	it('tells nothing on a new profile', () => {
+		expect(soFar(emptyProgress())).toEqual([]);
+	});
+
+	it('keeps the opening of a world as soon as one of its lessons was played, even failed', () => {
+		expect(soFar(progressAfter([A, FAILING]))).toEqual([OPENING_ONE]);
+	});
+
+	it('keeps the lines of the passed lessons in the order of the progression', () => {
+		expect(soFar(progressAfter([B, PASSING], [A, PASSING]))).toEqual([
+			OPENING_ONE,
+			LINE_A,
+			LINE_B,
+			ENDING_ONE
+		]);
+	});
+
+	it('leaves out a lesson that is only failed, and the ending of its world', () => {
+		expect(soFar(progressAfter([A, PASSING], [B, FAILING]))).toEqual([OPENING_ONE, LINE_A]);
+	});
+
+	it('tells the whole story once every lesson is passed', () => {
+		expect(soFar(progressAfter([A, PASSING], [B, PASSING], [C, PASSING]))).toEqual([
+			OPENING_ONE,
+			LINE_A,
+			LINE_B,
+			ENDING_ONE,
+			OPENING_TWO,
+			LINE_C,
+			ENDING_TWO
+		]);
+	});
+
+	it('leaves out a world that the story does not tell', () => {
+		const story: StoryDefinition = { ...STORY, worlds: [STORY.worlds[1] as StoryWorld] };
+		expect(storySoFar(story, PROGRESSION, progressAfter([A, PASSING], [C, PASSING]))).toEqual([
+			OPENING_TWO,
+			LINE_C,
+			ENDING_TWO
+		]);
+	});
+
+	it('keeps every moment told during the plays, whatever the history', () => {
+		fc.assert(
+			fc.property(
+				fc.array(fc.tuple(fc.constantFrom(...LESSON_IDS), fc.constantFrom(PASSING, FAILING)), {
+					maxLength: 8
+				}),
+				(plays) => {
+					let progress = emptyProgress();
+					const told: StoryMoment[] = [];
+					for (const [id, accuracy] of plays) {
+						told.push(...before(progress, id));
+						const next = play(progress, id, accuracy);
+						told.push(...after(progress, next, id));
+						progress = next;
+					}
+					// An opening is told just before a lesson of its world is played: it is kept too.
+					const kept = soFar(progress);
+					for (const moment of told) expect(kept).toContainEqual(moment);
+				}
+			)
 		);
 	});
 });
