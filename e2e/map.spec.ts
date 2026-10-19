@@ -21,6 +21,8 @@ const PLAY_URL = '/jouer';
 const PASSED_STARS: StarCount = 2;
 /** How far, in pixels, the middle of the companion may sit from the middle of its lesson. */
 const LEVEL_TOLERANCE = 2;
+/** Shift+Tab presses from the chosen lesson to the top bar: the story button, then the bar. */
+const TOP_BAR_BUDGET = 6;
 
 interface Lesson {
 	id: string;
@@ -173,12 +175,17 @@ test.describe('map walked with the arrows', () => {
 		).toBeFocused();
 		await page.keyboard.press('Tab');
 		await expectChosen(page, chosen);
-		await page.keyboard.press('Tab');
-		const leftTheMap = () =>
-			page.evaluate(
-				() => document.activeElement?.closest('ol') === null || !document.activeElement
-			);
-		await expect.poll(leftTheMap).toBe(true);
+
+		// Going back up (Firefox leaves the page after its last element, L-056): no other lesson
+		// on the way, up to the top bar.
+		const settings = page.getByRole('button', { name: message('play_settings_open') });
+		const inTheMap = () => page.evaluate(() => document.activeElement?.closest('ol') !== null);
+		for (let press = 0; press < TOP_BAR_BUDGET; press++) {
+			await page.keyboard.press('Shift+Tab');
+			expect(await inTheMap()).toBe(false);
+			if (await settings.evaluate((element) => element === document.activeElement)) break;
+		}
+		await expect(settings).toBeFocused();
 	});
 
 	test('places the companion at once with calm motion, from the profile setting', async ({
