@@ -899,6 +899,12 @@
 		},
 		"visually-hidden": {
 			"$value": "1px"
+		},
+		"map-companion": {
+			"$value": "4rem"
+		},
+		"key-hint": {
+			"$value": "2rem"
 		}
 	},
 	"radius": {
@@ -1068,6 +1074,9 @@
 		},
 		"trick-orbit": {
 			"$value": "{duration.1000}"
+		},
+		"walk": {
+			"$value": "{duration.400}"
 		}
 	},
 	"easing": {
