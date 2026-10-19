@@ -197,13 +197,21 @@ async function snapshotOfRealStore(profile: Profile): Promise<DatabaseSnapshot> 
 	}
 }
 
-/** `version-1`, `version-2`, `version-4`: the record as that version of the app stored it, before any migration. */
-export type StoredFormat = 'current' | 'version-1' | 'version-2' | 'version-4';
+/**
+ * `version-1`, `version-2`, `version-4`: the record as that version of the app stored it, before any
+ * migration; `later-version`: as a more recent app would store it, which this one cannot open.
+ */
+export type StoredFormat = 'current' | 'version-1' | 'version-2' | 'version-4' | 'later-version';
 
 const STORED_FORMATS = {
 	'version-1': asVersion1,
 	'version-2': asVersion2,
-	'version-4': asVersion4
+	'version-4': asVersion4,
+	'later-version': (profile: Profile) => ({
+		...profile,
+		schemaVersion: profile.schemaVersion + 1,
+		addedLater: true
+	})
 } as const;
 
 function inFormat(snapshot: DatabaseSnapshot, profile: Profile, format: StoredFormat) {

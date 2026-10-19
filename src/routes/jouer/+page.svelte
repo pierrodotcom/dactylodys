@@ -43,7 +43,7 @@
 		withLastGame
 	} from '$lib/state/profile';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
-	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
+	import type { Profile, ProfileStore, Settings, UnreadableProfile } from '$lib/state/types';
 	import { provideCompanionAppearance } from '$lib/ui/companion/appearance';
 	import { loadKeyboardAssets, type KeyboardAssets } from './assets';
 	import { loadBanks, settleWithin, type LoadedBanks } from './banks';
@@ -142,6 +142,9 @@
 	let result = $state.raw<ResultView | null>(null);
 	let playClock = createPlayClock();
 	let memoryOnly = $state(false);
+	/** Records the app cannot open: listed on the player screen, deleted only on request. */
+	let unreadable = $state.raw<readonly UnreadableProfile[]>([]);
+	let forgetFailed = $state(false);
 	let loadFailed = $state(false);
 	let saveState = $state<'idle' | 'saved' | 'error'>('idle');
 	let systemPrefersReduced = $state(false);
@@ -212,6 +215,7 @@
 		store = createIndexedDbProfileStore();
 		try {
 			profiles = await store.list();
+			unreadable = await store.listUnreadable();
 		} catch {
 			store = createMemoryProfileStore();
 			memoryOnly = true;
@@ -310,6 +314,17 @@
 		});
 		if (!(await commit(created))) return false;
 		return enter(created);
+	}
+
+	/** Deletes, after the confirmation of the person, a record the app cannot open. */
+	async function forgetUnreadable(id: string) {
+		forgetFailed = false;
+		try {
+			await store.removeUnreadable(id);
+			unreadable = await store.listUnreadable();
+		} catch {
+			forgetFailed = true;
+		}
 	}
 
 	function changePlayer() {
@@ -672,6 +687,9 @@
 			{loadFailed}
 			onchoose={enter}
 			onnew={() => go({ type: 'new-player' })}
+			{unreadable}
+			{forgetFailed}
+			onforget={forgetUnreadable}
 		/>
 	{:else if screen.name === 'new-player'}
 		<NewPlayer oncreate={createPlayer} onback={() => go({ type: 'cancel-new-player' })} />

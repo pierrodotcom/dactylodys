@@ -76,6 +76,12 @@ export interface ProfileStore {
 	save(profile: Profile): Promise<void>;
 	/** Rejects rather than delete a record the app cannot open. */
 	remove(id: string): Promise<void>;
-	/** The records left out of `list`; the store never deletes nor replaces them. */
+	/** The records left out of `list`; the store never deletes nor replaces them on its own. */
 	listUnreadable(): Promise<readonly UnreadableProfile[]>;
+	/**
+	 * Deletes, at the explicit request of the person, a record the app cannot open. Rejects with a
+	 * `RangeError` for a profile it can open (that one goes through `remove`); nothing to do for an
+	 * unknown id.
+	 */
+	removeUnreadable(id: string): Promise<void>;
 }
