@@ -9,8 +9,11 @@ import type { Frame } from './geometry';
 export const ITEM_SLOTS = ['back', 'body', 'neck', 'feet', 'face', 'head', 'hand'] as const;
 export type ItemSlot = (typeof ITEM_SLOTS)[number];
 
-/** `back`: drawn behind the body (a backpack, a cape, the far side of a ring); `front`: the rest. */
-export type ItemLayer = 'back' | 'front';
+/**
+ * `back`: drawn behind the body (a backpack, a cape, the far side of a ring); `front`: the rest;
+ * `sleeve`: drawn on each arm, along it (`ItemArt.sleeves`).
+ */
+export type ItemLayer = 'back' | 'front' | 'sleeve';
 
 export interface ItemArt {
 	readonly slot: ItemSlot;
@@ -18,36 +21,42 @@ export interface ItemArt {
 	readonly frame: Frame;
 	/** Layers shown when the item is drawn alone; by default both. */
 	readonly pictureLayers?: readonly ItemLayer[];
+	/**
+	 * Worn, it also covers the arms (`sleeve` layer), drawn in the frame of each arm: the grip at
+	 * (0, 0), the arm along -y from it, whatever the pose.
+	 */
+	readonly sleeves?: boolean;
 }
 
+/** Layers of an item drawn alone: its sleeves are then drawn in its `front` layer. */
 export const ITEM_LAYERS: readonly ItemLayer[] = ['back', 'front'];
 
 /** One drawing per `artId` of an item of the catalogue; the slot repeats the catalogue's (tested). */
 export const ITEM_ARTS: Readonly<Record<string, ItemArt>> = {
-	'egg-necklace': { slot: 'neck', frame: [38, 68, 44, 20] },
-	springs: { slot: 'feet', frame: [32, 100, 56, 20] },
-	'nest-backpack': { slot: 'back', frame: [4, 37, 40, 34], pictureLayers: ['back'] },
-	'rain-boots': { slot: 'feet', frame: [26, 92, 68, 24] },
-	magnifier: { slot: 'hand', frame: [-24, -30, 28, 33] },
-	crown: { slot: 'head', frame: [34, 1, 52, 28] },
-	'chef-hat': { slot: 'head', frame: [26, 0, 68, 34] },
-	'cream-moustache': { slot: 'face', frame: [34, 45, 52, 19] },
-	'checked-apron': { slot: 'body', frame: [33, 72, 54, 34] },
-	'ladle-mic': { slot: 'hand', frame: [-22, -30, 25, 33] },
-	'chili-nose': { slot: 'face', frame: [52, 41, 20, 28] },
-	'giraffe-bow-tie': { slot: 'neck', frame: [44, 71, 32, 20] },
-	'ball-shoes': { slot: 'feet', frame: [30, 98, 60, 18] },
-	'yak-beanie': { slot: 'head', frame: [27, 0, 66, 40] },
-	'striped-sweater': { slot: 'body', frame: [19, 58, 82, 46] },
-	'star-glasses': { slot: 'face', frame: [30, 33, 60, 26] },
-	'comet-cape': { slot: 'back', frame: [0, 60, 90, 54] },
-	'astronaut-helmet': { slot: 'head', frame: [16, 7, 88, 79] },
-	'ring-float': { slot: 'body', frame: [12, 76, 96, 28] },
-	'bulb-horn': { slot: 'hand', frame: [-25, -30, 33, 38] },
-	'train-cap': { slot: 'head', frame: [28, 6, 64, 34] },
-	'aviator-goggles': { slot: 'face', frame: [30, 33, 60, 26] },
-	'pilot-scarf': { slot: 'neck', frame: [34, 70, 52, 36] },
-	'roller-skates': { slot: 'feet', frame: [28, 98, 64, 22] }
+	'egg-necklace': { slot: 'neck', frame: [38, 71, 44, 31] },
+	springs: { slot: 'feet', frame: [31, 102, 58, 26] },
+	'nest-backpack': { slot: 'back', frame: [-4, 36, 59, 43], pictureLayers: ['back'] },
+	'rain-boots': { slot: 'feet', frame: [25, 89, 70, 28] },
+	magnifier: { slot: 'hand', frame: [-27, -32, 37, 44] },
+	crown: { slot: 'head', frame: [33, 0, 54, 33] },
+	'chef-hat': { slot: 'head', frame: [26, -2, 68, 36] },
+	'cream-moustache': { slot: 'face', frame: [30, 46, 60, 20] },
+	'checked-apron': { slot: 'body', frame: [27, 56, 66, 53] },
+	'ladle-mic': { slot: 'hand', frame: [-28, -33, 40, 48] },
+	'chili-nose': { slot: 'face', frame: [52, 40, 23, 30] },
+	'giraffe-bow-tie': { slot: 'neck', frame: [37, 72, 46, 20] },
+	'ball-shoes': { slot: 'feet', frame: [29, 101, 62, 19] },
+	'yak-beanie': { slot: 'head', frame: [28, -2, 64, 39] },
+	'striped-sweater': { slot: 'body', frame: [11, 54, 98, 53], sleeves: true },
+	'star-glasses': { slot: 'face', frame: [29, 29, 62, 32] },
+	'comet-cape': { slot: 'back', frame: [0, 44, 98, 71] },
+	'astronaut-helmet': { slot: 'head', frame: [14, 2, 92, 87] },
+	'ring-float': { slot: 'body', frame: [10, 75, 100, 33] },
+	'bulb-horn': { slot: 'hand', frame: [-30, -36, 46, 55] },
+	'train-cap': { slot: 'head', frame: [28, 1, 64, 36] },
+	'aviator-goggles': { slot: 'face', frame: [29, 32, 62, 28] },
+	'pilot-scarf': { slot: 'neck', frame: [34, 65, 82, 46] },
+	'roller-skates': { slot: 'feet', frame: [26, 90, 68, 34] }
 };
 
 /** The worn items by slot, in drawing order: the first one of a slot wins, unknown drawings are left out. */
@@ -88,7 +97,8 @@ export const ARM_POSES: Readonly<Record<ArmPose, { arms: readonly Ellipse[]; gri
 			{ cx: 24, cy: 54, rx: 6, ry: 10 },
 			{ cx: 96, cy: 54, rx: 6, ry: 10 }
 		],
-		grip: { x: 24, y: 47 }
+		// Spread in a V from the shoulders: hugging the head, the arms looked stuck on its sides.
+		grip: { x: 13, y: 45 }
 	},
 	/** Stretched above the head: upside down, the hands reach the ground (handstand). */
 	ground: {
@@ -96,7 +106,7 @@ export const ARM_POSES: Readonly<Record<ArmPose, { arms: readonly Ellipse[]; gri
 			{ cx: 26, cy: 26, rx: 6, ry: 18 },
 			{ cx: 94, cy: 26, rx: 6, ry: 18 }
 		],
-		grip: { x: 26, y: 11 }
+		grip: { x: 17, y: 13 }
 	}
 };
 
@@ -136,13 +146,16 @@ export const TROPHY_KEY_COUNT = 3;
 
 /**
  * The keys a trophy of keys shows, as written on the keycaps: the first characters of its
- * condition, in capitals of the language of the reward (its id is `<language>.reward.<slug>`).
+ * condition. The letters of a row are in capitals of the language of the reward (its id is
+ * `<language>.reward.<slug>`), as on a keyboard; accents and punctuation stay as they are typed.
  * Read from the catalogue, so that no layout is assumed in a drawing.
  */
 export function trophyKeys(reward: RewardDefinition): readonly string[] {
 	if (reward.condition.kind !== 'chars-mastered') return [];
 	const locale = reward.id.split('.')[0];
+	const art = TROPHY_ARTS[reward.artId];
+	const capitals = art?.kind === 'key' && art.sign.endsWith('-row');
 	return reward.condition.chars
 		.slice(0, TROPHY_KEY_COUNT)
-		.map((char) => char.toLocaleUpperCase(locale));
+		.map((char) => (capitals ? char.toLocaleUpperCase(locale) : char));
 }

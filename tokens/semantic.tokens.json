@@ -144,6 +144,9 @@
 			"cheek": {
 				"$value": "{color.companion.green.cheek}"
 			},
+			"tongue": {
+				"$value": "{color.red.300}"
+			},
 			"shadow": {
 				"$value": "{color.shadow.light}"
 			},
