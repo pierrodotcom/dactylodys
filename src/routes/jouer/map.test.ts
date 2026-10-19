@@ -19,6 +19,7 @@ import {
 	mapMoveForKey,
 	moveOnMap,
 	nextLessonId,
+	showsKeysHint,
 	worldOfLesson,
 	type LessonStatus,
 	type WorldMapLayout
@@ -334,6 +335,18 @@ describe('isOpenOnMap', () => {
 		expect(isOpenOnMap(layout, 'xx.lesson.1b')).toBe(true);
 		expect(isOpenOnMap(layout, 'xx.lesson.2a')).toBe(false);
 		expect(isOpenOnMap(layout, 'xx.lesson.unknown')).toBe(false);
+	});
+});
+
+describe('showsKeysHint', () => {
+	it('hides the hint while a single lesson is open: the arrows would move nothing', () => {
+		expect(showsKeysHint(layoutMap(MANY_WORLDS, emptyProgress()))).toBe(false);
+		expect(showsKeysHint(mapOf([]))).toBe(false);
+	});
+
+	it('shows the hint from two open lessons on, in any world', () => {
+		expect(showsKeysHint(layoutMap(MANY_WORLDS, passed(1)))).toBe(true);
+		expect(showsKeysHint(mapOf([['current'], ['locked', 'done']]))).toBe(true);
 	});
 });
 

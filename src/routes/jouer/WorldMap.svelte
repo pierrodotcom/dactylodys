@@ -16,6 +16,7 @@
 		layoutMap,
 		mapMoveForKey,
 		moveOnMap,
+		showsKeysHint,
 		type MapLesson
 	} from './map';
 
@@ -140,16 +141,19 @@
 			{/if}
 		</div>
 
-		<p class="keys-hint">
-			<span class="dd-visually-hidden">{m.play_map_keys_hint()}</span>
-			<span class="keys" aria-hidden="true">
-				<kbd class="key">{@render arrow(false)}</kbd>
-				<kbd class="key">{@render arrow(true)}</kbd>
-				<span>{m.play_map_keys_choose()}</span>
-				<kbd class="key">{m.ui_key_enter()}</kbd>
-				<span>{m.play_map_keys_play()}</span>
-			</span>
-		</p>
+		{#if showsKeysHint(layout)}
+			<p class="keys-hint" data-keys-hint>
+				<span class="dd-visually-hidden">{m.play_map_keys_hint()}</span>
+				<!-- Up and down: the path of the map goes down. -->
+				<span class="keys" aria-hidden="true">
+					<kbd class="key">{@render arrow('up')}</kbd>
+					<kbd class="key">{@render arrow('down')}</kbd>
+					<span>{m.play_map_keys_choose()}</span>
+					<kbd class="key">{m.ui_key_enter()}</kbd>
+					<span>{m.play_map_keys_play()}</span>
+				</span>
+			</p>
+		{/if}
 
 		<div class="trail">
 			{#each layout.worlds as world (world.id)}
@@ -228,9 +232,9 @@
 	</ScreenFrame>
 {/if}
 
-{#snippet arrow(forward: boolean)}
-	<svg class="arrow" viewBox="0 0 24 24" focusable="false">
-		<path d={forward ? 'M5 12h14M13 6l6 6-6 6' : 'M19 12H5M11 6l-6 6 6 6'} />
+{#snippet arrow(direction: 'up' | 'down')}
+	<svg class="arrow" data-arrow={direction} viewBox="0 0 24 24" focusable="false">
+		<path d={direction === 'up' ? 'M12 19V5M6 11l6-6 6 6' : 'M12 5v14M6 13l6 6 6-6'} />
 	</svg>
 {/snippet}
 

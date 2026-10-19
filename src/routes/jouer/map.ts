@@ -156,6 +156,11 @@ export function isOpenOnMap(layout: WorldMapLayout, lessonId: string): boolean {
 	);
 }
 
+/** The hint of the arrows is shown once they can move the companion: two open lessons or more. */
+export function showsKeysHint(layout: WorldMapLayout): boolean {
+	return layout.worlds.flatMap((world) => world.lessons).filter(isOpen).length >= 2;
+}
+
 export interface Box {
 	readonly left: number;
 	readonly top: number;

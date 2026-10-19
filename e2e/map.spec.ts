@@ -106,6 +106,25 @@ test.describe('map walked with the arrows', () => {
 		await expect(page.getByText(message('play_map_keys_hint'))).toHaveCount(1);
 	});
 
+	test('shows no key hint while a single lesson is open', async ({ page }) => {
+		await reachMapAs(page, advancedProfile({ name: 'Noa', passed: {} }));
+
+		await expectChosen(page, FIRST);
+		await expect(page.locator('[data-keys-hint]')).toHaveCount(0);
+	});
+
+	test('shows the up and down keys once two lessons are open', async ({ page }) => {
+		const hint = page.locator('[data-keys-hint]');
+		await reachMapAs(page, advancedProfile({ name: 'Ilo', passed: { [FIRST.id]: PASSED_STARS } }));
+
+		await expect(hint).toHaveCount(1);
+		await expect(hint).toContainText(message('play_map_keys_hint'));
+		const arrows = await hint
+			.locator('[data-arrow]')
+			.evaluateAll((items) => items.map((item) => item.getAttribute('data-arrow')));
+		expect(arrows).toEqual(['up', 'down']);
+	});
+
 	test('walks the focus and the companion with the arrows, from one world to the next', async ({
 		page
 	}) => {
