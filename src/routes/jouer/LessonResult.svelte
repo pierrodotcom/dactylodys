@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { SoundPlayer } from '$lib/audio';
+	import type { RaceWinner } from '$lib/engine/ghost/race';
 	import type { StarCount } from '$lib/engine/progression/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
@@ -25,6 +26,8 @@
 		suggestBreak: boolean;
 		/** Stopped just short of the next star: that star is drawn half full. */
 		almost: boolean;
+		/** Who was done first, when the child raced the ghost to the end: one sentence, never a time. */
+		race?: RaceWinner | null;
 		saveFailed: boolean;
 		/** Which dance the companion does, in the order of the lessons. */
 		dance: number;
@@ -50,6 +53,7 @@
 		worldDone,
 		suggestBreak,
 		almost,
+		race = null,
 		saveFailed,
 		dance,
 		date,
@@ -132,6 +136,12 @@
 
 	{#if almost}
 		<p class="encourage">{m.play_result_almost()}</p>
+	{/if}
+
+	{#if race}
+		<p class="encourage" data-race={race}>
+			{race === 'child' ? m.play_result_race_child() : m.play_result_race_ghost()}
+		</p>
 	{/if}
 
 	{#if worldDone}

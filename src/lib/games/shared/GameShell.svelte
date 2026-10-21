@@ -9,7 +9,7 @@
 	import TargetText from '$lib/ui/components/TargetText.svelte';
 	import { focusOnMount, focusSoon } from '$lib/ui/focus';
 	import KeyboardCaptureField from '$lib/ui/keyboard-capture/KeyboardCaptureField.svelte';
-	import type { GameProps } from '../types';
+	import type { GameOutcome, GameProps } from '../types';
 	import { readDurationToken } from '$lib/ui/motion';
 	import {
 		createGame,
@@ -22,6 +22,16 @@
 	import { isGuided } from '$lib/engine/progression/guide';
 	import { isLookReminderDue, needsCapsLockHelp } from './help';
 	import { targetKeyPress } from './target';
+	import { ghostShare, raceWinner } from '$lib/engine/ghost/race';
+	import GhostTrack from './GhostTrack.svelte';
+	import {
+		STOPPED_CLOCK,
+		clockMs,
+		exerciseCharCount,
+		followGame,
+		typedCharCount,
+		type RaceClock
+	} from './race';
 
 	interface Props extends GameProps {
 		/** Name of the game, for screen readers. */
@@ -62,6 +72,8 @@
 		fingering,
 		settings,
 		sounds,
+		ghost,
+		ghostGreeting = 0,
 		onComplete,
 		onQuit,
 		onSettings,
@@ -84,6 +96,12 @@
 	let capsLock = $state(false);
 	let field: KeyboardCaptureField | undefined = $state();
 	let reported = false;
+
+	// The race against the ghost: its clock runs only while a group is typed (`followGame`).
+	const charCount = untrack(() => exerciseCharCount(exercise.groups));
+	let racing = $state(untrack(() => ghost !== undefined));
+	let raceClock = $state.raw<RaceClock>(STOPPED_CLOCK);
+	let raceNow = $state(0);
 
 	const normalizer = createInputNormalizer();
 
@@ -130,12 +148,26 @@
 		if (step.state === game) return;
 		const groupChanged = step.state.groupIndex !== game.groupIndex;
 		game = step.state;
+		const at = action.type === 'keystroke' ? action.keystroke.timestamp : performance.now();
+		raceClock = followGame(raceClock, step.state, at);
+		raceNow = at;
 		for (const sound of step.sounds) sounds.play(sound);
 		if (groupChanged) field?.clear();
 		if (step.state.phase === 'complete' && !reported) {
 			reported = true;
-			onComplete(exerciseOutcome(step.state));
+			onComplete(withRace(exerciseOutcome(step.state)));
 		}
+	}
+
+	/** The child raced the ghost to the end: who was done first. */
+	function withRace(outcome: GameOutcome): GameOutcome {
+		if (!ghost || !racing) return outcome;
+		return { ...outcome, race: raceWinner(ghost, clockMs(raceClock, raceNow), charCount, 1) };
+	}
+
+	async function leaveRace() {
+		racing = false;
+		await resume();
 	}
 
 	function onRawEvent(event: RawInputEvent) {
@@ -163,6 +195,16 @@
 
 	onMount(() => {
 		field?.focus();
+	});
+
+	// The ghost moves on its own while the clock runs; nothing ticks when it is stopped.
+	$effect(() => {
+		if (!racing || raceClock.since === null) return;
+		let frame = requestAnimationFrame(function tickRace(time) {
+			raceNow = time;
+			frame = requestAnimationFrame(tickRace);
+		});
+		return () => cancelAnimationFrame(frame);
 	});
 
 	$effect(() => {
@@ -225,6 +267,18 @@
 
 	<header class="top">
 		{@render progress(view)}
+		{#if ghost && racing}
+			<div class="race">
+				<GhostTrack
+					childShare={typedCharCount(game) / charCount}
+					ghostShare={ghostShare(ghost, clockMs(raceClock, raceNow), charCount, 1)}
+					arrived={phase !== 'typing' && game.groupIndex === game.groups.length - 1}
+					greeting={ghostGreeting}
+					still={settings.reducedMotion}
+					label={m.game_shared_race_label()}
+				/>
+			</div>
+		{/if}
 		{#if !inFinale}
 			<Button variant="secondary" onclick={() => dispatch({ type: 'pause' })}>
 				{m.game_shared_pause()}
@@ -320,6 +374,9 @@
 			<p>{pauseText}</p>
 			<div class="actions">
 				<Button {@attach focusOnMount} onclick={resume}>{m.game_shared_resume()}</Button>
+				{#if ghost && racing}
+					<Button variant="secondary" onclick={leaveRace}>{m.game_shared_race_leave()}</Button>
+				{/if}
 				<Button variant="secondary" onclick={onQuit}>{m.game_shared_quit()}</Button>
 				{#if onSettings}
 					<Button variant="quiet" onclick={onSettings}>{m.play_settings_open()}</Button>
@@ -345,6 +402,12 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--dd-space-md);
+	}
+
+	/* The race takes the room left between the progress of the game and the pause button. */
+	.race {
+		flex: 1 1 var(--dd-size-race-track-min);
+		min-inline-size: 0;
 	}
 
 	.stage {

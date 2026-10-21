@@ -1,5 +1,6 @@
 import type { SoundPlayer } from '../audio';
 import type { VoicePlayer } from '../audio/voice-types';
+import type { RaceWinner } from '../engine/ghost/race';
 import type { GhostRun, PacePoint } from '../engine/ghost/types';
 import type { Exercise, GuideMode } from '../engine/progression/types';
 import type { ErrorPolicy, SessionMetrics } from '../engine/types';
@@ -36,6 +37,8 @@ export interface GameOutcome {
 	readonly metrics: SessionMetrics;
 	/** How far the exercise was at the end of each group, filled in by the shell shared by the games. */
 	readonly pace: readonly PacePoint[];
+	/** Who was done first, when the child raced the ghost to the end; absent otherwise. */
+	readonly race?: RaceWinner;
 }
 
 /**
@@ -51,8 +54,13 @@ export interface GameProps {
 	readonly settings: GameSettings;
 	/** Shared by the whole play route and already bound to the sound setting of the profile. */
 	readonly sounds: SoundPlayer;
-	/** An earlier play of the same lesson to race against; a game is free to ignore it. */
+	/**
+	 * An earlier play of the same lesson to race against, already slowed down by the route; the
+	 * shell shared by the games shows the race above the game.
+	 */
 	readonly ghost?: GhostRun;
+	/** Which greeting the ghost makes when the child arrives; they follow one another. */
+	readonly ghostGreeting?: number;
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
 	/** Says the reminders of the game aloud; absent: they are only shown. */
