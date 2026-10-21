@@ -91,8 +91,12 @@
 	</li>
 {/snippet}
 
-<ScreenFrame title={m.play_companion_title()} wide>
-	<div class="stage">
+<ScreenFrame
+	title={m.play_companion_title()}
+	wide
+	back={{ label: m.play_companion_back(), onclick: onback }}
+>
+	<div class="stage" data-companion-stage>
 		{#key shown?.run}
 			<Companion mood="happy" trick={shown?.artId ?? null} />
 		{/key}
@@ -228,14 +232,25 @@
 	{#if saveFailed}
 		<p class="warning" role="alert">{m.play_companion_save_error()}</p>
 	{/if}
-
-	<Button onclick={onback}>{m.play_companion_back()}</Button>
 </ScreenFrame>
 
 <style>
+	/* The companion stays in view while the child scrolls down to choose what it wears. */
+	.stage {
+		position: sticky;
+		inset-block-start: 0;
+		z-index: var(--dd-z-index-sticky);
+		display: grid;
+		justify-items: center;
+		inline-size: 100%;
+		padding-block: var(--dd-space-sm);
+		border-block-end: var(--dd-border-width-thick) solid var(--dd-color-border-subtle);
+		background-color: var(--dd-color-surface-base);
+	}
+
 	.stage :global(svg.companion) {
-		inline-size: var(--dd-size-companion-large);
-		block-size: var(--dd-size-companion-large);
+		inline-size: var(--dd-size-companion-preview);
+		block-size: var(--dd-size-companion-preview);
 	}
 
 	.status {

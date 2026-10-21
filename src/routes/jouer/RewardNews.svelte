@@ -3,6 +3,7 @@
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import { m } from '$lib/paraglide/messages.js';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
+	import Companion from '$lib/ui/components/Companion.svelte';
 	import { trophyKeys } from '$lib/ui/companion/items';
 	import Button from '$lib/ui/components/Button.svelte';
 	import CompanionName from './CompanionName.svelte';
@@ -68,14 +69,22 @@
 			{#key current.id}
 				<article class="card" data-reward-card={current.id}>
 					<h2 class="new" tabindex="-1" bind:this={cardHeading}>{m.play_reward_new()}</h2>
-					<div class="picture">
-						<RewardPicture
-							artId={current.artId}
-							keys={trophyKeys(current)}
-							kind={current.kind}
-							owned={true}
-							label={current.title}
-						/>
+					<!-- An item to wear sits next to the companion: "Wear it" shows on it, right here. -->
+					<div class="pictures">
+						<div class="picture">
+							<RewardPicture
+								artId={current.artId}
+								keys={trophyKeys(current)}
+								kind={current.kind}
+								owned={true}
+								label={current.title}
+							/>
+						</div>
+						{#if current.kind === 'item'}
+							<div class="wearer" data-reward-wearer>
+								<Companion mood="happy" />
+							</div>
+						{/if}
 					</div>
 					<p class="won">
 						{m.play_reward_won()}
@@ -143,6 +152,14 @@
 	.new:focus,
 	.status:focus {
 		outline: none;
+	}
+
+	.pictures {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-md);
 	}
 
 	.picture {
