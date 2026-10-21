@@ -1,5 +1,7 @@
 # Le fantôme — propositions (lot F)
 
+**Réponses du porteur (2026-10-21)** : 1B adouci (« proposes-en plusieurs »), 2A, 3A (« avec de bons graphismes, qui ne rendent pas la partie trop ennuyante »), 4A, 5A (« et elle applaudit quand l'enfant arrive, ou salue, ou fait une révérence »), 6A, 7A, 8A. Suite (nom, dessin, salut) dans le document partagé « Fantôme : nom, dessin, salut » ; réalisé dans l'ADR-047.
+
 Réponds par numéro : « ok » (je prends la recommandation ★), une autre lettre, ou ta correction. « oui à tout » marche aussi.
 
 **Déjà décidé (ADR-022)** : facultatif ; seulement pour rejouer une leçon déjà réussie ; il suit l'allure de la dernière partie réussie de l'enfant sur cette leçon, 10 % plus lent ; pas de défaite ; aucune étoile, aucun objet, aucun trophée lié à la vitesse.

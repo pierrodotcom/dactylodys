@@ -143,3 +143,14 @@ Données : `content/<langue>/story/<progression>.json` ; chaque texte nomme son 
 | `inRecordingOrder` | `audio/voice-texts` | Ordre de `/dev/voix` : ouvertures et fins, consignes, lignes |
 
 Le récit passe entre deux écrans (`tell` dans `routes/jouer/flow`) ; les specs e2e le traversent avec `throughStory` (`e2e/support.ts`).
+
+## Fantôme copieur (F, ADR-047)
+
+La course vit dans `GameShell` (piste `GhostTrack`, figure `GhostFigure`, page d'essai `/dev/fantome`) : un jeu n'a rien à faire pour elle, il transmet `GameProps` à `GameShell` comme les autres.
+
+| Fonction | Module | Rôle |
+|---|---|---|
+| `slowGhostRun` / `ghostShare` / `ghostFinishMs` / `raceWinner` | `engine/ghost/race` | Allure ralentie, part faite par le fantôme sur un exercice d'une autre longueur (caractères par milliseconde), qui arrive le premier (égalité : l'enfant) |
+| `followGame` / `clockMs` / `typedCharCount` / `exerciseCharCount` | `games/shared/race` | Horloge de la course : tourne seulement pendant la frappe d'un groupe, jamais en pause ni entre deux groupes |
+| `raceGhostFor` / `ghostGreetingFor` | `routes/jouer/race` | Fantôme proposé (leçon réussie avec allure gardée, déjà ralenti) et salut de cette partie |
+| `GameProps.ghost` / `GameProps.ghostGreeting` / `GameOutcome.race` | `games/types` | Allure déjà ralentie par la route ; salut ; `'child' \| 'ghost'` quand la course est allée au bout |
