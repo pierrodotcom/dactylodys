@@ -51,6 +51,12 @@
 			"outline": { "$value": "{color.brown.50}" },
 			"active": { "$value": "{color.teal.400}" }
 		},
+		"race": {
+			"pole": { "$value": "{color.brown.100}" },
+			"mark": { "$value": "{color.brown.50}" },
+			"grass": { "$value": "{color.sage.400}" },
+			"grass-line": { "$value": "{color.green.900}" }
+		},
 		"typing": {
 			"done": { "$value": "{color.brown.400}" },
 			"current-surface": { "$value": "{color.charcoal.700}" },
