@@ -1,5 +1,6 @@
 import { expect as baseExpect, test, type Page } from '@playwright/test';
 import type { StarCount } from '../src/lib/engine/progression/types';
+import { withGhost } from '../src/lib/state/profile';
 import {
 	advancedProfile,
 	installProfile,
@@ -86,4 +87,36 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await page.getByRole('button', { name: FIRST.title }).click();
 	await throughStory(page, heading(page, FIRST.title));
 	await expectWayOutAtTop(page, message('play_intro_back'));
+});
+
+test('keeps the race choice in view with the games, and the race above the game', async ({
+	page
+}) => {
+	const racer = withGhost(
+		advancedProfile({ name: 'Lou', passed: { [FIRST.id]: PASSED_STARS } }),
+		FIRST.id,
+		{
+			recordedAt: 1,
+			charCount: 20,
+			activeMs: 600_000,
+			points: [{ correctChars: 20, activeMs: 600_000 }]
+		}
+	);
+	await openPage(page, '/jouer');
+	await installProfile(page, racer);
+	await reloadPage(page);
+	await page.getByRole('button', { name: racer.name }).click();
+	await page.getByRole('button', { name: FIRST.title }).click();
+	await throughStory(page, heading(page, FIRST.title));
+
+	const choice = page.locator('[data-race-choice]');
+	const proposed = page.locator('button[data-proposed]');
+	await expect(proposed).toBeInViewport();
+	await expect(choice).toBeInViewport({ ratio: 1 });
+
+	await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
+	await proposed.click();
+	const track = page.locator('[data-ghost-track]');
+	await expect(track).toBeInViewport({ ratio: 1 });
+	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
 });
