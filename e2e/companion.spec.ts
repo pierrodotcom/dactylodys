@@ -207,6 +207,10 @@ test.describe('companion and rewards', () => {
 
 		await activateByTab(page, button(page, message('play_reward_wear')));
 		await expect(photo).toHaveAttribute('data-items', NECKLACE.artId);
+		// The companion next to the item, in the card: the child sees it put on where it clicked.
+		const wearer = page.locator('[data-reward-wearer] svg.companion');
+		await expect(wearer).toHaveAttribute('data-items', NECKLACE.artId);
+		await expect(wearer).toBeInViewport();
 		await expect(page.getByText(message('play_reward_worn'))).toBeVisible();
 		await expect(button(page, message('play_reward_wear'))).toHaveCount(0);
 
@@ -314,6 +318,21 @@ test.describe('companion and rewards', () => {
 			'data-color',
 			SECOND_COLOR.id
 		);
+	});
+
+	test('keeps the companion in view while the child puts on an item far down the list', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 720 });
+		const lessons = worlds.slice(0, 2).flatMap((world) => world.lessons);
+		await reachMapAs(page, advancedProfile({ name: 'Zia', passed: passedThrough(lessons) }));
+		await button(page, message('play_companion_open')).click();
+		await expect(heading(page, message('play_companion_title'))).toBeVisible();
+
+		const last = itemOf(lessons.at(-1)?.id ?? '');
+		await button(page, last.title).click();
+		await expect(bigCompanion(page)).toHaveAttribute('data-items', new RegExp(last.artId));
+		await expect(bigCompanion(page)).toBeInViewport();
 	});
 
 	test('gives a profile of version 4 what it has already earned, without announcing it', async ({
