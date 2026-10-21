@@ -116,6 +116,14 @@ export function createVoicePlayer(options: VoicePlayerOptions): VoicePlayer {
 	const createAudio = options.createAudio ?? createBrowserAudio;
 	let current: Playback | undefined;
 	let disposed = false;
+	/** Clips loaded ahead by `prepare`, each played once: the browser keeps the file afterwards. */
+	const prepared = new Map<string, VoiceAudioLike>();
+
+	function audioFor(clip: VoiceClip): VoiceAudioLike {
+		const ready = prepared.get(clip.file);
+		prepared.delete(clip.file);
+		return ready ?? createAudio(fileUrl(options.baseUrl, clip.file));
+	}
 
 	function clipFor(text: string): VoiceClip | undefined {
 		const clips = disposed ? undefined : options.manifest?.clips;
@@ -147,7 +155,7 @@ export function createVoicePlayer(options: VoicePlayerOptions): VoicePlayer {
 			};
 			current = playback;
 			try {
-				audio = createAudio(fileUrl(options.baseUrl, clip.file));
+				audio = audioFor(clip);
 				audio.addEventListener('ended', onEnded);
 				audio.addEventListener('error', onError);
 				Promise.resolve(audio.play()).catch(onError);
@@ -174,9 +182,21 @@ export function createVoicePlayer(options: VoicePlayerOptions): VoicePlayer {
 				return Promise.resolve('unavailable');
 			}
 		},
+		prepare(text) {
+			try {
+				if (disposed || !options.isEnabled()) return;
+				const clip = clipFor(text);
+				if (clip && !prepared.has(clip.file)) {
+					prepared.set(clip.file, createAudio(fileUrl(options.baseUrl, clip.file)));
+				}
+			} catch {
+				// Preparing is only a head start: speaking still works without it.
+			}
+		},
 		stop,
 		dispose() {
 			stop();
+			prepared.clear();
 			disposed = true;
 		}
 	};

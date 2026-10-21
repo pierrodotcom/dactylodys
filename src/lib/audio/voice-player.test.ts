@@ -92,6 +92,34 @@ async function settledValue<T>(promise: Promise<T>): Promise<T | 'pending'> {
 }
 
 describe('createVoicePlayer', () => {
+	it('loads a prepared clip ahead, then plays that same audio when asked', async () => {
+		const setup = harness();
+		const voice = player(setup);
+
+		voice.prepare(KNOWN);
+		voice.prepare(KNOWN);
+		expect(setup.audios).toHaveLength(1);
+		expect(setup.audios[0]?.paused).toBe(true);
+
+		void voice.speak(KNOWN);
+		await Promise.resolve();
+		expect(setup.audios).toHaveLength(1);
+		expect(setup.audios[0]?.paused).toBe(false);
+	});
+
+	it('prepares nothing without a clip, with the voice off, or when the audio cannot be made', () => {
+		const setup = harness();
+		const voice = player(setup);
+
+		voice.prepare(UNKNOWN);
+		setup.enabled = false;
+		voice.prepare(KNOWN);
+		setup.enabled = true;
+		setup.createFails = true;
+		expect(() => voice.prepare(KNOWN)).not.toThrow();
+		expect(setup.audios).toHaveLength(0);
+	});
+
 	it('knows which texts have a clip', () => {
 		const voice = player(harness());
 

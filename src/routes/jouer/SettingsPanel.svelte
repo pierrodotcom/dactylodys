@@ -10,7 +10,6 @@
 		TextSpacing,
 		ThemePreference
 	} from '$lib/state/types';
-	import Button from '$lib/ui/components/Button.svelte';
 	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import TargetText from '$lib/ui/components/TargetText.svelte';
@@ -62,17 +61,13 @@
 	const flag = (value: boolean) => (value ? YES : NO);
 </script>
 
-<ScreenFrame title={m.settings_title()} wide>
-	<!-- Close comes first: the child leaves the settings without scrolling down to the end. -->
-	<div class="top">
-		<div class="status" role="status">
-			{#if saveState === 'saved'}
-				<p>{m.settings_saved()}</p>
-			{:else if saveState === 'error'}
-				<p class="error">{m.settings_save_error()}</p>
-			{/if}
-		</div>
-		<Button onclick={onback}>{m.settings_back()}</Button>
+<ScreenFrame title={m.settings_title()} wide back={{ label: m.settings_back(), onclick: onback }}>
+	<div class="status" role="status">
+		{#if saveState === 'saved'}
+			<p>{m.settings_saved()}</p>
+		{:else if saveState === 'error'}
+			<p class="error">{m.settings_save_error()}</p>
+		{/if}
 	</div>
 
 	<div class="groups">
@@ -147,15 +142,6 @@
 </ScreenFrame>
 
 <style>
-	.top {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: flex-end;
-		gap: var(--dd-space-md);
-		inline-size: 100%;
-	}
-
 	/* Two columns where there is room: the settings fit in about one screen. */
 	.groups {
 		display: grid;

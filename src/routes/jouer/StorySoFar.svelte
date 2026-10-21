@@ -3,7 +3,6 @@
 	import type { ProgressionDefinition } from '$lib/engine/progression/types';
 	import type { StoryMoment } from '$lib/engine/story';
 	import { m } from '$lib/paraglide/messages.js';
-	import Button from '$lib/ui/components/Button.svelte';
 	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import StoryPicture from '$lib/ui/story/StoryPicture.svelte';
@@ -27,8 +26,11 @@
 	);
 </script>
 
-<ScreenFrame title={m.play_story_so_far_title()} wide>
-	<Button variant="secondary" onclick={onback}>{m.play_story_so_far_back()}</Button>
+<ScreenFrame
+	title={m.play_story_so_far_title()}
+	wide
+	back={{ label: m.play_story_so_far_back(), onclick: onback }}
+>
 	{#if pages.length === 0}
 		<p class="empty">{m.play_story_so_far_empty()}</p>
 	{/if}
@@ -48,9 +50,6 @@
 			</ol>
 		</section>
 	{/each}
-	{#if pages.length > 0}
-		<Button variant="secondary" onclick={onback}>{m.play_story_so_far_back()}</Button>
-	{/if}
 </ScreenFrame>
 
 <style>
@@ -90,10 +89,13 @@
 		justify-items: center;
 	}
 
+	/* Under the picture and as wide as it: the button first, then the sentence. */
 	.say {
-		display: flex;
+		display: grid;
 		gap: var(--dd-space-sm);
-		align-items: start;
+		justify-items: start;
+		inline-size: 100%;
+		max-inline-size: var(--dd-size-story-picture-small);
 		text-align: start;
 	}
 

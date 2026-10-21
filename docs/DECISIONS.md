@@ -234,6 +234,13 @@ Réponses du porteur aux propositions de `docs/PONCTUATION_PROPOSITIONS.md` (« 
 - **Guillemets droits "** (touche 3 de l'AZERTY de PC ; les guillemets français « » n'ont pas de touche) : appris dans la leçon *Le klaxon rigolo*, avec « ? » et « ! », sans espace à l'intérieur.
 - 17 phrases ajoutées (relues par le porteur). Les consignes de ces deux leçons changent : leurs enregistrements sont à refaire sur `/dev/voix`.
 
+## 046 — Sortie en haut, effet visible là où on agit (2026-10-21, acceptée)
+Retours du porteur sur le site en ligne : le bouton Retour de « Mon compagnon » était tout en bas de la page ; en choisissant un objet, l'enfant ne voyait pas son dino, resté plus haut ; le carnet « L'histoire jusqu'ici » serrait le texte en colonne étroite à côté de « Écouter ».
+- **Sortie en haut, partout** : un écran qu'on quitte donne son bouton (Retour, Fermer, Annuler) à `ScreenFrame` (prop `back`), qui l'affiche en haut à gauche ; l'écran commence alors en haut de page. Appliqué aux réglages, à « Mon compagnon », au carnet, à l'avant-leçon et au nouveau joueur. Pour le clavier, la sortie vient juste après le titre (Tab l'atteint en premier depuis le titre où l'écran s'ouvre) et la touche Échap la prend aussi, pour sortir sans remonter la page. Un test e2e (`ergonomics.spec.ts`) vérifie chaque écran sur un portable (1280 × 720).
+- **L'effet se voit là où on agit** : dans « Mon compagnon », l'aperçu du dino reste collé en haut de l'écran pendant le défilement ; sur le bilan, la carte « Nouveau ! » d'un objet montre le compagnon à côté de l'objet, qui le porte dès « Le mettre ».
+- **Carnet** : sous chaque image, « Écouter » puis le texte, sur toute la largeur de l'image.
+- **Écoute plus rapide** : le son d'un bouton « Écouter » se charge dès que le pointeur ou le focus arrive dessus (`VoicePlayer.prepare`), puis il est rejoué depuis le cache. Mesure sur le site : le premier chargement d'un enregistrement prend 0,2 à 0,8 s, les suivants sont immédiats ; un délai de plusieurs secondes vient d'ailleurs (sortie audio qui se réveille, Bluetooth notamment).
+
 ## 047 — Course contre son fantôme copieur (2026-10-22, acceptée)
 Réalise le dernier point de l'ADR-022 avec les réponses du porteur aux propositions (`docs/FANTOME_PROPOSITIONS.md` : 2A à 8A ; nom, dessin et salut choisis par défaut sur les recommandations, en attendant sa réponse : textes et dessin se changent sans toucher à la logique).
 - **Nom** : « ton fantôme copieur » (il copie ta dernière partie réussie). Le porteur voulait « fantôme » adouci.

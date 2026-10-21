@@ -6,7 +6,6 @@
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
-	import Button from '$lib/ui/components/Button.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
 	import ListenButton from '$lib/ui/components/ListenButton.svelte';
@@ -83,7 +82,12 @@
 	);
 </script>
 
-<ScreenFrame title={lesson.title} focusHeading={false} wide>
+<ScreenFrame
+	title={lesson.title}
+	focusHeading={false}
+	wide
+	back={{ label: m.play_intro_back(), onclick: onback }}
+>
 	<!-- Number, prize and Listen share one line: the pictures of the games stay in view on a laptop. -->
 	<div class="head">
 		<p class="number">{m.play_lesson_number({ number })}</p>
@@ -132,10 +136,6 @@
 	{#if loadFailed}
 		<p class="problem" role="alert">{m.play_game_load_error()}</p>
 	{/if}
-
-	<div class="actions">
-		<Button variant="quiet" onclick={onback}>{m.play_intro_back()}</Button>
-	</div>
 </ScreenFrame>
 
 <style>
@@ -200,13 +200,5 @@
 		border-color: var(--dd-color-oops-outline);
 		border-radius: var(--dd-radius-md);
 		font-weight: var(--dd-font-weight-bold);
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: var(--dd-space-md);
 	}
 </style>

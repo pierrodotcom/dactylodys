@@ -24,6 +24,9 @@ export function createDemoVoicePlayer(texts: readonly string[]): VoicePlayer {
 				finish = () => resolve('played');
 			});
 		},
+		prepare() {
+			// Nothing to load: the gallery voice is silent.
+		},
 		stop,
 		dispose: stop
 	};

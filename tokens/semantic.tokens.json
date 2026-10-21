@@ -878,6 +878,9 @@
 		"companion-large": {
 			"$value": "20rem"
 		},
+		"companion-preview": {
+			"$value": "11rem"
+		},
 		"reward-picture": {
 			"$value": "7rem"
 		},
