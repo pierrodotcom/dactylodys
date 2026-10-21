@@ -82,6 +82,7 @@
 	.words {
 		display: grid;
 		gap: var(--dd-space-xs);
+		text-align: start;
 	}
 
 	.title {

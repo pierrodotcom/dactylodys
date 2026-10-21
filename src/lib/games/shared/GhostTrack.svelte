@@ -22,7 +22,9 @@
 	/** The track is drawn in a box of 600 × 64 units; both figures stand in squares. */
 	const WIDTH = 600;
 	const LANE_START = 4;
-	const FLAG_X = 572;
+	const FLAG_X = 516;
+	/** Past the flag and its cloth: where a ghost that is done waits, beside the child, never behind. */
+	const GHOST_SEAT_X = FLAG_X + 28;
 	const CHILD_SIZE = 60;
 	const GHOST_SIZE = 52;
 	/** In reduced motion, a figure moves only every twelfth of the track. */
@@ -56,14 +58,15 @@
 	const DUST = fluffPath(0, 0, 2.2, 6, 0.5);
 	const DUST_SMALL = fluffPath(0, 0, 1.4, 5, 0.4);
 
+	/** A figure runs until it touches the flag, so that both are seen at the finish. */
 	function place(share: number, size: number): number {
 		const bounded = Math.min(Math.max(share, 0), 1);
 		const shown = still ? Math.floor(bounded * STILL_STEPS) / STILL_STEPS : bounded;
-		return LANE_START + shown * (FLAG_X - LANE_START - size / 2);
+		return LANE_START + shown * (FLAG_X - LANE_START - size);
 	}
 
 	const childX = $derived(place(childShare, CHILD_SIZE));
-	const ghostX = $derived(place(ghostShare, GHOST_SIZE));
+	const ghostX = $derived(ghostShare >= 1 ? GHOST_SEAT_X : place(ghostShare, GHOST_SIZE));
 	const pose = $derived<GhostPose>(
 		arrived
 			? (GREETINGS[greeting % GREETINGS.length] as GhostPose)
