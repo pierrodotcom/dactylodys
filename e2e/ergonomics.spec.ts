@@ -77,7 +77,11 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await button(page, message('play_story_so_far_open')).click();
 	await expect(heading(page, message('play_story_so_far_title'))).toBeVisible();
 	await expectWayOutAtTop(page, message('play_story_so_far_back'));
-	await button(page, message('play_story_so_far_back')).click();
+	// From the title the screen opens on, Tab reaches the way out first; Escape takes it too.
+	await page.keyboard.press('Tab');
+	await expect(page.locator('[data-screen-back] button')).toBeFocused();
+	await page.keyboard.press('Escape');
+	await expect(heading(page, message('play_map_title'))).toBeVisible();
 
 	await page.getByRole('button', { name: FIRST.title }).click();
 	await throughStory(page, heading(page, FIRST.title));

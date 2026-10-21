@@ -312,7 +312,8 @@ test.describe('companion and rewards', () => {
 			.poll(async () => (await stored(page, child)).companion)
 			.toEqual({ name: COMPANION_NAME, colorId: SECOND_COLOR.id, wornItemIds: [] });
 
-		await activateByTab(page, button(page, message('play_companion_back')));
+		// Far down the page, Escape leaves the screen like its way out at the top.
+		await page.keyboard.press('Escape');
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await expect(page.locator('.hero svg.companion')).toHaveAttribute(
 			'data-color',
