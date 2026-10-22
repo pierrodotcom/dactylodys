@@ -14,6 +14,7 @@
 	import type { KeyboardAssets } from './assets';
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
+	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
 		lesson: LessonDefinition;
@@ -33,7 +34,10 @@
 		loadFailed: boolean;
 		/** What passing the lesson earns, when the child does not own it yet. */
 		prize: RewardDefinition | null;
-		onplay: (gameId: string) => void;
+		/** A passed lesson whose pace was kept: the child may race the ghost (ADR-022). */
+		canRace: boolean;
+		/** `race`: the child switched the race on before taking a game. */
+		onplay: (gameId: string, race: boolean) => void;
 		onback: () => void;
 	}
 
@@ -48,9 +52,12 @@
 		voice,
 		loadFailed,
 		prize,
+		canRace,
 		onplay,
 		onback
 	}: Props = $props();
+
+	let race = $state(false);
 
 	// The child does not read: the instruction is said once as the lesson opens.
 	$effect(() => {
@@ -120,7 +127,11 @@
 		</ul>
 	</section>
 
-	<GamePicker {games} proposed={gameId} {onplay} />
+	<GamePicker {games} proposed={gameId} onplay={(id) => onplay(id, canRace && race)} />
+
+	{#if canRace}
+		<RaceChoice checked={race} onchange={(value) => (race = value)} />
+	{/if}
 
 	{#if loadFailed}
 		<p class="problem" role="alert">{m.play_game_load_error()}</p>

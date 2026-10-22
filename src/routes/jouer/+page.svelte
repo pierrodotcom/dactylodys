@@ -8,6 +8,8 @@
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
+	import type { RaceWinner } from '$lib/engine/ghost/race';
+	import type { GhostRun } from '$lib/engine/ghost/types';
 	import {
 		storyAfterLesson,
 		storyBeforeLesson,
@@ -82,6 +84,7 @@
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
 	import { recordLessonOutcome } from './lesson-outcome';
+	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
 	import { nextLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
@@ -125,6 +128,8 @@
 		readonly askName: boolean;
 		/** What this play won of the story, told when the child leaves the result (ADR-042). */
 		readonly story: readonly StoryMoment[];
+		/** Who was done first, when the child raced the ghost to the end. */
+		readonly race: RaceWinner | null;
 	}
 
 	interface HelpDoneView {
@@ -139,6 +144,9 @@
 	let profile = $state.raw<Profile | null>(null);
 	let assets = $state.raw<KeyboardAssets | null>(null);
 	let exercise = $state.raw<Exercise | null>(null);
+	/** The ghost of the game being played, when the child chose to race it; never kept for a replay. */
+	let raceGhost = $state.raw<GhostRun | null>(null);
+	let raceGreeting = $state(0);
 	let result = $state.raw<ResultView | null>(null);
 	let playClock = createPlayClock();
 	let memoryOnly = $state(false);
@@ -453,9 +461,9 @@
 	}
 
 	/** A picture of a game was chosen on the lesson screen: it is kept, and the lesson starts with it. */
-	function playLesson(worldId: string, lessonId: string, gameId: string) {
+	function playLesson(worldId: string, lessonId: string, gameId: string, race: boolean) {
 		chooseGame(worldId, lessonId, gameId);
-		void beginGame(lessonId, { type: 'start' }, gameId);
+		void beginGame(lessonId, { type: 'start' }, gameId, race);
 	}
 
 	/** The game is kept for the world and for the lesson, so that a return finds it. */
@@ -499,7 +507,7 @@
 	}
 
 	/** `gameId`: the picture the child took; without it (a replay) the game proposed for the lesson. */
-	async function beginGame(lessonId: string, event: FlowEvent, gameId?: string) {
+	async function beginGame(lessonId: string, event: FlowEvent, gameId?: string, race = false) {
 		if (!profile || !progression) return;
 		const world = worldOfLesson(progression, lessonId);
 		const definition = world
@@ -523,6 +531,10 @@
 			themeId: world.themeId,
 			maxLevel: PLAY_RULES.maxWordLevel
 		});
+		raceGhost = race
+			? raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor)
+			: null;
+		raceGreeting = ghostGreetingFor(profile, lessonId);
 		playClock = startPlaying(playClock, now());
 		go(event);
 	}
@@ -561,7 +573,8 @@
 			saveFailed: false,
 			rewards: announced,
 			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater),
-			story: told
+			story: told,
+			race: outcome.race ?? null
 		};
 		go({ type: 'completed' });
 		if (!(await commit(next)) && result) result = { ...result, saveFailed: true };
@@ -587,6 +600,7 @@
 			return;
 		}
 		helpRun = quest;
+		raceGhost = null;
 		playClock = startPlaying(playClock, now());
 		go({ type: 'start-help' });
 	}
@@ -645,6 +659,8 @@
 				)
 			)}
 			{sounds}
+			ghost={raceGhost ?? undefined}
+			ghostGreeting={raceGreeting}
 			onComplete={oncomplete}
 			onSettings={openSettings}
 			{voice}
@@ -748,7 +764,9 @@
 				{voice}
 				loadFailed={gameLoadFailed}
 				prize={prizeOfLesson(catalogue, lessonId, owned)}
-				onplay={(gameId) => playLesson(world.id, lessonId, gameId)}
+				canRace={raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor) !==
+					null}
+				onplay={(gameId, race) => playLesson(world.id, lessonId, gameId, race)}
 				onback={() => go({ type: 'back-to-map' })}
 			/>
 		{/if}
@@ -769,6 +787,7 @@
 			worldDone={result.worldDone}
 			suggestBreak={result.suggestBreak}
 			almost={result.almost}
+			race={result.race}
 			saveFailed={result.saveFailed}
 			dance={lessonIds(progression).indexOf(lessonId)}
 			date={new Date()}

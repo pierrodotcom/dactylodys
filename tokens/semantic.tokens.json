@@ -643,6 +643,56 @@
 			"p": {
 				"$value": "{color.amber.700}"
 			}
+		},
+		"race": {
+			"ground": {
+				"$value": "{color.brown.400}"
+			},
+			"lane": {
+				"$value": "{color.brown.400}"
+			},
+			"pole": {
+				"$value": "{color.brown.900}"
+			},
+			"flag": {
+				"$value": "{color.tomato.300}"
+			},
+			"ghost": {
+				"$value": "{color.cream.50}"
+			},
+			"ghost-shade": {
+				"$value": "{color.ice.100}"
+			},
+			"ghost-line": {
+				"$value": "{color.navy.800}"
+			},
+			"cookie": {
+				"$value": "{color.leather.400}"
+			},
+			"cookie-chip": {
+				"$value": "{color.brown.600}"
+			},
+			"grass": {
+				"$value": "{color.green.300}"
+			},
+			"grass-line": {
+				"$value": "{color.green.700}"
+			},
+			"dust": {
+				"$value": "{color.brown.100}"
+			},
+			"flag-star": {
+				"$value": "{color.cream.50}"
+			},
+			"finish": {
+				"$value": "{color.brown.900}"
+			},
+			"finish-light": {
+				"$value": "{color.cream.50}"
+			},
+			"mark": {
+				"$value": "{color.brown.900}"
+			}
 		}
 	},
 	"typing": {
@@ -902,6 +952,12 @@
 		},
 		"visually-hidden": {
 			"$value": "1px"
+		},
+		"race-track": {
+			"$value": "3.5rem"
+		},
+		"race-track-min": {
+			"$value": "16rem"
 		}
 	},
 	"radius": {
@@ -1014,6 +1070,12 @@
 		},
 		"companion-light": {
 			"$value": 0.5
+		},
+		"race-ghost": {
+			"$value": 0.8
+		},
+		"race-ghost-hole": {
+			"$value": 0.5
 		}
 	},
 	"duration": {
@@ -1071,6 +1133,24 @@
 		},
 		"trick-orbit": {
 			"$value": "{duration.1000}"
+		},
+		"race-float": {
+			"$value": "{duration.1400}"
+		},
+		"race-step": {
+			"$value": "{duration.600}"
+		},
+		"race-greet": {
+			"$value": "{duration.1000}"
+		},
+		"race-bow": {
+			"$value": "{duration.2000}"
+		},
+		"race-nibble": {
+			"$value": "{duration.2000}"
+		},
+		"race-flag": {
+			"$value": "{duration.2800}"
 		}
 	},
 	"easing": {
