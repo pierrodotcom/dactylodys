@@ -25,11 +25,17 @@ interface Lesson {
 	title: string;
 }
 
-const { message } = loadMessages();
-const firstWorld = readJson<{ worlds: { lessons: Lesson[] }[] }>(
+const { message, templateRegex } = loadMessages();
+const progressionWorlds = readJson<{ worlds: { lessons: Lesson[] }[] }>(
 	'content/fr/progression/azerty-decouverte.json'
-).worlds[0];
+).worlds;
+const firstWorld = progressionWorlds[0];
 const FIRST = firstWorld?.lessons[0] as Lesson;
+const GROUP_LABEL = templateRegex('ui_target_text_label');
+/** The reminder to look at the screen comes after this many groups (`lookReminderEveryGroups`). */
+const REMINDER_EVERY = readJson<{ lookReminderEveryGroups: number }>(
+	'content/common/play-rules.json'
+).lookReminderEveryGroups;
 
 function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
@@ -119,4 +125,63 @@ test('keeps the race choice in view with the games, and the race above the game'
 	const track = page.locator('[data-ghost-track]');
 	await expect(track).toBeInViewport({ ratio: 1 });
 	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
+});
+
+// The second lesson of the kitchen proposes the tower, whose text zone is the narrowest.
+test('does not move the keyboard when the reminder to look at the screen shows', async ({
+	page
+}) => {
+	await page.addInitScript(() => {
+		document.addEventListener('DOMContentLoaded', () => {
+			const style = document.createElement('style');
+			style.textContent =
+				':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms;--dd-duration-reminder:4000ms}';
+			document.head.append(style);
+		});
+	});
+	const lessons = progressionWorlds.flatMap((world) => world.lessons);
+	const kitchen = progressionWorlds[1]?.lessons[1] as Lesson;
+	const before = lessons.slice(
+		0,
+		lessons.findIndex((lesson) => lesson.id === kitchen.id)
+	);
+	const child = advancedProfile({
+		name: 'Lou',
+		passed: Object.fromEntries(before.map((lesson) => [lesson.id, PASSED_STARS]))
+	});
+	await openPage(page, '/jouer');
+	await installProfile(page, child);
+	await reloadPage(page);
+	await page.getByRole('button', { name: child.name }).click();
+	await page.getByRole('button', { name: kitchen.title }).click();
+	await throughStory(page, page.locator('button[data-proposed]'));
+	await page.locator('button[data-proposed]').click();
+
+	const label = page.locator('.target-text > .dd-visually-hidden').first();
+	const keyboard = page.locator('.keyboard');
+	const settled = () =>
+		page.evaluate(async () => {
+			await document.fonts.ready;
+			await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+		});
+	let top: number | undefined;
+	for (let group = 1; group <= REMINDER_EVERY; group++) {
+		await expect(label).toHaveText(GROUP_LABEL);
+		if (group === REMINDER_EVERY) {
+			await settled();
+			top = (await keyboard.boundingBox())?.y;
+		}
+		await page.keyboard.type(
+			GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? ''
+		);
+		if (group === REMINDER_EVERY) break;
+		await expect(async () => {
+			await page.keyboard.press('Enter');
+			await expect(label).toHaveText(GROUP_LABEL, { timeout: 500 });
+		}).toPass();
+	}
+	await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
+	// Measured once the page has laid the reminder out: a poll would take the first, unmoved value.
+	await settled();
+	expect((await keyboard.boundingBox())?.y).toBe(top);
 });
