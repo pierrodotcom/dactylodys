@@ -10,12 +10,19 @@ import type {
 } from '$lib/engine/progression/types';
 import type { SessionMetrics } from '$lib/engine/types';
 import {
+	companionSpot,
 	focusLessonId,
+	isOpenOnMap,
 	layoutMap,
 	lessonStars,
 	lessonStatus,
+	mapMoveForKey,
+	moveOnMap,
 	nextLessonId,
-	worldOfLesson
+	showsKeysHint,
+	worldOfLesson,
+	type LessonStatus,
+	type WorldMapLayout
 } from './map';
 
 const [{ progression }] = loadShippedProgressions() as [
@@ -235,6 +242,129 @@ describe('layoutMap', () => {
 describe('focusLessonId', () => {
 	it('is the last open lesson', () => {
 		expect(focusLessonId(MANY_WORLDS, passed(4))).toBe('xx.lesson.3a');
+	});
+});
+
+describe('mapMoveForKey', () => {
+	it('moves forward with Right and Down, back with Left and Up, to the ends with Home and End', () => {
+		expect(
+			['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].map(mapMoveForKey)
+		).toEqual(['next', 'next', 'previous', 'previous', 'first', 'last']);
+	});
+
+	it('ignores the other keys, Enter and Space included', () => {
+		expect(['Enter', ' ', 'Tab', 'a', 'toString', 'PageDown'].map(mapMoveForKey)).toEqual(
+			Array(6).fill(null)
+		);
+	});
+});
+
+/** A map whose open lessons are given by status, to try a locked lesson between two open ones. */
+function mapOf(statuses: readonly (readonly LessonStatus[])[]): WorldMapLayout {
+	let number = 0;
+	return {
+		focusId: null,
+		worlds: statuses.map((world, worldIndex) => ({
+			id: `w${worldIndex}`,
+			title: `World ${worldIndex}`,
+			current: false,
+			lessons: world.map((status) => {
+				number += 1;
+				return { id: `l${number}`, title: `Lesson ${number}`, number, status, stars: 0, side: 0 };
+			})
+		}))
+	};
+}
+
+describe('moveOnMap', () => {
+	const layout = layoutMap(MANY_WORLDS, passed(3));
+
+	it('goes to the next and the previous open lesson, from one world to the next', () => {
+		expect(moveOnMap(layout, 'xx.lesson.1a', 'next')).toBe('xx.lesson.1b');
+		expect(moveOnMap(layout, 'xx.lesson.1b', 'next')).toBe('xx.lesson.2a');
+		expect(moveOnMap(layout, 'xx.lesson.2a', 'previous')).toBe('xx.lesson.1b');
+	});
+
+	it('stays at the ends of the open path, without going round', () => {
+		expect(moveOnMap(layout, 'xx.lesson.2b', 'next')).toBeNull();
+		expect(moveOnMap(layout, 'xx.lesson.1a', 'previous')).toBeNull();
+	});
+
+	it('goes to the first and the last open lesson', () => {
+		expect(moveOnMap(layout, 'xx.lesson.2a', 'first')).toBe('xx.lesson.1a');
+		expect(moveOnMap(layout, 'xx.lesson.1a', 'last')).toBe('xx.lesson.2b');
+		expect(moveOnMap(layout, null, 'last')).toBe('xx.lesson.2b');
+	});
+
+	it('steps over locked lessons, inside a world and across worlds', () => {
+		const gapped = mapOf([['done', 'locked'], ['locked', 'current', 'locked'], ['current']]);
+
+		expect(moveOnMap(gapped, 'l1', 'next')).toBe('l4');
+		expect(moveOnMap(gapped, 'l4', 'next')).toBe('l6');
+		expect(moveOnMap(gapped, 'l6', 'previous')).toBe('l4');
+		expect(moveOnMap(gapped, 'l4', 'previous')).toBe('l1');
+		expect(moveOnMap(gapped, 'l1', 'last')).toBe('l6');
+	});
+
+	it('does not move from an unknown lesson, and finds nothing on a map without open lesson', () => {
+		expect(moveOnMap(layout, 'xx.lesson.unknown', 'next')).toBeNull();
+		const closed = mapOf([['locked', 'locked']]);
+		expect(moveOnMap(closed, 'l1', 'next')).toBeNull();
+		expect(moveOnMap(closed, null, 'first')).toBeNull();
+		expect(moveOnMap(closed, null, 'last')).toBeNull();
+	});
+
+	it('always leads to an open lesson of the map', () => {
+		const moves = ['next', 'previous', 'first', 'last'] as const;
+		for (let count = 0; count <= MANY_IDS.length; count++) {
+			const map = layoutMap(MANY_WORLDS, passed(count));
+			for (const from of MANY_IDS) {
+				for (const move of moves) {
+					const target = moveOnMap(map, from, move);
+					if (target !== null) expect(isOpenOnMap(map, target)).toBe(true);
+				}
+			}
+		}
+	});
+});
+
+describe('isOpenOnMap', () => {
+	it('tells an open lesson from a locked or unknown one', () => {
+		const layout = layoutMap(MANY_WORLDS, passed(1));
+
+		expect(isOpenOnMap(layout, 'xx.lesson.1b')).toBe(true);
+		expect(isOpenOnMap(layout, 'xx.lesson.2a')).toBe(false);
+		expect(isOpenOnMap(layout, 'xx.lesson.unknown')).toBe(false);
+	});
+});
+
+describe('showsKeysHint', () => {
+	it('hides the hint while a single lesson is open: the arrows would move nothing', () => {
+		expect(showsKeysHint(layoutMap(MANY_WORLDS, emptyProgress()))).toBe(false);
+		expect(showsKeysHint(mapOf([]))).toBe(false);
+	});
+
+	it('shows the hint from two open lessons on, in any world', () => {
+		expect(showsKeysHint(layoutMap(MANY_WORLDS, passed(1)))).toBe(true);
+		expect(showsKeysHint(mapOf([['current'], ['locked', 'done']]))).toBe(true);
+	});
+});
+
+describe('companionSpot', () => {
+	const trail = { left: 100, top: 1000, width: 600, height: 2000 };
+	const room = { left: 120, top: 1200, width: 560, height: 400 };
+	const companion = { width: 40, height: 50 };
+
+	it('stands in the middle of the free room after a lesson on the first side', () => {
+		const lesson = { left: 120, top: 1300, width: 480, height: 70 };
+
+		expect(companionSpot(trail, room, lesson, companion, 0)).toEqual({ x: 520, y: 310 });
+	});
+
+	it('stands in the middle of the free room before a lesson on the second side', () => {
+		const lesson = { left: 200, top: 1300, width: 480, height: 70 };
+
+		expect(companionSpot(trail, room, lesson, companion, 1)).toEqual({ x: 40, y: 310 });
 	});
 });
 
