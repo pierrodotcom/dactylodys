@@ -109,3 +109,82 @@ export function layoutMap(
 	});
 	return { worlds, focusId };
 }
+
+/** A move of the companion on the map, between the exercises (ADR-027). */
+export type MapMove = 'next' | 'previous' | 'first' | 'last';
+
+const MOVES_BY_KEY: Readonly<Record<string, MapMove>> = {
+	ArrowRight: 'next',
+	ArrowDown: 'next',
+	ArrowLeft: 'previous',
+	ArrowUp: 'previous',
+	Home: 'first',
+	End: 'last'
+};
+
+/** The move a key asks for on the map; `null`: the key is not one of the map's. */
+export function mapMoveForKey(key: string): MapMove | null {
+	return Object.hasOwn(MOVES_BY_KEY, key) ? (MOVES_BY_KEY[key] ?? null) : null;
+}
+
+function isOpen(lesson: MapLesson): boolean {
+	return lesson.status !== 'locked';
+}
+
+/**
+ * Where a move leads from a lesson, along the whole path and from one world to the next; locked
+ * lessons are stepped over. `null`: no open lesson that way, the companion stays where it is.
+ */
+export function moveOnMap(
+	layout: WorldMapLayout,
+	fromId: string | null,
+	move: MapMove
+): string | null {
+	const lessons = layout.worlds.flatMap((world) => world.lessons);
+	if (move === 'first') return lessons.find(isOpen)?.id ?? null;
+	if (move === 'last') return lessons.findLast(isOpen)?.id ?? null;
+	const index = lessons.findIndex((lesson) => lesson.id === fromId);
+	if (index < 0) return null;
+	const ahead = move === 'next' ? lessons.slice(index + 1) : lessons.slice(0, index).reverse();
+	return ahead.find(isOpen)?.id ?? null;
+}
+
+/** Whether a lesson of the map can be opened. */
+export function isOpenOnMap(layout: WorldMapLayout, lessonId: string): boolean {
+	return layout.worlds.some((world) =>
+		world.lessons.some((lesson) => lesson.id === lessonId && isOpen(lesson))
+	);
+}
+
+/** The hint of the arrows is shown once they can move the companion: two open lessons or more. */
+export function showsKeysHint(layout: WorldMapLayout): boolean {
+	return layout.worlds.flatMap((world) => world.lessons).filter(isOpen).length >= 2;
+}
+
+export interface Box {
+	readonly left: number;
+	readonly top: number;
+	readonly width: number;
+	readonly height: number;
+}
+
+/**
+ * Where the companion stands beside a lesson, in the frame of the trail: in the middle of the room
+ * the path leaves free beside the lesson, level with the lesson's middle.
+ */
+export function companionSpot(
+	trail: Box,
+	room: Box,
+	lesson: Box,
+	companion: { readonly width: number; readonly height: number },
+	side: 0 | 1
+): { x: number; y: number } {
+	const free =
+		side === 0
+			? { start: lesson.left + lesson.width, end: room.left + room.width }
+			: { start: room.left, end: lesson.left };
+	return {
+		x: (free.start + free.end) / 2 - companion.width / 2 - trail.left,
+		y: lesson.top + lesson.height / 2 - companion.height / 2 - trail.top
+	};
+}

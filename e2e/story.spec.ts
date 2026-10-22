@@ -84,13 +84,17 @@ async function reachMapAs(page: Page, profile: Profile) {
 	await expect(heading(page, message('play_map_title'))).toBeVisible();
 }
 
-async function focusByTab(page: Page, target: Locator) {
+/**
+ * `Shift+Tab` for what lies above the focus: Firefox leaves the page for its own interface after
+ * the last element and does not come back (L-056).
+ */
+async function focusByTab(page: Page, target: Locator, key: 'Tab' | 'Shift+Tab' = 'Tab') {
 	await expect(target).toBeVisible();
 	for (let press = 0; press < PRESS_BUDGET; press++) {
 		if (await target.evaluate((element) => element === document.activeElement)) return;
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(key);
 	}
-	throw new Error('The element cannot be reached with the Tab key');
+	throw new Error(`The element cannot be reached with the ${key} key`);
 }
 
 async function currentGroup(page: Page): Promise<string> {
@@ -247,7 +251,8 @@ test.describe('the story so far', () => {
 			page,
 			advancedProfile({ name: 'Maé', passed: passed([...DINOS.lessons, FIRST_KITCHEN]) })
 		);
-		await focusByTab(page, button(page, message('play_story_so_far_open')));
+		// The map opens with the focus on the proposed lesson, below the button of the story.
+		await focusByTab(page, button(page, message('play_story_so_far_open')), 'Shift+Tab');
 		await page.keyboard.press('Enter');
 		await expect(heading(page, message('play_story_so_far_title'))).toBeVisible();
 
