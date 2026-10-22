@@ -32,3 +32,9 @@ paths:
 
 - Un composant réutilisable vit dans `src/lib/ui/` avec ses états (repos, survol, focus, actif, désactivé) et un test d'accessibilité.
 - Aucune ressource externe : polices, icônes et sons sont auto-hébergés.
+
+## Ergonomie des écrans (ADR-046)
+
+- **Sortie en haut** : tout écran qu'on quitte (Retour, Fermer, Annuler) la donne à `ScreenFrame` par sa prop `back` ; elle s'affiche en haut à gauche, au même endroit partout. Jamais de bouton de sortie en bas de page. Testé par `e2e/ergonomics.spec.ts` : ajouter tout nouvel écran à ce test.
+- **On voit l'effet là où on agit** : un choix qui change le compagnon (objet, couleur) se fait avec le compagnon visible (aperçu collant de « Mon compagnon », compagnon dans la carte « Nouveau ! »). Vérifier sur un écran de portable (1280 × 720) après défilement.
+- Tout écran du parcours se vérifie à 1280 × 720 : rien d'essentiel hors de vue sans défiler (L-060).

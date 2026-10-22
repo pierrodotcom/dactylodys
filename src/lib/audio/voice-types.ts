@@ -46,6 +46,11 @@ export interface VoicePlayer {
 	 * Speaking again stops what was being said.
 	 */
 	speak(text: string): Promise<'played' | 'unavailable' | 'disabled'>;
+	/**
+	 * Starts loading the clip of this text before it is asked for (a pointer or the focus on its
+	 * "listen" button), so that it plays at once; does nothing without a clip or with the voice off.
+	 */
+	prepare(text: string): void;
 	stop(): void;
 	dispose(): void;
 }

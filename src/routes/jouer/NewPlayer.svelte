@@ -47,7 +47,7 @@
 	}
 </script>
 
-<ScreenFrame title={m.play_new_title()}>
+<ScreenFrame title={m.play_new_title()} back={{ label: m.play_new_cancel(), onclick: onback }}>
 	<form onsubmit={submit} novalidate>
 		<p id={HINT_ID} class="hint">{m.play_new_hint()}</p>
 		<label for={INPUT_ID}>{m.play_new_label()}</label>
@@ -64,7 +64,6 @@
 		<p id={ERROR_ID} class="error" role="alert">{message}</p>
 		<div class="actions">
 			<Button type="submit" disabled={busy}>{m.play_new_submit()}</Button>
-			<Button variant="quiet" onclick={onback}>{m.play_new_cancel()}</Button>
 		</div>
 	</form>
 </ScreenFrame>

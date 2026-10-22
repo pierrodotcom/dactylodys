@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
+import { voiceKey } from '../src/lib/audio/voice-key';
 import { parseStory } from '../src/lib/engine/story';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
@@ -211,6 +212,25 @@ test.describe('the story between two exercises', () => {
 		await expect(told(page)).toHaveAttribute('data-art', TOLD_DINOS.lessons[0]?.art ?? '');
 		await continueButton(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+	});
+});
+
+test.describe('the story said by the recorded voice', () => {
+	test('says the opening of the first world as it appears, and offers to hear it again', async ({
+		page
+	}) => {
+		const requested: string[] = [];
+		page.on('request', (request) => requested.push(request.url()));
+		const child = advancedProfile({ name: 'Iris', passed: {} });
+		await reachMapAs(page, { ...child, settings: { ...child.settings, voiceEnabled: true } });
+		await page.getByRole('button', { name: FIRST.title }).click();
+
+		await expect(told(page)).toHaveAttribute('data-art', TOLD_DINOS.openingArt);
+		const listen = new RegExp(`^(${message('ui_listen_start')}|${message('ui_listen_stop')})$`);
+		await expect(told(page).getByRole('button', { name: listen })).toBeVisible();
+		await expect
+			.poll(() => requested.some((url) => url.includes(voiceKey(TOLD_DINOS.opening))))
+			.toBe(true);
 	});
 });
 

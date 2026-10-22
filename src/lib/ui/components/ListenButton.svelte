@@ -48,7 +48,14 @@
 
 {#if available}
 	<span class="listen">
-		<Button variant="secondary" data-playing={playing} onclick={toggle}>
+		<!-- Pointer or focus on the button: the clip starts loading, and plays at once on the click. -->
+		<Button
+			variant="secondary"
+			data-playing={playing}
+			onpointerenter={() => player.prepare(text)}
+			onfocus={() => player.prepare(text)}
+			onclick={toggle}
+		>
 			<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
 				{#if playing}
 					<path d={STOP_PATH} />

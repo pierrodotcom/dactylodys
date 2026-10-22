@@ -6,7 +6,6 @@
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
-	import Button from '$lib/ui/components/Button.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
 	import ListenButton from '$lib/ui/components/ListenButton.svelte';
@@ -15,6 +14,7 @@
 	import type { KeyboardAssets } from './assets';
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
+	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
 		lesson: LessonDefinition;
@@ -34,7 +34,10 @@
 		loadFailed: boolean;
 		/** What passing the lesson earns, when the child does not own it yet. */
 		prize: RewardDefinition | null;
-		onplay: (gameId: string) => void;
+		/** A passed lesson whose pace was kept: the child may race the ghost (ADR-022). */
+		canRace: boolean;
+		/** `race`: the child switched the race on before taking a game. */
+		onplay: (gameId: string, race: boolean) => void;
 		onback: () => void;
 	}
 
@@ -49,9 +52,12 @@
 		voice,
 		loadFailed,
 		prize,
+		canRace,
 		onplay,
 		onback
 	}: Props = $props();
+
+	let race = $state(false);
 
 	// The child does not read: the instruction is said once as the lesson opens.
 	$effect(() => {
@@ -76,7 +82,12 @@
 	);
 </script>
 
-<ScreenFrame title={lesson.title} focusHeading={false} wide>
+<ScreenFrame
+	title={lesson.title}
+	focusHeading={false}
+	wide
+	back={{ label: m.play_intro_back(), onclick: onback }}
+>
 	<!-- Number, prize and Listen share one line: the pictures of the games stay in view on a laptop. -->
 	<div class="head">
 		<p class="number">{m.play_lesson_number({ number })}</p>
@@ -116,15 +127,15 @@
 		</ul>
 	</section>
 
-	<GamePicker {games} proposed={gameId} {onplay} />
+	<GamePicker {games} proposed={gameId} onplay={(id) => onplay(id, canRace && race)} />
+
+	{#if canRace}
+		<RaceChoice checked={race} onchange={(value) => (race = value)} />
+	{/if}
 
 	{#if loadFailed}
 		<p class="problem" role="alert">{m.play_game_load_error()}</p>
 	{/if}
-
-	<div class="actions">
-		<Button variant="quiet" onclick={onback}>{m.play_intro_back()}</Button>
-	</div>
 </ScreenFrame>
 
 <style>
@@ -189,13 +200,5 @@
 		border-color: var(--dd-color-oops-outline);
 		border-radius: var(--dd-radius-md);
 		font-weight: var(--dd-font-weight-bold);
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: var(--dd-space-md);
 	}
 </style>
