@@ -18,7 +18,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
 2. **Voix** : voix humaine (ADR-028), **tous les textes enregistrés par le porteur** : les 24 consignes, le rappel « regarde l'écran » et les 34 textes du récit (59 fichiers MP3, 3 Mo, contribution anonyme ; archives dans `docs/voix/`, hors dépôt). Page `/dev/voix`, lecteur, bouton « Écouter » sur l'avant-leçon et sur les écrans du récit, outil `tools/voice/import.js` (mode d'emploi dans `tools/voice/README.md`). Un texte réécrit perd son enregistrement : le réenregistrer sur `/dev/voix`, puis importer l'archive avec `--prune`.
-3. Écrire aux auteurs de Lexique pour confirmer la licence (Q9) : courriel prêt dans `docs/COURRIEL_LEXIQUE.md`, **à envoyer par le porteur**.
+3. ~~Écrire aux auteurs de Lexique (Q9)~~ : levée le 2026-10-23, la licence est écrite par les auteurs dans l'archive (voir Q9). Un courriel de courtoisie reste possible (`docs/COURRIEL_LEXIQUE.md`), mais rien n'en dépend.
 4. Dette de J3, par ordre de gêne pour l'enfant :
    - la scène de « Décollage » : agrandie (PR 57, option C du porteur : toute la largeur, 1,4 à 1,7 fois plus haute avec le clavier, bulle près de l'habitant). « œ », point-virgule et guillemets : décidés le 2026-10-18 (ADR-045).
 5. Dette plus ancienne : soldée le 2026-10-18 (`GameSettings.soundEnabled` retiré, règle du pseudo à un seul endroit). La langue ne dépend plus de `localStorage` (stratégie `baseLocale` seule) : il faudra réintroduire un choix de langue quand une deuxième langue arrivera (J6).
@@ -110,7 +110,7 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 
 | # | Question | Bloque |
 |---|---|---|
-| Q9 | Confirmer la licence de Lexique auprès de ses auteurs : le fichier dit CC BY-SA, la page d'accueil du site pointe vers une licence non commerciale | Publication des listes de mots |
+| Q9 | ~~Confirmer la licence de Lexique~~ **Levée (2026-10-23)** : le `README-Lexique.txt` de l'archive Lexique383.zip dit « License : CC BY SA 4.0 » ; les pages actuelles de lexique.org n'indiquent aucune licence, demandent seulement de citer les publications, et ne donnent aucune adresse (forum Google Groups seulement) | — |
 | Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
 

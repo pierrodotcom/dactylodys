@@ -1,6 +1,8 @@
-# Courriel aux auteurs de Lexique (à envoyer par toi)
+# Courriel aux auteurs de Lexique (facultatif)
 
-Où l'envoyer : à l'adresse de contact indiquée sur https://www.lexique.org (page « Contact » ou « Auteurs »). Je n'ai pas pu la vérifier d'ici ; Boris New et Christophe Pallier en sont les auteurs principaux.
+**Mise à jour du 2026-10-23** : ce courriel n'est plus nécessaire. L'archive officielle de Lexique 3.83 contient un `README-Lexique.txt` qui déclare « License : CC BY SA 4.0 » ; c'est la licence que le projet applique déjà, et l'attribution est dans `static/ATTRIBUTIONS.md`. Le site n'indique aucune adresse (seulement un forum : https://groups.google.com/g/lexiqueorg). Le texte ci-dessous ne sert que si tu veux écrire par courtoisie ou demander la licence de Lexique 4.
+
+Où l'envoyer : le site n'affiche pas d'adresse ; les pages des auteurs sont http://psycho-usmb.fr/boris.new/ (Boris New) et http://www.pallier.org (Christophe Pallier).
 
 Pourquoi : le fichier de données de Lexique 3.83 déclare la licence CC BY-SA, mais la page d'accueil du site renvoie vers une licence non commerciale. DactyloDys est un projet libre et gratuit : avant de publier la liste de mots, il faut une confirmation écrite.
 
