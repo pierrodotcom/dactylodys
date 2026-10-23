@@ -797,7 +797,11 @@ test.describe('reminder to look at the screen', () => {
 		await reachReminder(page, tops);
 		await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
 
-		await expect.poll(async () => (await page.locator('.keyboard').boundingBox())?.y).toBe(tops[0]);
+		// Measured once the page has laid the reminder out: a poll would take the first, unmoved value.
+		await page.evaluate(
+			() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
+		);
+		expect((await page.locator('.keyboard').boundingBox())?.y).toBe(tops[0]);
 	});
 
 	test('stays long enough to be read: a key does not remove it', async ({ page }) => {
