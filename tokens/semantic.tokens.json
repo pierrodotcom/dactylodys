@@ -977,6 +977,158 @@
 			"mark": {
 				"$value": "{color.brown.900}"
 			}
+		},
+		"recipe": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"tile": {
+				"$value": "{color.cream.50}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.lemon.300}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"frame": {
+				"$value": "{color.cream.50}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"wood-light": {
+				"$value": "{color.amber.300}"
+			},
+			"wood-dark": {
+				"$value": "{color.amber.700}"
+			},
+			"pot": {
+				"$value": "{color.slate.600}"
+			},
+			"pot-light": {
+				"$value": "{color.slate.300}"
+			},
+			"pot-inside": {
+				"$value": "{color.navy.800}"
+			},
+			"soup": {
+				"$value": "{color.jade.300}"
+			},
+			"soup-dark": {
+				"$value": "{color.sage.400}"
+			},
+			"soup-light": {
+				"$value": "{color.mint.200}"
+			},
+			"steam": {
+				"$value": "{color.slate.300}"
+			},
+			"carrot": {
+				"$value": "{color.orange.300}"
+			},
+			"carrot-flesh": {
+				"$value": "{color.amber.300}"
+			},
+			"leaf": {
+				"$value": "{color.green.300}"
+			},
+			"tomato": {
+				"$value": "{color.tomato.500}"
+			},
+			"tomato-flesh": {
+				"$value": "{color.tomato.200}"
+			},
+			"cheese": {
+				"$value": "{color.lemon.300}"
+			},
+			"cheese-rind": {
+				"$value": "{color.lemon.500}"
+			},
+			"cheese-flesh": {
+				"$value": "{color.lemon.50}"
+			},
+			"cap": {
+				"$value": "{color.clay.400}"
+			},
+			"stem": {
+				"$value": "{color.cream.100}"
+			},
+			"gills": {
+				"$value": "{color.brown.100}"
+			},
+			"flesh": {
+				"$value": "{color.cream.50}"
+			},
+			"glass": {
+				"$value": "{color.ice.100}"
+			},
+			"liquid": {
+				"$value": "{color.ocean.400}"
+			},
+			"cloth": {
+				"$value": "{color.cream.50}"
+			},
+			"check": {
+				"$value": "{color.tomato.500}"
+			},
+			"balloon": {
+				"$value": "{color.azure.500}"
+			},
+			"rocket": {
+				"$value": "{color.cream.50}"
+			},
+			"rocket-trim": {
+				"$value": "{color.tomato.500}"
+			},
+			"rocket-glass": {
+				"$value": "{color.azure.300}"
+			},
+			"flame": {
+				"$value": "{color.amber.300}"
+			},
+			"flame-core": {
+				"$value": "{color.lemon.300}"
+			},
+			"giraffe": {
+				"$value": "{color.sunflower.300}"
+			},
+			"giraffe-spot": {
+				"$value": "{color.orange.500}"
+			},
+			"giraffe-mane": {
+				"$value": "{color.leather.400}"
+			},
+			"snout": {
+				"$value": "{color.lemon.50}"
+			},
+			"eye": {
+				"$value": "{color.cream.50}"
+			},
+			"iris": {
+				"$value": "{color.leather.400}"
+			},
+			"cheek": {
+				"$value": "{color.pink.300}"
+			},
+			"ear": {
+				"$value": "{color.pink.200}"
+			},
+			"stripe": {
+				"$value": "{color.azure.500}"
+			},
+			"plant-pot": {
+				"$value": "{color.clay.400}"
+			}
 		}
 	},
 	"typing": {
@@ -1402,6 +1554,27 @@
 		},
 		"drawing-tape": {
 			"$value": 0.6
+		},
+		"recipe-shade": {
+			"$value": 0.2
+		},
+		"recipe-light": {
+			"$value": 0.55
+		},
+		"recipe-tile": {
+			"$value": 0.5
+		},
+		"recipe-glass": {
+			"$value": 0.55
+		},
+		"recipe-crease": {
+			"$value": 0.4
+		},
+		"recipe-shadow": {
+			"$value": 0.16
+		},
+		"recipe-steam": {
+			"$value": 0.8
 		}
 	},
 	"duration": {

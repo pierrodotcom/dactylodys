@@ -24,8 +24,8 @@
 <div class="row" role="img" aria-label={label}>
 	{#each items as index (index)}
 		<span class="item" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}>
-			<svg class="tile" viewBox="-44 -48 88 96" focusable="false" aria-hidden="true">
-				<IngredientShape variant={index} stage={index < done ? PREP_STAGES : 0} />
+			<svg class="tile" viewBox="-49 -40 94 80" focusable="false" aria-hidden="true">
+				<IngredientShape variant={index} stage={index < done ? PREP_STAGES : 0} small />
 			</svg>
 		</span>
 	{/each}
