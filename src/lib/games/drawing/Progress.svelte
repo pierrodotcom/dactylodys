@@ -10,6 +10,9 @@
 		current: number;
 	}
 
+	/** Colours of the finished marks, in turn. */
+	const INKS = 6;
+
 	let { total, done, current }: Props = $props();
 
 	const steps = $derived(Array.from({ length: total }, (_, index) => index));
@@ -23,13 +26,15 @@
 <div class="row" role="img" aria-label={label}>
 	{#each steps as index (index)}
 		<svg
-			class="squiggle"
+			class="step"
 			viewBox="0 0 36 36"
 			focusable="false"
 			aria-hidden="true"
 			data-state={index < done ? 'done' : index === current ? 'current' : 'next'}
+			data-ink={index % INKS}
 		>
-			<path d={SQUIGGLES[index % SQUIGGLES.length]} />
+			<rect class="card" x="2" y="2" width="32" height="32" rx="5" />
+			<path class="mark" d={SQUIGGLES[index % SQUIGGLES.length]} />
 		</svg>
 	{/each}
 </div>
@@ -41,23 +46,69 @@
 		gap: var(--dd-space-sm);
 	}
 
-	.squiggle {
-		inline-size: var(--dd-size-egg-mini);
-		block-size: var(--dd-size-egg-mini);
+	.step {
+		inline-size: var(--dd-size-drawing-step);
+		block-size: var(--dd-size-drawing-step);
+	}
+
+	.card {
 		fill: transparent;
 		stroke: var(--dd-color-border-strong);
 		stroke-width: var(--dd-border-width-thick);
+		stroke-dasharray: 4 4;
+	}
+
+	.mark {
+		fill: transparent;
+		stroke: transparent;
+		stroke-width: var(--dd-border-width-target);
 		stroke-linecap: round;
 		stroke-linejoin: round;
 	}
 
-	.squiggle[data-state='current'] {
+	.step[data-state='current'] .card {
+		fill: var(--dd-color-drawing-paper);
 		stroke: var(--dd-color-accent-base);
 		stroke-width: var(--dd-border-width-target);
+		stroke-dasharray: none;
 	}
 
-	.squiggle[data-state='done'] {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-target);
+	.step[data-state='current'] .mark {
+		stroke: var(--dd-color-accent-base);
+		stroke-dasharray: 3 5;
+	}
+
+	.step[data-state='done'] .card {
+		fill: var(--dd-color-drawing-paper);
+		stroke: var(--dd-color-drawing-pencil);
+		stroke-dasharray: none;
+	}
+
+	.step[data-state='done'] .mark {
+		stroke: var(--dd-color-drawing-pencil);
+	}
+
+	.step[data-state='done'][data-ink='0'] .mark {
+		stroke: var(--dd-color-drawing-fur-dark);
+	}
+
+	.step[data-state='done'][data-ink='1'] .mark {
+		stroke: var(--dd-color-drawing-petal-dark);
+	}
+
+	.step[data-state='done'][data-ink='2'] .mark {
+		stroke: var(--dd-color-drawing-stripe);
+	}
+
+	.step[data-state='done'][data-ink='3'] .mark {
+		stroke: var(--dd-color-drawing-hull);
+	}
+
+	.step[data-state='done'][data-ink='4'] .mark {
+		stroke: var(--dd-color-drawing-wood);
+	}
+
+	.step[data-state='done'][data-ink='5'] .mark {
+		stroke: var(--dd-color-drawing-leaf-dark);
 	}
 </style>

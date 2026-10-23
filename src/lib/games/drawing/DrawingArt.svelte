@@ -19,21 +19,54 @@
 
 	let { picture, share, colored, still }: Props = $props();
 
+	const uid = $props.id();
 	const weights = $derived(picture.strokes.map((stroke) => stroke.weight));
 	const fractions = $derived(strokeFractions(weights, share));
 	const painted = $derived(paintOrder(picture));
+	/** Every visible piece of line, in drawing order, with how much of it is drawn. */
+	const pieces = $derived(
+		picture.strokes.flatMap((stroke, index) => {
+			const drawn = strokeFractions(
+				stroke.pieces.map((piece) => piece.length),
+				fractions[index] ?? 0
+			);
+			return stroke.pieces.map((piece, at) => ({
+				d: piece.d,
+				fine: stroke.fine === true,
+				cut: piece.cut,
+				drawn: drawn[at] ?? 0
+			}));
+		})
+	);
+	/** Index of the first piece of each stroke in `pieces`. */
+	const firstPiece = $derived(
+		picture.strokes.reduce<number[]>(
+			(starts, stroke, index) => [
+				...starts,
+				(starts[index - 1] ?? 0) + (picture.strokes[index - 1]?.pieces.length ?? 0)
+			],
+			[]
+		)
+	);
 	const lines: (SVGPathElement | undefined)[] = [];
+
+	function clipId(index: number): string {
+		return `${uid}-paint-${index}`;
+	}
 
 	/** Where the pencil is when `at` of the drawing is traced (a measure of the page, once drawn). */
 	export function pointAt(at: number): DrawingPoint | null {
 		const { index, fraction } = locateShare(weights, at);
-		const line = lines[index];
+		const stroke = picture.strokes[index];
+		if (!stroke || stroke.pieces.length === 0) return null;
+		const inStroke = locateShare(
+			stroke.pieces.map((piece) => piece.length),
+			fraction
+		);
+		const line = lines[(firstPiece[index] ?? 0) + inStroke.index];
 		if (!line || typeof line.getTotalLength !== 'function') return null;
-		const length = line.getTotalLength();
-		const point = line.getPointAtLength(length * fraction);
-		const matrix = line.transform.baseVal.consolidate()?.matrix;
-		const placed = matrix ? new DOMPoint(point.x, point.y).matrixTransform(matrix) : point;
-		return { x: placed.x, y: placed.y };
+		const point = line.getPointAtLength(line.getTotalLength() * inStroke.fraction);
+		return { x: point.x, y: point.y };
 	}
 
 	/** The line drawn between two shares of the drawing, as a path; empty when it cannot be measured. */
@@ -53,23 +86,39 @@
 
 <g class="art" data-colored={colored || undefined} data-still={still || undefined}>
 	<g class="colors">
+		{#if picture.ground}
+			<path class="paint" data-tone="ground" d={picture.ground} />
+		{/if}
 		{#each painted as stroke, index (index)}
-			<path class="paint" data-tone={stroke.tone} d={stroke.d} transform={stroke.transform} />
+			<clipPath id={clipId(index)}><path d={stroke.fill ?? stroke.d} /></clipPath>
+			<path class="paint" data-tone={stroke.tone} d={stroke.fill ?? stroke.d} />
+			<g clip-path="url(#{clipId(index)})">
+				{#each stroke.marks ?? [] as mark, at (at)}
+					<path class="paint" data-tone={mark.tone} fill-rule="evenodd" d={mark.d} />
+				{/each}
+				{#if stroke.shade}
+					<path class="paint" data-tone="shade" fill-rule="evenodd" d={stroke.shade} />
+				{/if}
+				{#if stroke.rim}
+					<path class="paint" data-tone="light" fill-rule="evenodd" d={stroke.rim} />
+				{/if}
+			</g>
 		{/each}
 		{#each picture.touches as touch, index (index)}
 			<path class="paint" data-tone={touch.tone} d={touch.d} />
 		{/each}
 	</g>
 	<g class="lines">
-		{#each picture.strokes as stroke, index (index)}
+		{#each pieces as piece, index (index)}
 			<path
 				bind:this={lines[index]}
 				class="line"
-				d={stroke.d}
-				transform={stroke.transform}
+				data-fine={piece.fine || undefined}
+				data-cut={piece.cut || undefined}
+				d={piece.d}
 				pathLength="1"
-				stroke-dashoffset={1 - (fractions[index] ?? 0)}
-				visibility={(fractions[index] ?? 0) > 0 ? 'visible' : 'hidden'}
+				stroke-dashoffset={1 - piece.drawn}
+				visibility={piece.drawn > 0 ? 'visible' : 'hidden'}
 			/>
 		{/each}
 	</g>
@@ -78,8 +127,8 @@
 <style>
 	.line {
 		fill: transparent;
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: calc(var(--dd-border-width-drawing-bold) * 1.25);
+		stroke: var(--dd-color-drawing-pencil);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.85);
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		/* pathLength="1": the dash covers the whole line, the gap is long enough to hide the cap. */
@@ -87,6 +136,15 @@
 		transition-property: stroke-dashoffset;
 		transition-duration: var(--dd-duration-fast);
 		transition-timing-function: var(--dd-easing-steady);
+	}
+
+	.line[data-fine] {
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.5);
+	}
+
+	/* A line that goes behind a form stops flat under its outline, without a round end showing. */
+	.line[data-cut] {
+		stroke-linecap: butt;
 	}
 
 	.art[data-still] .line {
@@ -113,43 +171,142 @@
 		transition: none;
 	}
 
-	.paint[data-tone='orange'] {
-		fill: var(--dd-color-food-a);
+	.paint[data-tone='shade'] {
+		fill: var(--dd-color-drawing-shade);
+		fill-opacity: var(--dd-opacity-drawing-shade);
 	}
 
-	.paint[data-tone='pink'] {
-		fill: var(--dd-color-food-b);
+	.paint[data-tone='light'] {
+		fill: var(--dd-color-drawing-light);
+		fill-opacity: var(--dd-opacity-drawing-light);
 	}
 
-	.paint[data-tone='yellow'] {
-		fill: var(--dd-color-food-c);
-	}
-
-	.paint[data-tone='green'] {
-		fill: var(--dd-color-food-d);
-	}
-
-	.paint[data-tone='teal'] {
-		fill: var(--dd-color-food-e);
-	}
-
-	.paint[data-tone='lilac'] {
-		fill: var(--dd-color-food-f);
-	}
-
-	.paint[data-tone='clay'] {
-		fill: var(--dd-color-astre-b);
-	}
-
-	.paint[data-tone='cream'] {
-		fill: var(--dd-color-bubble-surface);
-	}
-
-	.paint[data-tone='slate'] {
-		fill: var(--dd-color-pot-steam);
+	.paint[data-tone='ground'] {
+		fill: var(--dd-color-drawing-shade);
+		fill-opacity: var(--dd-opacity-drawing-ground);
 	}
 
 	.paint[data-tone='ink'] {
 		fill: var(--dd-color-drawing-ink);
+	}
+
+	.paint[data-tone='fur'] {
+		fill: var(--dd-color-drawing-fur);
+	}
+
+	.paint[data-tone='fur-dark'] {
+		fill: var(--dd-color-drawing-fur-dark);
+	}
+
+	.paint[data-tone='cream'] {
+		fill: var(--dd-color-drawing-cream);
+	}
+
+	.paint[data-tone='pink'] {
+		fill: var(--dd-color-drawing-pink);
+	}
+
+	.paint[data-tone='iris'] {
+		fill: var(--dd-color-drawing-iris);
+	}
+
+	.paint[data-tone='white'] {
+		fill: var(--dd-color-drawing-white);
+	}
+
+	.paint[data-tone='sea'] {
+		fill: var(--dd-color-drawing-sea);
+	}
+
+	.paint[data-tone='fin'] {
+		fill: var(--dd-color-drawing-fin);
+	}
+
+	.paint[data-tone='stripe'] {
+		fill: var(--dd-color-drawing-stripe);
+	}
+
+	.paint[data-tone='bubble'] {
+		fill: var(--dd-color-drawing-bubble);
+	}
+
+	.paint[data-tone='leaf'] {
+		fill: var(--dd-color-drawing-leaf);
+	}
+
+	.paint[data-tone='leaf-dark'] {
+		fill: var(--dd-color-drawing-leaf-dark);
+	}
+
+	.paint[data-tone='wall'] {
+		fill: var(--dd-color-drawing-wall);
+	}
+
+	.paint[data-tone='roof'] {
+		fill: var(--dd-color-drawing-roof);
+	}
+
+	.paint[data-tone='roof-dark'] {
+		fill: var(--dd-color-drawing-roof-dark);
+	}
+
+	.paint[data-tone='wood'] {
+		fill: var(--dd-color-drawing-wood);
+	}
+
+	.paint[data-tone='glass'] {
+		fill: var(--dd-color-drawing-glass);
+	}
+
+	.paint[data-tone='brick'] {
+		fill: var(--dd-color-drawing-brick);
+	}
+
+	.paint[data-tone='grass'] {
+		fill: var(--dd-color-drawing-grass);
+	}
+
+	.paint[data-tone='stone'] {
+		fill: var(--dd-color-drawing-stone);
+	}
+
+	.paint[data-tone='curtain'] {
+		fill: var(--dd-color-drawing-curtain);
+	}
+
+	.paint[data-tone='petal'] {
+		fill: var(--dd-color-drawing-petal);
+	}
+
+	.paint[data-tone='petal-dark'] {
+		fill: var(--dd-color-drawing-petal-dark);
+	}
+
+	.paint[data-tone='pollen'] {
+		fill: var(--dd-color-drawing-pollen);
+	}
+
+	.paint[data-tone='hull'] {
+		fill: var(--dd-color-drawing-hull);
+	}
+
+	.paint[data-tone='water'] {
+		fill: var(--dd-color-drawing-water);
+	}
+
+	.paint[data-tone='gold'] {
+		fill: var(--dd-color-drawing-gold);
+	}
+
+	.paint[data-tone='gold-dark'] {
+		fill: var(--dd-color-drawing-gold-dark);
+	}
+
+	.paint[data-tone='lilac'] {
+		fill: var(--dd-color-drawing-lilac);
+	}
+
+	.paint[data-tone='smoke'] {
+		fill: var(--dd-color-drawing-smoke);
 	}
 </style>

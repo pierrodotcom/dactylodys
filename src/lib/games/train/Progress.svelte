@@ -31,7 +31,7 @@
 </script>
 
 <div class="row" role="img" aria-label={label}>
-	<svg class="loco" viewBox="-6 -76 118 80" focusable="false" aria-hidden="true">
+	<svg class="loco" viewBox="-7 -76 118 79" focusable="false" aria-hidden="true">
 		<LocoShape puff={false} />
 	</svg>
 	{#each steps as index (index)}
@@ -59,7 +59,7 @@
 
 	.loco {
 		display: block;
-		inline-size: var(--dd-size-star-large);
+		inline-size: var(--dd-size-train-loco-mini);
 		block-size: auto;
 	}
 

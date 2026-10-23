@@ -443,3 +443,50 @@ describe.each(contrastThemes)('drawing contrast in $name theme', ({ overrides })
 		}
 	);
 });
+
+/**
+ * Keys written twice in one object of a JSON text. `JSON.parse` keeps the last one silently: two
+ * branches that each add the same group (a merge that git resolves on its own) lose half of it.
+ */
+const BACKSLASH = String.fromCharCode(92);
+
+function duplicateKeys(text: string): string[] {
+	const found: string[] = [];
+	const stack: { keys: Set<string>; isObject: boolean }[] = [];
+	let expectingKey = false;
+	for (let index = 0; index < text.length; index++) {
+		const char = text[index];
+		if (char === '"') {
+			let end = index + 1;
+			while (text[end] !== '"') end += text[end] === BACKSLASH ? 2 : 1;
+			const value = text.slice(index + 1, end);
+			const frame = stack[stack.length - 1];
+			if (expectingKey && frame?.isObject) {
+				if (frame.keys.has(value)) found.push(value);
+				frame.keys.add(value);
+				expectingKey = false;
+			}
+			index = end;
+		} else if (char === '{' || char === '[') {
+			stack.push({ keys: new Set(), isObject: char === '{' });
+			expectingKey = char === '{';
+		} else if (char === '}' || char === ']') {
+			stack.pop();
+		} else if (char === ',') {
+			expectingKey = stack[stack.length - 1]?.isObject ?? false;
+		}
+	}
+	return found;
+}
+
+describe('token files', () => {
+	it('finds a key written twice in one object', () => {
+		expect(duplicateKeys('{"a":{"x":1},"b":[{"x":1},{"x":2}],"a":{"y":2}}')).toEqual(['a']);
+	});
+
+	for (const file of [PRIMITIVES_FILE, SEMANTIC_FILE, ...Object.values(THEME_FILES)]) {
+		it(`never writes a group twice in ${file}`, () => {
+			expect(duplicateKeys(readFileSync(file, 'utf8'))).toEqual([]);
+		});
+	}
+});

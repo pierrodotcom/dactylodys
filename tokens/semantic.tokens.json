@@ -480,6 +480,129 @@
 			},
 			"ink": {
 				"$value": "{color.brown.900}"
+			},
+			"pencil": {
+				"$value": "{color.brown.900}"
+			},
+			"paper": {
+				"$value": "{color.cream.50}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"fur": {
+				"$value": "{color.orange.300}"
+			},
+			"fur-dark": {
+				"$value": "{color.orange.500}"
+			},
+			"cream": {
+				"$value": "{color.cream.50}"
+			},
+			"pink": {
+				"$value": "{color.pink.200}"
+			},
+			"iris": {
+				"$value": "{color.jade.300}"
+			},
+			"white": {
+				"$value": "{color.cream.50}"
+			},
+			"sea": {
+				"$value": "{color.lagoon.300}"
+			},
+			"fin": {
+				"$value": "{color.lemon.300}"
+			},
+			"stripe": {
+				"$value": "{color.azure.500}"
+			},
+			"bubble": {
+				"$value": "{color.ice.100}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"leaf-dark": {
+				"$value": "{color.sage.400}"
+			},
+			"wall": {
+				"$value": "{color.sunflower.300}"
+			},
+			"roof": {
+				"$value": "{color.tomato.300}"
+			},
+			"roof-dark": {
+				"$value": "{color.tomato.600}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"glass": {
+				"$value": "{color.azure.300}"
+			},
+			"brick": {
+				"$value": "{color.clay.400}"
+			},
+			"grass": {
+				"$value": "{color.green.300}"
+			},
+			"stone": {
+				"$value": "{color.cream.300}"
+			},
+			"curtain": {
+				"$value": "{color.pink.300}"
+			},
+			"petal": {
+				"$value": "{color.pink.300}"
+			},
+			"petal-dark": {
+				"$value": "{color.pink.500}"
+			},
+			"pollen": {
+				"$value": "{color.lemon.500}"
+			},
+			"hull": {
+				"$value": "{color.tomato.500}"
+			},
+			"water": {
+				"$value": "{color.azure.300}"
+			},
+			"gold": {
+				"$value": "{color.sunflower.300}"
+			},
+			"gold-dark": {
+				"$value": "{color.amber.300}"
+			},
+			"lilac": {
+				"$value": "{color.lavender.300}"
+			},
+			"smoke": {
+				"$value": "{color.brown.100}"
+			},
+			"desk": {
+				"$value": "{color.cream.300}"
+			},
+			"desk-dark": {
+				"$value": "{color.brown.100}"
+			},
+			"tape": {
+				"$value": "{color.lagoon.300}"
+			},
+			"pencil-body": {
+				"$value": "{color.violet.400}"
+			},
+			"pencil-wood": {
+				"$value": "{color.orange.50}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"rubber": {
+				"$value": "{color.pink.300}"
 			}
 		},
 		"sky": {
@@ -528,6 +651,150 @@
 			},
 			"smoke": {
 				"$value": "{color.cream.200}"
+			},
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.navy.800}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"trim": {
+				"$value": "{color.tomato.500}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"glass": {
+				"$value": "{color.azure.300}"
+			},
+			"flame-edge": {
+				"$value": "{color.orange.500}"
+			},
+			"flame-core": {
+				"$value": "{color.cream.50}"
+			},
+			"nebula-a": {
+				"$value": "{color.plum.500}"
+			},
+			"nebula-b": {
+				"$value": "{color.azure.500}"
+			},
+			"spark-a": {
+				"$value": "{color.lemon.300}"
+			},
+			"spark-b": {
+				"$value": "{color.pink.300}"
+			},
+			"spark-c": {
+				"$value": "{color.lagoon.300}"
+			},
+			"spark-d": {
+				"$value": "{color.plum.300}"
+			},
+			"astre-a-band": {
+				"$value": "{color.lagoon.300}"
+			},
+			"astre-a-ring": {
+				"$value": "{color.lemon.300}"
+			},
+			"astre-b-crater": {
+				"$value": "{color.leather.400}"
+			},
+			"astre-b-lip": {
+				"$value": "{color.orange.300}"
+			},
+			"astre-c-band": {
+				"$value": "{color.orange.300}"
+			},
+			"astre-c-storm": {
+				"$value": "{color.tomato.300}"
+			},
+			"astre-d-patch": {
+				"$value": "{color.plum.300}"
+			},
+			"astre-d-cap": {
+				"$value": "{color.plum.50}"
+			},
+			"home-sea": {
+				"$value": "{color.azure.300}"
+			},
+			"home-land": {
+				"$value": "{color.jade.300}"
+			},
+			"home-cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"inhabitant-a-body": {
+				"$value": "{color.lemon.300}"
+			},
+			"inhabitant-a-belly": {
+				"$value": "{color.lemon.50}"
+			},
+			"inhabitant-a-accent": {
+				"$value": "{color.orange.500}"
+			},
+			"inhabitant-b-body": {
+				"$value": "{color.lagoon.300}"
+			},
+			"inhabitant-b-belly": {
+				"$value": "{color.lagoon.50}"
+			},
+			"inhabitant-b-accent": {
+				"$value": "{color.lagoon.500}"
+			},
+			"inhabitant-c-body": {
+				"$value": "{color.plum.300}"
+			},
+			"inhabitant-c-belly": {
+				"$value": "{color.plum.50}"
+			},
+			"inhabitant-c-accent": {
+				"$value": "{color.plum.500}"
+			},
+			"inhabitant-d-body": {
+				"$value": "{color.jade.300}"
+			},
+			"inhabitant-d-belly": {
+				"$value": "{color.green.100}"
+			},
+			"inhabitant-d-accent": {
+				"$value": "{color.teal.600}"
+			},
+			"inhabitant-cheek": {
+				"$value": "{color.pink.300}"
+			},
+			"cow-skin": {
+				"$value": "{color.cream.50}"
+			},
+			"cow-spot": {
+				"$value": "{color.brown.600}"
+			},
+			"cow-pink": {
+				"$value": "{color.pink.300}"
+			},
+			"cow-horn": {
+				"$value": "{color.cream.300}"
+			},
+			"comet-head": {
+				"$value": "{color.lemon.300}"
+			},
+			"comet-tail": {
+				"$value": "{color.azure.300}"
+			},
+			"comet-tail-light": {
+				"$value": "{color.ice.100}"
+			},
+			"gift-ribbon": {
+				"$value": "{color.lemon.300}"
+			},
+			"hoop": {
+				"$value": "{color.pink.500}"
+			},
+			"hoop-stripe": {
+				"$value": "{color.cream.50}"
 			}
 		},
 		"food": {
@@ -692,6 +959,119 @@
 				"$value": "{color.amber.700}"
 			}
 		},
+		"train": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"sky-high": {
+				"$value": "{color.azure.300}"
+			},
+			"sky-low": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.sunflower.300}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"hill-far": {
+				"$value": "{color.mint.200}"
+			},
+			"hill-near": {
+				"$value": "{color.green.300}"
+			},
+			"grass": {
+				"$value": "{color.jade.300}"
+			},
+			"tree": {
+				"$value": "{color.sage.400}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"stone": {
+				"$value": "{color.brown.100}"
+			},
+			"earth": {
+				"$value": "{color.brown.400}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"iron": {
+				"$value": "{color.charcoal.600}"
+			},
+			"steel": {
+				"$value": "{color.slate.300}"
+			},
+			"brass": {
+				"$value": "{color.sunflower.300}"
+			},
+			"paint": {
+				"$value": "{color.tomato.500}"
+			},
+			"glass": {
+				"$value": "{color.ice.100}"
+			},
+			"glow": {
+				"$value": "{color.amber.300}"
+			},
+			"flame": {
+				"$value": "{color.lemon.50}"
+			},
+			"mouth": {
+				"$value": "{color.charcoal.900}"
+			},
+			"wall": {
+				"$value": "{color.cream.200}"
+			},
+			"roof": {
+				"$value": "{color.tomato.600}"
+			},
+			"steam": {
+				"$value": "{color.cream.50}"
+			},
+			"empty": {
+				"$value": "{color.cream.100}"
+			},
+			"wagon-a": {
+				"$value": "{color.azure.500}"
+			},
+			"wagon-b": {
+				"$value": "{color.lemon.500}"
+			},
+			"wagon-c": {
+				"$value": "{color.jade.300}"
+			},
+			"wagon-d": {
+				"$value": "{color.violet.400}"
+			},
+			"wagon-e": {
+				"$value": "{color.orange.500}"
+			},
+			"wagon-f": {
+				"$value": "{color.lagoon.500}"
+			},
+			"cargo-a": {
+				"$value": "{color.tomato.500}"
+			},
+			"cargo-b": {
+				"$value": "{color.azure.500}"
+			},
+			"cargo-c": {
+				"$value": "{color.cream.50}"
+			},
+			"cargo-d": {
+				"$value": "{color.sunflower.300}"
+			}
+		},
 		"race": {
 			"ground": {
 				"$value": "{color.brown.400}"
@@ -740,6 +1120,265 @@
 			},
 			"mark": {
 				"$value": "{color.brown.900}"
+			}
+		},
+		"recipe": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"tile": {
+				"$value": "{color.cream.50}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.lemon.300}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"frame": {
+				"$value": "{color.cream.50}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"wood-light": {
+				"$value": "{color.amber.300}"
+			},
+			"wood-dark": {
+				"$value": "{color.amber.700}"
+			},
+			"pot": {
+				"$value": "{color.slate.600}"
+			},
+			"pot-light": {
+				"$value": "{color.slate.300}"
+			},
+			"pot-inside": {
+				"$value": "{color.navy.800}"
+			},
+			"soup": {
+				"$value": "{color.jade.300}"
+			},
+			"soup-dark": {
+				"$value": "{color.sage.400}"
+			},
+			"soup-light": {
+				"$value": "{color.mint.200}"
+			},
+			"steam": {
+				"$value": "{color.slate.300}"
+			},
+			"carrot": {
+				"$value": "{color.orange.300}"
+			},
+			"carrot-flesh": {
+				"$value": "{color.amber.300}"
+			},
+			"leaf": {
+				"$value": "{color.green.300}"
+			},
+			"tomato": {
+				"$value": "{color.tomato.500}"
+			},
+			"tomato-flesh": {
+				"$value": "{color.tomato.200}"
+			},
+			"cheese": {
+				"$value": "{color.lemon.300}"
+			},
+			"cheese-rind": {
+				"$value": "{color.lemon.500}"
+			},
+			"cheese-flesh": {
+				"$value": "{color.lemon.50}"
+			},
+			"cap": {
+				"$value": "{color.clay.400}"
+			},
+			"stem": {
+				"$value": "{color.cream.100}"
+			},
+			"gills": {
+				"$value": "{color.brown.100}"
+			},
+			"flesh": {
+				"$value": "{color.cream.50}"
+			},
+			"glass": {
+				"$value": "{color.ice.100}"
+			},
+			"liquid": {
+				"$value": "{color.ocean.400}"
+			},
+			"cloth": {
+				"$value": "{color.cream.50}"
+			},
+			"check": {
+				"$value": "{color.tomato.500}"
+			},
+			"balloon": {
+				"$value": "{color.azure.500}"
+			},
+			"rocket": {
+				"$value": "{color.cream.50}"
+			},
+			"rocket-trim": {
+				"$value": "{color.tomato.500}"
+			},
+			"rocket-glass": {
+				"$value": "{color.azure.300}"
+			},
+			"flame": {
+				"$value": "{color.amber.300}"
+			},
+			"flame-core": {
+				"$value": "{color.lemon.300}"
+			},
+			"giraffe": {
+				"$value": "{color.sunflower.300}"
+			},
+			"giraffe-spot": {
+				"$value": "{color.orange.500}"
+			},
+			"giraffe-mane": {
+				"$value": "{color.leather.400}"
+			},
+			"snout": {
+				"$value": "{color.lemon.50}"
+			},
+			"eye": {
+				"$value": "{color.cream.50}"
+			},
+			"iris": {
+				"$value": "{color.leather.400}"
+			},
+			"cheek": {
+				"$value": "{color.pink.300}"
+			},
+			"ear": {
+				"$value": "{color.pink.200}"
+			},
+			"stripe": {
+				"$value": "{color.azure.500}"
+			},
+			"plant-pot": {
+				"$value": "{color.clay.400}"
+			}
+		},
+		"tower": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"shadow": {
+				"$value": "{color.shadow.light}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.sunflower.300}"
+			},
+			"night-star": {
+				"$value": "{color.cream.50}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"hill-far": {
+				"$value": "{color.green.100}"
+			},
+			"hill-near": {
+				"$value": "{color.mint.200}"
+			},
+			"grass": {
+				"$value": "{color.green.300}"
+			},
+			"soil": {
+				"$value": "{color.leather.400}"
+			},
+			"pebble": {
+				"$value": "{color.brown.100}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"trunk": {
+				"$value": "{color.leather.400}"
+			},
+			"crane": {
+				"$value": "{color.lemon.300}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"concrete": {
+				"$value": "{color.brown.100}"
+			},
+			"glass": {
+				"$value": "{color.azure.300}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"mortar": {
+				"$value": "{color.cream.200}"
+			},
+			"block-a": {
+				"$value": "{color.orange.300}"
+			},
+			"block-b": {
+				"$value": "{color.tomato.300}"
+			},
+			"block-c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"block-d": {
+				"$value": "{color.jade.300}"
+			},
+			"block-e": {
+				"$value": "{color.ocean.400}"
+			},
+			"block-f": {
+				"$value": "{color.plum.300}"
+			},
+			"flag": {
+				"$value": "{color.tomato.500}"
+			},
+			"gold": {
+				"$value": "{color.sunflower.300}"
+			},
+			"dust": {
+				"$value": "{color.cream.50}"
+			},
+			"spark": {
+				"$value": "{color.amber.300}"
+			},
+			"magnet": {
+				"$value": "{color.tomato.500}"
+			},
+			"rocket": {
+				"$value": "{color.cream.50}"
+			},
+			"rocket-fin": {
+				"$value": "{color.tomato.300}"
+			},
+			"cone": {
+				"$value": "{color.orange.500}"
 			}
 		}
 	},
@@ -986,6 +1625,9 @@
 		"star-large": {
 			"$value": "5rem"
 		},
+		"train-loco-mini": {
+			"$value": "3.5rem"
+		},
 		"icon": {
 			"$value": "1.25rem"
 		},
@@ -1012,6 +1654,9 @@
 		},
 		"race-track-min": {
 			"$value": "16rem"
+		},
+		"drawing-step": {
+			"$value": "2.25rem"
 		}
 	},
 	"radius": {
@@ -1134,11 +1779,95 @@
 		"egg-water": {
 			"$value": 0.55
 		},
+		"train-shade": {
+			"$value": 0.2
+		},
+		"train-light": {
+			"$value": 0.55
+		},
+		"train-halo": {
+			"$value": 0.3
+		},
 		"race-ghost": {
 			"$value": 0.8
 		},
 		"race-ghost-hole": {
 			"$value": 0.5
+		},
+		"drawing-shade": {
+			"$value": 0.16
+		},
+		"drawing-light": {
+			"$value": 0.55
+		},
+		"drawing-ground": {
+			"$value": 0.12
+		},
+		"drawing-tape": {
+			"$value": 0.6
+		},
+		"recipe-shade": {
+			"$value": 0.2
+		},
+		"recipe-light": {
+			"$value": 0.55
+		},
+		"recipe-tile": {
+			"$value": 0.5
+		},
+		"recipe-glass": {
+			"$value": 0.55
+		},
+		"recipe-crease": {
+			"$value": 0.4
+		},
+		"recipe-shadow": {
+			"$value": 0.16
+		},
+		"recipe-steam": {
+			"$value": 0.8
+		},
+		"rocket-shade": {
+			"$value": 0.24
+		},
+		"rocket-light": {
+			"$value": 0.6
+		},
+		"rocket-nebula": {
+			"$value": 0.32
+		},
+		"rocket-glow": {
+			"$value": 0.55
+		},
+		"rocket-route": {
+			"$value": 0.4
+		},
+		"rocket-tail": {
+			"$value": 0.75
+		},
+		"rocket-ground": {
+			"$value": 0.28
+		},
+		"tower-shade": {
+			"$value": 0.18
+		},
+		"tower-side": {
+			"$value": 0.3
+		},
+		"tower-top": {
+			"$value": 0.42
+		},
+		"tower-light": {
+			"$value": 0.6
+		},
+		"tower-day": {
+			"$value": 1
+		},
+		"tower-night": {
+			"$value": 0
+		},
+		"tower-hole": {
+			"$value": 0.55
 		}
 	},
 	"duration": {

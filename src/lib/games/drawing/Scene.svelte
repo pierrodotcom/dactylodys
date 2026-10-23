@@ -4,32 +4,34 @@
 	import { stageFor } from '../shared/stage';
 	import { PROBE_STEPS, drawnShare, isColored } from './draw';
 	import DrawingArt from './DrawingArt.svelte';
+	import Figure from './Figure.svelte';
 	import {
 		BOX_CENTER,
+		CRUMBS,
+		DESK_GRAIN,
+		DESK_SEAMS,
 		DINO,
-		DINO_CHEEKS,
-		DINO_EYES,
-		DINO_MOUTH,
 		DINO_PLACE,
-		DINO_PUPILS,
 		DROP_PATH,
+		DROP_SHINE,
 		ERASER,
-		ERASER_EYES,
-		ERASER_MOUTH,
 		ERASER_PLACE,
-		ERASER_PUPILS,
 		LOOP_PATH,
+		LOOSE_PENCIL,
+		LOOSE_PENCIL_PLACE,
 		PAPER,
 		PENCIL,
 		PENCIL_PLACE,
+		PENCIL_POT,
 		PICTURE_PLACE,
 		ROCKET,
 		ROCKET_SCALE,
-		ROCKET_WINDOW,
 		SCENE,
 		SPARKS,
+		SPARK_HEART,
 		SPARK_PATH,
-		SPLASH_RADIUS
+		SPLASH,
+		TAPES
 	} from './scenery';
 	import type { DrawingPicture } from './shapes';
 
@@ -41,8 +43,10 @@
 	const SCENE_TOKEN = '--dd-duration-scene';
 	const DELAY_TOKEN = '--dd-duration-reward-delay';
 	const MS_PER_SECOND = 1000;
-	/** Colours of the drop, in turn. */
+	/** Colours of the drop and of the touch left by the entrances, in turn. */
 	const DROP_TONES = 6;
+	/** How far the shadow of the sheet falls, toward the bottom right. */
+	const SHADOW_OFFSET = 4;
 
 	let { view, picture }: Props = $props();
 
@@ -50,6 +54,7 @@
 
 	const celebrating = $derived(view.phase === 'celebrating');
 	const share = $derived(drawnShare(view));
+	const tone = $derived(view.groupIndex % DROP_TONES);
 	const sceneId = $derived(celebrating && view.scene.kind === 'scene' ? view.scene.id : undefined);
 	const entrance = $derived(
 		celebrating && view.scene.kind === 'variant' ? view.scene.index : undefined
@@ -80,50 +85,34 @@
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 >
+	<rect class="desk" x="0" y="0" width={SCENE.width} height={SCENE.height} />
+	<path class="seam" d={DESK_SEAMS} />
+	<path class="grain" d={DESK_GRAIN} />
+
+	<Figure figure={PENCIL_POT} />
+	<g transform={LOOSE_PENCIL_PLACE}><Figure figure={LOOSE_PENCIL} /></g>
+
 	{#if sceneId === 'dino-photobomb'}
 		<g transform={DINO_PLACE}>
-			<g class="stunt dino">
-				{#each DINO as piece (piece.d)}
-					<path class="piece" data-paint={piece.paint} d={piece.d} />
-				{/each}
-				{#each DINO_CHEEKS as cheek (cheek.x)}
-					<ellipse
-						class="piece"
-						data-paint="cheek"
-						cx={cheek.x}
-						cy={cheek.y}
-						rx={cheek.rx}
-						ry={cheek.ry}
-					/>
-				{/each}
-				{#each DINO_EYES as eye (eye.x)}
-					<circle class="piece" data-paint="white" cx={eye.x} cy={eye.y} r={eye.radius} />
-				{/each}
-				{#each DINO_PUPILS as pupil (pupil.x)}
-					<circle class="pupil" cx={pupil.x} cy={pupil.y} r={pupil.radius} />
-				{/each}
-				<path class="mouth" d={DINO_MOUTH} />
-			</g>
+			<g class="stunt dino"><Figure figure={DINO} /></g>
 		</g>
 	{/if}
 
 	{#if sceneId === 'eraser-peek'}
+		<path class="stunt crumbs" d={CRUMBS} />
 		<g transform={ERASER_PLACE}>
-			<g class="stunt eraser">
-				{#each ERASER as piece (piece.d)}
-					<path class="piece" data-paint={piece.paint} d={piece.d} />
-				{/each}
-				{#each ERASER_EYES as eye (eye.x)}
-					<circle class="piece" data-paint="white" cx={eye.x} cy={eye.y} r={eye.radius} />
-				{/each}
-				{#each ERASER_PUPILS as pupil (pupil.x)}
-					<circle class="pupil" cx={pupil.x} cy={pupil.y} r={pupil.radius} />
-				{/each}
-				<path class="mouth" d={ERASER_MOUTH} />
-			</g>
+			<g class="stunt eraser"><Figure figure={ERASER} /></g>
 		</g>
 	{/if}
 
+	<rect
+		class="sheet-shadow"
+		x={PAPER.x + SHADOW_OFFSET}
+		y={PAPER.y + SHADOW_OFFSET}
+		width={PAPER.width}
+		height={PAPER.height}
+		rx={PAPER.radius}
+	/>
 	<rect
 		class="paper"
 		x={PAPER.x}
@@ -132,13 +121,12 @@
 		height={PAPER.height}
 		rx={PAPER.radius}
 	/>
+	{#each TAPES as tape (tape.place)}
+		<path class="tape" d={tape.d} transform={tape.place} />
+	{/each}
 
 	<g transform={PENCIL_PLACE}>
-		<g class="stunt pencil">
-			{#each PENCIL as piece (piece.d)}
-				<path class="piece" data-paint={piece.paint} d={piece.d} />
-			{/each}
-		</g>
+		<g class="stunt pencil"><Figure figure={PENCIL} /></g>
 	</g>
 
 	<g transform={PICTURE_PLACE}>
@@ -153,13 +141,10 @@
 
 			{#if entrance !== undefined}
 				<g transform="translate({tip.x} {tip.y})">
-					<path
-						class="mark"
-						data-tone={view.groupIndex % DROP_TONES}
-						d={SPARK_PATH}
-						data-reward
-						data-reward-variant={entrance}
-					/>
+					<g class="mark" data-tone={tone} data-reward data-reward-variant={entrance}>
+						<path class="spark-body" d={SPARK_PATH} />
+						<path class="spark-heart" d={SPARK_HEART} />
+					</g>
 				</g>
 			{/if}
 
@@ -173,7 +158,10 @@
 				<g transform="translate({tip.x} {tip.y})">
 					{#each SPARKS as spark, slot (spark.x)}
 						<g transform="translate({spark.x} {spark.y})">
-							<path class="stunt spark" data-slot={slot} d={SPARK_PATH} />
+							<g class="stunt spark" data-slot={slot}>
+								<path class="spark-body" d={SPARK_PATH} />
+								<path class="spark-heart" d={SPARK_HEART} />
+							</g>
 						</g>
 					{/each}
 				</g>
@@ -181,26 +169,22 @@
 
 			{#if sceneId === 'color-drop'}
 				<g transform="translate({tip.x} {tip.y})">
-					<circle class="stunt splash" data-tone={view.groupIndex % DROP_TONES} r={SPLASH_RADIUS} />
-					<path class="stunt drop" data-tone={view.groupIndex % DROP_TONES} d={DROP_PATH} />
+					{#each SPLASH as droplet (droplet.x)}
+						<g transform="translate({droplet.x} {droplet.y})">
+							<circle class="stunt splash" data-tone={tone} r={droplet.r} />
+						</g>
+					{/each}
+					<g class="stunt drop">
+						<path class="drop-body" data-tone={tone} d={DROP_PATH} />
+						<path class="drop-shine" d={DROP_SHINE} />
+					</g>
 				</g>
 			{/if}
 
 			{#if sceneId === 'rocket-trace' && trace !== ''}
 				<path class="stunt trail" d={trace} pathLength="1" />
 				<g class="stunt flyer">
-					<g class="rocket" transform="scale({ROCKET_SCALE})">
-						{#each ROCKET as piece (piece.d)}
-							<path class="piece" data-paint={piece.paint} d={piece.d} />
-						{/each}
-						<circle
-							class="piece"
-							data-paint="window"
-							cx={ROCKET_WINDOW.x}
-							cy={ROCKET_WINDOW.y}
-							r={ROCKET_WINDOW.radius}
-						/>
-					</g>
+					<g transform="scale({ROCKET_SCALE})"><Figure figure={ROCKET} /></g>
 					<animateMotion
 						{@attach fly}
 						path={trace}
@@ -222,135 +206,105 @@
 		block-size: auto;
 		overflow: hidden;
 		border-radius: var(--dd-radius-lg);
-		background-color: var(--dd-color-surface-sunken);
+		background-color: var(--dd-color-drawing-desk);
 	}
 
-	.paper {
-		fill: var(--dd-color-surface-raised);
-		stroke: var(--dd-color-border-subtle);
-		stroke-width: var(--dd-border-width-thick);
+	.desk {
+		fill: var(--dd-color-drawing-desk);
 	}
 
-	.piece,
-	.pupil,
-	.mouth,
-	.mark,
-	.drop,
-	.splash,
-	.spark {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
-		stroke-linejoin: round;
+	.seam,
+	.grain {
+		fill: transparent;
+		stroke: var(--dd-color-drawing-desk-dark);
 		stroke-linecap: round;
 	}
 
-	.mouth,
+	.seam {
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.5);
+	}
+
+	.grain {
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.35);
+	}
+
+	.sheet-shadow {
+		fill: var(--dd-color-drawing-shade);
+		fill-opacity: var(--dd-opacity-drawing-shade);
+	}
+
+	.paper {
+		fill: var(--dd-color-drawing-paper);
+	}
+
+	.tape {
+		fill: var(--dd-color-drawing-tape);
+		fill-opacity: var(--dd-opacity-drawing-tape);
+	}
+
+	.crumbs {
+		fill: var(--dd-color-drawing-rubber);
+	}
+
+	.spark-body,
+	.drop-body,
+	.splash {
+		stroke: var(--dd-color-drawing-pencil);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.5);
+		stroke-linejoin: round;
+	}
+
+	.spark-heart,
+	.drop-shine {
+		fill: var(--dd-color-drawing-light);
+		fill-opacity: var(--dd-opacity-drawing-light);
+	}
+
+	.spark .spark-body {
+		fill: var(--dd-color-drawing-gold);
+	}
+
+	.mark[data-tone='0'] .spark-body,
+	.drop-body[data-tone='0'],
+	.splash[data-tone='0'] {
+		fill: var(--dd-color-drawing-fur);
+	}
+
+	.mark[data-tone='1'] .spark-body,
+	.drop-body[data-tone='1'],
+	.splash[data-tone='1'] {
+		fill: var(--dd-color-drawing-petal);
+	}
+
+	.mark[data-tone='2'] .spark-body,
+	.drop-body[data-tone='2'],
+	.splash[data-tone='2'] {
+		fill: var(--dd-color-drawing-gold);
+	}
+
+	.mark[data-tone='3'] .spark-body,
+	.drop-body[data-tone='3'],
+	.splash[data-tone='3'] {
+		fill: var(--dd-color-drawing-leaf);
+	}
+
+	.mark[data-tone='4'] .spark-body,
+	.drop-body[data-tone='4'],
+	.splash[data-tone='4'] {
+		fill: var(--dd-color-drawing-glass);
+	}
+
+	.mark[data-tone='5'] .spark-body,
+	.drop-body[data-tone='5'],
+	.splash[data-tone='5'] {
+		fill: var(--dd-color-drawing-lilac);
+	}
+
 	.loop,
 	.trail {
 		fill: transparent;
-	}
-
-	.pupil {
-		fill: var(--dd-color-drawing-ink);
-	}
-
-	.piece[data-paint='wood'] {
-		fill: var(--dd-color-food-a);
-	}
-
-	.piece[data-paint='lead'] {
-		fill: var(--dd-color-drawing-ink);
-	}
-
-	.piece[data-paint='body'],
-	.piece[data-paint='band'] {
-		fill: var(--dd-color-food-e);
-	}
-
-	.piece[data-paint='ferrule'] {
-		fill: var(--dd-color-pot-steam);
-	}
-
-	.piece[data-paint='rubber'] {
-		fill: var(--dd-color-food-b);
-	}
-
-	.piece[data-paint='green'] {
-		fill: var(--dd-color-companion-green-body);
-	}
-
-	.piece[data-paint='plate'] {
-		fill: var(--dd-color-companion-green-plate);
-	}
-
-	.piece[data-paint='cheek'] {
-		fill: var(--dd-color-companion-green-cheek);
-	}
-
-	.piece[data-paint='white'] {
-		fill: var(--dd-color-companion-eye);
-	}
-
-	.piece[data-paint='cream'] {
-		fill: var(--dd-color-rocket-body);
-	}
-
-	.piece[data-paint='fin'] {
-		fill: var(--dd-color-rocket-fin);
-	}
-
-	.piece[data-paint='window'] {
-		fill: var(--dd-color-rocket-window);
-	}
-
-	.piece[data-paint='flame'] {
-		fill: var(--dd-color-rocket-flame-outer);
-	}
-
-	.mark[data-tone='0'],
-	.drop[data-tone='0'],
-	.splash[data-tone='0'] {
-		fill: var(--dd-color-food-a);
-	}
-
-	.mark[data-tone='1'],
-	.drop[data-tone='1'],
-	.splash[data-tone='1'] {
-		fill: var(--dd-color-food-b);
-	}
-
-	.mark[data-tone='2'],
-	.drop[data-tone='2'],
-	.splash[data-tone='2'] {
-		fill: var(--dd-color-food-c);
-	}
-
-	.mark[data-tone='3'],
-	.drop[data-tone='3'],
-	.splash[data-tone='3'] {
-		fill: var(--dd-color-food-d);
-	}
-
-	.mark[data-tone='4'],
-	.drop[data-tone='4'],
-	.splash[data-tone='4'] {
-		fill: var(--dd-color-food-e);
-	}
-
-	.mark[data-tone='5'],
-	.drop[data-tone='5'],
-	.splash[data-tone='5'] {
-		fill: var(--dd-color-food-f);
-	}
-
-	.spark {
-		fill: var(--dd-color-star-fill);
-	}
-
-	.loop,
-	.trail {
 		stroke: var(--dd-color-accent-base);
-		stroke-width: calc(var(--dd-border-width-drawing-bold) * 1.25);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.85);
 		stroke-linecap: round;
 		stroke-linejoin: round;
 		/* pathLength="1": the dash covers the whole line, so its offset draws it bit by bit. */
@@ -419,6 +373,10 @@
 
 	[data-scene='eraser-peek'] .eraser {
 		animation-name: eraser-peeks;
+	}
+
+	[data-scene='eraser-peek'] .crumbs {
+		animation-name: crumbs-show;
 	}
 
 	[data-scene='color-drop'] .drop {
@@ -633,6 +591,22 @@
 		}
 	}
 
+	@keyframes crumbs-show {
+		0%,
+		30% {
+			opacity: 0;
+		}
+
+		45%,
+		85% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+		}
+	}
+
 	@keyframes drop-falls {
 		0% {
 			opacity: 0;
@@ -665,14 +639,19 @@
 			scale: 0.2;
 		}
 
-		52% {
+		55% {
 			opacity: 100%;
-			scale: 0.6;
+			scale: 1.2;
+		}
+
+		80% {
+			opacity: 100%;
+			scale: 1;
 		}
 
 		100% {
 			opacity: 0;
-			scale: 1.8;
+			scale: 0.6;
 		}
 	}
 </style>

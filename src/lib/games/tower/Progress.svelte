@@ -12,7 +12,7 @@
 	}
 
 	/** Size of the mini blocks, in the units of their drawing. */
-	const TILE = { width: 60, height: 20 } as const;
+	const TILE = { width: 52, height: 15 } as const;
 
 	let { total, done, current }: Props = $props();
 
@@ -27,7 +27,7 @@
 <div class="row" role="img" aria-label={label}>
 	{#each items as index (index)}
 		<span class="item" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}>
-			<svg class="tile" viewBox="-34 -24 68 28" focusable="false" aria-hidden="true">
+			<svg class="tile" viewBox="-30 -25 68 28" focusable="false" aria-hidden="true">
 				<BlockShape size={TILE} look={blockLook(index)} />
 			</svg>
 		</span>

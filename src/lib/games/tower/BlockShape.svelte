@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { MATERIAL_OF_MARK, blockArt } from './block-art';
 	import type { BlockLook, BlockSize } from './blocks';
 
 	interface Props {
@@ -8,112 +9,148 @@
 
 	let { size, look }: Props = $props();
 
-	const left = $derived(-size.width / 2);
-	const radius = $derived(Math.min(4, size.height / 4));
-	const middle = $derived(-size.height / 2);
-	const dot = $derived(size.height * 0.16);
-	const windowRadius = $derived(size.height * 0.24);
-	const zigzag = $derived(
-		Array.from({ length: 9 }, (_, index) => {
-			const x = left + size.width * 0.12 + (size.width * 0.76 * index) / 8;
-			const y = index % 2 === 0 ? middle - size.height * 0.2 : middle + size.height * 0.2;
-			return `${x.toFixed(1)},${y.toFixed(1)}`;
-		}).join(' ')
-	);
+	const material = $derived(MATERIAL_OF_MARK[look.mark]);
+	const art = $derived(blockArt(size, material));
+	const under = $derived(art.parts.filter((part) => !part.over));
+	const over = $derived(art.parts.filter((part) => part.over));
 </script>
 
-<!-- A block with its bottom centre on the origin. -->
-<g class="block" data-colour={look.colour}>
-	<rect
-		class="body"
-		x={left}
-		y={-size.height}
-		width={size.width}
-		height={size.height}
-		rx={radius}
-	/>
-	{#if look.mark === 'bar'}
-		<line
-			class="line"
-			x1={left + size.width * 0.14}
-			x2={-left - size.width * 0.14}
-			y1={-size.height * 0.7}
-			y2={-size.height * 0.7}
-		/>
-	{:else if look.mark === 'windows'}
-		<circle class="dot" cx={-size.width * 0.22} cy={middle} r={windowRadius} />
-		<circle class="dot" cx={size.width * 0.22} cy={middle} r={windowRadius} />
-	{:else if look.mark === 'stripes'}
-		{#each [-0.25, 0, 0.25] as share (share)}
-			<line
-				class="line"
-				x1={size.width * share}
-				x2={size.width * share}
-				y1={-size.height * 0.8}
-				y2={-size.height * 0.2}
-			/>
-		{/each}
-	{:else if look.mark === 'studs'}
-		{#each [-0.3, -0.1, 0.1, 0.3] as share (share)}
-			<circle class="dot" cx={size.width * share} cy={middle} r={dot} />
-		{/each}
-	{:else if look.mark === 'zigzag'}
-		<polyline class="line" points={zigzag} />
-	{:else}
-		<rect
-			class="dot"
-			x={-size.height * 0.2}
-			y={middle - size.height * 0.2}
-			width={size.height * 0.4}
-			height={size.height * 0.4}
-			transform="rotate(45 0 {middle})"
-		/>
-	{/if}
+<!-- A block with its bottom front centre on the origin: front, top and right side, lit from the top left. -->
+<g class="block" data-colour={look.colour} data-material={material}>
+	<path class="paint" d={art.outline} />
+	<path class="top" d={art.top} />
+	<path class="side" d={art.side} />
+	<path class="low" d={art.low} />
+	{#each under as part, index (index)}
+		<path class={part.role} d={part.d} />
+	{/each}
+	<path class="rim" d={art.rim} />
+	<path class="edge" d={art.edges} />
+	<path class="outline" d={art.outline} />
+	{#each over as part, index (index)}
+		<path class={part.role} d={part.d} />
+	{/each}
 </g>
 
 <style>
-	.body,
-	.line,
-	.dot {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
+	path {
 		stroke-linejoin: round;
 		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 
-	.line {
-		fill: transparent;
-		stroke: var(--dd-color-pot-bubble);
+	.paint {
+		fill: var(--dd-tower-paint);
 	}
 
-	.dot {
-		fill: var(--dd-color-pot-bubble);
-		stroke: var(--dd-color-drawing-line);
+	.block {
+		--dd-tower-paint: var(--dd-color-tower-block-a);
+	}
+
+	[data-colour='b'] {
+		--dd-tower-paint: var(--dd-color-tower-block-b);
+	}
+
+	[data-colour='c'] {
+		--dd-tower-paint: var(--dd-color-tower-block-c);
+	}
+
+	[data-colour='d'] {
+		--dd-tower-paint: var(--dd-color-tower-block-d);
+	}
+
+	[data-colour='e'] {
+		--dd-tower-paint: var(--dd-color-tower-block-e);
+	}
+
+	[data-colour='f'] {
+		--dd-tower-paint: var(--dd-color-tower-block-f);
+	}
+
+	/* Wood keeps its own colour, whatever the colour of its group. */
+	[data-material='wood'] {
+		--dd-tower-paint: var(--dd-color-tower-wood);
+	}
+
+	.top,
+	.light {
+		fill: var(--dd-color-tower-light);
+		fill-opacity: var(--dd-opacity-tower-top);
+	}
+
+	.side,
+	.shade {
+		fill: var(--dd-color-tower-shade);
+		fill-opacity: var(--dd-opacity-tower-side);
+	}
+
+	.low {
+		fill: var(--dd-color-tower-shade);
+		fill-opacity: var(--dd-opacity-tower-shade);
+	}
+
+	.shine {
+		fill: var(--dd-color-tower-light);
+		fill-opacity: var(--dd-opacity-tower-light);
+	}
+
+	.rim {
+		fill: transparent;
+		stroke: var(--dd-color-tower-light);
+		stroke-opacity: var(--dd-opacity-tower-light);
 		stroke-width: var(--dd-border-width-thin);
 	}
 
-	[data-colour='a'] .body {
-		fill: var(--dd-color-food-a);
+	.edge,
+	.fine {
+		fill: transparent;
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thin);
 	}
 
-	[data-colour='b'] .body {
-		fill: var(--dd-color-food-b);
+	.outline,
+	.line {
+		fill: transparent;
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thick);
 	}
 
-	[data-colour='c'] .body {
-		fill: var(--dd-color-food-c);
+	.metal {
+		fill: var(--dd-color-tower-metal);
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thin);
 	}
 
-	[data-colour='d'] .body {
-		fill: var(--dd-color-food-d);
+	.frame {
+		fill: var(--dd-color-tower-mortar);
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thin);
 	}
 
-	[data-colour='e'] .body {
-		fill: var(--dd-color-food-e);
+	.sill {
+		fill: var(--dd-color-tower-mortar);
 	}
 
-	[data-colour='f'] .body {
-		fill: var(--dd-color-food-f);
+	.glass {
+		fill: var(--dd-color-tower-glass);
+	}
+
+	.joint {
+		fill: transparent;
+		stroke: var(--dd-color-tower-mortar);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.hole {
+		fill: var(--dd-color-tower-shade);
+		fill-opacity: var(--dd-opacity-tower-hole);
+	}
+
+	.ink {
+		fill: var(--dd-color-tower-line);
+	}
+
+	.gem {
+		fill: var(--dd-color-tower-light);
 	}
 </style>
