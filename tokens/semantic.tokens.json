@@ -402,6 +402,113 @@
 				"$value": "{color.azure.300}"
 			}
 		},
+		"tower": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"shadow": {
+				"$value": "{color.shadow.light}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.sunflower.300}"
+			},
+			"night-star": {
+				"$value": "{color.cream.50}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"hill-far": {
+				"$value": "{color.green.100}"
+			},
+			"hill-near": {
+				"$value": "{color.mint.200}"
+			},
+			"grass": {
+				"$value": "{color.green.300}"
+			},
+			"soil": {
+				"$value": "{color.leather.400}"
+			},
+			"pebble": {
+				"$value": "{color.brown.100}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"trunk": {
+				"$value": "{color.leather.400}"
+			},
+			"crane": {
+				"$value": "{color.lemon.300}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"concrete": {
+				"$value": "{color.brown.100}"
+			},
+			"glass": {
+				"$value": "{color.azure.300}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"mortar": {
+				"$value": "{color.cream.200}"
+			},
+			"block-a": {
+				"$value": "{color.orange.300}"
+			},
+			"block-b": {
+				"$value": "{color.tomato.300}"
+			},
+			"block-c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"block-d": {
+				"$value": "{color.jade.300}"
+			},
+			"block-e": {
+				"$value": "{color.ocean.400}"
+			},
+			"block-f": {
+				"$value": "{color.plum.300}"
+			},
+			"flag": {
+				"$value": "{color.tomato.500}"
+			},
+			"gold": {
+				"$value": "{color.sunflower.300}"
+			},
+			"dust": {
+				"$value": "{color.cream.50}"
+			},
+			"spark": {
+				"$value": "{color.amber.300}"
+			},
+			"magnet": {
+				"$value": "{color.tomato.500}"
+			},
+			"rocket": {
+				"$value": "{color.cream.50}"
+			},
+			"rocket-fin": {
+				"$value": "{color.tomato.300}"
+			},
+			"cone": {
+				"$value": "{color.orange.500}"
+			}
+		},
 		"baby": {
 			"a": {
 				"$value": "{color.ocean.400}"
@@ -1139,6 +1246,27 @@
 		},
 		"race-ghost-hole": {
 			"$value": 0.5
+		},
+		"tower-shade": {
+			"$value": 0.18
+		},
+		"tower-side": {
+			"$value": 0.3
+		},
+		"tower-top": {
+			"$value": 0.42
+		},
+		"tower-light": {
+			"$value": 0.6
+		},
+		"tower-day": {
+			"$value": 1
+		},
+		"tower-night": {
+			"$value": 0
+		},
+		"tower-hole": {
+			"$value": 0.55
 		}
 	},
 	"duration": {

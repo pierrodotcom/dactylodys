@@ -1,20 +1,89 @@
 <script lang="ts">
+	import StoryDino from '$lib/ui/story/StoryDino.svelte';
 	import { isRewarded, type GameView } from '../shared/game-view';
 	import { stageFor } from '../shared/stage';
 	import BlockShape from './BlockShape.svelte';
+	import { blockDepth } from './block-art';
 	import {
 		DROP_STAGES,
-		FLAG_HEIGHT,
 		GROUND_Y,
 		SCENE,
+		TOWER_X,
 		blockLook,
 		blockSize,
 		blockSpot,
 		flagSpot,
-		hoverOffset,
-		starPoints
+		hoverOffset
 	} from './blocks';
-	import { CLOUD, DINO, ROCKET, SPARKS, SPEED_LINES, TUFTS } from './shapes';
+	import {
+		APEX,
+		APEX_ALL_HOLES,
+		APEX_OUTLINE,
+		BUSHES,
+		CAB,
+		CAB_GLINT,
+		CAB_SHADE,
+		CAB_WINDOW,
+		CLOUD,
+		CLOUDS,
+		CLOUD_LIGHT,
+		CLOUD_SHADE,
+		CONE,
+		COUNTERWEIGHT,
+		COUNTERWEIGHT_SEAMS,
+		COUNTERWEIGHT_SHADE,
+		CRANE,
+		CROWN,
+		CROWN_LIGHT,
+		CROWN_SHADE,
+		FLAG,
+		FOOTING,
+		FOOTING_SHADE,
+		FOOTING_TOP,
+		GRASS,
+		HILL_FAR,
+		HILL_NEAR,
+		HILL_RIMS,
+		HOOK_REACH,
+		JIB,
+		JIB_ALL_HOLES,
+		JIB_OUTLINE,
+		JIB_SHADE,
+		MAGNET,
+		MAST,
+		MAST_HOLES,
+		MAST_LIGHT,
+		MAST_OUTLINE,
+		MAST_SHADE,
+		NIGHT_STARS,
+		PEBBLES,
+		PENDANTS,
+		PUFF,
+		ROCKET,
+		SLING,
+		SOIL,
+		SPARKS,
+		SPEED_LINES,
+		STOMPER,
+		STRATA,
+		SUN_DISC,
+		SUN_LIGHT,
+		SUN_RAYS,
+		SUN_SHADE,
+		TAIL,
+		TAIL_ALL_HOLES,
+		TAIL_OUTLINE,
+		TREES,
+		TRUNK,
+		TRUNK_SHADE,
+		TUFTS,
+		cablePath,
+		hookBlockPath,
+		hookPath,
+		trolleyPath,
+		tuftPath,
+		twinkle
+	} from './shapes';
 
 	interface Props {
 		view: GameView;
@@ -22,11 +91,8 @@
 
 	let { view }: Props = $props();
 
-	const POLE_HEIGHT = 30;
-	const PENNANT_DEPTH = 14;
-	const STAR_RADIUS = 7;
-
 	const size = $derived(blockSize(view.total));
+	const depth = $derived(blockDepth(size));
 	const rewarded = $derived(isRewarded(view));
 	const stage = $derived(
 		view.phase === 'typing' ? stageFor(view.position, view.group.length, DROP_STAGES) : DROP_STAGES
@@ -35,14 +101,28 @@
 	const entrance = $derived(rewarded && view.scene.kind === 'variant' ? view.scene.index : null);
 	const below = $derived(Array.from({ length: view.groupIndex }, (_, index) => index));
 	const spot = $derived(blockSpot(view.groupIndex, size));
-	const place = $derived(`translate(${spot.x} ${spot.y + (rewarded ? 0 : hoverOffset(stage))})`);
+	const lift = $derived(rewarded ? 0 : hoverOffset(stage));
+	const place = $derived(`translate(${spot.x} ${spot.y + lift})`);
 	const planted = $derived(rewarded && view.groupIndex === view.total - 1);
 	const flag = $derived(flagSpot(view.total));
-	const belly = ROCKET.belly * ROCKET.scale;
-	const ropeDrop = belly + ROCKET.ropeLength;
 
-	function tuft(x: number): string {
-		return `M ${x - 6} ${GROUND_Y} Q ${x - 5} ${GROUND_Y - 8} ${x - 9} ${GROUND_Y - 11} M ${x} ${GROUND_Y} Q ${x} ${GROUND_Y - 9} ${x} ${GROUND_Y - 13} M ${x + 6} ${GROUND_Y} Q ${x + 5} ${GROUND_Y - 8} ${x + 9} ${GROUND_Y - 11}`;
+	/** The top of the block, halfway back: where the slings, the dino and the flag meet it. */
+	const topMiddle = $derived(spot.y + lift - size.height - depth.y / 2);
+	const hookX = $derived(spot.x + depth.x / 2);
+	const magnetOn = $derived(sceneId === 'magnet-snap');
+	const hookY = $derived(
+		!rewarded
+			? topMiddle - SLING - HOOK_REACH
+			: magnetOn
+				? topMiddle - 1 - MAGNET.height - HOOK_REACH + 1
+				: CRANE.rest
+	);
+	const slingSpread = $derived(size.width * 0.3);
+	const ropeTop = ROCKET.belly * ROCKET.scale;
+	const ropeDrop = ropeTop + 8;
+
+	function placed(x: number, y: number, scale = 1): string {
+		return scale === 1 ? `translate(${x} ${y})` : `translate(${x} ${y}) scale(${scale})`;
 	}
 </script>
 
@@ -55,11 +135,102 @@
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 >
-	<path class="cloud" d={CLOUD.path} />
-	<rect class="floor" x="0" y={GROUND_Y} width={SCENE.width} height={SCENE.height - GROUND_Y} />
-	{#each TUFTS as x (x)}
-		<path class="tuft" d={tuft(x)} />
+	<!-- Sky: the sun by day, the moon and stars in the dark theme. -->
+	<rect class="sky" x="0" y="0" width={SCENE.width} height={SCENE.height} />
+	<path class="night-star" d={NIGHT_STARS} />
+	<path class="ray" d={SUN_RAYS} />
+	<path class="sun" d={SUN_DISC} />
+	<path class="shade" d={SUN_SHADE} />
+	<path class="shine" d={SUN_LIGHT} />
+	<path class="line" d={SUN_DISC} />
+	{#each CLOUDS as cloud (cloud.x)}
+		<g transform={placed(cloud.x, cloud.y, cloud.scale)}>
+			<path class="cloud" d={CLOUD} />
+			<path class="soft-shade" d={CLOUD_SHADE} />
+			<path class="shine" d={CLOUD_LIGHT} />
+			<path class="line" d={CLOUD} />
+		</g>
 	{/each}
+
+	<!-- Hills, trees and the ground the tower stands on. -->
+	<path class="hill-far" d={HILL_FAR} />
+	<path class="hill-near" d={HILL_NEAR} />
+	<path class="rim" d={HILL_RIMS} />
+	{#each TREES as tree (tree.x)}
+		<g transform={placed(tree.x, tree.y, tree.scale)}>
+			<path class="trunk" d={TRUNK} />
+			<path class="shade" d={TRUNK_SHADE} />
+			<path class="line" d={TRUNK} />
+			<path class="leaf" d={CROWN} />
+			<path class="shade" d={CROWN_SHADE} />
+			<path class="shine" d={CROWN_LIGHT} />
+			<path class="line" d={CROWN} />
+		</g>
+	{/each}
+	<path class="soil" d={SOIL} />
+	<path class="fine" d={STRATA} />
+	<path class="pebble" d={PEBBLES} />
+	<path class="grass" d={GRASS} />
+	<path class="line" d={GRASS} />
+	{#each BUSHES as bush (bush.x)}
+		<g transform={placed(bush.x, bush.y, bush.scale)}>
+			<path class="leaf" d={CROWN} />
+			<path class="shade" d={CROWN_SHADE} />
+			<path class="line" d={CROWN} />
+		</g>
+	{/each}
+	{#each TUFTS as x (x)}
+		<path class="tuft" d={tuftPath(x)} />
+	{/each}
+	<g transform={placed(CONE.x, CONE.y)}>
+		<path class="cone" d={CONE.body} />
+		<path class="band" d={CONE.band} />
+		<path class="shade" d={CONE.shade} />
+		<path class="shine" d={CONE.light} />
+		<path class="line" d={CONE.body} />
+		<path class="cone" d={CONE.base} />
+		<path class="line" d={CONE.base} />
+	</g>
+
+	<!-- The crane, right of the speech bubble: its arm runs above the tower. -->
+	<path class="fine" d={PENDANTS} />
+	<path class="crane" fill-rule="evenodd" d={TAIL} />
+	<path class="fine" d={TAIL_ALL_HOLES} />
+	<path class="line" d={TAIL_OUTLINE} />
+	<path class="concrete" d={COUNTERWEIGHT} />
+	<path class="shade" d={COUNTERWEIGHT_SHADE} />
+	<path class="fine" d={COUNTERWEIGHT_SEAMS} />
+	<path class="line" d={COUNTERWEIGHT} />
+	<path class="crane" fill-rule="evenodd" d={JIB} />
+	<path class="shade" d={JIB_SHADE} />
+	<path class="fine" d={JIB_ALL_HOLES} />
+	<path class="line" d={JIB_OUTLINE} />
+	<path class="crane" fill-rule="evenodd" d={APEX} />
+	<path class="fine" d={APEX_ALL_HOLES} />
+	<path class="line" d={APEX_OUTLINE} />
+	<path class="crane" fill-rule="evenodd" d={MAST} />
+	<path class="shade" d={MAST_SHADE} />
+	<path class="shine" d={MAST_LIGHT} />
+	<path class="fine" d={MAST_HOLES} />
+	<path class="line" d={MAST_OUTLINE} />
+	<path class="crane" d={CAB} />
+	<path class="shade" d={CAB_SHADE} />
+	<path class="glass" d={CAB_WINDOW} />
+	<path class="shine" d={CAB_GLINT} />
+	<path class="fine" d={CAB_WINDOW} />
+	<path class="line" d={CAB} />
+	<path class="concrete" d={FOOTING} />
+	<path class="soft-shine" d={FOOTING_TOP} />
+	<path class="shade" d={FOOTING_SHADE} />
+	<path class="line" d={FOOTING} />
+
+	<ellipse
+		class="ground-shadow"
+		cx={TOWER_X + depth.x}
+		cy={GROUND_Y - 1}
+		rx={size.width / 2 + 10}
+		ry="3.6"
+	/>
 
 	<g class="stack">
 		{#each below as index (index)}
@@ -69,42 +240,38 @@
 			</g>
 		{/each}
 
+		{#if !rewarded}
+			<!-- Where the block will land: its shadow grows as it comes down. -->
+			<ellipse
+				class="drop-shadow"
+				cx={spot.x + depth.x / 2}
+				cy={spot.y - depth.y / 2}
+				rx={size.width * (0.28 + 0.04 * stage)}
+				ry={depth.y * 0.45}
+			/>
+		{/if}
+
 		<g transform={place}>
 			{#if sceneId === 'drop-land'}
 				{#each [-1, 1] as side (side)}
-					<circle class="dust" data-side={side} cx={side * (size.width / 2 + 3)} cy={-5} r="6" />
-				{/each}
-			{/if}
-
-			{#if sceneId === 'dino-stomp'}
-				<g transform="translate(0 {-size.height})">
-					<g class="dino">
-						<g transform="scale({DINO.scale})">
-							{#each DINO.plates as plate (plate)}
-								<path class="plate" d={plate} />
-							{/each}
-							<path class="dino-body" d={DINO.tailPath} />
-							{#each DINO.legs as leg (leg.x)}
-								<rect class="dino-body" {...leg} />
-							{/each}
-							<ellipse class="dino-body" {...DINO.body} />
-							<ellipse class="belly" {...DINO.belly} />
-							<circle class="dino-body" {...DINO.head} />
-							<circle class="cheek" {...DINO.cheek} />
-							<circle class="eye" {...DINO.eye} />
-							<path class="smile" d={DINO.smilePath} />
+					<g class="dust" data-side={side}>
+						<g transform={placed(side * (size.width / 2 + 4) + (side > 0 ? depth.x : 0), 0)}>
+							<path class="dust-fill" d={PUFF.body} />
+							<path class="soft-shade" d={PUFF.shade} />
+							<path class="thin-line" d={PUFF.body} />
 						</g>
 					</g>
-				</g>
+				{/each}
 			{/if}
 
 			{#if sceneId === 'magnet-snap'}
 				{#each SPARKS as spark (`${spark.side}${spark.rise}`)}
-					<path
-						class="spark"
-						d="M {spark.side * (size.width / 2 + 4)} {-size.height *
-							spark.rise} l {spark.dx} {spark.dy}"
-					/>
+					{@const x = spark.side * (size.width / 2 + 4) + (spark.side > 0 ? depth.x : 0)}
+					{@const y = -size.height * spark.rise}
+					<g class="spark">
+						<path class="spark-line" d="M {x} {y} l {spark.dx} {spark.dy}" />
+						<path class="spark-star" d={twinkle(x + spark.dx * 1.35, y + spark.dy * 1.35, 2.6)} />
+					</g>
 				{/each}
 			{/if}
 
@@ -117,61 +284,112 @@
 
 				{#if sceneId === 'slide-in'}
 					<g class="speed">
-						{#each SPEED_LINES as rise (rise)}
-							<line
-								class="line"
-								x1={size.width / 2 + 6}
-								x2={size.width / 2 + 24}
-								y1={-size.height * rise}
-								y2={-size.height * rise}
-							/>
+						{#each SPEED_LINES as speed (speed.rise)}
+							{@const x = size.width / 2 + depth.x + 5}
+							<path class="speed-line" d="M {x} {-size.height * speed.rise} l {speed.length} 0" />
 						{/each}
 					</g>
 				{/if}
 
 				{#if sceneId === 'rocket-crane'}
-					<g class="rocket" transform="translate(0 {-size.height - ropeDrop})">
-						<path
-							class="line"
-							d="M {-ROCKET.ropeSpread} {belly} L {-size.width * 0.22} {ropeDrop}"
-						/>
-						<path class="line" d="M {ROCKET.ropeSpread} {belly} L {size.width * 0.22} {ropeDrop}" />
+					<g
+						class="rocket"
+						transform="translate({depth.x / 2} {-size.height - depth.y / 2 - ropeDrop})"
+					>
+						{#each [-1, 1] as side (side)}
+							<path
+								class="rope"
+								d="M {side * ROCKET.ropeSpread * ROCKET.scale} {ropeTop} L {side *
+									size.width *
+									0.3} {ropeDrop}"
+							/>
+						{/each}
 						<g transform="scale({ROCKET.scale})">
-							<path class="flame-outer" d={ROCKET.flameOuterPath} />
-							<path class="flame-inner" d={ROCKET.flameInnerPath} />
-							{#each ROCKET.finPaths as fin (fin)}
+							<path class="flame-outer" d={ROCKET.flameOuter} />
+							<path class="flame-inner" d={ROCKET.flameInner} />
+							{#each ROCKET.fins as fin (fin)}
 								<path class="fin" d={fin} />
+								<path class="line" d={fin} />
 							{/each}
-							<path class="hull" d={ROCKET.bodyPath} />
-							<circle class="window" {...ROCKET.window} />
+							<path class="rocket-body" d={ROCKET.body} />
+							<path class="fin" d={ROCKET.nose} />
+							<path class="shade" d={ROCKET.shade} />
+							<path class="shine" d={ROCKET.light} />
+							<path class="fine" d={ROCKET.band} />
+							<path class="fine" d={ROCKET.nose} />
+							<path class="metal" d={ROCKET.ring} />
+							<path class="glass" d={ROCKET.window} />
+							<path class="shine" d={ROCKET.glint} />
+							<path class="fine" d={ROCKET.window} />
+							<path class="line" d={ROCKET.body} />
 						</g>
 					</g>
 				{/if}
 			</g>
+
+			{#if sceneId === 'dino-stomp'}
+				<g transform="translate({depth.x / 2} {-size.height - depth.y / 2})">
+					<g class="dino">
+						<StoryDino
+							x={-STOMPER.size / 2}
+							y={-STOMPER.size * STOMPER.feet}
+							size={STOMPER.size}
+							mood="happy"
+						/>
+					</g>
+				</g>
+			{/if}
 		</g>
 
 		{#if planted}
-			<g transform="translate({flag.x} {flag.y})">
+			<g transform="translate({flag.x + depth.x / 2} {flag.y - depth.y / 2})">
 				<g
 					class="flag"
 					data-reward={sceneId === undefined ? true : undefined}
 					data-reward-variant={sceneId === undefined ? 0 : undefined}
 				>
-					<line class="pole" x1="0" x2="0" y1="0" y2={-POLE_HEIGHT} />
-					<path
-						class="pennant"
-						d="M 0 {-POLE_HEIGHT} L {FLAG_HEIGHT / 2} {-POLE_HEIGHT +
-							PENNANT_DEPTH / 2} L 0 {-POLE_HEIGHT + PENNANT_DEPTH} Z"
-					/>
-					<polygon
-						class="star"
-						points={starPoints(STAR_RADIUS)}
-						transform="translate(0 {-POLE_HEIGHT - STAR_RADIUS + 1})"
-					/>
+					<path class="metal" d={FLAG.pole} />
+					<path class="shade" d={FLAG.poleShade} />
+					<path class="cloth" d={FLAG.cloth} />
+					<path class="shade" d={FLAG.fold} />
+					<path class="shine" d={FLAG.light} />
+					<path class="gold" d={FLAG.star} />
+					<path class="fine" d={FLAG.star} />
+					<path class="line" d={FLAG.cloth} />
+					<path class="fine" d={FLAG.pole} />
+					<path class="gold" d={FLAG.knob} />
+					<path class="shine" d={FLAG.knobLight} />
+					<path class="line" d={FLAG.knob} />
 				</g>
 			</g>
 		{/if}
 	</g>
+
+	<!-- The trolley, its cable and its hook: they hold the block until the group is typed. -->
+	<path class="cable" d={cablePath(hookX, CRANE.trolley + 3, hookY + 0.5)} />
+	<path class="metal" d={trolleyPath(hookX)} />
+	<path class="line" d={trolleyPath(hookX)} />
+	<path class="crane" d={hookBlockPath(hookX, hookY)} />
+	<path class="shade" d={`M ${hookX + 1} ${hookY + 0.6} h 3 v 4.8 h -3 z`} />
+	<path class="line" d={hookBlockPath(hookX, hookY)} />
+	<path class="hook-under" d={hookPath(hookX, hookY)} />
+	<path class="hook" d={hookPath(hookX, hookY)} />
+	{#if !rewarded}
+		<path
+			class="sling"
+			d="M {hookX - slingSpread} {topMiddle} L {hookX} {hookY + HOOK_REACH - 1} L {hookX +
+				slingSpread} {topMiddle}"
+		/>
+	{:else if magnetOn}
+		<g transform={placed(hookX, topMiddle - 1)}>
+			<path class="magnet" d={MAGNET.body} />
+			<path class="shade" d={MAGNET.shade} />
+			<path class="shine" d={MAGNET.light} />
+			<path class="metal" d={MAGNET.poles} />
+			<path class="line" d={MAGNET.body} />
+			<path class="thin-line" d={MAGNET.shackle} />
+		</g>
+	{/if}
 </svg>
 
 <style>
@@ -184,121 +402,214 @@
 		block-size: auto;
 		overflow: hidden;
 		border-radius: var(--dd-radius-lg);
-		background-color: var(--dd-color-surface-sunken);
+		background-color: var(--dd-color-tower-sky);
 	}
 
-	.cloud,
-	.floor,
-	.tuft,
-	.pole,
-	.pennant,
-	.star,
-	.line,
-	.dino-body,
-	.plate,
-	.belly,
-	.cheek,
-	.eye,
-	.smile,
-	.hull,
-	.fin,
-	.window,
-	.spark,
-	.dust {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
+	path,
+	ellipse {
 		stroke-linejoin: round;
 		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 
+	.sky {
+		fill: var(--dd-color-tower-sky);
+	}
+
+	.night-star {
+		fill: var(--dd-color-tower-night-star);
+		fill-opacity: var(--dd-opacity-tower-night);
+	}
+
+	.ray {
+		fill: var(--dd-color-tower-sun);
+		fill-opacity: var(--dd-opacity-tower-day);
+	}
+
+	.sun {
+		fill: var(--dd-color-tower-sun);
+	}
+
 	.cloud {
-		fill: var(--dd-color-pot-bubble);
+		fill: var(--dd-color-tower-cloud);
 	}
 
-	.floor {
-		fill: var(--dd-color-border-subtle);
+	.hill-far {
+		fill: var(--dd-color-tower-hill-far);
 	}
 
-	.tuft,
-	.line,
-	.smile,
-	.spark {
+	.hill-near {
+		fill: var(--dd-color-tower-hill-near);
+	}
+
+	.rim {
 		fill: transparent;
+		stroke: var(--dd-color-tower-light);
+		stroke-opacity: var(--dd-opacity-tower-light);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.leaf {
+		fill: var(--dd-color-tower-leaf);
+	}
+
+	.trunk {
+		fill: var(--dd-color-tower-trunk);
+	}
+
+	.soil {
+		fill: var(--dd-color-tower-soil);
+	}
+
+	.pebble {
+		fill: var(--dd-color-tower-pebble);
+	}
+
+	.grass {
+		fill: var(--dd-color-tower-grass);
 	}
 
 	.tuft {
-		stroke: var(--dd-color-food-d);
-		stroke-width: var(--dd-border-width-target);
+		fill: transparent;
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thick);
 	}
 
-	.line {
-		stroke: var(--dd-color-drawing-line);
+	.cone {
+		fill: var(--dd-color-tower-cone);
 	}
 
-	.pole {
-		stroke-width: var(--dd-border-width-target);
+	.band {
+		fill: var(--dd-color-tower-light);
 	}
 
-	.pennant {
-		fill: var(--dd-color-food-b);
+	.crane {
+		fill: var(--dd-color-tower-crane);
 	}
 
-	.star {
-		fill: var(--dd-color-star-fill);
+	.concrete {
+		fill: var(--dd-color-tower-concrete);
 	}
 
-	.dino-body {
-		fill: var(--dd-color-baby-a);
+	.glass {
+		fill: var(--dd-color-tower-glass);
 	}
 
-	.plate {
-		fill: var(--dd-color-baby-c);
+	.metal {
+		fill: var(--dd-color-tower-metal);
 	}
 
-	.belly {
-		fill: var(--dd-color-companion-belly);
-		stroke: transparent;
+	.gold {
+		fill: var(--dd-color-tower-gold);
 	}
 
-	.cheek {
-		fill: var(--dd-color-companion-cheek);
-		stroke: transparent;
+	.cloth {
+		fill: var(--dd-color-tower-flag);
 	}
 
-	.eye {
-		fill: var(--dd-color-drawing-ink);
-		stroke: transparent;
+	.magnet {
+		fill: var(--dd-color-tower-magnet);
 	}
 
-	.hull {
-		fill: var(--dd-color-rocket-body);
+	.rocket-body {
+		fill: var(--dd-color-tower-rocket);
 	}
 
 	.fin {
-		fill: var(--dd-color-rocket-fin);
-	}
-
-	.window {
-		fill: var(--dd-color-rocket-window);
+		fill: var(--dd-color-tower-rocket-fin);
 	}
 
 	.flame-outer {
-		fill: var(--dd-color-rocket-flame-outer);
+		fill: var(--dd-color-tower-spark);
 	}
 
 	.flame-inner {
-		fill: var(--dd-color-rocket-flame-inner);
+		fill: var(--dd-color-tower-gold);
 	}
 
-	.dust {
-		fill: var(--dd-color-pot-bubble);
+	.dust-fill {
+		fill: var(--dd-color-tower-dust);
+	}
+
+	.shade {
+		fill: var(--dd-color-tower-shade);
+		fill-opacity: var(--dd-opacity-tower-side);
+	}
+
+	.soft-shade {
+		fill: var(--dd-color-tower-shade);
+		fill-opacity: var(--dd-opacity-tower-shade);
+	}
+
+	.shine {
+		fill: var(--dd-color-tower-light);
+		fill-opacity: var(--dd-opacity-tower-light);
+	}
+
+	.soft-shine {
+		fill: var(--dd-color-tower-light);
+		fill-opacity: var(--dd-opacity-tower-top);
+	}
+
+	.ground-shadow,
+	.drop-shadow {
+		fill: var(--dd-color-tower-shadow);
+	}
+
+	.line,
+	.fine,
+	.thin-line,
+	.cable,
+	.sling,
+	.rope,
+	.speed-line,
+	.spark-line,
+	.hook-under,
+	.hook {
+		fill: transparent;
+		stroke: var(--dd-color-tower-line);
+	}
+
+	.line,
+	.hook {
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.fine,
+	.thin-line,
+	.cable,
+	.sling,
+	.rope {
 		stroke-width: var(--dd-border-width-thin);
 	}
 
-	.spark {
-		stroke: var(--dd-color-food-c);
+	.hook-under {
 		stroke-width: var(--dd-border-width-target);
+	}
+
+	.hook {
+		stroke: var(--dd-color-tower-metal);
+	}
+
+	.metal,
+	.dust-fill {
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thin);
+	}
+
+	.speed-line {
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.spark-line {
+		stroke: var(--dd-color-tower-spark);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.spark-star {
+		fill: var(--dd-color-tower-gold);
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thin);
 	}
 
 	/* Surprise scenes (ADR-034): a moment after the last key, long enough to be seen. */
@@ -309,6 +620,7 @@
 	[data-scene] .speed,
 	[data-scene] .dust,
 	[data-scene] .spark,
+	[data-scene] .rope,
 	[data-scene] .flag {
 		transform-box: fill-box;
 		transform-origin: 50% 100%;
@@ -373,6 +685,10 @@
 	[data-scene='rocket-crane'] .rocket {
 		transform-origin: 50% 50%;
 		animation-name: rocket-leaves;
+	}
+
+	[data-scene='rocket-crane'] .rope {
+		animation-name: ropes-off;
 	}
 
 	[data-scene='slide-in'] .landing {
@@ -538,6 +854,7 @@
 		}
 	}
 
+	/* The dino jumps on the block, stamps it down, hops for joy and stays on top. */
 	@keyframes dino-hop {
 		0% {
 			opacity: 0;
@@ -562,23 +879,31 @@
 		52% {
 			translate: 0 0;
 			rotate: 0deg;
+			scale: 1.08 0.9;
 		}
 
-		66% {
-			translate: var(--dd-space-lg) calc(var(--dd-space-lg) * -1);
-			rotate: -8deg;
+		60% {
+			translate: 0 0;
+			scale: 1;
 		}
 
-		82% {
-			opacity: 100%;
-			translate: calc(var(--dd-space-xl) * 2) calc(var(--dd-space-sm) * -1);
-			rotate: 4deg;
+		72% {
+			translate: 0 calc(var(--dd-space-md) * -1);
+			rotate: -6deg;
 		}
 
-		100% {
-			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 1.5) 0;
+		84% {
+			translate: 0 0;
 			rotate: 0deg;
+			scale: 1.04 0.95;
+		}
+
+		92%,
+		100% {
+			opacity: 100%;
+			translate: 0 0;
+			rotate: 0deg;
+			scale: 1;
 		}
 	}
 
@@ -698,17 +1023,36 @@
 		}
 	}
 
+	/* Its delivery made, the rocket backs away to the right, beside the bubble, and waits there. */
 	@keyframes rocket-leaves {
 		0%,
-		70% {
-			opacity: 100%;
+		76% {
 			translate: 0 0;
-			animation-timing-function: var(--dd-easing-exit);
+			rotate: 0deg;
+			animation-timing-function: var(--dd-easing-standard);
+		}
+
+		88% {
+			translate: calc(var(--dd-space-3xl) * 0.9) calc(var(--dd-space-sm) * -2.5);
+			rotate: -8deg;
 		}
 
 		100% {
+			translate: calc(var(--dd-space-3xl) * 1.1) calc(var(--dd-space-sm) * -2);
+			rotate: 0deg;
+		}
+	}
+
+	/* The ropes are let go once the block is down. */
+	@keyframes ropes-off {
+		0%,
+		72% {
+			opacity: 100%;
+		}
+
+		80%,
+		100% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -1.6) calc(var(--dd-space-xl) * -1.2);
 		}
 	}
 
