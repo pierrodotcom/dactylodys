@@ -54,6 +54,14 @@
 			"outline": { "$value": "{color.brown.50}" },
 			"active": { "$value": "{color.teal.400}" }
 		},
+		"train": {
+			"sky-high": { "$value": "{color.navy.800}" },
+			"sky-low": { "$value": "{color.slate.600}" },
+			"sun": { "$value": "{color.cream.200}" },
+			"cloud": { "$value": "{color.slate.300}" },
+			"hill-far": { "$value": "{color.sage.400}" },
+			"hill-near": { "$value": "{color.jade.300}" }
+		},
 		"race": {
 			"pole": { "$value": "{color.brown.100}" },
 			"mark": { "$value": "{color.brown.50}" },
