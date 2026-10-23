@@ -388,6 +388,18 @@
 			},
 			"line": {
 				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"shadow": {
+				"$value": "{color.shadow.light}"
+			},
+			"water": {
+				"$value": "{color.azure.300}"
 			}
 		},
 		"baby": {
@@ -402,6 +414,42 @@
 			},
 			"d": {
 				"$value": "{color.lavender.300}"
+			},
+			"a-belly": {
+				"$value": "{color.lagoon.50}"
+			},
+			"a-plate": {
+				"$value": "{color.lemon.500}"
+			},
+			"a-cheek": {
+				"$value": "{color.pink.200}"
+			},
+			"b-belly": {
+				"$value": "{color.orange.50}"
+			},
+			"b-plate": {
+				"$value": "{color.teal.400}"
+			},
+			"b-cheek": {
+				"$value": "{color.pink.300}"
+			},
+			"c-belly": {
+				"$value": "{color.lemon.50}"
+			},
+			"c-plate": {
+				"$value": "{color.orange.500}"
+			},
+			"c-cheek": {
+				"$value": "{color.orange.600}"
+			},
+			"d-belly": {
+				"$value": "{color.plum.50}"
+			},
+			"d-plate": {
+				"$value": "{color.plum.500}"
+			},
+			"d-cheek": {
+				"$value": "{color.pink.300}"
 			}
 		},
 		"bubble": {
@@ -1076,6 +1124,15 @@
 		},
 		"companion-light": {
 			"$value": 0.5
+		},
+		"egg-shade": {
+			"$value": 0.18
+		},
+		"egg-light": {
+			"$value": 0.6
+		},
+		"egg-water": {
+			"$value": 0.55
 		},
 		"race-ghost": {
 			"$value": 0.8
