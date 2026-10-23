@@ -25,6 +25,19 @@
 		"egg": {
 			"shadow": { "$value": "{color.shadow.dark}" }
 		},
+		"tower": {
+			"shadow": { "$value": "{color.shadow.dark}" },
+			"sky": { "$value": "{color.navy.800}" },
+			"sun": { "$value": "{color.cream.200}" },
+			"cloud": { "$value": "{color.slate.600}" },
+			"hill-far": { "$value": "{color.teal.700}" },
+			"hill-near": { "$value": "{color.green.900}" },
+			"grass": { "$value": "{color.sage.400}" },
+			"soil": { "$value": "{color.brown.600}" },
+			"pebble": { "$value": "{color.brown.400}" },
+			"leaf": { "$value": "{color.sage.400}" },
+			"dust": { "$value": "{color.slate.300}" }
+		},
 		"success": {
 			"text": { "$value": "{color.green.300}" },
 			"surface": { "$value": "{color.green.900}" }
@@ -80,6 +93,11 @@
 			"sky": { "$value": "{color.navy.800}" },
 			"sun": { "$value": "{color.cream.200}" }
 		}
+	},
+	"opacity": {
+		"$type": "number",
+		"tower-day": { "$value": 0 },
+		"tower-night": { "$value": 1 }
 	},
 	"shadow": {
 		"$type": "shadow",
