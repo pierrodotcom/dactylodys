@@ -22,6 +22,9 @@
 		"focus": {
 			"ring": { "$value": "{color.indigo.300}" }
 		},
+		"egg": {
+			"shadow": { "$value": "{color.shadow.dark}" }
+		},
 		"success": {
 			"text": { "$value": "{color.green.300}" },
 			"surface": { "$value": "{color.green.900}" }

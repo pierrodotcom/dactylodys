@@ -1,7 +1,7 @@
 <script lang="ts">
 	import HatchEgg from './HatchEgg.svelte';
 
-	const CRACKS_SHOWN = 2;
+	const CRACKS_SHOWN = 3;
 </script>
 
 <div class="fit">

@@ -47,6 +47,19 @@
 		padding-block-end: var(--dd-space-sm);
 	}
 
+	/* At this size the outlines of the big egg would cover the faces: thinner, without fine lines. */
+	.row .item :global(.line) {
+		stroke-width: var(--dd-border-width-thin);
+	}
+
+	.row .item :global(.underlay) {
+		stroke-width: calc(var(--dd-border-width-thin) * 2);
+	}
+
+	.row .item :global(.fine) {
+		stroke: transparent;
+	}
+
 	.item[data-state='next'] {
 		opacity: var(--dd-opacity-disabled);
 	}
