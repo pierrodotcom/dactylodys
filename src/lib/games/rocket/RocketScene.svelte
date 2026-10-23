@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { GameView } from '../shared/game-view';
 	import AstreShape from './AstreShape.svelte';
+	import BabyDino from './BabyDino.svelte';
 	import {
 		FLIGHT,
 		INHABITANT,
@@ -15,43 +16,47 @@
 	import {
 		ASTRE_RING,
 		CAR,
-		COMET_EYE_PATHS,
-		COMET_HEAD_RADIUS,
-		COMET_MOUTH_PATH,
-		COMET_TAIL_PATH,
+		COMET,
+		COOL,
 		COOL_STAR,
-		COOL_STAR_EYE_PATHS,
-		COOL_STAR_MOUTH_PATH,
 		COUGH_PUFFS,
 		COW,
 		DINO,
 		DINO_SEATS,
 		DISH,
-		HEART_PATH,
+		GIFT,
+		HEART,
 		HEART_PUFFS,
 		HOOP_BACK_PATH,
 		HOOP_FRONT_PATH,
-		ROCKET_WINDOW,
+		INHABITANT_ASTRE,
+		INHABITANT_SHAPE,
+		NEBULAS,
+		PUFF_LIGHTS,
+		ROCKET,
+		ROCKET_SCALE,
+		ROUTE,
+		SPARK,
 		STARS,
-		STAR_PATH,
-		SUNGLASSES_BRIDGE_PATH,
-		SUNGLASSES_GLINT_PATH,
-		SUNGLASSES_LENS_PATHS,
-		TOQUE
+		TOQUE,
+		TWINKLES,
+		type Modelled
 	} from './shapes';
 
 	interface Props {
 		view: GameView;
 	}
 
-	const HOME_VARIANT = 3;
 	const REWARD_VARIANTS = 4;
 	/** Directions of the sparks of the fireworks around the astre reached, in degrees. */
 	const SPARK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315] as const;
 	const SPARK_COLORS = 4;
-	const SPARK_RADIUS = 7;
 	const INHABITANT_TRANSFORM = `translate(${INHABITANT.x} ${INHABITANT.y}) scale(${INHABITANT.scale})`;
-	const ROCKET_SCALE = 1.2;
+	/**
+	 * Where the inhabitant peeks out in the hide-and-seek: behind the right edge of its astre, leaning
+	 * out; its feet (41, 53 in its box) inside the astre.
+	 */
+	const PEEKER_TRANSFORM = `translate(${462 - 41 * INHABITANT.scale} ${124 - 53 * INHABITANT.scale}) scale(${INHABITANT.scale}) rotate(50 41 53)`;
 	/** Where the smoke of a cough appears, behind the engine. */
 	const COUGH_OFFSET = { x: -30, y: -40 } as const;
 	/** Where the heart of smoke appears: behind the engine in flight, in the free sky once landed. */
@@ -63,9 +68,12 @@
 	const GIFT_SCALE = 1.5;
 	/** The ring of the astre reached, in the sky: the scene spins it like a hoop. */
 	const HOOP_TRANSFORM = `translate(${FLIGHT.destinationX} ${FLIGHT.astreY}) scale(${FLIGHT.astreScale}) rotate(${ASTRE_RING.angle})`;
+	const DINO_TRANSFORM = `scale(${DINO.scale}) translate(${-DINO.seat.x} ${-DINO.seat.y})`;
 	const DEGREES_TO_RADIANS = Math.PI / 180;
 
 	let { view }: Props = $props();
+
+	const uid = $props.id();
 
 	const pose = $derived(rocketPose(view));
 	const departure = $derived(departureIndex(view));
@@ -75,7 +83,7 @@
 	const sceneId = $derived(lit && view.scene.kind === 'scene' ? view.scene.id : undefined);
 	const ringed = $derived(astreVariant(destinationVariant) === 0);
 	const heart = $derived(pose.landed ? HEART_OFFSET.landed : HEART_OFFSET.flying);
-	const rocketWindow = $derived(rocketPoint(ROCKET_WINDOW.cx, ROCKET_WINDOW.cy));
+	const rocketWindow = $derived(rocketPoint(ROCKET.windowCenter.x, ROCKET.windowCenter.y));
 	const inhabitantMoves = $derived(
 		sceneId === 'inhabitant-joy' ||
 			sceneId === 'hide-and-seek' ||
@@ -103,7 +111,42 @@
 			y: pose.y + (x * sin + y * cos) * ROCKET_SCALE
 		};
 	}
+
+	function ref(name: string): string {
+		return `${uid}-${name}`;
+	}
+
+	function url(name: string): string {
+		return `url(#${ref(name)})`;
+	}
 </script>
+
+<!-- A form with its volume: its fill, then, kept inside it, its shade and its lights. -->
+{#snippet volume(name: string, form: Modelled, fill: string)}
+	<clipPath id={ref(name)}><path d={form.d} /></clipPath>
+	<path class={fill} d={form.d} />
+	<g clip-path={url(name)}>
+		<path class="shade" fill-rule="evenodd" d={form.shade} />
+		{#each form.lights as light (light)}
+			<path class="light" d={light} />
+		{/each}
+	</g>
+{/snippet}
+
+<!-- Round puffs of smoke under one outline, lit on their top left. -->
+{#snippet smoke(puffs: readonly { x: number; y: number; radius: number }[], lit: boolean)}
+	{#each puffs as puff (puff.x)}
+		<circle class="underlay" cx={puff.x} cy={puff.y} r={puff.radius} />
+	{/each}
+	{#each puffs as puff (puff.x)}
+		<circle class="puff" cx={puff.x} cy={puff.y} r={puff.radius} />
+	{/each}
+	{#if lit}
+		{#each PUFF_LIGHTS as light (light)}
+			<path class="light" d={light} />
+		{/each}
+	{/if}
+{/snippet}
 
 <svg
 	class="sky"
@@ -114,19 +157,51 @@
 	data-scene={sceneId}
 	data-landed={pose.landed || undefined}
 >
+	<defs>
+		{#each ['a', 'b'] as tone (tone)}
+			<radialGradient id={ref(`nebula-${tone}`)}>
+				<stop class="nebula-{tone}" offset="0" />
+				<stop class="nebula-{tone}-edge" offset="1" stop-opacity="0" />
+			</radialGradient>
+		{/each}
+		<clipPath id={ref('astre')}><path d={INHABITANT_ASTRE} /></clipPath>
+	</defs>
+
+	{#each NEBULAS as nebula (nebula.cx)}
+		<ellipse
+			cx={nebula.cx}
+			cy={nebula.cy}
+			rx={nebula.rx}
+			ry={nebula.ry}
+			fill={url(`nebula-${nebula.tone}`)}
+		/>
+	{/each}
 	{#each STARS as star (star.x)}
 		<circle class="star" cx={star.x} cy={star.y} r={star.radius} />
 	{/each}
+	{#each TWINKLES as twinkle (twinkle)}
+		<path class="twinkle" d={twinkle} />
+	{/each}
+	<path class="route" d={ROUTE} />
 
 	{#if sceneId === 'comet'}
 		<g transform="translate({COMET_START.x} {COMET_START.y}) scale({COMET_START.scale})">
 			<g class="comet">
-				<path class="comet-tail" d={COMET_TAIL_PATH} />
-				<circle class="star-body" cx="0" cy="0" r={COMET_HEAD_RADIUS} />
-				{#each COMET_EYE_PATHS as eye (eye)}
-					<path class="face-line" d={eye} />
+				{#each COMET.tail as tail, index (tail)}
+					<path class="comet-tail" data-layer={index} d={tail} />
 				{/each}
-				<path class="face-line" d={COMET_MOUTH_PATH} />
+				{#each COMET.sparkles as sparkle (sparkle)}
+					<path class="sparkle" d={sparkle} />
+				{/each}
+				<path class="underlay" d={COMET.head.d} />
+				{@render volume('comet-head', COMET.head, 'comet-head')}
+				{#each COMET.eyes as eye (eye)}
+					<path class="open line" d={eye} />
+				{/each}
+				{#each COMET.cheeks as cheek (cheek)}
+					<path class="cheek" d={cheek} />
+				{/each}
+				<path class="open line" d={COMET.mouth} />
 			</g>
 		</g>
 	{/if}
@@ -134,43 +209,55 @@
 	{#if sceneId === 'space-cow'}
 		<g transform="translate({COW_START.x} {COW_START.y})">
 			<g class="cow">
-				<path class="cow-tail" d={COW.tailPath} />
-				<circle class="cow-ink" cx={COW.tuft.x} cy={COW.tuft.y} r={COW.tuft.radius} />
-				{#each COW.legPaths as leg (leg)}
-					<path class="cow-leg" d={leg} />
+				<path class="open tail-line" d={COW.tail} />
+				<path class="open tail-fill" d={COW.tail} />
+				<path class="underlay" d={COW.tuft.d} />
+				{@render volume('cow-tuft', COW.tuft, 'cow-spot')}
+				{#each COW.legs as leg, index (leg.hoof)}
+					<path class="underlay" d={leg.leg.d} />
+					<path class="underlay" d={leg.hoof} />
+					{@render volume(`cow-leg-${index}`, leg.leg, 'cow-skin')}
+					<path class="cow-hoof" d={leg.hoof} />
 				{/each}
-				{#each COW.hooves as hoof (hoof.x)}
-					<circle class="cow-ink" cx={hoof.x} cy={hoof.y} r="2.5" />
+				<path class="underlay" d={COW.udder.d} />
+				{@render volume('cow-udder', COW.udder, 'cow-pink')}
+				<path class="open fine" d={COW.teats} />
+				<path class="underlay" d={COW.body.d} />
+				<clipPath id={ref('cow-body')}><path d={COW.body.d} /></clipPath>
+				<path class="cow-skin" d={COW.body.d} />
+				<g clip-path={url('cow-body')}>
+					{#each COW.spots as spot (spot)}
+						<path class="cow-spot" d={spot} />
+					{/each}
+					<path class="shade" fill-rule="evenodd" d={COW.body.shade} />
+					{#each COW.body.lights as light (light)}
+						<path class="light" d={light} />
+					{/each}
+				</g>
+				<path class="underlay" d={COW.collar.d} />
+				{@render volume('cow-collar', COW.collar, 'metal')}
+				{#each COW.horns as horn, index (horn.d)}
+					<path class="underlay" d={horn.d} />
+					{@render volume(`cow-horn-${index}`, horn, 'cow-horn')}
 				{/each}
-				<path class="cow-skin" d={COW.bodyPath} />
-				{#each COW.spotPaths as spot (spot)}
-					<path class="cow-ink" d={spot} />
+				<path class="underlay" d={COW.ear.d} />
+				{@render volume('cow-ear', COW.ear, 'cow-skin')}
+				<path class="cow-pink" d={COW.earInside} />
+				<path class="underlay" d={COW.head.d} />
+				{@render volume('cow-head', COW.head, 'cow-skin')}
+				{@render volume('cow-snout', COW.snout, 'cow-pink')}
+				<path class="open fine" d={COW.snout.d} />
+				{#each COW.nostrils as nostril (nostril)}
+					<path class="ink" d={nostril} />
 				{/each}
-				<path class="cow-skin" d={COW.earPath} />
-				{#each COW.hornPaths as horn (horn)}
-					<path class="cow-horn" d={horn} />
+				{#each COW.eyes as eye (eye)}
+					<path class="open line" d={eye} />
 				{/each}
-				<ellipse
-					class="cow-skin"
-					cx={COW.head.cx}
-					cy={COW.head.cy}
-					rx={COW.head.rx}
-					ry={COW.head.ry}
-				/>
-				<ellipse
-					class="cow-snout"
-					cx={COW.snout.cx}
-					cy={COW.snout.cy}
-					rx={COW.snout.rx}
-					ry={COW.snout.ry}
-				/>
-				{#each COW.nostrils as nostril (nostril.x)}
-					<circle class="cow-ink" cx={nostril.x} cy={nostril.y} r="1" />
+				<path class="cheek" d={COW.cheek} />
+				<path class="glass line" d={COW.helmet} />
+				{#each COW.helmetLights as light (light)}
+					<path class="glint" d={light} />
 				{/each}
-				<circle class="cow-ink" cx={COW.eye.x} cy={COW.eye.y} r="1.8" />
-				<path class="cow-collar" d={COW.collarPath} />
-				<circle class="cow-helmet" cx={COW.helmet.cx} cy={COW.helmet.cy} r={COW.helmet.radius} />
-				<path class="cow-glint" d={COW.glintPath} />
 			</g>
 		</g>
 	{/if}
@@ -178,17 +265,20 @@
 	{#if sceneId === 'sunglasses'}
 		<g transform="translate({COOL_STAR.x} {COOL_STAR.y}) scale({COOL_STAR.scale})">
 			<g class="cool-star">
-				<path class="star-body" d={STAR_PATH} />
-				{#each COOL_STAR_EYE_PATHS as eye (eye)}
-					<path class="face-line" d={eye} />
+				{@render volume('cool-star', COOL.star, 'star-fill')}
+				<path class="open line" d={COOL.star.d} />
+				{#each COOL.eyes as eye (eye)}
+					<path class="open line" d={eye} />
 				{/each}
-				<path class="face-line" d={COOL_STAR_MOUTH_PATH} />
+				<path class="open line" d={COOL.mouth} />
 				<g class="shades">
-					{#each SUNGLASSES_LENS_PATHS as lens (lens)}
-						<path class="lens" d={lens} />
+					{#each COOL.lenses as lens (lens)}
+						<path class="ink" d={lens} />
 					{/each}
-					<path class="lens-bridge" d={SUNGLASSES_BRIDGE_PATH} />
-					<path class="lens-glint" d={SUNGLASSES_GLINT_PATH} />
+					<path class="open line" d={COOL.bridge} />
+					{#each COOL.glints as glint (glint)}
+						<path class="open glint-line" d={glint} />
+					{/each}
 				</g>
 			</g>
 		</g>
@@ -198,26 +288,24 @@
 		<g transform="translate({CAR.start.x} {CAR.start.y})">
 			<g class="car">
 				<g transform="scale({CAR.scale})">
-					{#each CAR.trailPaths as trail (trail)}
+					{#each CAR.trails as trail (trail)}
 						<path class="car-trail" d={trail} />
 					{/each}
 					<g class="car-bump">
-						<path class="car-body" d={CAR.bodyPath} />
-						{#each CAR.windowPaths as window (window)}
-							<path class="car-window" d={window} />
-						{/each}
-						<circle
-							class="car-light"
-							cx={CAR.headlight.cx}
-							cy={CAR.headlight.cy}
-							r={CAR.headlight.radius}
-						/>
+						<path class="underlay" d={CAR.body.d} />
+						{@render volume('car-body', CAR.body, 'car-paint')}
+						<path class="glass fine" d={CAR.window} />
+						<path class="glint" d={CAR.windowShine} />
+						<path class="open fine" d={CAR.pillar} />
+						<path class="open fine" d={CAR.trim} />
+						<path class="gold fine" d={CAR.headlight} />
+						<path class="jewel fine" d={CAR.tailLight} />
 						{#each CAR.wheels as wheel (wheel.cx)}
 							<g transform="translate({wheel.cx} {wheel.cy})">
 								<g class="car-wheel">
-									<circle class="car-tire" cx="0" cy="0" r={CAR.wheelRadius} />
-									<path class="car-spoke" d={CAR.spokePath} />
-									<circle class="car-hub" cx="0" cy="0" r={CAR.hubRadius} />
+									<circle class="tire line" cx="0" cy="0" r={CAR.wheelRadius} />
+									<circle class="metal fine" cx="0" cy="0" r={CAR.hubRadius} />
+									<path class="open fine" d={CAR.spokePath} />
 								</g>
 							</g>
 						{/each}
@@ -228,7 +316,7 @@
 	{/if}
 
 	<g transform={astreTransform(FLIGHT.departureX)}>
-		<AstreShape variant={departure ?? HOME_VARIANT} lit={true} />
+		<AstreShape variant={departure ?? 0} lit={true} home={departure === null} />
 	</g>
 
 	{#if sceneId === 'hide-and-seek'}
@@ -237,11 +325,20 @@
 				<InhabitantShape variant={destinationVariant} />
 			</g>
 		</g>
+		<g transform={PEEKER_TRANSFORM}>
+			<g class="peeker">
+				<InhabitantShape variant={destinationVariant} />
+			</g>
+		</g>
 	{/if}
 
 	{#if sceneId === 'hula-hoop'}
 		<g transform={HOOP_TRANSFORM}>
-			<path class="hoop" data-ringed={ringed || undefined} d={HOOP_BACK_PATH} />
+			<g class="hoop" data-ringed={ringed || undefined}>
+				<path class="hoop-edge" d={HOOP_BACK_PATH} />
+				<path class="hoop-band" d={HOOP_BACK_PATH} />
+				<path class="hoop-stripe" d={HOOP_BACK_PATH} />
+			</g>
 		</g>
 	{/if}
 
@@ -253,21 +350,33 @@
 
 	{#if sceneId === 'hula-hoop'}
 		<g transform={HOOP_TRANSFORM}>
-			<path class="hoop" data-ringed={ringed || undefined} d={HOOP_FRONT_PATH} />
+			<g class="hoop" data-ringed={ringed || undefined}>
+				<path class="hoop-edge" d={HOOP_FRONT_PATH} />
+				<path class="hoop-band" d={HOOP_FRONT_PATH} />
+				<path class="hoop-stripe" d={HOOP_FRONT_PATH} />
+			</g>
 		</g>
 	{/if}
 
 	{#if lit}
 		<g transform={INHABITANT_TRANSFORM}>
+			{#if sceneId !== 'hide-and-seek'}
+				<path class="ground" clip-path={url('astre')} d={INHABITANT_SHAPE.ground} />
+			{/if}
 			{#if inhabitantMoves}
 				<g class="inhabitant">
-					<InhabitantShape variant={destinationVariant} />
+					<InhabitantShape
+						variant={destinationVariant}
+						pose={sceneId === 'inhabitant-joy' ? 'cheer' : 'rest'}
+					/>
 					{#if sceneId === 'chef-planet'}
 						<g class="toque">
-							{#each TOQUE.puffs as puff (puff.cx)}
-								<circle class="toque-part" cx={puff.cx} cy={puff.cy} r={puff.radius} />
-							{/each}
-							<path class="toque-part" d={TOQUE.bandPath} />
+							<path class="underlay" d={TOQUE.puff.d} />
+							<path class="underlay" d={TOQUE.band.d} />
+							{@render volume('toque-puff', TOQUE.puff, 'cream')}
+							<path class="open fine" d={TOQUE.folds} />
+							{@render volume('toque-band', TOQUE.band, 'cream')}
+							<path class="open fine" d={TOQUE.band.d} />
 						</g>
 					{/if}
 				</g>
@@ -282,23 +391,20 @@
 	{#if sceneId === 'chef-planet'}
 		<g transform="translate({DISH.spot.x} {DISH.spot.y})">
 			<g class="dish">
-				<ellipse
-					class="dish-plate"
-					cx={DISH.plate.cx}
-					cy={DISH.plate.cy}
-					rx={DISH.plate.rx}
-					ry={DISH.plate.ry}
-				/>
-				<path class="dish-food" d={DISH.foodPath} />
-				<circle
-					class="dish-garnish"
-					cx={DISH.garnish.cx}
-					cy={DISH.garnish.cy}
-					r={DISH.garnish.radius}
-				/>
+				<path class="underlay" d={DISH.plate.d} />
+				<path class="cream" d={DISH.plate.d} />
+				<path class="shade" d={DISH.well} />
+				<path class="underlay" d={DISH.cake.d} />
+				{@render volume('dish-cake', DISH.cake, 'food')}
+				{@render volume('dish-icing', DISH.icing, 'cream')}
+				<path class="open fine" d={DISH.icing.d} />
+				<path class="open stem" d={DISH.stem} />
+				<path class="underlay" d={DISH.cherry.d} />
+				{@render volume('dish-cherry', DISH.cherry, 'jewel')}
+				<path class="glint" d={DISH.cherryGlint} />
 				<g class="steam">
-					{#each DISH.steamPuffs as puff (puff.y)}
-						<circle class="puff" cx={puff.x} cy={puff.y} r={puff.radius} />
+					{#each DISH.wisps as wisp (wisp)}
+						<path class="wisp" d={wisp} />
 					{/each}
 				</g>
 			</g>
@@ -308,13 +414,7 @@
 	{#if sceneId === 'fireworks'}
 		{#each SPARK_ANGLES as angle, index (angle)}
 			<g transform="rotate({angle} {FLIGHT.destinationX} {FLIGHT.astreY})">
-				<circle
-					class="spark"
-					cx={FLIGHT.destinationX}
-					cy={FLIGHT.astreY}
-					r={SPARK_RADIUS}
-					data-color={index % SPARK_COLORS}
-				/>
+				<path class="spark fine" d={SPARK} data-color={index % SPARK_COLORS} />
 			</g>
 		{/each}
 	{/if}
@@ -322,9 +422,7 @@
 	{#if coughing}
 		<g transform="translate({pose.x + COUGH_OFFSET.x} {pose.y + COUGH_OFFSET.y})">
 			<g class="cough">
-				{#each COUGH_PUFFS as puff (puff.x)}
-					<circle class="puff" cx={puff.x} cy={puff.y} r={puff.radius} />
-				{/each}
+				{@render smoke(COUGH_PUFFS, true)}
 			</g>
 		</g>
 	{/if}
@@ -332,11 +430,10 @@
 	{#if sceneId === 'heart-smoke'}
 		<g transform="translate({pose.x + heart.x} {pose.y + heart.y}) scale({HEART_SCALE})">
 			<g class="heart">
-				<path class="puff" d={HEART_PATH} />
+				<path class="underlay" d={HEART.d} />
+				{@render volume('heart', HEART, 'puff')}
 				{#if !pose.landed}
-					{#each HEART_PUFFS as puff (puff.x)}
-						<circle class="puff" cx={puff.x} cy={puff.y} r={puff.radius} />
-					{/each}
+					{@render smoke(HEART_PUFFS, false)}
 				{/if}
 			</g>
 		</g>
@@ -350,41 +447,34 @@
 
 	{#if sceneId === 'gift'}
 		<g transform="translate({rocketWindow.x} {rocketWindow.y}) scale({GIFT_SCALE})">
-			<path class="gift star-body" d={STAR_PATH} />
+			<g class="gift">
+				<path class="underlay" d={GIFT.box.d} />
+				<path class="underlay" d={GIFT.lid.d} />
+				{#each GIFT.bow as loop (loop)}
+					<path class="underlay" d={loop} />
+				{/each}
+				{@render volume('gift-box', GIFT.box, 'trim')}
+				{@render volume('gift-lid', GIFT.lid, 'trim')}
+				{#each GIFT.ribbon as band (band)}
+					<path class="ribbon" d={band} />
+				{/each}
+				<path class="open fine" d={GIFT.lid.d} />
+				{#each GIFT.bow as loop (loop)}
+					<path class="ribbon" d={loop} />
+				{/each}
+				<path class="ribbon fine" d={GIFT.knot} />
+				{#each GIFT.lights as light (light)}
+					<path class="light" d={light} />
+				{/each}
+			</g>
 		</g>
 	{/if}
 
 	{#if sceneId === 'dino-aboard'}
 		<g transform="translate({dinoSeat.x} {dinoSeat.y})">
-			<g class="dino" data-look={astreVariant(destinationVariant)}>
-				<g transform="scale({DINO.scale}) translate({-DINO.feet.x} {-DINO.feet.y})">
-					<path class="dino-body" d={DINO.tailPath} />
-					<path class="dino-body" d={DINO.restingArmPath} />
-					{#each DINO.footEllipses as foot (foot.cx)}
-						<ellipse class="dino-body" cx={foot.cx} cy={foot.cy} rx={foot.rx} ry={foot.ry} />
-					{/each}
-					<ellipse
-						class="dino-body"
-						cx={DINO.body.cx}
-						cy={DINO.body.cy}
-						rx={DINO.body.rx}
-						ry={DINO.body.ry}
-					/>
-					<g class="dino-arm">
-						<path class="dino-body" d={DINO.wavingArmPath} />
-					</g>
-					{#each DINO.platePaths as plate (plate)}
-						<path class="dino-plate" d={plate} />
-					{/each}
-					<circle class="dino-body" cx={DINO.head.cx} cy={DINO.head.cy} r={DINO.head.radius} />
-					{#each DINO.eyes as eye (eye.x)}
-						<circle class="dino-white" cx={eye.x} cy={eye.y} r="3" />
-						<circle class="dino-ink" cx={eye.x + 0.5} cy={eye.y + 0.5} r="1.5" />
-					{/each}
-					{#each DINO.cheeks as cheek (cheek.x)}
-						<circle class="dino-cheek" cx={cheek.x} cy={cheek.y} r="1.8" />
-					{/each}
-					<path class="dino-mouth" d={DINO.mouthPath} />
+			<g class="dino">
+				<g transform={DINO_TRANSFORM}>
+					<BabyDino look={astreVariant(destinationVariant)} />
 				</g>
 			</g>
 		</g>
@@ -401,16 +491,259 @@
 		background-color: var(--dd-color-sky-base);
 	}
 
-	.star {
+	.line,
+	.fine,
+	.underlay,
+	.tail-line,
+	.tail-fill,
+	.stem,
+	.wisp,
+	.glint-line,
+	.car-trail,
+	.hoop-edge,
+	.hoop-band,
+	.hoop-stripe {
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.line,
+	.fine,
+	.underlay,
+	.tail-line,
+	.stem {
+		stroke: var(--dd-color-rocket-line);
+	}
+
+	.line,
+	.stem {
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.fine {
+		stroke-width: var(--dd-border-width-thin);
+	}
+
+	/* Under joined forms: only its outer half shows, one outline around them all. */
+	.underlay {
+		fill: var(--dd-color-rocket-line);
+		stroke-width: calc(var(--dd-border-width-thick) * 2);
+	}
+
+	.open {
+		fill: transparent;
+	}
+
+	.shade {
+		fill: var(--dd-color-rocket-shade);
+		fill-opacity: var(--dd-opacity-rocket-shade);
+	}
+
+	.light {
+		fill: var(--dd-color-rocket-light);
+		fill-opacity: var(--dd-opacity-rocket-light);
+	}
+
+	.glint {
+		fill: var(--dd-color-rocket-light);
+	}
+
+	.ink {
+		fill: var(--dd-color-rocket-line);
+	}
+
+	.cheek {
+		fill: var(--dd-color-rocket-inhabitant-cheek);
+	}
+
+	.nebula-a {
+		stop-color: var(--dd-color-rocket-nebula-a);
+		stop-opacity: var(--dd-opacity-rocket-nebula);
+	}
+
+	.nebula-b {
+		stop-color: var(--dd-color-rocket-nebula-b);
+		stop-opacity: var(--dd-opacity-rocket-nebula);
+	}
+
+	.nebula-a-edge {
+		stop-color: var(--dd-color-rocket-nebula-a);
+	}
+
+	.nebula-b-edge {
+		stop-color: var(--dd-color-rocket-nebula-b);
+	}
+
+	.star,
+	.twinkle {
 		fill: var(--dd-color-sky-star);
+	}
+
+	.route {
+		fill: transparent;
+		stroke: var(--dd-color-sky-line);
+		stroke-width: var(--dd-border-width-target);
+		stroke-linecap: round;
+		stroke-dasharray: 0 14;
+		stroke-opacity: var(--dd-opacity-rocket-route);
+		vector-effect: non-scaling-stroke;
+	}
+
+	.ground {
+		fill: var(--dd-color-rocket-shade);
+		fill-opacity: var(--dd-opacity-rocket-ground);
 	}
 
 	.puff {
 		fill: var(--dd-color-rocket-smoke);
+	}
+
+	.metal {
+		fill: var(--dd-color-rocket-metal);
+	}
+
+	.glass {
+		fill: var(--dd-color-wear-glass);
+		fill-opacity: var(--dd-opacity-glass);
+	}
+
+	.trim {
+		fill: var(--dd-color-rocket-trim);
+	}
+
+	.ribbon {
+		fill: var(--dd-color-rocket-gift-ribbon);
+	}
+
+	.cream {
+		fill: var(--dd-color-wear-cream);
+	}
+
+	.food {
+		fill: var(--dd-color-food-a);
+	}
+
+	.jewel {
+		fill: var(--dd-color-wear-jewel);
+	}
+
+	.gold,
+	.star-fill,
+	.sparkle {
+		fill: var(--dd-color-star-fill);
+	}
+
+	.comet-head {
+		fill: var(--dd-color-rocket-comet-head);
+	}
+
+	.comet-tail {
+		fill: var(--dd-color-rocket-comet-tail);
+		fill-opacity: var(--dd-opacity-rocket-tail);
+	}
+
+	.comet-tail[data-layer='1'] {
+		fill: var(--dd-color-rocket-comet-tail-light);
+	}
+
+	.comet-tail[data-layer='2'] {
+		fill: var(--dd-color-rocket-light);
+	}
+
+	.cow-skin {
+		fill: var(--dd-color-rocket-cow-skin);
+	}
+
+	.cow-spot,
+	.cow-hoof {
+		fill: var(--dd-color-rocket-cow-spot);
+	}
+
+	.cow-pink {
+		fill: var(--dd-color-rocket-cow-pink);
+	}
+
+	.cow-horn {
+		fill: var(--dd-color-rocket-cow-horn);
+	}
+
+	.tail-line {
+		stroke-width: calc(var(--dd-border-width-thick) * 2 + var(--dd-border-width-thick));
+	}
+
+	.tail-fill {
+		stroke: var(--dd-color-rocket-cow-skin);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.glint-line {
+		stroke: var(--dd-color-rocket-light);
+		stroke-width: var(--dd-border-width-thin);
+	}
+
+	.car-paint {
+		fill: var(--dd-color-wear-red);
+	}
+
+	.tire {
+		fill: var(--dd-color-wear-ink);
+	}
+
+	.car-trail {
+		fill: transparent;
 		stroke: var(--dd-color-sky-line);
 		stroke-width: var(--dd-border-width-thick);
-		stroke-dasharray: 4 3;
-		vector-effect: non-scaling-stroke;
+		stroke-opacity: var(--dd-opacity-overlay);
+	}
+
+	.wisp {
+		fill: transparent;
+		stroke: var(--dd-color-rocket-smoke);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.hoop-edge,
+	.hoop-band,
+	.hoop-stripe {
+		fill: transparent;
+	}
+
+	.hoop-edge {
+		stroke: var(--dd-color-rocket-line);
+		stroke-width: calc(var(--dd-border-width-target) + var(--dd-border-width-thick) * 2);
+	}
+
+	.hoop-band {
+		stroke: var(--dd-color-rocket-hoop);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.hoop-stripe {
+		stroke: var(--dd-color-rocket-hoop-stripe);
+		stroke-width: var(--dd-border-width-target);
+		stroke-linecap: butt;
+		stroke-dasharray: 4 9;
+	}
+
+	.spark {
+		opacity: 0;
+	}
+
+	.spark[data-color='0'] {
+		fill: var(--dd-color-rocket-spark-a);
+	}
+
+	.spark[data-color='1'] {
+		fill: var(--dd-color-rocket-spark-b);
+	}
+
+	.spark[data-color='2'] {
+		fill: var(--dd-color-rocket-spark-c);
+	}
+
+	.spark[data-color='3'] {
+		fill: var(--dd-color-rocket-spark-d);
 	}
 
 	.cough {
@@ -434,229 +767,12 @@
 			scale: 1;
 		}
 	}
-	.spark {
-		opacity: 0;
-	}
-
-	.spark[data-color='0'] {
-		fill: var(--dd-color-star-fill);
-	}
-
-	.spark[data-color='1'] {
-		fill: var(--dd-color-finger-left-index);
-	}
-
-	.spark[data-color='2'] {
-		fill: var(--dd-color-finger-right-ring);
-	}
-
-	.spark[data-color='3'] {
-		fill: var(--dd-color-sky-star);
-	}
-
-	.hoop,
-	.star-body,
-	.face-line,
-	.cow-tail,
-	.cow-leg,
-	.cow-skin,
-	.cow-snout,
-	.cow-horn,
-	.cow-collar,
-	.cow-helmet,
-	.cow-glint,
-	.lens,
-	.lens-bridge,
-	.lens-glint {
-		stroke-width: var(--dd-border-width-thick);
-		stroke-linejoin: round;
-		stroke-linecap: round;
-		vector-effect: non-scaling-stroke;
-	}
-
-	.hoop,
-	.face-line,
-	.cow-tail,
-	.cow-leg,
-	.cow-horn,
-	.cow-collar,
-	.cow-helmet,
-	.cow-glint,
-	.lens-bridge,
-	.lens-glint {
-		fill: transparent;
-	}
-
-	.hoop,
-	.star-body,
-	.cow-helmet,
-	.cow-glint,
-	.lens-glint {
-		stroke: var(--dd-color-sky-line);
-	}
-
-	.star-body {
-		fill: var(--dd-color-star-fill);
-	}
-
-	.face-line,
-	.lens,
-	.lens-bridge {
-		stroke: var(--dd-color-drawing-ink);
-	}
-
-	.lens,
-	.cow-ink {
-		fill: var(--dd-color-drawing-ink);
-	}
-
-	.comet-tail {
-		fill: var(--dd-color-sky-star);
-		opacity: var(--dd-opacity-overlay);
-	}
-
-	.cow-skin,
-	.cow-snout {
-		stroke: var(--dd-color-drawing-line);
-	}
-
-	.cow-skin {
-		fill: var(--dd-color-rocket-body);
-	}
-
-	.cow-snout {
-		fill: var(--dd-color-finger-left-index);
-	}
-
-	.cow-tail,
-	.cow-leg {
-		stroke: var(--dd-color-rocket-body);
-	}
-
-	.cow-leg,
-	.cow-horn,
-	.cow-collar,
-	.cow-glint {
-		stroke-width: var(--dd-border-width-target);
-	}
-
-	.cow-horn {
-		stroke: var(--dd-color-star-fill);
-	}
-
-	.cow-collar {
-		stroke: var(--dd-color-astre-dim);
-	}
-
-	.dino-body,
-	.dino-plate,
-	.dino-white,
-	.dino-mouth,
-	.toque-part,
-	.dish-plate,
-	.dish-food,
-	.dish-garnish,
-	.car-trail,
-	.car-body,
-	.car-window,
-	.car-light,
-	.car-tire,
-	.car-spoke,
-	.car-hub {
-		stroke: var(--dd-color-sky-line);
-		stroke-width: var(--dd-border-width-thick);
-		stroke-linejoin: round;
-		stroke-linecap: round;
-		vector-effect: non-scaling-stroke;
-	}
-
-	.dino-mouth,
-	.car-trail,
-	.car-spoke {
-		fill: transparent;
-	}
-
-	.dino-mouth {
-		stroke: var(--dd-color-drawing-ink);
-	}
-
-	.dino-body {
-		fill: var(--dd-color-baby-a);
-	}
-
-	[data-look='1'] .dino-body {
-		fill: var(--dd-color-baby-b);
-	}
-
-	[data-look='2'] .dino-body {
-		fill: var(--dd-color-baby-c);
-	}
-
-	[data-look='3'] .dino-body {
-		fill: var(--dd-color-baby-d);
-	}
-
-	.dino-plate {
-		fill: var(--dd-color-companion-plate);
-	}
-
-	.dino-white {
-		fill: var(--dd-color-companion-eye);
-	}
-
-	.dino-ink {
-		fill: var(--dd-color-companion-line);
-	}
-
-	.dino-cheek {
-		fill: var(--dd-color-companion-cheek);
-	}
-
-	.toque-part,
-	.dish-plate {
-		fill: var(--dd-color-wear-cream);
-	}
-
-	.dish-food {
-		fill: var(--dd-color-food-a);
-	}
-
-	.dish-garnish {
-		fill: var(--dd-color-wear-red);
-	}
-
-	.car-trail {
-		opacity: var(--dd-opacity-overlay);
-	}
-
-	.car-body {
-		fill: var(--dd-color-wear-red);
-	}
-
-	.car-window {
-		fill: var(--dd-color-rocket-window);
-	}
-
-	.car-light {
-		fill: var(--dd-color-star-fill);
-	}
-
-	.car-tire {
-		fill: var(--dd-color-drawing-ink);
-	}
-
-	.car-spoke {
-		stroke: var(--dd-color-wear-cream);
-	}
-
-	.car-hub {
-		fill: var(--dd-color-wear-cream);
-	}
 
 	/* Surprise scenes (ADR-032): a moment after the last key, long enough to be seen. */
 	[data-scene] .flyer,
 	[data-scene] .inhabitant,
 	[data-scene] .hider,
+	[data-scene] .peeker,
 	[data-scene] .spark,
 	[data-scene] .sway,
 	[data-scene] .hoop,
@@ -667,7 +783,7 @@
 	[data-scene] .heart,
 	[data-scene] .gift,
 	[data-scene] .dino,
-	[data-scene] .dino-arm,
+	[data-scene] :global(.dino-arm),
 	[data-scene] .toque,
 	[data-scene] .dish,
 	[data-scene] .steam,
@@ -714,6 +830,11 @@
 	[data-scene='hide-and-seek'] .hider {
 		transform-origin: 50% 100%;
 		animation-name: hide-and-seek;
+	}
+
+	[data-scene='hide-and-seek'] .peeker {
+		transform-origin: 50% 100%;
+		animation-name: peek;
 	}
 
 	[data-scene='hide-and-seek'] .inhabitant {
@@ -808,7 +929,7 @@
 		animation-name: dish-landed;
 	}
 
-	[data-scene='dino-aboard'] .dino-arm {
+	[data-scene='dino-aboard'] :global(.dino-arm) {
 		transform-origin: 100% 100%;
 		animation-name: dino-wave;
 	}
@@ -925,16 +1046,23 @@
 		0%,
 		20% {
 			opacity: 0;
-			translate: 0 0;
+			translate: calc(var(--dd-space-xl) * 1.1) 0;
+			scale: 0.4;
 		}
 
 		30% {
+			opacity: 100%;
+			scale: 1.2;
+		}
+
+		70% {
 			opacity: 100%;
 		}
 
 		100% {
 			opacity: 0;
-			translate: calc(var(--dd-space-xl) * 2) 0;
+			translate: calc(var(--dd-space-xl) * 2.6) 0;
+			scale: 0.8;
 		}
 	}
 
@@ -1039,7 +1167,7 @@
 		}
 	}
 
-	/* Slips behind the astre, peeks out on the other side, then comes back. */
+	/* Looks around, ducks behind its astre, then comes back up where it was. */
 	@keyframes hide-and-seek {
 		0% {
 			opacity: 0;
@@ -1063,36 +1191,61 @@
 			rotate: 0deg;
 		}
 
-		34% {
-			translate: 114% 95%;
+		32%,
+		76% {
+			translate: 45% 82%;
 			rotate: 0deg;
 		}
 
-		42% {
-			translate: 190% 105%;
-			rotate: 0deg;
-		}
-
-		52%,
-		64% {
-			translate: 235% 107%;
-			rotate: 14deg;
-		}
-
-		58% {
-			translate: 235% 107%;
-			rotate: 4deg;
-		}
-
-		78% {
-			translate: 114% 95%;
-			rotate: 0deg;
+		88% {
+			translate: 0 -6%;
 		}
 
 		92%,
 		100% {
 			opacity: 100%;
 			translate: 0 0;
+			rotate: 0deg;
+		}
+	}
+
+	/* Meanwhile, the head peeks out from behind the other side of the astre, looks, and is gone. */
+	@keyframes peek {
+		0%,
+		38% {
+			opacity: 0;
+			translate: 0 60%;
+			rotate: 0deg;
+		}
+
+		40% {
+			opacity: 100%;
+			translate: 0 60%;
+		}
+
+		48%,
+		62% {
+			translate: 0 0;
+			rotate: 0deg;
+		}
+
+		53% {
+			rotate: -8deg;
+		}
+
+		58% {
+			rotate: 8deg;
+		}
+
+		70% {
+			opacity: 100%;
+			translate: 0 60%;
+		}
+
+		72%,
+		100% {
+			opacity: 0;
+			translate: 0 60%;
 			rotate: 0deg;
 		}
 	}
@@ -1391,11 +1544,11 @@
 		}
 	}
 
-	/* The star starts in front of the inhabitant and ends in the window of the rocket. */
+	/* The present starts in front of the inhabitant and ends in the window of the rocket. */
 	@keyframes gift {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-xl) * 0.61) calc(var(--dd-space-xl) * -0.375);
+			translate: calc(var(--dd-space-xl) * 0.6) calc(var(--dd-space-xl) * -0.36);
 			scale: 0;
 			rotate: 0deg;
 		}
@@ -1407,7 +1560,7 @@
 
 		22%,
 		40% {
-			translate: calc(var(--dd-space-xl) * 0.61) calc(var(--dd-space-xl) * -0.375);
+			translate: calc(var(--dd-space-xl) * 0.6) calc(var(--dd-space-xl) * -0.36);
 			scale: 1;
 			rotate: 0deg;
 		}
@@ -1435,7 +1588,7 @@
 	@keyframes gift-landed {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-xl) * -0.65) calc(var(--dd-space-xl) * 1.2);
+			translate: calc(var(--dd-space-xl) * -0.4) calc(var(--dd-space-xl) * 1.42);
 			scale: 0;
 			rotate: 0deg;
 		}
@@ -1447,7 +1600,7 @@
 
 		22%,
 		40% {
-			translate: calc(var(--dd-space-xl) * -0.65) calc(var(--dd-space-xl) * 1.2);
+			translate: calc(var(--dd-space-xl) * -0.4) calc(var(--dd-space-xl) * 1.42);
 			scale: 1;
 			rotate: 0deg;
 		}
@@ -1870,26 +2023,26 @@
 		}
 
 		62% {
-			translate: calc(calc(var(--dd-space-md) * -2.4) * 0.3)
-				calc(calc(var(--dd-space-md) * 0.9) * 0.3 - var(--dd-space-sm));
+			translate: calc(calc(var(--dd-space-md) * -2.875) * 0.3)
+				calc(calc(var(--dd-space-md) * 0.5) * 0.3 - var(--dd-space-sm));
 		}
 
 		74% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-md) * -2.4) calc(var(--dd-space-md) * 0.9);
+			translate: calc(var(--dd-space-md) * -2.875) calc(var(--dd-space-md) * 0.5);
 			scale: 1;
 		}
 
 		82% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-md) * -2.4) calc(var(--dd-space-md) * 0.9);
+			translate: calc(var(--dd-space-md) * -2.875) calc(var(--dd-space-md) * 0.5);
 			scale: 0.6;
 		}
 
 		88%,
 		100% {
 			opacity: 0;
-			translate: calc(var(--dd-space-md) * -2.4) calc(var(--dd-space-md) * 0.9);
+			translate: calc(var(--dd-space-md) * -2.875) calc(var(--dd-space-md) * 0.5);
 			scale: 0.2;
 		}
 	}
@@ -1916,26 +2069,26 @@
 		}
 
 		62% {
-			translate: calc(calc(var(--dd-space-md) * 0.9) * 0.3)
-				calc(calc(var(--dd-space-md) * -2) * 0.3 - var(--dd-space-sm));
+			translate: calc(calc(var(--dd-space-md) * 1.0625) * 0.3)
+				calc(calc(var(--dd-space-md) * -4.25) * 0.3 - var(--dd-space-sm));
 		}
 
 		74% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-md) * 0.9) calc(var(--dd-space-md) * -2);
+			translate: calc(var(--dd-space-md) * 1.0625) calc(var(--dd-space-md) * -4.25);
 			scale: 1;
 		}
 
 		82% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-md) * 0.9) calc(var(--dd-space-md) * -2);
+			translate: calc(var(--dd-space-md) * 1.0625) calc(var(--dd-space-md) * -4.25);
 			scale: 0.6;
 		}
 
 		88%,
 		100% {
 			opacity: 0;
-			translate: calc(var(--dd-space-md) * 0.9) calc(var(--dd-space-md) * -2);
+			translate: calc(var(--dd-space-md) * 1.0625) calc(var(--dd-space-md) * -4.25);
 			scale: 0.2;
 		}
 	}
