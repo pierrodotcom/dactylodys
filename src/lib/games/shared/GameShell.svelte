@@ -519,7 +519,15 @@
 		min-block-size: calc(var(--dd-font-size-xl) * 1.3);
 	}
 
+	/*
+	 * Over the bottom of the text zone, growing upwards: on two lines (a narrow text zone) it covers
+	 * the group just typed instead of pushing the keyboard down.
+	 */
 	.look-reminder {
+		position: absolute;
+		inset-inline: var(--dd-space-md);
+		inset-block-end: var(--dd-space-md);
+		justify-content: center;
 		display: flex;
 		align-items: center;
 		gap: var(--dd-space-sm);
