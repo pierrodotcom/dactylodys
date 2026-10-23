@@ -43,7 +43,10 @@
 			"outline": { "$value": "{color.amber.300}" }
 		},
 		"drawing": {
-			"line": { "$value": "{color.brown.50}" }
+			"line": { "$value": "{color.brown.50}" },
+			"paper": { "$value": "{color.brown.50}" },
+			"desk": { "$value": "{color.charcoal.600}" },
+			"desk-dark": { "$value": "{color.charcoal.700}" }
 		},
 		"silhouette": { "$value": "{color.brown.550}" },
 		"reward": {

@@ -480,6 +480,129 @@
 			},
 			"ink": {
 				"$value": "{color.brown.900}"
+			},
+			"pencil": {
+				"$value": "{color.brown.900}"
+			},
+			"paper": {
+				"$value": "{color.cream.50}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"fur": {
+				"$value": "{color.orange.300}"
+			},
+			"fur-dark": {
+				"$value": "{color.orange.500}"
+			},
+			"cream": {
+				"$value": "{color.cream.50}"
+			},
+			"pink": {
+				"$value": "{color.pink.200}"
+			},
+			"iris": {
+				"$value": "{color.jade.300}"
+			},
+			"white": {
+				"$value": "{color.cream.50}"
+			},
+			"sea": {
+				"$value": "{color.lagoon.300}"
+			},
+			"fin": {
+				"$value": "{color.lemon.300}"
+			},
+			"stripe": {
+				"$value": "{color.azure.500}"
+			},
+			"bubble": {
+				"$value": "{color.ice.100}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"leaf-dark": {
+				"$value": "{color.sage.400}"
+			},
+			"wall": {
+				"$value": "{color.sunflower.300}"
+			},
+			"roof": {
+				"$value": "{color.tomato.300}"
+			},
+			"roof-dark": {
+				"$value": "{color.tomato.600}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"glass": {
+				"$value": "{color.azure.300}"
+			},
+			"brick": {
+				"$value": "{color.clay.400}"
+			},
+			"grass": {
+				"$value": "{color.green.300}"
+			},
+			"stone": {
+				"$value": "{color.cream.300}"
+			},
+			"curtain": {
+				"$value": "{color.pink.300}"
+			},
+			"petal": {
+				"$value": "{color.pink.300}"
+			},
+			"petal-dark": {
+				"$value": "{color.pink.500}"
+			},
+			"pollen": {
+				"$value": "{color.lemon.500}"
+			},
+			"hull": {
+				"$value": "{color.tomato.500}"
+			},
+			"water": {
+				"$value": "{color.azure.300}"
+			},
+			"gold": {
+				"$value": "{color.sunflower.300}"
+			},
+			"gold-dark": {
+				"$value": "{color.amber.300}"
+			},
+			"lilac": {
+				"$value": "{color.lavender.300}"
+			},
+			"smoke": {
+				"$value": "{color.brown.100}"
+			},
+			"desk": {
+				"$value": "{color.cream.300}"
+			},
+			"desk-dark": {
+				"$value": "{color.brown.100}"
+			},
+			"tape": {
+				"$value": "{color.lagoon.300}"
+			},
+			"pencil-body": {
+				"$value": "{color.violet.400}"
+			},
+			"pencil-wood": {
+				"$value": "{color.orange.50}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"rubber": {
+				"$value": "{color.pink.300}"
 			}
 		},
 		"sky": {
@@ -1012,6 +1135,9 @@
 		},
 		"race-track-min": {
 			"$value": "16rem"
+		},
+		"drawing-step": {
+			"$value": "2.25rem"
 		}
 	},
 	"radius": {
@@ -1139,6 +1265,18 @@
 		},
 		"race-ghost-hole": {
 			"$value": 0.5
+		},
+		"drawing-shade": {
+			"$value": 0.16
+		},
+		"drawing-light": {
+			"$value": 0.55
+		},
+		"drawing-ground": {
+			"$value": 0.12
+		},
+		"drawing-tape": {
+			"$value": 0.6
 		}
 	},
 	"duration": {

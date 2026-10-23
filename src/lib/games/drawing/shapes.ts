@@ -1,36 +1,115 @@
 /**
- * Drawing data of the magic drawings, in a local box of 200 x 200. A picture is a list of strokes
- * drawn in turn (the longer a stroke, the longer it takes), then colored all at once at the end.
+ * Drawing data of the magic drawings, in a local box of 200 x 200, lit from the top left. A picture
+ * is a list of strokes drawn in turn (the longer a stroke, the longer it takes), then coloured all
+ * at once at the end. A line that goes behind a form painted over it stops at that form's outline:
+ * joined forms show one contour, during the drawing as once coloured.
  */
+import {
+	ellipseLength,
+	ellipsePath,
+	pathBox,
+	regionOf,
+	shiftPath,
+	visiblePieces,
+	type Piece
+} from './geometry';
+import { SUBJECTS } from './subjects';
 
-/** A colour of the drawings: each one is a design token, see `DrawingArt.svelte`. */
+export { ellipseLength, ellipsePath };
+
+/** A colour of the drawings: each one is a design token `--dd-color-drawing-<tone>`. */
 export type Tone =
-	'orange' | 'pink' | 'yellow' | 'green' | 'teal' | 'lilac' | 'clay' | 'cream' | 'slate' | 'ink';
+	| 'fur'
+	| 'fur-dark'
+	| 'cream'
+	| 'pink'
+	| 'iris'
+	| 'ink'
+	| 'white'
+	| 'sea'
+	| 'fin'
+	| 'stripe'
+	| 'bubble'
+	| 'leaf'
+	| 'leaf-dark'
+	| 'wall'
+	| 'roof'
+	| 'roof-dark'
+	| 'wood'
+	| 'glass'
+	| 'brick'
+	| 'grass'
+	| 'stone'
+	| 'curtain'
+	| 'petal'
+	| 'petal-dark'
+	| 'pollen'
+	| 'hull'
+	| 'water'
+	| 'gold'
+	| 'gold-dark'
+	| 'lilac'
+	| 'smoke';
+
+/** A tone, or the shade and light washed over a colour to give it its volume. */
+export type Wash = Tone | 'shade' | 'light';
 
 /** Where a colour is painted among the others: behind them, with them, or on top. */
 export type Layer = 'back' | 'middle' | 'front';
 
-export interface Stroke {
+/** A touch of colour inside a coloured form, kept inside it: a stripe, a spot, a gleam. */
+export interface Mark {
 	readonly d: string;
-	/** About the length of the line: the share of the drawing time this stroke takes. */
-	readonly weight: number;
-	/** Colour given to the inside once the drawing is finished; none: the line stays alone. */
-	readonly tone?: Tone;
-	/** Order of painting only: the lines are always drawn in the order of the list. */
-	readonly layer?: Layer;
-	readonly transform?: string;
+	readonly tone: Wash;
 }
 
-/** A coloured touch that only appears with the colours (cheeks, glints). */
+/** A stroke as it is written: its line, and what it paints once the drawing is finished. */
+export interface StrokeSpec {
+	/** The line, in the order the pencil draws it. */
+	readonly d: string;
+	/** Colour given to the inside once the drawing is finished; none: the line stays alone. */
+	readonly tone?: Tone;
+	/** The form painted, when it is not the line itself (a line left open on a form behind). */
+	readonly fill?: string;
+	/** Order of painting; a line without colour counts as drawn on top. */
+	readonly layer?: Layer;
+	/** A thin line: a detail, a fold, a whisker. */
+	readonly fine?: boolean;
+	readonly marks?: readonly Mark[];
+	/** No shade nor light of its own: a flat colour (a pupil, a glint). */
+	readonly flat?: boolean;
+}
+
+export interface Stroke extends StrokeSpec {
+	readonly layer: Layer;
+	/** Length of the visible line: the share of the drawing time this stroke takes. */
+	readonly weight: number;
+	/** The visible pieces of the line, in drawing order. */
+	readonly pieces: readonly Piece[];
+	/** The side away from the light, and the thin light along the lit edge (even-odd paths). */
+	readonly shade?: string;
+	readonly rim?: string;
+}
+
+/** A coloured touch that only appears with the colours, outside any form (cheeks, glints). */
 export interface Touch {
 	readonly d: string;
-	readonly tone: Tone;
+	readonly tone: Wash;
+}
+
+export interface PictureSpec {
+	readonly id: string;
+	readonly strokes: readonly StrokeSpec[];
+	readonly touches?: readonly Touch[];
+	/** The soft shadow on the paper under the subject. */
+	readonly ground?: string;
 }
 
 export interface DrawingPicture {
 	readonly id: string;
 	readonly strokes: readonly Stroke[];
 	readonly touches: readonly Touch[];
+	readonly ground?: string;
 }
 
 /** A point of the drawing, in the local box of the picture. */
@@ -39,200 +118,71 @@ export interface DrawingPoint {
 	readonly y: number;
 }
 
-/** An ellipse as a closed path, to keep the data short. */
-export function ellipsePath(cx: number, cy: number, rx: number, ry: number): string {
-	return `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`;
+const LAYER_RANK: Readonly<Record<Layer, number>> = { back: 0, middle: 1, front: 2 };
+
+/** How far inside a form a line must be to be hidden by it: the rest is under its outline. */
+const COVER_MARGIN = 1.3;
+
+function clamp(value: number, low: number, high: number): number {
+	return Math.min(high, Math.max(low, value));
 }
 
-/** Length of an ellipse (Ramanujan), rounded: the weight of the strokes drawn with `ellipsePath`. */
-export function ellipseLength(rx: number, ry: number): number {
-	const h = ((rx - ry) / (rx + ry)) ** 2;
-	return Math.round(Math.PI * (rx + ry) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h))));
-}
-
-function dot(cx: number, cy: number, radius: number, tone: Tone, layer?: Layer): Stroke {
+/** Shade and light of a form, sized on the form: thin on a small one, wide on a big one. */
+function volumeOf(fill: string): { shade: string; rim: string } {
+	const [x0, y0, x1, y1] = pathBox(fill);
+	const size = Math.min(x1 - x0, y1 - y0);
+	const depth = clamp(size * 0.14, 1.2, 9);
+	const inset = clamp(size * 0.05, 1.4, 3);
+	const band = inset + clamp(size * 0.05, 0.8, 3);
 	return {
-		d: ellipsePath(cx, cy, radius, radius),
-		weight: ellipseLength(radius, radius),
-		tone,
-		layer
+		shade: fill + shiftPath(fill, -depth, -depth * 0.85),
+		rim: shiftPath(fill, inset, inset) + shiftPath(fill, band, band)
 	};
 }
 
-const PETAL = 'M100 72C83 52 85 24 100 20C115 24 117 52 100 72Z';
-const PETAL_COUNT = 6;
-const PETAL_STEP = 360 / PETAL_COUNT;
-const SPARKLE = 'M0 -18L5 -5L18 0L5 5L0 18L-5 5L-18 0L-5 -5Z';
+function layerOf(spec: StrokeSpec): Layer {
+	return spec.layer ?? (spec.tone === undefined ? 'front' : 'middle');
+}
 
-const CAT: DrawingPicture = {
-	id: 'cat',
-	strokes: [
-		{
-			d: 'M54 84L58 40L84 58C94 55 106 55 116 58L142 40L146 84C150 112 130 132 100 132C70 132 50 112 54 84Z',
-			weight: 390,
-			tone: 'orange'
-		},
-		{ d: 'M63 56L76 63L65 76Z', weight: 42, tone: 'pink' },
-		{ d: 'M137 56L124 63L135 76Z', weight: 42, tone: 'pink' },
-		{ d: 'M100 62L100 74M89 64L90 74M111 64L110 74', weight: 36 },
-		{ d: ellipsePath(84, 92, 6, 8), weight: ellipseLength(6, 8), tone: 'ink' },
-		{ d: ellipsePath(116, 92, 6, 8), weight: ellipseLength(6, 8), tone: 'ink' },
-		{ d: 'M94 104L106 104L100 111Z', weight: 30, tone: 'pink' },
-		{ d: 'M100 111C100 120 90 121 86 116M100 111C100 120 110 121 114 116', weight: 40 },
-		{ d: 'M68 106L38 100M68 114L38 120', weight: 62 },
-		{ d: 'M132 106L162 100M132 114L162 120', weight: 62 },
-		{
-			d: 'M64 126C46 150 50 184 72 190L128 190C150 184 154 150 136 126',
-			weight: 190,
-			tone: 'orange',
-			layer: 'back'
-		},
-		{ d: 'M88 190C86 166 114 166 112 190', weight: 70, tone: 'cream', layer: 'back' },
-		{ d: 'M138 184C172 188 190 156 170 128', weight: 90 }
-	],
-	touches: [
-		{ d: ellipsePath(70, 112, 7, 4.5), tone: 'pink' },
-		{ d: ellipsePath(130, 112, 7, 4.5), tone: 'pink' }
-	]
-};
-
-const FISH: DrawingPicture = {
-	id: 'fish',
-	strokes: [
-		{
-			d: 'M24 100C52 56 128 56 156 100C128 144 52 144 24 100Z',
-			weight: 290,
-			tone: 'orange'
-		},
-		{ d: ellipsePath(62, 92, 6, 6), weight: ellipseLength(6, 6), tone: 'ink' },
-		{ d: 'M30 106C36 110 42 110 46 106', weight: 18 },
-		{ d: 'M92 80C80 94 80 106 92 120', weight: 45 },
-		{ d: 'M108 86q8 6 0 12M122 92q8 6 0 12M108 104q8 6 0 12', weight: 55 },
-		dot(30, 62, 7, 'teal'),
-		dot(46, 42, 5, 'teal'),
-		dot(30, 24, 4, 'teal'),
-		{ d: 'M84 68C92 44 118 42 128 70', weight: 80, tone: 'pink', layer: 'back' },
-		{ d: 'M146 100L186 66C178 90 178 110 186 134Z', weight: 150, tone: 'pink', layer: 'back' }
-	],
-	touches: [{ d: ellipsePath(70, 106, 7, 4.5), tone: 'pink' }]
-};
-
-const HOUSE: DrawingPicture = {
-	id: 'house',
-	strokes: [
-		{ d: 'M52 102L52 178L148 178L148 102', weight: 270, tone: 'yellow' },
-		{ d: 'M36 106L100 50L164 106Z', weight: 300, tone: 'pink' },
-		{ d: 'M88 178L88 140C88 128 112 128 112 140L112 178Z', weight: 130, tone: 'clay' },
-		dot(106, 158, 2.5, 'yellow'),
-		{ d: 'M58 120L80 120L80 142L58 142Z', weight: 88, tone: 'teal' },
-		{ d: 'M69 120L69 142M58 131L80 131', weight: 44 },
-		{ d: 'M120 120L142 120L142 142L120 142Z', weight: 88, tone: 'teal' },
-		{ d: 'M131 120L131 142M120 131L142 131', weight: 44 },
-		{ d: 'M122 69L122 50L142 50L142 87Z', weight: 95, tone: 'clay' },
-		dot(166, 32, 13, 'yellow'),
-		{ d: 'M166 10L166 4M166 54L166 60M144 32L138 32M188 32L194 32', weight: 24 },
-		{ d: 'M16 178L184 178', weight: 168 }
-	],
-	touches: []
-};
-
-const FLOWER: DrawingPicture = {
-	id: 'flower',
-	strokes: [
-		dot(100, 72, 18, 'yellow', 'front'),
-		...Array.from({ length: PETAL_COUNT }, (_, index): Stroke => ({
-			d: PETAL,
-			weight: 100,
-			tone: index % 2 === 0 ? 'pink' : 'lilac',
-			transform: `rotate(${index * PETAL_STEP} 100 72)`
-		})),
-		dot(93, 68, 2.4, 'ink', 'front'),
-		dot(107, 68, 2.4, 'ink', 'front'),
-		{ d: 'M92 77Q100 85 108 77', weight: 18 },
-		{ d: 'M100 148C100 142 99 136 100 124', weight: 26 },
-		{ d: 'M99 142C80 146 68 134 64 122C82 120 95 128 99 142Z', weight: 85, tone: 'green' },
-		{ d: 'M101 134C120 138 132 126 136 114C118 112 105 120 101 134Z', weight: 85, tone: 'green' },
-		{ d: 'M70 160L130 160L122 196L78 196Z', weight: 150, tone: 'clay' },
-		{ d: 'M64 148L136 148L136 162L64 162Z', weight: 168, tone: 'clay' }
-	],
-	touches: [
-		{ d: ellipsePath(85, 77, 3.5, 2.5), tone: 'pink' },
-		{ d: ellipsePath(115, 77, 3.5, 2.5), tone: 'pink' }
-	]
-};
-
-const BOAT: DrawingPicture = {
-	id: 'boat',
-	strokes: [
-		{ d: 'M34 122L166 122L146 154L54 154Z', weight: 300, tone: 'clay' },
-		{ d: 'M100 120L100 34', weight: 86 },
-		{ d: 'M104 40L104 112L148 112Z', weight: 205, tone: 'cream' },
-		{ d: 'M96 54L96 112L62 112Z', weight: 165, tone: 'yellow' },
-		{ d: 'M100 34L100 16L122 25Z', weight: 70, tone: 'pink' },
-		{
-			d: 'M75 138a5 5 0 1 0 10 0a5 5 0 1 0 -10 0ZM95 138a5 5 0 1 0 10 0a5 5 0 1 0 -10 0ZM115 138a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z',
-			weight: 94,
-			tone: 'teal'
-		},
-		dot(40, 48, 14, 'yellow'),
-		{
-			d: 'M10 172C22 162 34 162 46 172C58 182 70 182 82 172C94 162 106 162 118 172C130 182 142 182 154 172C166 162 178 162 190 172L190 192L10 192Z',
-			weight: 400,
-			tone: 'teal'
-		}
-	],
-	touches: []
-};
-
-const STAR: DrawingPicture = {
-	id: 'star',
-	strokes: [
-		{
-			d: 'M100 26L119 76L172 79L131 113L144 164L100 135L56 164L69 113L28 79L81 76Z',
-			weight: 530,
-			tone: 'yellow'
-		},
-		dot(88, 98, 3.5, 'ink'),
-		dot(112, 98, 3.5, 'ink'),
-		{ d: 'M90 111Q100 121 110 111', weight: 22 },
-		{ d: SPARKLE, weight: 100, tone: 'cream', transform: 'translate(164 40)' },
-		{ d: SPARKLE, weight: 100, tone: 'pink', transform: 'translate(172 150)' },
-		{ d: SPARKLE, weight: 100, tone: 'lilac', transform: 'translate(34 144)' }
-	],
-	touches: [
-		{ d: ellipsePath(80, 108, 6, 4), tone: 'pink' },
-		{ d: ellipsePath(120, 108, 6, 4), tone: 'pink' }
-	]
-};
+/** Measures the strokes and cuts their lines where a form painted later hides them. */
+export function buildPicture(spec: PictureSpec): DrawingPicture {
+	const ranks = spec.strokes.map((stroke, index) => ({
+		index,
+		rank: LAYER_RANK[layerOf(stroke)],
+		region: stroke.tone === undefined ? null : regionOf(stroke.fill ?? stroke.d)
+	}));
+	const strokes = spec.strokes.map((stroke, index): Stroke => {
+		const own = ranks[index] ?? { index, rank: 0 };
+		const covers = ranks
+			.filter((o) => o.rank > own.rank || (o.rank === own.rank && o.index > index))
+			.flatMap((o) => (o.region ? [o.region] : []));
+		const pieces = visiblePieces(stroke.d, covers, COVER_MARGIN);
+		const weight = Math.round(pieces.reduce((sum, piece) => sum + piece.length, 0));
+		const volume =
+			stroke.tone !== undefined && !stroke.flat ? volumeOf(stroke.fill ?? stroke.d) : {};
+		return { ...stroke, ...volume, layer: layerOf(stroke), weight, pieces };
+	});
+	return { id: spec.id, strokes, touches: spec.touches ?? [], ground: spec.ground };
+}
 
 export const DRAWINGS: readonly [DrawingPicture, ...DrawingPicture[]] = [
-	CAT,
-	FISH,
-	HOUSE,
-	FLOWER,
-	BOAT,
-	STAR
+	buildPicture(SUBJECTS[0]),
+	...SUBJECTS.slice(1).map(buildPicture)
 ];
 
 /** The little pencil marks of the progress row, in a box of 36 x 36, picked in turn. */
 export const SQUIGGLES: readonly [string, ...string[]] = [
-	'M5 27C9 8 16 8 18 20C20 30 27 28 31 9',
-	'M5 12C12 4 14 18 20 18C26 18 26 8 31 14',
-	'M6 29L12 8L18 28L24 8L30 28',
-	'M5 20C9 12 13 12 17 20C21 28 25 28 31 18'
+	'M6 26C9 12 14 9 17 17C20 26 25 25 30 10',
+	'M6 14C11 6 15 12 18 18C21 24 26 22 30 12',
+	'M6 28C8 18 12 8 16 14C19 19 15 25 19 26C24 27 26 14 30 8',
+	'M6 20C9 12 13 11 17 18C21 26 26 26 30 16'
 ];
-
-const LAYER_RANK: Readonly<Record<Layer, number>> = { back: 0, middle: 1, front: 2 };
 
 /** The coloured strokes in the order they are painted: the back ones first, the front ones last. */
 export function paintOrder(picture: DrawingPicture): readonly Stroke[] {
 	return picture.strokes
 		.filter((stroke) => stroke.tone !== undefined)
 		.map((stroke, index) => ({ stroke, index }))
-		.sort(
-			(a, b) =>
-				LAYER_RANK[a.stroke.layer ?? 'middle'] - LAYER_RANK[b.stroke.layer ?? 'middle'] ||
-				a.index - b.index
-		)
+		.sort((a, b) => LAYER_RANK[a.stroke.layer] - LAYER_RANK[b.stroke.layer] || a.index - b.index)
 		.map(({ stroke }) => stroke);
 }
