@@ -528,6 +528,150 @@
 			},
 			"smoke": {
 				"$value": "{color.cream.200}"
+			},
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.navy.800}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"trim": {
+				"$value": "{color.tomato.500}"
+			},
+			"metal": {
+				"$value": "{color.slate.300}"
+			},
+			"glass": {
+				"$value": "{color.azure.300}"
+			},
+			"flame-edge": {
+				"$value": "{color.orange.500}"
+			},
+			"flame-core": {
+				"$value": "{color.cream.50}"
+			},
+			"nebula-a": {
+				"$value": "{color.plum.500}"
+			},
+			"nebula-b": {
+				"$value": "{color.azure.500}"
+			},
+			"spark-a": {
+				"$value": "{color.lemon.300}"
+			},
+			"spark-b": {
+				"$value": "{color.pink.300}"
+			},
+			"spark-c": {
+				"$value": "{color.lagoon.300}"
+			},
+			"spark-d": {
+				"$value": "{color.plum.300}"
+			},
+			"astre-a-band": {
+				"$value": "{color.lagoon.300}"
+			},
+			"astre-a-ring": {
+				"$value": "{color.lemon.300}"
+			},
+			"astre-b-crater": {
+				"$value": "{color.leather.400}"
+			},
+			"astre-b-lip": {
+				"$value": "{color.orange.300}"
+			},
+			"astre-c-band": {
+				"$value": "{color.orange.300}"
+			},
+			"astre-c-storm": {
+				"$value": "{color.tomato.300}"
+			},
+			"astre-d-patch": {
+				"$value": "{color.plum.300}"
+			},
+			"astre-d-cap": {
+				"$value": "{color.plum.50}"
+			},
+			"home-sea": {
+				"$value": "{color.azure.300}"
+			},
+			"home-land": {
+				"$value": "{color.jade.300}"
+			},
+			"home-cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"inhabitant-a-body": {
+				"$value": "{color.lemon.300}"
+			},
+			"inhabitant-a-belly": {
+				"$value": "{color.lemon.50}"
+			},
+			"inhabitant-a-accent": {
+				"$value": "{color.orange.500}"
+			},
+			"inhabitant-b-body": {
+				"$value": "{color.lagoon.300}"
+			},
+			"inhabitant-b-belly": {
+				"$value": "{color.lagoon.50}"
+			},
+			"inhabitant-b-accent": {
+				"$value": "{color.lagoon.500}"
+			},
+			"inhabitant-c-body": {
+				"$value": "{color.plum.300}"
+			},
+			"inhabitant-c-belly": {
+				"$value": "{color.plum.50}"
+			},
+			"inhabitant-c-accent": {
+				"$value": "{color.plum.500}"
+			},
+			"inhabitant-d-body": {
+				"$value": "{color.jade.300}"
+			},
+			"inhabitant-d-belly": {
+				"$value": "{color.green.100}"
+			},
+			"inhabitant-d-accent": {
+				"$value": "{color.teal.600}"
+			},
+			"inhabitant-cheek": {
+				"$value": "{color.pink.300}"
+			},
+			"cow-skin": {
+				"$value": "{color.cream.50}"
+			},
+			"cow-spot": {
+				"$value": "{color.brown.600}"
+			},
+			"cow-pink": {
+				"$value": "{color.pink.300}"
+			},
+			"cow-horn": {
+				"$value": "{color.cream.300}"
+			},
+			"comet-head": {
+				"$value": "{color.lemon.300}"
+			},
+			"comet-tail": {
+				"$value": "{color.azure.300}"
+			},
+			"comet-tail-light": {
+				"$value": "{color.ice.100}"
+			},
+			"gift-ribbon": {
+				"$value": "{color.lemon.300}"
+			},
+			"hoop": {
+				"$value": "{color.pink.500}"
+			},
+			"hoop-stripe": {
+				"$value": "{color.cream.50}"
 			}
 		},
 		"food": {
@@ -1139,6 +1283,27 @@
 		},
 		"race-ghost-hole": {
 			"$value": 0.5
+		},
+		"rocket-shade": {
+			"$value": 0.24
+		},
+		"rocket-light": {
+			"$value": 0.6
+		},
+		"rocket-nebula": {
+			"$value": 0.32
+		},
+		"rocket-glow": {
+			"$value": 0.55
+		},
+		"rocket-route": {
+			"$value": 0.4
+		},
+		"rocket-tail": {
+			"$value": 0.75
+		},
+		"rocket-ground": {
+			"$value": 0.28
 		}
 	},
 	"duration": {
