@@ -3,6 +3,7 @@
 	import { stageFor } from '../shared/stage';
 	import Car from './Car.svelte';
 	import Cloud from './Cloud.svelte';
+	import Form from './Form.svelte';
 	import LocoShape from './LocoShape.svelte';
 	import { EXCLAMATION, LANDSCAPE, SMOKE_PUFFS, TRACK } from './shapes';
 	import {
@@ -28,6 +29,8 @@
 
 	let { view }: Props = $props();
 
+	const uid = $props.id();
+
 	// One step per good key: the wagon that rolls in moves a notch each time.
 	const stage = $derived(
 		view.phase === 'typing'
@@ -43,8 +46,9 @@
 	const wagons = $derived(wagonIndexes(view));
 	const entrance = $derived(view.scene.kind === 'variant' ? view.scene.index : view.groupIndex % 4);
 	const ties = $derived(
-		Array.from({ length: Math.ceil(SCENE.width / TRACK.tieSpacing) }, (_, index) => index)
+		Array.from({ length: Math.ceil(SCENE.width / TRACK.tieSpacing) + 1 }, (_, index) => index)
 	);
+	const station = LANDSCAPE.station;
 </script>
 
 <svg
@@ -56,40 +60,74 @@
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 >
-	<path class="hill far" d={LANDSCAPE.farHillPath} />
-	<path class="hill near" d={LANDSCAPE.nearHillPath} />
-	<circle class="sun" cx={LANDSCAPE.sun.x} cy={LANDSCAPE.sun.y} r={LANDSCAPE.sun.radius} />
+	<linearGradient id="{uid}-sky" x1="0" y1="0" x2="0" y2="1">
+		<stop class="sky-high" offset="0" />
+		<stop class="sky-low" offset="0.85" />
+	</linearGradient>
+	<rect x="0" y="0" width={SCENE.width} height={SCENE.height} fill="url(#{uid}-sky)" />
+
+	<path class="halo" d={LANDSCAPE.sunHalo} />
+	<Form form={LANDSCAPE.sun} paint="sun" />
 	{#each LANDSCAPE.clouds as cloud (cloud[0]?.x)}
-		<g>
-			{#each cloud as puff (puff.x)}
-				<circle class="sky-cloud" cx={puff.x} cy={puff.y} r={puff.radius} />
-			{/each}
-		</g>
-	{/each}
-	<path class="station-wall" d={LANDSCAPE.station.bodyPath} />
-	<path class="station-roof" d={LANDSCAPE.station.roofPath} />
-	<path class="station-door" d={LANDSCAPE.station.doorPath} />
-	{#each LANDSCAPE.station.windowPaths as window (window)}
-		<path class="station-window" d={window} />
+		<Cloud puffs={cloud} tone="sky" />
 	{/each}
 
+	<Form form={LANDSCAPE.farHills} paint="hill-far" />
+	{#each LANDSCAPE.trees as tree (tree.trunk)}
+		<path class="part trunk" d={tree.trunk} />
+		<Form form={tree.crown} paint="tree" />
+	{/each}
+	<Form form={LANDSCAPE.nearHills} paint="hill-near" />
+
+	<path class="wire" d={LANDSCAPE.wires} />
+	{#each LANDSCAPE.poles as pole (pole.pole)}
+		<path class="part trunk" d={pole.pole} />
+		<path class="part trunk" d={pole.arm} />
+		{#each pole.insulators as insulator (insulator)}
+			<path class="part glass thin" d={insulator} />
+		{/each}
+	{/each}
+
+	<Form form={station.roof} paint="roof" />
+	<path class="fine" d={station.roofTiles} />
+	<path class="part dial" d={station.clock} />
+	<path class="fine" d={station.clockHands} />
+	<Form form={station.wall} paint="wall" />
+	<Form form={station.door} paint="wood" />
+	{#each station.windows as window (window)}
+		<path class="part glass" d={window} />
+	{/each}
+	<path class="fine" d={station.windowBars} />
+	<Form form={station.platform} paint="stone" />
+
 	<rect
-		class="ground"
-		x="0"
-		y={TRACK.y + TRACK.railHeight}
-		width={SCENE.width}
-		height={TRACK.groundHeight}
+		class="part ground"
+		x="-2"
+		y={TRACK.y - 3}
+		width={SCENE.width + 4}
+		height={TRACK.groundHeight + 4}
 	/>
+	<path class="fine" d={LANDSCAPE.grassTufts} />
+	<rect
+		class="part ballast"
+		x="-2"
+		y={TRACK.ballastTop}
+		width={SCENE.width + 4}
+		height={TRACK.ballastBottom - TRACK.ballastTop}
+	/>
+	<path class="pebbles" d={LANDSCAPE.pebbles} />
 	{#each ties as tie (tie)}
 		<rect
-			class="tie"
-			x={tie * TRACK.tieSpacing}
+			class="part tie thin"
+			x={tie * TRACK.tieSpacing - TRACK.tieWidth / 2}
 			y={TRACK.tieY}
 			width={TRACK.tieWidth}
 			height={TRACK.tieHeight}
+			rx="1"
 		/>
 	{/each}
-	<rect class="rail" x="0" y={TRACK.y} width={SCENE.width} height={TRACK.railHeight} />
+	<rect class="part rail" x="-2" y={TRACK.y} width={SCENE.width + 4} height={TRACK.railHeight} />
+	<path class="rail-light" d="M0 {TRACK.y + 1}L{SCENE.width} {TRACK.y + 1}" />
 
 	<g class="train" data-departing={departing || undefined}>
 		<g transform="translate({originX} {TRACK.y}) scale({scale})">
@@ -116,14 +154,11 @@
 	{#if sceneId === 'whistle-puff'}
 		<g transform="translate({chimney.x} {chimney.y - WHISTLE_LIFT})">
 			<g class="exclaim">
-				<path class="bar" d={EXCLAMATION.barPath} />
-				<circle
-					class="dot"
-					cx={EXCLAMATION.dot.x}
-					cy={EXCLAMATION.dot.y}
-					r={EXCLAMATION.dot.radius}
-				/>
 				<Cloud puffs={EXCLAMATION.wisps} />
+				<path class="underlay" d={EXCLAMATION.bar.d} />
+				<path class="underlay" d={EXCLAMATION.dot.d} />
+				<Form form={EXCLAMATION.bar} paint="steam" edge={false} />
+				<Form form={EXCLAMATION.dot} paint="steam" edge={false} />
 			</g>
 		</g>
 	{/if}
@@ -152,77 +187,83 @@
 		block-size: auto;
 		overflow: hidden;
 		border-radius: var(--dd-radius-lg);
-		background-color: var(--dd-color-surface-sunken);
+		background-color: var(--dd-color-train-sky-low);
 	}
 
-	.hill,
-	.sun,
-	.sky-cloud,
-	.station-wall,
-	.station-roof,
-	.station-door,
-	.station-window,
-	.ground,
-	.tie,
-	.rail,
-	.bar,
-	.dot {
-		stroke: var(--dd-color-drawing-line);
+	.sky-high {
+		stop-color: var(--dd-color-train-sky-high);
+	}
+
+	.sky-low {
+		stop-color: var(--dd-color-train-sky-low);
+	}
+
+	.halo {
+		fill: var(--dd-color-train-light);
+		fill-opacity: var(--dd-opacity-train-halo);
+	}
+
+	.part,
+	.underlay,
+	.fine,
+	.wire {
+		stroke: var(--dd-color-train-line);
 		stroke-width: var(--dd-border-width-thick);
 		stroke-linejoin: round;
+		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 
-	.hill.far {
-		fill: var(--dd-color-wear-leaf);
-	}
-
-	.hill.near {
-		fill: var(--dd-color-companion-green-body);
-	}
-
-	.sun {
-		fill: var(--dd-color-star-fill);
-	}
-
-	.sky-cloud {
-		fill: var(--dd-color-surface-raised);
-		stroke: transparent;
-	}
-
-	.station-wall {
-		fill: var(--dd-color-surface-raised);
-	}
-
-	.station-roof {
-		fill: var(--dd-color-wear-red);
-	}
-
-	.station-door {
-		fill: var(--dd-color-wear-leather);
-	}
-
-	.station-window {
-		fill: var(--dd-color-wear-glass);
-	}
-
-	.ground {
-		fill: var(--dd-color-border-subtle);
-		stroke: transparent;
-	}
-
-	.tie {
-		fill: var(--dd-color-wear-leather);
+	.thin,
+	.fine,
+	.wire {
 		stroke-width: var(--dd-border-width-thin);
 	}
 
-	.rail {
-		fill: var(--dd-color-border-strong);
+	.fine,
+	.wire {
+		fill: transparent;
 	}
 
-	.bar,
-	.dot {
-		fill: var(--dd-color-surface-raised);
+	/* Under two joined forms: only its outer half shows, one outline around both. */
+	.underlay {
+		fill: var(--dd-color-train-line);
+		stroke-width: calc(var(--dd-border-width-thick) * 2);
+	}
+
+	.trunk,
+	.tie {
+		fill: var(--dd-color-train-wood);
+	}
+
+	.glass {
+		fill: var(--dd-color-train-glass);
+	}
+
+	.dial {
+		fill: var(--dd-color-train-steam);
+	}
+
+	.ground {
+		fill: var(--dd-color-train-grass);
+	}
+
+	.ballast {
+		fill: var(--dd-color-train-stone);
+	}
+
+	.pebbles {
+		fill: var(--dd-color-train-earth);
+	}
+
+	.rail {
+		fill: var(--dd-color-train-steel);
+	}
+
+	.rail-light {
+		stroke: var(--dd-color-train-light);
+		stroke-width: var(--dd-border-width-thin);
+		vector-effect: non-scaling-stroke;
 	}
 
 	/* The train leaves after the last reward: it rolls out of the scene, slowly at first. */

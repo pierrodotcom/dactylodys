@@ -815,6 +815,119 @@
 				"$value": "{color.amber.700}"
 			}
 		},
+		"train": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"sky-high": {
+				"$value": "{color.azure.300}"
+			},
+			"sky-low": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.sunflower.300}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"hill-far": {
+				"$value": "{color.mint.200}"
+			},
+			"hill-near": {
+				"$value": "{color.green.300}"
+			},
+			"grass": {
+				"$value": "{color.jade.300}"
+			},
+			"tree": {
+				"$value": "{color.sage.400}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"stone": {
+				"$value": "{color.brown.100}"
+			},
+			"earth": {
+				"$value": "{color.brown.400}"
+			},
+			"wood": {
+				"$value": "{color.leather.400}"
+			},
+			"iron": {
+				"$value": "{color.charcoal.600}"
+			},
+			"steel": {
+				"$value": "{color.slate.300}"
+			},
+			"brass": {
+				"$value": "{color.sunflower.300}"
+			},
+			"paint": {
+				"$value": "{color.tomato.500}"
+			},
+			"glass": {
+				"$value": "{color.ice.100}"
+			},
+			"glow": {
+				"$value": "{color.amber.300}"
+			},
+			"flame": {
+				"$value": "{color.lemon.50}"
+			},
+			"mouth": {
+				"$value": "{color.charcoal.900}"
+			},
+			"wall": {
+				"$value": "{color.cream.200}"
+			},
+			"roof": {
+				"$value": "{color.tomato.600}"
+			},
+			"steam": {
+				"$value": "{color.cream.50}"
+			},
+			"empty": {
+				"$value": "{color.cream.100}"
+			},
+			"wagon-a": {
+				"$value": "{color.azure.500}"
+			},
+			"wagon-b": {
+				"$value": "{color.lemon.500}"
+			},
+			"wagon-c": {
+				"$value": "{color.jade.300}"
+			},
+			"wagon-d": {
+				"$value": "{color.violet.400}"
+			},
+			"wagon-e": {
+				"$value": "{color.orange.500}"
+			},
+			"wagon-f": {
+				"$value": "{color.lagoon.500}"
+			},
+			"cargo-a": {
+				"$value": "{color.tomato.500}"
+			},
+			"cargo-b": {
+				"$value": "{color.azure.500}"
+			},
+			"cargo-c": {
+				"$value": "{color.cream.50}"
+			},
+			"cargo-d": {
+				"$value": "{color.sunflower.300}"
+			}
+		},
 		"race": {
 			"ground": {
 				"$value": "{color.brown.400}"
@@ -1109,6 +1222,9 @@
 		"star-large": {
 			"$value": "5rem"
 		},
+		"train-loco-mini": {
+			"$value": "3.5rem"
+		},
 		"icon": {
 			"$value": "1.25rem"
 		},
@@ -1259,6 +1375,15 @@
 		},
 		"egg-water": {
 			"$value": 0.55
+		},
+		"train-shade": {
+			"$value": 0.2
+		},
+		"train-light": {
+			"$value": 0.55
+		},
+		"train-halo": {
+			"$value": 0.3
 		},
 		"race-ghost": {
 			"$value": 0.8

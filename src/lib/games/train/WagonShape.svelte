@@ -1,7 +1,10 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import { CARGOS, WAGON } from './shapes';
+	import type { Snippet } from 'svelte';
+	import Form from './Form.svelte';
+	import { CARGOS, WAGON, type CargoItem } from './shapes';
+	import Wheel from './Wheel.svelte';
 
 	interface Props {
 		/** Body colour, `0` to `WAGON_TONES - 1`. */
@@ -10,147 +13,162 @@
 		cargo: number;
 		/** Degrees the wheels have turned. */
 		angle?: number;
-		/** Draw an empty outline, for a wagon that is not hooked yet. */
+		/** A wagon still to come: no colour, no load. */
 		empty?: boolean;
 		/** The load does the wave, one item after the other. */
 		wave?: boolean;
+		/** What stands in the wagon in front of the load, hidden below the side (a passenger). */
+		inside?: Snippet;
 	}
 
-	let { tone, cargo, angle = 0, empty = false, wave = false }: Props = $props();
+	let { tone, cargo, angle = 0, empty = false, wave = false, inside }: Props = $props();
 
 	const items = $derived(CARGOS[cargo % CARGOS.length] ?? []);
+
+	function paintOf(item: CargoItem): 'wood' | 'cargo' {
+		return item.kind === 'crate' || item.kind === 'barrel' ? 'wood' : 'cargo';
+	}
 </script>
 
 <g class="wagon" data-tone={tone} data-empty={empty || undefined} data-wave={wave || undefined}>
 	{#if !empty}
 		{#each items as item, index (index)}
 			<g class="item" data-tone={item.tone}>
-				<path class="cargo" d={item.d} />
+				{#each item.extras as extra (extra.d)}
+					<path class="extra" data-paint={extra.paint} d={extra.d} />
+				{/each}
+				<Form
+					form={item}
+					paint={paintOf(item)}
+					spots={item.spots}
+					spotPaint={item.kind === 'barrel' ? 'iron' : 'accent'}
+				/>
 				{#if item.detail !== ''}
-					<path class="detail" d={item.detail} />
+					<path class="fine" d={item.detail} />
 				{/if}
 			</g>
 		{/each}
 	{/if}
-	<path class="chassis" d={WAGON.chassisPath} />
+	{@render inside?.()}
+
 	<path class="hitch" d={WAGON.hitchPath} />
-	<path class="hitch" d={WAGON.hitchRingPath} />
-	<path class="body" d={WAGON.bodyPath} />
-	{#if !empty}
-		<path class="detail" d={WAGON.rimPath} />
-		{#each WAGON.plankPaths as plank (plank)}
-			<path class="detail" d={plank} />
-		{/each}
-	{/if}
+	{#each WAGON.hitchLinks as link (link)}
+		<path class="link" d={link} />
+	{/each}
+	{#each WAGON.buffers as buffer (buffer.stock)}
+		<path class="part iron" d={buffer.stock} />
+		<Form form={buffer.head} paint="steel" />
+	{/each}
+	<Form form={WAGON.solebar} paint="iron" />
+	<Form form={WAGON.body} paint={empty ? 'empty' : 'body'} />
+	<path class="fine" d={WAGON.planks} />
+	{#each WAGON.stanchions as stanchion (stanchion.d)}
+		<Form form={stanchion} paint="steel" edge={false} />
+		<path class="fine" d={stanchion.d} />
+	{/each}
+	{#each WAGON.rivets as rivet (`${rivet.x} ${rivet.y}`)}
+		<circle class="rivet" cx={rivet.x} cy={rivet.y} r={rivet.radius} />
+	{/each}
+	<Form form={WAGON.rim} paint="steel" />
+	{#each WAGON.springs as spring (spring)}
+		<path class="part iron thin" d={spring} />
+	{/each}
 	{#each WAGON.wheels as wheel (wheel.x)}
-		<g transform="rotate({angle} {wheel.x} {wheel.y})">
-			<circle class="wheel" cx={wheel.x} cy={wheel.y} r={wheel.radius} />
-			<path
-				class="spoke"
-				d="M{wheel.x - wheel.radius + 2} {wheel.y}L{wheel.x + wheel.radius - 2} {wheel.y}"
-			/>
-			<circle class="hub" cx={wheel.x} cy={wheel.y} r="2" />
-		</g>
+		<Wheel x={wheel.x} y={wheel.y} radius={wheel.radius} spokes={6} {angle} />
 	{/each}
 </g>
 
 <style>
 	.wagon {
-		--dd-train-body: var(--dd-color-food-a);
+		--dd-train-body: var(--dd-color-train-wagon-a);
 	}
 
 	.wagon[data-tone='1'] {
-		--dd-train-body: var(--dd-color-food-d);
+		--dd-train-body: var(--dd-color-train-wagon-b);
 	}
 
 	.wagon[data-tone='2'] {
-		--dd-train-body: var(--dd-color-food-b);
+		--dd-train-body: var(--dd-color-train-wagon-c);
 	}
 
 	.wagon[data-tone='3'] {
-		--dd-train-body: var(--dd-color-food-e);
+		--dd-train-body: var(--dd-color-train-wagon-d);
 	}
 
 	.wagon[data-tone='4'] {
-		--dd-train-body: var(--dd-color-food-c);
+		--dd-train-body: var(--dd-color-train-wagon-e);
 	}
 
 	.wagon[data-tone='5'] {
-		--dd-train-body: var(--dd-color-food-f);
+		--dd-train-body: var(--dd-color-train-wagon-f);
 	}
 
 	.item {
-		--dd-train-cargo: var(--dd-color-wear-red);
+		--dd-train-cargo: var(--dd-color-train-cargo-a);
+		--dd-train-accent: var(--dd-color-train-cargo-c);
 	}
 
 	.item[data-tone='1'] {
-		--dd-train-cargo: var(--dd-color-wear-blue);
+		--dd-train-cargo: var(--dd-color-train-cargo-b);
 	}
 
 	.item[data-tone='2'] {
-		--dd-train-cargo: var(--dd-color-wear-cream);
+		--dd-train-cargo: var(--dd-color-train-cargo-c);
+		--dd-train-accent: var(--dd-color-train-cargo-a);
 	}
 
 	.item[data-tone='3'] {
-		--dd-train-cargo: var(--dd-color-wear-gold);
+		--dd-train-cargo: var(--dd-color-train-cargo-d);
 	}
 
-	.body,
-	.cargo,
-	.chassis,
-	.wheel,
-	.hub,
-	.detail,
-	.spoke,
-	.hitch {
-		stroke: var(--dd-color-drawing-line);
+	.part,
+	.extra,
+	.fine,
+	.hitch,
+	.link {
+		stroke: var(--dd-color-train-line);
 		stroke-width: var(--dd-border-width-thick);
 		stroke-linejoin: round;
 		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 
-	.body {
-		fill: var(--dd-train-body);
+	.thin,
+	.fine,
+	.link {
+		stroke-width: var(--dd-border-width-thin);
 	}
 
-	.wagon[data-empty] .body {
-		fill: var(--dd-color-surface-raised);
-	}
-
-	.cargo {
-		fill: var(--dd-train-cargo);
-	}
-
-	.chassis {
-		fill: var(--dd-color-border-strong);
-	}
-
-	.wheel {
-		fill: var(--dd-color-pot-body);
-	}
-
-	.hub {
-		fill: var(--dd-color-star-fill);
-	}
-
-	.detail,
-	.spoke,
-	.hitch {
+	.fine,
+	.hitch,
+	.link {
 		fill: transparent;
 	}
 
-	.detail {
-		stroke-width: var(--dd-border-width-thin);
-	}
-
-	.spoke {
-		stroke: var(--dd-color-surface-raised);
-		stroke-width: var(--dd-border-width-thin);
-	}
-
 	.hitch {
+		stroke: var(--dd-color-train-iron);
 		stroke-width: var(--dd-border-width-target);
+	}
+
+	.iron {
+		fill: var(--dd-color-train-iron);
+	}
+
+	.extra {
+		fill: var(--dd-train-accent);
+	}
+
+	.extra[data-paint='leaf'] {
+		fill: var(--dd-color-train-leaf);
+	}
+
+	.extra[data-paint='wood'] {
+		fill: var(--dd-color-train-wood);
+	}
+
+	.rivet {
+		fill: var(--dd-color-train-light);
+		fill-opacity: var(--dd-opacity-train-light);
 	}
 
 	/* The wave of the load (scene cargo-wave): each item jumps a little after the one before. */
