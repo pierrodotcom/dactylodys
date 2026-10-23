@@ -1,6 +1,33 @@
 <script lang="ts">
+	import {
+		BELLY,
+		BELLY_BANDS,
+		BELLY_SHADE,
+		BODY,
+		BODY_LIGHT,
+		BODY_SHADE,
+		BROWS,
+		CHEEKS,
+		CHIN_SHADE,
+		EYES,
+		FEET,
+		HEAD,
+		HEAD_LIGHTS,
+		HEAD_OFFSET,
+		HEAD_PLATES,
+		HEAD_SHADE,
+		MOUTH,
+		NOSTRILS,
+		RAISED_ARMS,
+		REST_ARMS,
+		SIDES,
+		SNOUT_RIDGE,
+		TONGUE,
+		type Arm
+	} from '../hatching/shapes';
 	import type { GameView } from '../shared/game-view';
 	import IngredientShape from './IngredientShape.svelte';
+	import Pot from './Pot.svelte';
 	import { ingredientPlace, isDishReady, prepStage } from './prep';
 	import {
 		BALLOON,
@@ -28,6 +55,8 @@
 
 	let { view }: Props = $props();
 
+	const uid = $props.id();
+
 	const place = $derived(ingredientPlace(view));
 	const stage = $derived(prepStage(view));
 	const ready = $derived(isDishReady(view));
@@ -40,7 +69,118 @@
 	function placeTransform(spot: { x: number; y: number; scale: number }): string {
 		return `translate(${spot.x} ${spot.y}) scale(${spot.scale})`;
 	}
+
+	function ref(name: string): string {
+		return `${uid}-${name}`;
+	}
+
+	function url(name: string): string {
+		return `url(#${ref(name)})`;
+	}
 </script>
+
+<!-- A form with its volume: its fill, then, kept inside it, its shade and its lights. -->
+{#snippet modelled(
+	name: string,
+	d: string,
+	fill: string,
+	shade: string | undefined,
+	lights: readonly string[] = []
+)}
+	<clipPath id={ref(name)}><path {d} /></clipPath>
+	<path class={fill} {d} />
+	<g clip-path={url(name)}>
+		{#if shade}
+			<path class="shade" fill-rule="evenodd" d={shade} />
+		{/if}
+		{#each lights as light (light)}
+			<path class="light" d={light} />
+		{/each}
+	</g>
+{/snippet}
+
+<!-- An arm of the baby dino: its outline under it, so that the body shares it at the shoulder. -->
+{#snippet babyArm(limb: Arm, name: string)}
+	<path class="underlay" d={limb.fill} />
+	{@render modelled(name, limb.fill, 'skin', limb.shade)}
+	{@render modelled(`${name}-hand`, limb.hand.fill, 'skin', limb.hand.shade)}
+	<path class="open line" d={limb.hand.line} />
+	<path class="open fine" d={limb.hand.fingers} />
+{/snippet}
+
+{#snippet baby()}
+	<path class="ground" d={DINO.groundPath} />
+	<path class="skin line" d={DINO.tailPath} />
+	<path class="shade" d={DINO.tailShade} />
+	<g transform="translate(0 {DINO.feetLift})">
+		{#each FEET as foot (foot.side)}
+			{@render modelled(`foot-${foot.side}`, foot.fill, 'skin', foot.shade)}
+			<path class="open line" d={foot.fill} />
+			<path class="open fine" d={foot.toes} />
+			<path class="claw fine" d={foot.claws} />
+		{/each}
+	</g>
+	<path class="underlay" d={BODY} />
+	<g class="dino-rest-arms">
+		{#each SIDES as side (side)}
+			{@render babyArm(REST_ARMS[side], `rest-${side}`)}
+		{/each}
+	</g>
+	<g class="dino-arm">
+		{#each SIDES as side (side)}
+			{@render babyArm(RAISED_ARMS[side], `up-${side}`)}
+		{/each}
+	</g>
+	{@render modelled('body', BODY, 'skin', BODY_SHADE, [BODY_LIGHT])}
+	{@render modelled('belly', BELLY, 'belly', BELLY_SHADE)}
+	<g clip-path={url('belly')}>
+		<path class="open fine" d={BELLY_BANDS} />
+	</g>
+	<path class="open fine" d={BELLY} />
+	<g clip-path={url('body')}>
+		<path class="shade" d={CHIN_SHADE} />
+	</g>
+	<g transform="translate(0 {HEAD_OFFSET})">
+		{#each HEAD_PLATES as plate, index (index)}
+			<g transform={plate.transform}>
+				{@render modelled(`plate-${index}`, plate.d, 'plate', plate.shade)}
+				<path class="open line" d={plate.d} />
+				<path class="open fine" d={plate.vein} />
+			</g>
+		{/each}
+		{@render modelled('head', HEAD, 'skin', HEAD_SHADE, HEAD_LIGHTS)}
+		<path class="open line" d={HEAD} />
+		<path class="open fine" d={SNOUT_RIDGE} />
+		{#each SIDES as side (side)}
+			{@const eye = EYES[side]}
+			<path class="baby-cheek" d={CHEEKS[side]} />
+			<clipPath id={ref(`eye-${side}`)}><path d={eye.white} /></clipPath>
+			<path class="white" d={eye.white} />
+			<g clip-path={url(`eye-${side}`)}>
+				<path class="plate" d={eye.iris} />
+				<path class="ink" d={eye.pupil} />
+				{#each eye.glints as glint (glint)}
+					<path class="white" d={glint} />
+				{/each}
+				<path class="shade" d={eye.lid} />
+			</g>
+			<path class="open line" d={eye.white} />
+			<path class="ink fine" d={BROWS[side]} />
+			<path class="ink" d={NOSTRILS[side]} />
+		{/each}
+		<clipPath id={ref('mouth')}><path d={MOUTH} /></clipPath>
+		<path class="ink" d={MOUTH} />
+		<g clip-path={url('mouth')}><path class="tongue" d={TONGUE} /></g>
+		<path class="open line" d={MOUTH} />
+	</g>
+{/snippet}
+
+{#snippet eyeOf(eye: { white: string; iris: string; pupil: string; glint: string })}
+	<path class="white line" d={eye.white} />
+	<path class="iris" d={eye.iris} />
+	<path class="ink" d={eye.pupil} />
+	<path class="white" d={eye.glint} />
+{/snippet}
 
 <svg
 	class="kitchen"
@@ -50,21 +190,47 @@
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 >
-	<path class="counter" d={KITCHEN.counterPath} />
-	<path class="board" d={KITCHEN.boardPath} />
+	<path class="tile" d={KITCHEN.tilesPath} />
 
-	{#each POT.handlePaths as handle (handle)}
-		<path class="handle" d={handle} />
+	<g class="window">
+		<path class="frame line" d={KITCHEN.window.framePath} />
+		<path class="sky fine" d={KITCHEN.window.panePath} />
+		<path class="sun" d={KITCHEN.window.sun} />
+		<path class="cloud" d={KITCHEN.window.cloud} />
+		<path class="light" d={KITCHEN.window.gleams} />
+		<path class="frame fine" d={KITCHEN.window.barsPath} />
+		<path class="wood-light line" d={KITCHEN.window.sillPath} />
+		{#each KITCHEN.plant.leaves as leaf (leaf)}
+			<path class="leaf line" d={leaf} />
+		{/each}
+		<path class="crease" d={KITCHEN.plant.veins} />
+		<path class="plant-pot line" d={KITCHEN.plant.potPath} />
+		<path class="plant-pot line" d={KITCHEN.plant.rimPath} />
+	</g>
+
+	{#each KITCHEN.bracketPaths as bracket (bracket)}
+		<path class="wood line" d={bracket} />
 	{/each}
-	<ellipse class="inside" cx={POT.rim.cx} cy={POT.rim.cy} rx={POT.rim.rx} ry={POT.rim.ry} />
-	<ellipse class="soup" cx={POT.soup.cx} cy={POT.soup.cy} rx={POT.soup.rx} ry={POT.soup.ry} />
+	<path class="wood line" d={KITCHEN.shelfPath} />
+	<path class="wood-light" d={KITCHEN.shelfTopPath} />
+	<path class="crease" d={KITCHEN.shelfGrain} />
+	<path class="open fine" d={KITCHEN.shelfEdge} />
+
+	<path class="wood-light line" d={KITCHEN.counterTopPath} />
+	<path class="wood line" d={KITCHEN.counterFrontPath} />
+	<path class="crease" d={KITCHEN.counterGrain} />
+	<path class="knot" d={KITCHEN.counterKnots} />
+	<path class="lip" d={KITCHEN.counterLip} />
+
+	<Pot layer="back" />
 
 	{#if sceneId === 'wave'}
 		<g class="olas">
-			{#each OLA_HUMPS as wave (wave.hump)}
+			{#each OLA_HUMPS as wave, index (wave.hump)}
 				<g class="ola">
-					<path class="hump" d={wave.hump} />
-					<path class="fold" d={wave.foam} />
+					{@render modelled(`ola-${index}`, wave.hump, 'soup-fill', wave.shade)}
+					<path class="open line" d={wave.hump} />
+					<path class="foam fine" d={wave.foam} />
 				</g>
 			{/each}
 		</g>
@@ -72,8 +238,12 @@
 
 	{#if sceneId === 'slide'}
 		<g class="ladle">
-			<path class="utensil" d={LADLE.bowlPath} />
-			<path class="utensil" d={LADLE.handlePath} />
+			<path class="metal-light line" d={LADLE.bowlPath} />
+			<path class="metal-dark" d={LADLE.bowlInside} />
+			{@render modelled('ladle', LADLE.handlePath, 'metal-light', LADLE.handleShade)}
+			<path class="open line" d={LADLE.handlePath} />
+			<path class="open line" d={LADLE.hookPath} />
+			<path class="gleam" d={LADLE.gleam} />
 		</g>
 	{/if}
 
@@ -81,13 +251,24 @@
 		<g class="bubbles" data-reward data-reward-variant="0">
 			{#each POT.bubbles as bubble (bubble.x)}
 				<circle class="bubble-dot" cx={bubble.x} cy={bubble.y} r={bubble.radius} />
+				<circle
+					class="white"
+					cx={bubble.x - bubble.radius * 0.35}
+					cy={bubble.y - bubble.radius * 0.35}
+					r={bubble.radius * 0.3}
+				/>
 			{/each}
 		</g>
 		<g transform={placeTransform(KITCHEN.potIngredient)}>
 			{#if sceneId === 'diving-board'}
 				<g class="diving-board">
-					<rect class="plank" {...DIVING_BOARD.plank} />
-					<rect class="plank" {...DIVING_BOARD.leg} />
+					<path class="metal-light line" d={DIVING_BOARD.postPath} />
+					<path class="gleam" d={DIVING_BOARD.postGleam} />
+					<path class="metal line" d={DIVING_BOARD.footPath} />
+					<path class="metal line" d={DIVING_BOARD.rollerPath} />
+					<path class="cloth line" d={DIVING_BOARD.plankPath} />
+					<path class="stripe" d={DIVING_BOARD.stripePath} />
+					<path class="gleam" d={DIVING_BOARD.gleam} />
 				</g>
 			{/if}
 			{#if sceneId === undefined}
@@ -96,33 +277,42 @@
 				</g>
 			{:else}
 				<g class="diver">
+					{#if sceneId === 'balloon'}
+						<path class="cord balloon-string" d={BALLOON.stringPath} />
+					{/if}
 					<IngredientShape variant={view.groupIndex} {stage} />
 					{#if sceneId === 'parachute'}
 						<g class="napkin">
 							{#each NAPKIN.cordPaths as cord (cord)}
 								<path class="cord" d={cord} />
 							{/each}
-							<path class="canopy" d={NAPKIN.canopyPath} />
-							{#each NAPKIN.foldPaths as fold (fold)}
-								<path class="fold" d={fold} />
-							{/each}
+							<clipPath id={ref('napkin')}><path d={NAPKIN.canopyPath} /></clipPath>
+							<path class="cloth" d={NAPKIN.canopyPath} />
+							<g clip-path={url('napkin')}>
+								<path class="check" d={NAPKIN.checksPath} />
+								<path class="shade" fill-rule="evenodd" d={NAPKIN.canopyShade} />
+								<path class="light" d={NAPKIN.canopyLight} />
+								{#each NAPKIN.foldPaths as fold (fold)}
+									<path class="crease" d={fold} />
+								{/each}
+							</g>
+							<path class="open line" d={NAPKIN.canopyPath} />
 						</g>
 					{:else if sceneId === 'balloon'}
-						<path class="cord balloon-string" d={BALLOON.stringPath} />
 						<g class="balloon">
-							<path class="balloon-body" d={BALLOON.bodyPath} />
-							<path class="balloon-body" d={BALLOON.knotPath} />
-							<path class="fold" d={BALLOON.shinePath} />
+							<path class="balloon-fill line" d={BALLOON.knotPath} />
+							{@render modelled('balloon', BALLOON.bodyPath, 'balloon-fill', BALLOON.bodyShade, [
+								BALLOON.shinePath,
+								BALLOON.glint
+							])}
+							<path class="open line" d={BALLOON.bodyPath} />
 						</g>
 					{:else if sceneId === 'float'}
 						<g class="arm">
-							<path class="glove" d={WAVING_ARM.armPath} />
-							<circle
-								class="glove"
-								cx={WAVING_ARM.hand.x}
-								cy={WAVING_ARM.hand.y}
-								r={WAVING_ARM.hand.radius}
-							/>
+							<path class="hose" d={WAVING_ARM.armPath} />
+							<path class="cloth line" d={WAVING_ARM.cuffPath} />
+							<path class="cloth line" d={WAVING_ARM.glovePath} />
+							<path class="open fine" d={WAVING_ARM.fingers} />
 						</g>
 					{/if}
 				</g>
@@ -130,85 +320,99 @@
 		</g>
 	{/if}
 
+	<Pot layer="surface" />
+
 	<g class="pot-body">
-		<path class="pot" d={POT.bodyPath} />
+		<Pot layer="front" />
 	</g>
 
 	{#if sceneId === 'somersault' || sceneId === 'diving-board'}
 		{#each SPLASH.angles as angle (angle)}
 			<g transform="rotate({angle} {SPLASH.center.x} {SPLASH.center.y})">
-				<circle class="drop" cx={SPLASH.center.x} cy={SPLASH.center.y} r={SPLASH.radius} />
+				<g class="drop">
+					<path class="soup-fill line" d={SPLASH.dropPath} />
+					<path class="white" d={SPLASH.glintPath} />
+				</g>
 			</g>
 		{/each}
 	{/if}
 
 	{#if sceneId === 'burp'}
-		<circle class="burp" cx={BURP_BUBBLE.cx} cy={BURP_BUBBLE.cy} r={BURP_BUBBLE.r} />
+		<g class="burp">
+			<circle class="burp-fill line" cx={BURP_BUBBLE.cx} cy={BURP_BUBBLE.cy} r={BURP_BUBBLE.r} />
+			<path class="white" d={BURP_BUBBLE.shinePath} />
+			<path class="light" d={BURP_BUBBLE.glint} />
+		</g>
 	{/if}
 
 	{#if sceneId === 'catapult'}
 		<g class="catapult">
-			<path class="plank" d={CATAPULT.pivotPath} />
+			<path class="wood line" d={CATAPULT.pivotPath} />
 			<g class="spoon">
-				<path class="utensil" d={CATAPULT.handlePath} />
-				<path class="utensil" d={CATAPULT.bowlPath} />
+				{@render modelled('spoon-handle', CATAPULT.handlePath, 'wood-light', CATAPULT.handleShade)}
+				<path class="open line" d={CATAPULT.handlePath} />
+				{@render modelled('spoon-bowl', CATAPULT.bowlPath, 'wood-light', CATAPULT.bowlShade)}
+				<path class="open line" d={CATAPULT.bowlPath} />
+				<path class="wood line" d={CATAPULT.hollowPath} />
+				<path class="gleam" d={CATAPULT.gleam} />
 			</g>
 		</g>
 	{/if}
 
 	{#if sceneId === 'hungry-lid'}
 		<g class="lid">
-			<path class="pot" d={LID.knobPath} />
-			<path class="pot" d={LID.domePath} />
-			{#each LID.eyes as eye (eye.x)}
-				<circle class="eye" cx={eye.x} cy={eye.y} r={eye.radius} />
+			<path class="white line" d={LID.teethPath} />
+			<path class="metal-light line" d={LID.knobStem} />
+			{@render modelled('knob', LID.knobPath, 'wood', LID.knobShade)}
+			<path class="open line" d={LID.knobPath} />
+			{@render modelled('dome', LID.domePath, 'metal', LID.domeShade, [LID.domeLight])}
+			<path class="open line" d={LID.domePath} />
+			<path class="metal-light line" d={LID.rimPath} />
+			{#each LID.eyes as eye (eye.white)}
+				{@render eyeOf(eye)}
 			{/each}
-			{#each LID.pupils as pupil (pupil.x)}
-				<circle class="pupil" cx={pupil.x} cy={pupil.y} r={pupil.radius} />
+			{#each LID.brows as brow (brow)}
+				<path class="ink line" d={brow} />
 			{/each}
 		</g>
 	{/if}
 
 	{#if sceneId === 'dino-snatch'}
-		<g transform={placeTransform(DINO.rest)}>
+		<g transform="translate({DINO.rest.x} {DINO.rest.y})">
 			<g class="dino">
-				<path class="dino-skin" d={DINO.tailPath} />
-				{#each DINO.platePaths as plate (plate)}
-					<path class="dino-plate" d={plate} />
-				{/each}
-				{#each DINO.feetPaths as foot (foot)}
-					<path class="dino-skin" d={foot} />
-				{/each}
-				<path class="dino-skin" d={DINO.bodyPath} />
-				<circle class="eye" cx={DINO.eye.x} cy={DINO.eye.y} r={DINO.eye.radius} />
-				<circle class="pupil" cx={DINO.pupil.x} cy={DINO.pupil.y} r={DINO.pupil.radius} />
-				<path class="cord" d={DINO.smilePath} />
-				<g class="dino-arm">
-					<path class="dino-skin" d={DINO.armPath} />
-					<circle class="dino-skin" cx={DINO.hand.x} cy={DINO.hand.y} r={DINO.hand.radius} />
+				<g transform="scale({DINO.scale}) translate({DINO.origin.x} {DINO.origin.y})">
+					{@render baby()}
 				</g>
 			</g>
 		</g>
 	{/if}
 
 	{#if sceneId === 'rocket-delivery'}
-		<g transform={placeTransform(DELIVERY_ROCKET.rest)}>
+		<g transform="translate({DELIVERY_ROCKET.rest.x} {DELIVERY_ROCKET.rest.y})">
 			<g class="delivery-rocket">
-				<path class="flame-outer" d={DELIVERY_ROCKET.flameOuterPath} />
-				<path class="flame-inner" d={DELIVERY_ROCKET.flameInnerPath} />
+				<path class="flame-fill" d={DELIVERY_ROCKET.flameOuterPath} />
+				<path class="flame-core" d={DELIVERY_ROCKET.flameInnerPath} />
+				<path class="metal line" d={DELIVERY_ROCKET.nozzlePath} />
 				{#each DELIVERY_ROCKET.finPaths as fin (fin)}
-					<path class="rocket-fin" d={fin} />
+					<path class="trim line" d={fin} />
 				{/each}
-				<path class="rocket-body" d={DELIVERY_ROCKET.bodyPath} />
-				<circle
-					class="rocket-window"
-					cx={DELIVERY_ROCKET.window.x}
-					cy={DELIVERY_ROCKET.window.y}
-					r={DELIVERY_ROCKET.window.radius}
-				/>
+				<path class="metal-light line" d={DELIVERY_ROCKET.rodPath} />
 				{#each DELIVERY_ROCKET.clawPaths as claw (claw)}
-					<path class="rocket-fin" d={claw} />
+					<path class="metal line" d={claw} />
 				{/each}
+				<path class="metal-light line" d={DELIVERY_ROCKET.hubPath} />
+				<clipPath id={ref('rocket')}><path d={DELIVERY_ROCKET.bodyPath} /></clipPath>
+				<path class="rocket-fill" d={DELIVERY_ROCKET.bodyPath} />
+				<g clip-path={url('rocket')}>
+					<path class="trim" d={DELIVERY_ROCKET.nosePath} />
+					<path class="trim" d={DELIVERY_ROCKET.bandPath} />
+					<path class="shade" fill-rule="evenodd" d={DELIVERY_ROCKET.bodyShade} />
+					<path class="light" d={DELIVERY_ROCKET.bodyLight} />
+				</g>
+				<path class="open line" d={DELIVERY_ROCKET.bodyPath} />
+				<path class="metal-light line" d={DELIVERY_ROCKET.windowFrame} />
+				<path class="glass-fill line" d={DELIVERY_ROCKET.window} />
+				<path class="white" d={DELIVERY_ROCKET.windowGleam} />
 			</g>
 		</g>
 	{/if}
@@ -216,29 +420,43 @@
 	{#if sceneId === 'giraffe-guest'}
 		<g transform={GIRAFFE.transform}>
 			<g class="neck">
-				<path class="giraffe-skin" d={GIRAFFE.neckPath} />
-				{#each GIRAFFE.spots as spot (spot.x)}
-					<circle class="giraffe-spot" cx={spot.x} cy={spot.y} r={spot.radius} />
-				{/each}
+				<path class="mane line" d={GIRAFFE.manePath} />
+				<clipPath id={ref('neck')}><path d={GIRAFFE.neckPath} /></clipPath>
+				<path class="giraffe-fill" d={GIRAFFE.neckPath} />
+				<g clip-path={url('neck')}>
+					{#each GIRAFFE.spots as spot (spot)}
+						<path class="spot" d={spot} />
+					{/each}
+					<path class="shade" fill-rule="evenodd" d={GIRAFFE.neckShade} />
+					<path class="light" d={GIRAFFE.neckLight} />
+				</g>
+				<path class="open line" d={GIRAFFE.neckPath} />
 			</g>
 			<g class="head">
 				<g transform={GIRAFFE.headTransform}>
-					{#each GIRAFFE.hornPaths as horn (horn)}
-						<path class="line" d={horn} />
+					{#each GIRAFFE.horns as horn (horn)}
+						<path class="giraffe-fill line" d={horn} />
 					{/each}
-					{#each GIRAFFE.hornTips as tip (tip.x)}
-						<circle class="giraffe-spot" cx={tip.x} cy={tip.y} r={tip.radius} />
+					{#each GIRAFFE.hornTips as tip (tip)}
+						<path class="mane line" d={tip} />
 					{/each}
-					<path class="giraffe-skin" d={GIRAFFE.earPath} />
-					<path class="giraffe-skin" d={GIRAFFE.headPath} />
-					<circle
-						class="giraffe-spot"
-						cx={GIRAFFE.cheek.x}
-						cy={GIRAFFE.cheek.y}
-						r={GIRAFFE.cheek.radius}
-					/>
-					<circle class="pupil" cx={GIRAFFE.eye.x} cy={GIRAFFE.eye.y} r={GIRAFFE.eye.radius} />
-					<path class="cord" d={GIRAFFE.smilePath} />
+					<path class="giraffe-fill line" d={GIRAFFE.earPath} />
+					<path class="ear" d={GIRAFFE.earInner} />
+					<clipPath id={ref('head')}><path d={GIRAFFE.headPath} /></clipPath>
+					<path class="giraffe-fill" d={GIRAFFE.headPath} />
+					<g clip-path={url('head')}>
+						<path class="snout" d={GIRAFFE.snoutPath} />
+						<path class="shade" d={GIRAFFE.headShade} />
+						<path class="light" d={GIRAFFE.headLight} />
+					</g>
+					<path class="open line" d={GIRAFFE.headPath} />
+					<path class="open fine" d={GIRAFFE.snoutPath} />
+					<path class="cheek" d={GIRAFFE.cheek} />
+					{@render eyeOf(GIRAFFE.eye)}
+					<path class="open line" d={GIRAFFE.lidPath} />
+					<path class="open fine" d={GIRAFFE.lashes} />
+					<path class="ink" d={GIRAFFE.nostril} />
+					<path class="open line" d={GIRAFFE.mouthPath} />
 				</g>
 				<g class="held" transform={GIRAFFE.heldTransform}>
 					<IngredientShape variant={view.groupIndex} {stage} />
@@ -251,11 +469,13 @@
 		<g class="steam-shape">
 			{#each steamShape as wisp (wisp)}
 				<path class="steam wisp" d={wisp} pathLength="1" />
+				<path class="steam-core wisp" d={wisp} pathLength="1" />
 			{/each}
 		</g>
 	{/if}
 
 	{#if place === 'board'}
+		<path class="ground" d={KITCHEN.boardShadow} />
 		<g transform={placeTransform(KITCHEN.boardIngredient)}>
 			<IngredientShape variant={view.groupIndex} {stage} />
 		</g>
@@ -265,6 +485,7 @@
 		<g data-reward data-reward-variant="0">
 			{#each POT.steamPaths as steam (steam)}
 				<path class="steam" d={steam} />
+				<path class="steam-core" d={steam} />
 			{/each}
 		</g>
 	{/if}
@@ -281,180 +502,260 @@
 		background-color: var(--dd-color-surface-sunken);
 	}
 
-	.counter,
-	.board,
-	.handle,
-	.inside,
-	.soup,
-	.pot,
-	.bubble-dot,
-	.steam {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
-		stroke-linejoin: round;
-		stroke-linecap: round;
-		vector-effect: non-scaling-stroke;
-	}
-
-	.counter {
-		fill: var(--dd-color-border-subtle);
-	}
-
-	.board {
-		fill: var(--dd-color-border-strong);
-	}
-
-	.handle,
-	.steam {
-		fill: transparent;
-	}
-
-	.handle {
-		stroke-width: var(--dd-border-width-target);
-	}
-
-	.steam {
-		stroke: var(--dd-color-pot-steam);
-		stroke-width: var(--dd-border-width-target);
-	}
-
-	.inside {
-		fill: var(--dd-color-pot-inside);
-	}
-
-	.soup {
-		fill: var(--dd-color-pot-soup);
-	}
-
-	.pot {
-		fill: var(--dd-color-pot-body);
-	}
-
-	.bubble-dot {
-		fill: var(--dd-color-pot-bubble);
-	}
-	.plank {
-		fill: var(--dd-color-border-strong);
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
-		vector-effect: non-scaling-stroke;
-	}
-
-	.drop,
-	.burp {
-		fill: var(--dd-color-pot-soup);
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
-		vector-effect: non-scaling-stroke;
-	}
-
-	.burp {
-		fill: var(--dd-color-pot-bubble);
-	}
-
-	.utensil,
-	.canopy,
-	.balloon-body,
-	.glove,
-	.eye,
-	.hump,
-	.dino-skin,
-	.dino-plate,
-	.rocket-body,
-	.rocket-fin,
-	.rocket-window,
-	.flame-outer,
-	.flame-inner,
-	.giraffe-skin,
-	.giraffe-spot,
-	.line {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
-		stroke-linejoin: round;
-		stroke-linecap: round;
-		vector-effect: non-scaling-stroke;
-	}
-
-	.utensil {
-		fill: var(--dd-color-pot-steam);
-	}
-
-	.canopy {
-		fill: var(--dd-color-food-b);
-	}
-
-	.balloon-body {
-		fill: var(--dd-color-food-e);
-	}
-
-	.glove,
-	.eye {
-		fill: var(--dd-color-pot-bubble);
-	}
-
-	.pupil {
-		fill: var(--dd-color-drawing-ink);
-	}
-
-	.hump {
-		fill: var(--dd-color-pot-soup);
-	}
-
-	.dino-skin {
-		fill: var(--dd-color-baby-a);
-	}
-
-	.dino-plate {
-		fill: var(--dd-color-baby-c);
-	}
-
-	.rocket-body {
-		fill: var(--dd-color-rocket-body);
-	}
-
-	.rocket-fin {
-		fill: var(--dd-color-rocket-fin);
-	}
-
-	.rocket-window {
-		fill: var(--dd-color-rocket-window);
-	}
-
-	.flame-outer {
-		fill: var(--dd-color-rocket-flame-outer);
-	}
-
-	.flame-inner {
-		fill: var(--dd-color-rocket-flame-inner);
-	}
-
-	.giraffe-skin {
-		fill: var(--dd-color-food-a);
-	}
-
-	.giraffe-spot {
-		fill: var(--dd-color-pot-soup);
-	}
-
-	.line {
-		fill: transparent;
-	}
-
+	.line,
+	.fine,
+	.underlay,
+	.crease,
+	.lip,
+	.gleam,
 	.cord,
-	.fold {
-		fill: transparent;
+	.hose,
+	.steam,
+	.steam-core {
+		stroke-linejoin: round;
 		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 
-	.cord {
-		stroke: var(--dd-color-drawing-line);
+	.line {
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.fine {
+		stroke: var(--dd-color-recipe-line);
 		stroke-width: var(--dd-border-width-thin);
 	}
 
-	.fold {
-		stroke: var(--dd-color-pot-bubble);
+	/* Under two joined forms: only its outer half shows, one outline around both. */
+	.underlay {
+		fill: var(--dd-color-recipe-line);
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: calc(var(--dd-border-width-thick) * 2);
+	}
+
+	.open,
+	.crease,
+	.lip,
+	.gleam,
+	.cord,
+	.hose,
+	.steam,
+	.steam-core {
+		fill: transparent;
+	}
+
+	.crease {
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: var(--dd-border-width-thin);
+		stroke-opacity: var(--dd-opacity-recipe-crease);
+	}
+
+	.lip,
+	.gleam {
+		stroke: var(--dd-color-recipe-light);
 		stroke-width: var(--dd-border-width-thick);
+		stroke-opacity: var(--dd-opacity-recipe-light);
+	}
+
+	.shade {
+		fill: var(--dd-color-recipe-shade);
+		fill-opacity: var(--dd-opacity-recipe-shade);
+	}
+
+	.light {
+		fill: var(--dd-color-recipe-light);
+		fill-opacity: var(--dd-opacity-recipe-light);
+	}
+
+	.ground {
+		fill: var(--dd-color-recipe-shade);
+		fill-opacity: var(--dd-opacity-recipe-shadow);
+	}
+
+	.tile {
+		fill: var(--dd-color-recipe-tile);
+		fill-opacity: var(--dd-opacity-recipe-tile);
+	}
+
+	.frame,
+	.cloth,
+	.white,
+	.rocket-fill {
+		fill: var(--dd-color-recipe-cloth);
+	}
+
+	.sky {
+		fill: var(--dd-color-recipe-sky);
+	}
+
+	.sun {
+		fill: var(--dd-color-recipe-sun);
+	}
+
+	.cloud {
+		fill: var(--dd-color-recipe-cloud);
+	}
+
+	.leaf {
+		fill: var(--dd-color-recipe-leaf);
+	}
+
+	.plant-pot {
+		fill: var(--dd-color-recipe-plant-pot);
+	}
+
+	.wood {
+		fill: var(--dd-color-recipe-wood);
+	}
+
+	.wood-light {
+		fill: var(--dd-color-recipe-wood-light);
+	}
+
+	.knot {
+		fill: var(--dd-color-recipe-wood-dark);
+		fill-opacity: var(--dd-opacity-recipe-crease);
+	}
+
+	.metal {
+		fill: var(--dd-color-recipe-pot);
+	}
+
+	.metal-light {
+		fill: var(--dd-color-recipe-pot-light);
+	}
+
+	.metal-dark {
+		fill: var(--dd-color-recipe-pot-inside);
+	}
+
+	.soup-fill {
+		fill: var(--dd-color-recipe-soup);
+	}
+
+	.foam {
+		fill: var(--dd-color-recipe-soup-light);
+	}
+
+	.bubble-dot {
+		fill: var(--dd-color-recipe-soup-light);
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: var(--dd-border-width-thick);
+		vector-effect: non-scaling-stroke;
+	}
+
+	.burp-fill {
+		fill: var(--dd-color-recipe-soup-light);
+		fill-opacity: var(--dd-opacity-recipe-glass);
+	}
+
+	.stripe {
+		fill: var(--dd-color-recipe-stripe);
+	}
+
+	.check,
+	.trim {
+		fill: var(--dd-color-recipe-check);
+	}
+
+	.balloon-fill {
+		fill: var(--dd-color-recipe-balloon);
+	}
+
+	.glass-fill {
+		fill: var(--dd-color-recipe-rocket-glass);
+	}
+
+	.flame-fill {
+		fill: var(--dd-color-recipe-flame);
+	}
+
+	.flame-core {
+		fill: var(--dd-color-recipe-flame-core);
+	}
+
+	.giraffe-fill {
+		fill: var(--dd-color-recipe-giraffe);
+	}
+
+	.spot {
+		fill: var(--dd-color-recipe-giraffe-spot);
+	}
+
+	.mane {
+		fill: var(--dd-color-recipe-giraffe-mane);
+	}
+
+	.snout {
+		fill: var(--dd-color-recipe-snout);
+	}
+
+	.ear {
+		fill: var(--dd-color-recipe-ear);
+	}
+
+	.cheek {
+		fill: var(--dd-color-recipe-cheek);
+	}
+
+	.iris {
+		fill: var(--dd-color-recipe-iris);
+	}
+
+	.ink {
+		fill: var(--dd-color-recipe-line);
+	}
+
+	.cord {
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: var(--dd-border-width-thin);
+	}
+
+	.hose {
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: var(--dd-border-width-target);
+	}
+
+	.steam {
+		stroke: var(--dd-color-recipe-steam);
+		stroke-width: calc(var(--dd-border-width-target) * 2);
+		stroke-opacity: var(--dd-opacity-recipe-steam);
+	}
+
+	.steam-core {
+		stroke: var(--dd-color-recipe-light);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	/* The baby dino of the visit, in the colors of the first baby of the eggs. */
+	.skin {
+		fill: var(--dd-color-baby-a);
+	}
+
+	.belly {
+		fill: var(--dd-color-baby-a-belly);
+	}
+
+	.plate {
+		fill: var(--dd-color-baby-a-plate);
+	}
+
+	.baby-cheek {
+		fill: var(--dd-color-baby-a-cheek);
+	}
+
+	.claw {
+		fill: var(--dd-color-recipe-eye);
+	}
+
+	.tongue {
+		fill: var(--dd-color-companion-tongue);
+	}
+
+	/* Its raised arms only show while it jumps. */
+	.dino-arm {
+		opacity: 0;
 	}
 
 	/* pathLength="1": the dash covers the whole line, so its offset draws it bit by bit. */
@@ -478,6 +779,7 @@
 	[data-scene] .lid,
 	[data-scene] .dino,
 	[data-scene] .dino-arm,
+	[data-scene] .dino-rest-arms,
 	[data-scene] .delivery-rocket,
 	[data-scene] .neck,
 	[data-scene] .head,
@@ -599,12 +901,16 @@
 	}
 
 	[data-scene='dino-snatch'] .dino {
+		transform-origin: 50% 100%;
 		animation-name: dino-leaps;
 	}
 
 	[data-scene='dino-snatch'] .dino-arm {
-		transform-origin: 0% 50%;
-		animation-name: dino-waves;
+		animation-name: arms-up;
+	}
+
+	[data-scene='dino-snatch'] .dino-rest-arms {
+		animation-name: arms-down;
 	}
 
 	[data-scene='rocket-delivery'] .diver {
@@ -672,7 +978,7 @@
 	@keyframes somersault {
 		0% {
 			opacity: 0;
-			translate: 0 calc(var(--dd-space-3xl) * -2.2);
+			translate: 0 calc(var(--dd-space-3xl) * -1.11);
 			rotate: 0deg;
 		}
 
@@ -681,7 +987,7 @@
 		}
 
 		55% {
-			translate: 0 calc(var(--dd-space-3xl) * -2.4);
+			translate: 0 calc(var(--dd-space-3xl) * -1.26);
 			rotate: 360deg;
 		}
 
@@ -706,14 +1012,14 @@
 
 		100% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 0.8) 0;
+			translate: calc(var(--dd-space-3xl) * 0.6) 0;
 		}
 	}
 
 	@keyframes rim-bounce {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -2) calc(var(--dd-space-3xl) * -2.5);
+			translate: calc(var(--dd-space-3xl) * -2.6) calc(var(--dd-space-3xl) * -1.21);
 			rotate: 0deg;
 		}
 
@@ -722,12 +1028,12 @@
 		}
 
 		35% {
-			translate: calc(var(--dd-space-3xl) * -1.6) calc(var(--dd-space-3xl) * -0.6);
+			translate: calc(var(--dd-space-3xl) * -1.6) calc(var(--dd-space-3xl) * -0.41);
 			rotate: 0deg;
 		}
 
 		55% {
-			translate: calc(var(--dd-space-3xl) * -0.8) calc(var(--dd-space-3xl) * -1.8);
+			translate: calc(var(--dd-space-3xl) * -0.8) calc(var(--dd-space-3xl) * -1.26);
 			rotate: 200deg;
 		}
 
@@ -742,7 +1048,7 @@
 	@keyframes dive {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -3.3) calc(var(--dd-space-3xl) * -1.75);
+			translate: calc(var(--dd-space-3xl) * -3.3) calc(var(--dd-space-3xl) * -1.21);
 			rotate: 0deg;
 		}
 
@@ -751,19 +1057,19 @@
 		}
 
 		28% {
-			translate: calc(var(--dd-space-3xl) * -2.4) calc(var(--dd-space-3xl) * -1.75);
+			translate: calc(var(--dd-space-3xl) * -2.4) calc(var(--dd-space-3xl) * -1.21);
 		}
 
 		36% {
-			translate: calc(var(--dd-space-3xl) * -2.4) calc(var(--dd-space-3xl) * -2.3);
+			translate: calc(var(--dd-space-3xl) * -2.4) calc(var(--dd-space-3xl) * -1.43);
 		}
 
 		44% {
-			translate: calc(var(--dd-space-3xl) * -2.4) calc(var(--dd-space-3xl) * -1.75);
+			translate: calc(var(--dd-space-3xl) * -2.4) calc(var(--dd-space-3xl) * -1.21);
 		}
 
 		56% {
-			translate: calc(var(--dd-space-3xl) * -1.8) calc(var(--dd-space-3xl) * -2.9);
+			translate: calc(var(--dd-space-3xl) * -1.2) calc(var(--dd-space-3xl) * -1.31);
 			rotate: 90deg;
 		}
 
@@ -789,7 +1095,7 @@
 	@keyframes drop-in {
 		0% {
 			opacity: 0;
-			translate: 0 calc(var(--dd-space-3xl) * -1.5);
+			translate: 0 calc(var(--dd-space-3xl) * -1.21);
 		}
 
 		10% {
@@ -857,27 +1163,27 @@
 	@keyframes slide {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 3.3) calc(var(--dd-space-3xl) * -2.6);
-			rotate: -28deg;
+			translate: calc(var(--dd-space-3xl) * 3.63) calc(var(--dd-space-3xl) * -2.26);
+			rotate: -23deg;
 		}
 
 		10% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-3xl) * 3.3) calc(var(--dd-space-3xl) * -2.6);
+			translate: calc(var(--dd-space-3xl) * 3.63) calc(var(--dd-space-3xl) * -2.26);
 		}
 
 		20% {
-			translate: calc(var(--dd-space-3xl) * 3.1) calc(var(--dd-space-3xl) * -2.45);
-			rotate: -28deg;
+			translate: calc(var(--dd-space-3xl) * 3.32) calc(var(--dd-space-3xl) * -2.12);
+			rotate: -23deg;
 		}
 
 		45% {
-			translate: calc(var(--dd-space-3xl) * 0.93) calc(var(--dd-space-3xl) * -1.34);
-			rotate: -28deg;
+			translate: calc(var(--dd-space-3xl) * 1.37) calc(var(--dd-space-3xl) * -1.28);
+			rotate: -23deg;
 		}
 
 		60% {
-			translate: calc(var(--dd-space-3xl) * 0.3) calc(var(--dd-space-3xl) * -1.7);
+			translate: calc(var(--dd-space-3xl) * 0.59) calc(var(--dd-space-3xl) * -1.57);
 			rotate: -200deg;
 		}
 
@@ -892,34 +1198,34 @@
 	@keyframes thrown {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -4.45) 0;
+			translate: calc(var(--dd-space-3xl) * -4.5) calc(var(--dd-space-3xl) * 0.44);
 			rotate: 0deg;
 		}
 
 		10%,
 		30% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-3xl) * -4.45) 0;
+			translate: calc(var(--dd-space-3xl) * -4.5) calc(var(--dd-space-3xl) * 0.44);
 			rotate: 0deg;
 		}
 
 		36% {
-			translate: calc(var(--dd-space-3xl) * -4) calc(var(--dd-space-3xl) * -0.9);
+			translate: calc(var(--dd-space-3xl) * -4) calc(var(--dd-space-3xl) * -0.71);
 			rotate: 90deg;
 		}
 
 		46% {
-			translate: calc(var(--dd-space-3xl) * -3.1) calc(var(--dd-space-3xl) * -1.7);
+			translate: calc(var(--dd-space-3xl) * -3.1) calc(var(--dd-space-3xl) * -1.11);
 			rotate: 270deg;
 		}
 
 		58% {
-			translate: calc(var(--dd-space-3xl) * -1.9) calc(var(--dd-space-3xl) * -2);
+			translate: calc(var(--dd-space-3xl) * -1.9) calc(var(--dd-space-3xl) * -1.26);
 			rotate: 450deg;
 		}
 
 		70% {
-			translate: calc(var(--dd-space-3xl) * -0.9) calc(var(--dd-space-3xl) * -1.6);
+			translate: calc(var(--dd-space-3xl) * -0.9) calc(var(--dd-space-3xl) * -1.01);
 			rotate: 600deg;
 		}
 
@@ -954,7 +1260,7 @@
 	@keyframes glide-down {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 2.6) calc(var(--dd-space-3xl) * -2.2);
+			translate: calc(var(--dd-space-3xl) * 4.6) calc(var(--dd-space-3xl) * -1.41);
 			rotate: 12deg;
 		}
 
@@ -963,17 +1269,17 @@
 		}
 
 		30% {
-			translate: calc(var(--dd-space-3xl) * 1.9) calc(var(--dd-space-3xl) * -1.4);
+			translate: calc(var(--dd-space-3xl) * 3.4) calc(var(--dd-space-3xl) * -0.91);
 			rotate: -10deg;
 		}
 
 		50% {
-			translate: calc(var(--dd-space-3xl) * 1.1) calc(var(--dd-space-3xl) * -0.85);
+			translate: calc(var(--dd-space-3xl) * 2) calc(var(--dd-space-3xl) * -0.51);
 			rotate: 8deg;
 		}
 
 		66% {
-			translate: calc(var(--dd-space-3xl) * 0.45) calc(var(--dd-space-3xl) * -0.4);
+			translate: calc(var(--dd-space-3xl) * 0.9) calc(var(--dd-space-3xl) * -0.16);
 			rotate: -5deg;
 		}
 
@@ -1001,7 +1307,7 @@
 	@keyframes hang-down {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 3) calc(var(--dd-space-3xl) * -1.3);
+			translate: calc(var(--dd-space-3xl) * 4.4) calc(var(--dd-space-3xl) * -0.76);
 			rotate: -6deg;
 		}
 
@@ -1010,32 +1316,32 @@
 		}
 
 		25% {
-			translate: calc(var(--dd-space-3xl) * 2.2) calc(var(--dd-space-3xl) * -1.1);
+			translate: calc(var(--dd-space-3xl) * 3) calc(var(--dd-space-3xl) * -0.56);
 			rotate: 6deg;
 		}
 
 		40% {
-			translate: calc(var(--dd-space-3xl) * 1.1) calc(var(--dd-space-3xl) * -0.9);
+			translate: calc(var(--dd-space-3xl) * 1.5) calc(var(--dd-space-3xl) * -0.53);
 			rotate: -4deg;
 		}
 
 		52% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.8);
+			translate: 0 calc(var(--dd-space-3xl) * -0.51);
 			rotate: 0deg;
 		}
 
 		62% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.68);
+			translate: 0 calc(var(--dd-space-3xl) * -0.39);
 			rotate: 3deg;
 		}
 
 		72% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.48);
+			translate: 0 calc(var(--dd-space-3xl) * -0.23);
 			rotate: -3deg;
 		}
 
 		82% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.24);
+			translate: 0 calc(var(--dd-space-3xl) * -0.01);
 			rotate: 2deg;
 		}
 
@@ -1097,19 +1403,19 @@
 	@keyframes jump-in {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -3.5) calc(var(--dd-space-3xl) * 0.2);
+			translate: calc(var(--dd-space-3xl) * -3.5) calc(var(--dd-space-3xl) * 0.39);
 			rotate: 0deg;
 		}
 
 		10%,
 		18% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-3xl) * -3.5) calc(var(--dd-space-3xl) * 0.2);
+			translate: calc(var(--dd-space-3xl) * -3.5) calc(var(--dd-space-3xl) * 0.39);
 			rotate: 0deg;
 		}
 
 		30% {
-			translate: calc(var(--dd-space-3xl) * -1.8) calc(var(--dd-space-3xl) * -1.4);
+			translate: calc(var(--dd-space-3xl) * -1.8) calc(var(--dd-space-3xl) * -1.21);
 			rotate: -20deg;
 		}
 
@@ -1125,13 +1431,13 @@
 		0% {
 			opacity: 0;
 			translate: 0 0;
-			rotate: 24deg;
+			rotate: 18deg;
 		}
 
 		10%,
 		40% {
 			opacity: 100%;
-			rotate: 24deg;
+			rotate: 18deg;
 		}
 
 		48%,
@@ -1142,7 +1448,7 @@
 
 		56%,
 		70% {
-			rotate: 14deg;
+			rotate: 10deg;
 		}
 
 		86% {
@@ -1161,7 +1467,7 @@
 	@keyframes float {
 		0% {
 			opacity: 0;
-			translate: 0 calc(var(--dd-space-3xl) * -1.6);
+			translate: 0 calc(var(--dd-space-3xl) * -1.11);
 			rotate: 0deg;
 		}
 
@@ -1170,29 +1476,29 @@
 		}
 
 		26% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.45);
+			translate: 0 calc(var(--dd-space-3xl) * -0.26);
 			rotate: -90deg;
 		}
 
 		34%,
 		50% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.38);
+			translate: 0 calc(var(--dd-space-3xl) * -0.19);
 			rotate: -86deg;
 		}
 
 		42%,
 		58% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.48);
+			translate: 0 calc(var(--dd-space-3xl) * -0.29);
 			rotate: -93deg;
 		}
 
 		68% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.42);
+			translate: 0 calc(var(--dd-space-3xl) * -0.23);
 			rotate: -90deg;
 		}
 
 		90% {
-			translate: 0 calc(var(--dd-space-3xl) * 0.35);
+			translate: 0 calc(var(--dd-space-3xl) * 0.31);
 			rotate: -30deg;
 		}
 
@@ -1279,7 +1585,7 @@
 	@keyframes ride {
 		0% {
 			opacity: 0;
-			translate: 0 calc(var(--dd-space-3xl) * -1.5);
+			translate: 0 calc(var(--dd-space-3xl) * -1.11);
 			rotate: 0deg;
 		}
 
@@ -1294,7 +1600,7 @@
 		}
 
 		60% {
-			translate: 0 calc(var(--dd-space-3xl) * -0.45);
+			translate: 0 calc(var(--dd-space-3xl) * -0.26);
 			rotate: -12deg;
 		}
 
@@ -1314,7 +1620,7 @@
 	@keyframes snatched {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -1.95) calc(var(--dd-space-3xl) * -1.29);
+			translate: calc(var(--dd-space-3xl) * 3.13) calc(var(--dd-space-3xl) * -1.1);
 			rotate: 0deg;
 		}
 
@@ -1322,115 +1628,167 @@
 			opacity: 100%;
 		}
 
-		16% {
-			translate: calc(var(--dd-space-3xl) * -1.95) calc(var(--dd-space-3xl) * -1.41);
+		20% {
+			translate: calc(var(--dd-space-3xl) * -0.2) calc(var(--dd-space-3xl) * -1.2);
+			rotate: -120deg;
 		}
 
 		32% {
-			translate: calc(var(--dd-space-3xl) * -1.95) calc(var(--dd-space-3xl) * -1.29);
+			translate: calc(var(--dd-space-3xl) * -2.97) calc(var(--dd-space-3xl) * -1.24);
+			rotate: -360deg;
 		}
 
 		42% {
-			translate: calc(var(--dd-space-3xl) * -1.68) calc(var(--dd-space-3xl) * -1.21);
-			rotate: 0deg;
+			translate: calc(var(--dd-space-3xl) * -2.85) calc(var(--dd-space-3xl) * -1.16);
+			rotate: -360deg;
 		}
 
 		50% {
-			translate: calc(var(--dd-space-3xl) * -0.94) calc(var(--dd-space-3xl) * -1.48);
-			rotate: 180deg;
+			translate: calc(var(--dd-space-3xl) * -1.56) calc(var(--dd-space-3xl) * -1.1);
+			rotate: -180deg;
 		}
 
 		56% {
-			translate: calc(var(--dd-space-3xl) * -0.27) calc(var(--dd-space-3xl) * -0.9);
-			rotate: 300deg;
+			translate: calc(var(--dd-space-3xl) * -0.49) calc(var(--dd-space-3xl) * -0.59);
+			rotate: -60deg;
 		}
 
 		62%,
 		100% {
 			opacity: 100%;
 			translate: 0 0;
-			rotate: 360deg;
+			rotate: 0deg;
 		}
 	}
 
 	@keyframes dino-leaps {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -0.87) 0;
+			translate: calc(var(--dd-space-3xl) * -0.88) 0;
 			rotate: 0deg;
+			scale: 1 1;
 		}
 
 		8% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-3xl) * -0.87) 0;
+			translate: calc(var(--dd-space-3xl) * -0.88) 0;
 		}
 
-		22% {
-			translate: calc(var(--dd-space-3xl) * -0.03) calc(var(--dd-space-3xl) * -0.78);
-			rotate: -20deg;
+		16% {
+			translate: calc(var(--dd-space-3xl) * -0.4) 0;
+			scale: 1.08 0.9;
+		}
+
+		24% {
+			translate: calc(var(--dd-space-3xl) * 0.2) calc(var(--dd-space-3xl) * -0.45);
+			rotate: 8deg;
+			scale: 1 1;
 		}
 
 		32% {
-			translate: calc(var(--dd-space-3xl) * 0.91) calc(var(--dd-space-3xl) * -1.22);
+			translate: calc(var(--dd-space-3xl) * 0.84) calc(var(--dd-space-3xl) * -0.59);
 			rotate: 0deg;
 		}
 
 		42% {
-			translate: calc(var(--dd-space-3xl) * 1.13) calc(var(--dd-space-3xl) * -1.16);
+			translate: calc(var(--dd-space-3xl) * 0.94) calc(var(--dd-space-3xl) * -0.53);
 		}
 
 		56% {
-			translate: calc(var(--dd-space-3xl) * 1.06) calc(var(--dd-space-3xl) * -0.62);
+			translate: calc(var(--dd-space-3xl) * 0.62) calc(var(--dd-space-3xl) * -0.25);
 			scale: 1 1;
 		}
 
-		72% {
+		70% {
 			translate: 0 0;
-			scale: 1.15 0.85;
+			scale: 1.12 0.88;
 		}
 
-		78% {
+		76% {
 			scale: 1 1;
+			rotate: 0deg;
 		}
 
-		92% {
+		82% {
+			rotate: -6deg;
+		}
+
+		88% {
+			rotate: 6deg;
+		}
+
+		93% {
 			opacity: 100%;
 			translate: 0 0;
+			rotate: 0deg;
 		}
 
 		100% {
 			opacity: 0;
 			translate: calc(var(--dd-space-3xl) * -1.44) 0;
+			rotate: 0deg;
 			scale: 1 1;
 		}
 	}
 
-	@keyframes dino-waves {
+	@keyframes arms-up {
 		0%,
-		72% {
-			rotate: 0deg;
+		15% {
+			opacity: 0;
+		}
+
+		16%,
+		69% {
+			opacity: 100%;
+		}
+
+		70%,
+		77% {
+			opacity: 0;
 		}
 
 		78%,
-		86% {
-			rotate: -55deg;
+		92% {
+			opacity: 100%;
 		}
 
-		82%,
-		90% {
-			rotate: -30deg;
-		}
-
-		96%,
+		93%,
 		100% {
-			rotate: 0deg;
+			opacity: 0;
+		}
+	}
+
+	@keyframes arms-down {
+		0%,
+		15% {
+			opacity: 100%;
+		}
+
+		16%,
+		69% {
+			opacity: 0;
+		}
+
+		70%,
+		77% {
+			opacity: 100%;
+		}
+
+		78%,
+		92% {
+			opacity: 0;
+		}
+
+		93%,
+		100% {
+			opacity: 100%;
 		}
 	}
 
 	@keyframes delivered {
 		0% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * -5.74) calc(var(--dd-space-3xl) * -1.33);
+			translate: calc(var(--dd-space-3xl) * -6.44) calc(var(--dd-space-3xl) * -0.12);
 			rotate: 0deg;
 		}
 
@@ -1440,7 +1798,7 @@
 
 		44%,
 		46% {
-			translate: 0 calc(var(--dd-space-3xl) * -1.33);
+			translate: calc(var(--dd-space-3xl) * -0.7) calc(var(--dd-space-3xl) * -0.12);
 			rotate: 0deg;
 		}
 
@@ -1497,13 +1855,13 @@
 		0%,
 		48% {
 			opacity: 0;
-			translate: calc(var(--dd-space-3xl) * 0.05) calc(var(--dd-space-3xl) * -0.9);
+			translate: calc(var(--dd-space-3xl) * 0.05) calc(var(--dd-space-3xl) * -0.71);
 			rotate: 0deg;
 		}
 
 		49% {
 			opacity: 100%;
-			translate: calc(var(--dd-space-3xl) * 0.05) calc(var(--dd-space-3xl) * -0.9);
+			translate: calc(var(--dd-space-3xl) * 0.05) calc(var(--dd-space-3xl) * -0.71);
 			rotate: 0deg;
 		}
 

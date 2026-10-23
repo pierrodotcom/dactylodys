@@ -64,6 +64,10 @@
 			"done": { "$value": "{color.brown.400}" },
 			"current-surface": { "$value": "{color.charcoal.700}" },
 			"current-frame": { "$value": "{color.teal.400}" }
+		},
+		"recipe": {
+			"sky": { "$value": "{color.navy.800}" },
+			"sun": { "$value": "{color.cream.200}" }
 		}
 	},
 	"shadow": {
@@ -105,5 +109,10 @@
 				"inset": true
 			}
 		}
+	},
+	"opacity": {
+		"$type": "number",
+		"recipe-tile": { "$value": 0.05 },
+		"recipe-shadow": { "$value": 0.4 }
 	}
 }

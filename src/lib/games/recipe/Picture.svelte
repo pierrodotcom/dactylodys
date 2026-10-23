@@ -1,21 +1,35 @@
 <script lang="ts">
 	import IngredientShape from './IngredientShape.svelte';
-	import { POT } from './shapes';
+	import Pot from './Pot.svelte';
+	import { SPLASH } from './shapes';
 
-	/** Where the ingredient waits, above the pot. */
-	const INGREDIENT = 'translate(260 88) scale(1.1)';
+	/** A tomato falls into the soup and makes it jump. */
+	const FALLING = 'translate(262 106) rotate(-14) scale(1.2)';
+	/** Each drop flies out of the soup in its direction, bigger than in the game to be seen. */
+	const DROPS = [
+		'rotate(-152 260 156) translate(50 0) translate(260 156) scale(1.6) translate(-260 -156)',
+		'rotate(-28 260 156) translate(50 0) translate(260 156) scale(1.6) translate(-260 -156)'
+	];
+	const STEAM = ['M196 124C188 112 202 104 196 92', 'M328 124C320 112 334 104 328 92'];
 </script>
 
-<svg class="picture" viewBox="100 30 320 210" focusable="false" aria-hidden="true">
-	{#each POT.handlePaths as handle (handle)}
-		<path class="handle" d={handle} />
-	{/each}
-	<ellipse class="inside" cx={POT.rim.cx} cy={POT.rim.cy} rx={POT.rim.rx} ry={POT.rim.ry} />
-	<ellipse class="soup" cx={POT.soup.cx} cy={POT.soup.cy} rx={POT.soup.rx} ry={POT.soup.ry} />
-	<path class="pot" d={POT.bodyPath} />
-	<g transform={INGREDIENT}>
-		<IngredientShape variant={0} stage={0} />
+<svg class="picture" viewBox="110 58 300 172" focusable="false" aria-hidden="true">
+	<Pot layer="back" />
+	<g transform={FALLING}>
+		<IngredientShape variant={1} stage={0} />
 	</g>
+	<Pot layer="surface" />
+	<Pot layer="front" />
+	{#each DROPS as drop (drop)}
+		<g transform={drop}>
+			<path class="soup line" d={SPLASH.dropPath} />
+			<path class="white" d={SPLASH.glintPath} />
+		</g>
+	{/each}
+	{#each STEAM as wisp (wisp)}
+		<path class="steam" d={wisp} />
+		<path class="steam-core" d={wisp} />
+	{/each}
 </svg>
 
 <style>
@@ -26,31 +40,40 @@
 		overflow: visible;
 	}
 
-	.handle,
-	.inside,
-	.soup,
-	.pot {
-		stroke: var(--dd-color-drawing-line);
-		stroke-width: var(--dd-border-width-thick);
+	.line,
+	.steam,
+	.steam-core {
 		stroke-linejoin: round;
 		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
 	}
 
-	.handle {
-		fill: transparent;
-		stroke-width: var(--dd-border-width-target);
-	}
-
-	.inside {
-		fill: var(--dd-color-pot-inside);
+	.line {
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: var(--dd-border-width-thick);
 	}
 
 	.soup {
-		fill: var(--dd-color-pot-soup);
+		fill: var(--dd-color-recipe-soup);
 	}
 
-	.pot {
-		fill: var(--dd-color-pot-body);
+	.white {
+		fill: var(--dd-color-recipe-cloth);
+	}
+
+	.steam,
+	.steam-core {
+		fill: transparent;
+	}
+
+	.steam {
+		stroke: var(--dd-color-recipe-steam);
+		stroke-width: calc(var(--dd-border-width-target) * 2);
+		stroke-opacity: var(--dd-opacity-recipe-steam);
+	}
+
+	.steam-core {
+		stroke: var(--dd-color-recipe-light);
+		stroke-width: var(--dd-border-width-thick);
 	}
 </style>
