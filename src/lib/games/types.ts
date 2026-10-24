@@ -67,6 +67,11 @@ export interface GameProps {
 	readonly voice?: VoicePlayer;
 	/** Leaves the game for the settings, from the pause; absent where there are none. */
 	readonly onSettings?: () => void;
+	/**
+	 * The game is hidden behind the settings, paused, and comes back as it was: it ignores the keys
+	 * and clicks of the page meanwhile.
+	 */
+	readonly suspended?: boolean;
 }
 
 /** A mini-game as the play flow sees it. Its title and description live in the messages, keyed by `id`. */
