@@ -375,9 +375,9 @@
 
 	async function openSettings() {
 		saveState = 'idle';
-		// A game left for the settings comes back to its lesson screen, which starts at the top.
-		scrollBeforeSettings = screen.name === 'game' ? 0 : window.scrollY;
-		if (screen.name === 'game') playClock = stopPlaying(playClock, now());
+		const fromGame = screen.name === 'game' || screen.name === 'help-game';
+		scrollBeforeSettings = fromGame ? 0 : window.scrollY;
+		if (fromGame) playClock = stopPlaying(playClock, now());
 		go({ type: 'open-settings' });
 		await tick();
 		window.scrollTo(0, 0);
@@ -385,6 +385,10 @@
 
 	async function closeSettings() {
 		go({ type: 'close-settings' });
+		// The paused game is given back as it was: its play time goes on.
+		if (screen.name === 'game' || screen.name === 'help-game') {
+			playClock = startPlaying(playClock, now());
+		}
 		await tick();
 		window.scrollTo(0, scrollBeforeSettings);
 	}
@@ -639,9 +643,15 @@
 	}
 </script>
 
-{#snippet playing(current: Profile, lessonId: string, oncomplete: (outcome: GameOutcome) => void)}
+{#snippet playing(
+	current: Profile,
+	lessonId: string,
+	oncomplete: (outcome: GameOutcome) => void,
+	suspended: boolean
+)}
 	{#if exercise && ActiveGame && assets && progression}
 		<ActiveGame
+			{suspended}
 			{exercise}
 			layout={assets.layout}
 			charIndex={assets.charIndex}
@@ -770,13 +780,6 @@
 				onback={() => go({ type: 'back-to-map' })}
 			/>
 		{/if}
-	{:else if screen.name === 'game'}
-		{@const lessonId = screen.lessonId}
-		{@render playing(profile, lessonId, (outcome) => finishGame(lessonId, outcome))}
-	{:else if screen.name === 'help-game'}
-		{#if helpRun}
-			{@render playing(profile, helpRun.lessonId, finishHelp)}
-		{/if}
 	{:else if screen.name === 'result' && result}
 		{@const lessonId = screen.lessonId}
 		{@const view = result}
@@ -835,6 +838,30 @@
 				{@render rewardNews(done.rewards, false)}
 			{/snippet}
 		</HelpThanks>
+	{/if}
+
+	<!--
+		Outside the chain of screens: a game paused for the settings stays mounted, hidden, and comes
+		back as it was when they close.
+	-->
+	{#if profile && progression}
+		{@const settingsOver = screen.name === 'settings'}
+		{@const shown = settingsOver && screen.name === 'settings' ? screen.back : screen}
+		{#if shown.name === 'game'}
+			{@const lessonId = shown.lessonId}
+			<div hidden={settingsOver}>
+				{@render playing(
+					profile,
+					lessonId,
+					(outcome) => finishGame(lessonId, outcome),
+					settingsOver
+				)}
+			</div>
+		{:else if shown.name === 'help-game' && helpRun}
+			<div hidden={settingsOver}>
+				{@render playing(profile, helpRun.lessonId, finishHelp, settingsOver)}
+			</div>
+		{/if}
 	{/if}
 </main>
 

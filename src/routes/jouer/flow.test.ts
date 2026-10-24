@@ -132,11 +132,11 @@ describe('screen automaton', () => {
 		}
 	});
 
-	it('leaves a paused game for the settings, and comes back to its lesson', () => {
+	it('leaves a paused game for the settings, and comes back to the game', () => {
 		const screen = transition({ name: 'game', lessonId: LESSON }, { type: 'open-settings' });
-		expect(screen).toEqual({ name: 'settings', back: { name: 'intro', lessonId: LESSON } });
+		expect(screen).toEqual({ name: 'settings', back: { name: 'game', lessonId: LESSON } });
 		expect(transition(screen, { type: 'close-settings' })).toEqual({
-			name: 'intro',
+			name: 'game',
 			lessonId: LESSON
 		});
 	});
@@ -211,10 +211,10 @@ describe('screen automaton', () => {
 		expect(transition({ name: 'help-game' }, { type: 'quit' })).toEqual({ name: 'map' });
 	});
 
-	it('leaves a paused help quest for the settings, and comes back to the map', () => {
+	it('leaves a paused help quest for the settings, and comes back to it', () => {
 		const screen = transition({ name: 'help-game' }, { type: 'open-settings' });
-		expect(screen).toEqual({ name: 'settings', back: { name: 'map' } });
-		expect(transition(screen, { type: 'close-settings' })).toEqual({ name: 'map' });
+		expect(screen).toEqual({ name: 'settings', back: { name: 'help-game' } });
+		expect(transition(screen, { type: 'close-settings' })).toEqual({ name: 'help-game' });
 	});
 
 	it('starts a help quest from the map only', () => {
@@ -285,12 +285,19 @@ describe('screen automaton', () => {
 			});
 		});
 
-		it('leads to the map or to the break after the story', () => {
-			for (const then of [{ name: 'map' }, { name: 'break' }] as const) {
-				expect(
-					run([{ type: 'tell', moments: [LINE], then }, { type: 'story-next' }], RESULT)
-				).toEqual(then);
-			}
+		it('leads to the map after the story', () => {
+			expect(
+				run(
+					[{ type: 'tell', moments: [LINE], then: { name: 'map' } }, { type: 'story-next' }],
+					RESULT
+				)
+			).toEqual({ name: 'map' });
+		});
+
+		it('goes straight to the break: a child who asked for a break is not told the story first', () => {
+			expect(
+				transition(RESULT, { type: 'tell', moments: [LINE], then: { name: 'break' } })
+			).toEqual({ name: 'break' });
 		});
 
 		it('waits for the game to be loaded before a replay', () => {
