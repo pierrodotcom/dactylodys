@@ -110,6 +110,7 @@ const [NEXT_FIRST, NEXT_SECOND, NEXT_THIRD] = NEXT_WORLD.lessons as [Lesson, Les
 const [DEFAULT_GAME = '', OTHER_GAME = ''] = NEXT_WORLD.gameIds;
 const RECIPE = 'recipe';
 const DRAWING = 'drawing';
+const WHOLE_IN_VIEW = 0.999;
 const ROCKET = 'rocket';
 const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => {
 	const letter = azerty.keys[code]?.base ?? '';
@@ -899,8 +900,9 @@ test.describe('play route', () => {
 		await reachMap(page);
 		await openIntro(page, FIRST);
 
+		// Whole, give or take a sub-pixel: the browser measures 0.9999998 for a picture fully in view.
 		for (const game of world.gameIds)
-			await expect(playButton(page, game)).toBeInViewport({ ratio: 1 });
+			await expect(playButton(page, game)).toBeInViewport({ ratio: WHOLE_IN_VIEW });
 	});
 
 	test('shows the settings at the top of the map and of a lesson, and from the pause of a game', async ({
