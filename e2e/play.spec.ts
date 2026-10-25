@@ -109,6 +109,8 @@ const NEXT_WORLD = worlds[1] ?? world;
 const [NEXT_FIRST, NEXT_SECOND, NEXT_THIRD] = NEXT_WORLD.lessons as [Lesson, Lesson, Lesson];
 const [DEFAULT_GAME = '', OTHER_GAME = ''] = NEXT_WORLD.gameIds;
 const RECIPE = 'recipe';
+const DRAWING = 'drawing';
+const WHOLE_IN_VIEW = 0.999;
 const ROCKET = 'rocket';
 const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => {
 	const letter = azerty.keys[code]?.base ?? '';
@@ -898,8 +900,9 @@ test.describe('play route', () => {
 		await reachMap(page);
 		await openIntro(page, FIRST);
 
+		// Whole, give or take a sub-pixel: the browser measures 0.9999998 for a picture fully in view.
 		for (const game of world.gameIds)
-			await expect(playButton(page, game)).toBeInViewport({ ratio: 1 });
+			await expect(playButton(page, game)).toBeInViewport({ ratio: WHOLE_IN_VIEW });
 	});
 
 	test('shows the settings at the top of the map and of a lesson, and from the pause of a game', async ({
@@ -1147,6 +1150,28 @@ test.describe('play route', () => {
 		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(progressPicture(page, DEFAULT_GAME, 0)).toBeVisible();
+	});
+
+	test('draws another subject each time the magic drawing is played (ADR-049)', async ({
+		page
+	}) => {
+		const profile = profileAfter(FIRST.id);
+		await reachMapAs(page, profile);
+		const subject = page.locator('svg[data-picture]');
+
+		await openIntro(page, FIRST);
+		await playButton(page, DRAWING).click();
+		const first = await subject.getAttribute('data-picture');
+		await typeToResult(page, { skipDelay: true });
+		await expect
+			.poll(async () => (await storedRecord(page, profile))?.['gamePlays'])
+			.toEqual({ [DRAWING]: 1 });
+
+		await resultToMap(page);
+		await openIntro(page, FIRST);
+		await playButton(page, DRAWING).click();
+		await expect(subject).toHaveAttribute('data-picture', /./);
+		expect(await subject.getAttribute('data-picture')).not.toBe(first);
 	});
 
 	test('puts real words of the banks in the groups of a lesson that asks for words', async ({

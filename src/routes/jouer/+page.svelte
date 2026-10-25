@@ -42,6 +42,7 @@
 		markCalibrated,
 		updateSettings,
 		withCompanion,
+		withGamePlayed,
 		withLastGame
 	} from '$lib/state/profile';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
@@ -553,7 +554,9 @@
 		playClock = finishPlaying(playClock, now());
 		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, Date.now());
 		const { evaluation } = recorded;
-		const { profile: next, announced } = earnRewards(recorded.profile, catalogue, progression);
+		const earned = earnRewards(recorded.profile, catalogue, progression);
+		const next = withGamePlayed(earned.profile, activeGameId);
+		const { announced } = earned;
 		const progress = next.progress;
 		const told = story
 			? storyAfterLesson(story, progression, profile.progress, progress, lessonId)
@@ -614,13 +617,9 @@
 		if (!profile || !progression || !helpRun) return;
 		const quest = helpRun;
 		playClock = stopPlaying(playClock, now());
-		const { profile: next, announced } = recordHelpOutcome(
-			profile,
-			progression,
-			catalogue,
-			quest,
-			outcome.metrics
-		);
+		const recorded = recordHelpOutcome(profile, progression, catalogue, quest, outcome.metrics);
+		const next = withGamePlayed(recorded.profile, activeGameId);
+		const { announced } = recorded;
 		helpDone = {
 			rewards: announced,
 			dance: lessonIds(progression).indexOf(quest.lessonId),
@@ -669,6 +668,9 @@
 				)
 			)}
 			{sounds}
+			playCount={Object.hasOwn(current.gamePlays, activeGameId)
+				? current.gamePlays[activeGameId]
+				: 0}
 			ghost={raceGhost ?? undefined}
 			ghostGreeting={raceGreeting}
 			onComplete={oncomplete}

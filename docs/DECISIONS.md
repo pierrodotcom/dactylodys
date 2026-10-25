@@ -256,6 +256,12 @@ Retour du porteur : « quand on veut faire une pause, ça lance une page de déb
 - **« Faire une pause » sur le bilan** mène directement à l'écran de pause (amende l'ADR-043, « quelle que soit la sortie ») : l'écran du récit, qui ressemble à un début d'exercice (titre du monde, image, « Continuer »), ne passe plus avant. La ligne gagnée n'est pas perdue : elle est dans le carnet « L'histoire jusqu'ici ». Les autres sorties du bilan (leçon suivante, rejouer, carte) racontent toujours le récit d'abord.
 - **« Réglages » dans la pause d'un jeu** rend la partie en pause telle qu'elle était, « Reprendre » sous le doigt, au lieu de ramener au début de la leçon en perdant la partie (avant, seul « Quitter » le disait). Le jeu reste monté, caché, pendant les réglages (`GameProps.suspended` : il ignore les touches et les clics de la page). Même chose pour la quête d'aide.
 
+## 049 — Un dessin différent à chaque partie du dessin magique (2026-10-25, acceptée)
+Demande du porteur : « il faudrait que ce soit à chaque fois un dessin différent ». Le sujet ne dépendait que de la leçon (amende l'ADR-040, « 6 sujets fixes ») : rejouer donnait toujours le même.
+- **Le profil compte les parties finies de chaque jeu** (`gamePlays`, profil **version 6**, migration sans perte : aucun compte au départ). Une partie quittée ne compte pas.
+- **Le dessin magique prend le sujet suivant à chaque partie**, à partir d'un point de départ propre à la leçon : jamais deux fois le même d'affilée, et les six sujets passent avant qu'un revienne. Jamais de hasard (principe des récompenses prévisibles).
+- `GameProps.playCount` donne ce compte à tout jeu qui voudrait varier de même.
+
 ## 050 — Quota gratuit de GitHub Actions épuisé : économiser les minutes (2026-10-25, acceptée)
 Constat du porteur : le quota gratuit de minutes de GitHub Actions est épuisé, la CI ne démarre plus (PR 72 restée « pending » sans exécuteur). Amende l'ADR de CI du jalon J0 (« la CI fait foi »).
 - **Tant que le quota n'est pas rétabli** : `npm run verify` en local fait foi ; son résultat réel (nombre de tests, échecs) est écrit dans la PR. Le chef d'orchestre fusionne sur cette base, sans attendre la CI.

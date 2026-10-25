@@ -82,6 +82,7 @@
 	focusable="false"
 	aria-hidden="true"
 	data-probe={stage}
+	data-picture={picture.id}
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 >

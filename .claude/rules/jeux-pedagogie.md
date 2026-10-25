@@ -154,3 +154,7 @@ La course vit dans `GameShell` (piste `GhostTrack`, figure `GhostFigure`, page d
 | `followGame` / `clockMs` / `typedCharCount` / `exerciseCharCount` | `games/shared/race` | Horloge de la course : tourne seulement pendant la frappe d'un groupe, jamais en pause ni entre deux groupes |
 | `raceGhostFor` / `ghostGreetingFor` | `routes/jouer/race` | Fantôme proposé (leçon réussie avec allure gardée, déjà ralenti) et salut de cette partie |
 | `GameProps.ghost` / `GameProps.ghostGreeting` / `GameOutcome.race` | `games/types` | Allure déjà ralentie par la route ; salut ; `'child' \| 'ghost'` quand la course est allée au bout |
+
+## Parties par jeu (ADR-049)
+
+Profil **version 6** : `gamePlays` (parties finies de chaque jeu, par identifiant de jeu), augmenté par `withGamePlayed` (`state/profile`) à la fin d'une leçon ou d'une quête d'aide. La route le passe à chaque jeu par `GameProps.playCount` ; le dessin magique en tire son sujet (`pictureFor(lessonId, playCount)`).
