@@ -919,7 +919,11 @@ test.describe('play route', () => {
 		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(top).toHaveCount(0);
+		const group = await currentGroup(page);
+		await page.keyboard.type(group.slice(0, 1));
+		const typedOne = await groupLabel(page).textContent();
 
+		// The settings opened from the pause give the paused game back, where it was.
 		await page.keyboard.press('Escape');
 		await page
 			.getByRole('dialog')
@@ -927,7 +931,14 @@ test.describe('play route', () => {
 			.click();
 		await expect(heading(page, message('settings_title'))).toBeVisible();
 		await button(page, message('settings_back')).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
+		const resume = page
+			.getByRole('dialog')
+			.getByRole('button', { name: message('game_shared_resume') });
+		await expect(resume).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(groupLabel(page)).toHaveText(typedOne ?? '');
+		await page.keyboard.type(group.slice(1));
+		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 	});
 
 	test('opens the settings at their top with Close above them, and gives the map its scroll back', async ({
@@ -1069,8 +1080,10 @@ test.describe('play route', () => {
 		await expect(button(page, message('play_result_replay'))).toBeVisible();
 		await expect(button(page, message('play_result_map'))).toBeVisible();
 
+		// The first lesson passed tells a line of the story, but not before the break the child asked for.
 		await button(page, message('play_break_button')).click();
-		await throughStory(page, heading(page, message('play_break_title')));
+		await expect(heading(page, message('play_break_title'))).toBeVisible();
+		await expect(page.locator('[data-story-continue]')).toHaveCount(0);
 		await button(page, message('play_break_return')).click();
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 
@@ -1479,7 +1492,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expect(button(page, message('play_break_button'))).toBeVisible();
 			await expectNoAxeViolation(page);
 			await button(page, message('play_break_button')).click();
-			await throughStory(page, heading(page, message('play_break_title')));
+			await expect(heading(page, message('play_break_title'))).toBeVisible();
 			await expectNoAxeViolation(page);
 		});
 	});

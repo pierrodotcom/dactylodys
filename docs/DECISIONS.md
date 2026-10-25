@@ -251,6 +251,11 @@ Réalise le dernier point de l'ADR-022 avec les réponses du porteur aux proposi
 - **Refuser** : ne pas cocher ; pendant la course, « Continuer sans le fantôme » dans la pause retire la piste et la phrase du bilan. Pas de réglage en plus, pas de voix à enregistrer.
 - **Contrats** : `GameProps.ghost` reçoit l'allure déjà ralentie (`slowGhostRun`), `GameProps.ghostGreeting` le salut ; `GameOutcome.race` (`'child' | 'ghost'`) dit qui est arrivé le premier quand la course est allée au bout. La course vit dans `GameShell` : aucun jeu n'a de code à lui pour le fantôme.
 
+## 048 — Une pause est une pause : sans récit, et la partie en cours reste (2026-10-24, acceptée)
+Retour du porteur : « quand on veut faire une pause, ça lance une page de début d'exercice avant la pause ». Revue de tous les boutons du parcours `/jouer` ; deux défauts du même genre corrigés, le reste fait ce qu'il annonce.
+- **« Faire une pause » sur le bilan** mène directement à l'écran de pause (amende l'ADR-043, « quelle que soit la sortie ») : l'écran du récit, qui ressemble à un début d'exercice (titre du monde, image, « Continuer »), ne passe plus avant. La ligne gagnée n'est pas perdue : elle est dans le carnet « L'histoire jusqu'ici ». Les autres sorties du bilan (leçon suivante, rejouer, carte) racontent toujours le récit d'abord.
+- **« Réglages » dans la pause d'un jeu** rend la partie en pause telle qu'elle était, « Reprendre » sous le doigt, au lieu de ramener au début de la leçon en perdant la partie (avant, seul « Quitter » le disait). Le jeu reste monté, caché, pendant les réglages (`GameProps.suspended` : il ignore les touches et les clics de la page). Même chose pour la quête d'aide.
+
 ## 049 — Un dessin différent à chaque partie du dessin magique (2026-10-25, acceptée)
 Demande du porteur : « il faudrait que ce soit à chaque fois un dessin différent ». Le sujet ne dépendait que de la leçon (amende l'ADR-040, « 6 sujets fixes ») : rejouer donnait toujours le même.
 - **Le profil compte les parties finies de chaque jeu** (`gamePlays`, profil **version 6**, migration sans perte : aucun compte au départ). Une partie quittée ne compte pas.

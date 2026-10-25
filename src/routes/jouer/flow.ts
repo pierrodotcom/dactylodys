@@ -35,10 +35,12 @@ export type Screen =
 	| { readonly name: 'story-so-far' };
 
 /**
- * Screens with the bar at the top, that the settings and the companion open from and come back
- * to. A game left for the settings comes back to its lesson, a help quest to the map.
+ * Screens that the settings and the companion open from and come back to. A game paused for the
+ * settings is kept as it was and given back (the companion does not open during a game).
  */
 export type SettingsOrigin =
+	| { readonly name: 'game'; readonly lessonId: string }
+	| { readonly name: 'help-game' }
 	| { readonly name: 'map' }
 	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'result'; readonly lessonId: string }
@@ -102,10 +104,8 @@ function originOf(screen: Screen): SettingsOrigin | null {
 }
 
 function openSettings(screen: Screen): Screen {
-	if (screen.name === 'game') {
-		return { name: 'settings', back: { name: 'intro', lessonId: screen.lessonId } };
-	}
-	if (screen.name === 'help-game') return { name: 'settings', back: { name: 'map' } };
+	if (screen.name === 'game' || screen.name === 'help-game')
+		return { name: 'settings', back: screen };
 	const back = originOf(screen);
 	return back === null ? screen : { name: 'settings', back };
 }
@@ -114,9 +114,12 @@ function destination(then: StoryDestination, screen: Screen): Screen {
 	return then.name === 'replay' ? screen : then;
 }
 
-/** The story screen, or the destination at once when there is nothing to tell. */
+/**
+ * The story screen, or the destination at once when there is nothing to tell. A child who asks
+ * for a break goes to it at once: the story waits in the notebook (`storySoFar`).
+ */
 function tell(moments: readonly StoryMoment[], then: StoryDestination, screen: Screen): Screen {
-	return moments.length === 0
+	return moments.length === 0 || then.name === 'break'
 		? destination(then, screen)
 		: { name: 'story', moments, index: 0, then };
 }

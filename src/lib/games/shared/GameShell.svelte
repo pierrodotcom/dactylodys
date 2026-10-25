@@ -74,6 +74,7 @@
 		sounds,
 		ghost,
 		ghostGreeting = 0,
+		suspended = false,
 		onComplete,
 		onQuit,
 		onSettings,
@@ -183,13 +184,13 @@
 	}
 
 	function onWindowKeydown(event: KeyboardEvent) {
-		if (event.key !== 'Escape' || event.repeat) return;
+		if (suspended || event.key !== 'Escape' || event.repeat) return;
 		if (paused) void resume();
 		else dispatch({ type: 'pause' });
 	}
 
 	function keepFocus(event: MouseEvent) {
-		if (paused) return;
+		if (paused || suspended) return;
 		if (!(event.target as Element).closest('button')) field?.focus();
 	}
 
@@ -367,7 +368,8 @@
 	<div class="dd-visually-hidden" role="status">{announcement}</div>
 </div>
 
-{#if paused}
+<!-- Hidden behind the settings: back from them, it opens again with the focus on "Resume". -->
+{#if paused && !suspended}
 	<div class="backdrop">
 		<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="game-pause-title">
 			<h2 id="game-pause-title">{m.game_shared_pause_title()}</h2>
