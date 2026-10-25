@@ -36,7 +36,15 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
 
-      - run: npx playwright install --with-deps
+      # The Ubuntu mirror sometimes stalls for half an hour (L-085): short attempts, retried.
+      - name: Install browsers and their system libraries
+        timeout-minutes: 15
+        run: |
+          for attempt in 1 2 3; do
+            timeout 240 npx playwright install --with-deps && exit 0
+            echo "Attempt $attempt did not finish, trying again"
+          done
+          exit 1
 
       - run: npm run verify
 
