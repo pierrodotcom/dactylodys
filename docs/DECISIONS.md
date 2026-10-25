@@ -261,3 +261,9 @@ Demande du porteur : « il faudrait que ce soit à chaque fois un dessin différ
 - **Le profil compte les parties finies de chaque jeu** (`gamePlays`, profil **version 6**, migration sans perte : aucun compte au départ). Une partie quittée ne compte pas.
 - **Le dessin magique prend le sujet suivant à chaque partie**, à partir d'un point de départ propre à la leçon : jamais deux fois le même d'affilée, et les six sujets passent avant qu'un revienne. Jamais de hasard (principe des récompenses prévisibles).
 - `GameProps.playCount` donne ce compte à tout jeu qui voudrait varier de même.
+
+## 050 — Quota gratuit de GitHub Actions épuisé : économiser les minutes (2026-10-25, acceptée)
+Constat du porteur : le quota gratuit de minutes de GitHub Actions est épuisé, la CI ne démarre plus (PR 72 restée « pending » sans exécuteur). Amende l'ADR de CI du jalon J0 (« la CI fait foi »).
+- **Tant que le quota n'est pas rétabli** : `npm run verify` en local fait foi ; son résultat réel (nombre de tests, échecs) est écrit dans la PR. Le chef d'orchestre fusionne sur cette base, sans attendre la CI.
+- **Consommer le moins possible, même après le retour du quota** : un lot = une PR ; commits regroupés et un seul `push` par lot (chaque push déclenche la CI) ; jamais de push « pour voir » ; pas d'Auto-fix qui relance la CI pour des broutilles ; docs seules : pas de CI utile (piste : filtrer `paths-ignore: docs/**` dans le workflow, à faire par le chef d'orchestre) ; aucun relancement d'une CI en échec sans cause comprise.
+- **Pas de repli payant décidé** : Cloudflare Pages / exécuteur local restent des pistes (porteur à consulter).

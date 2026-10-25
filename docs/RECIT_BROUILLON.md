@@ -59,4 +59,4 @@ Chaque texte est montré entre deux exercices : l'ouverture quand l'enfant entre
 
 ## Enregistrement
 
-Choix du porteur : on enregistre **d'abord les 10 ouvertures et fins** (numéros 1, 8, 9, 15, 16, 21, 22, 27, 28, 34) ; les 24 lignes de leçon restent écrites (et lisibles) en attendant leur enregistrement.
+Fait : les 34 textes sont enregistrés par le porteur et publiés (PR 61, 2026-10-21), avec les 24 consignes et le rappel (PR 50). Vérifié le 2026-10-25 : les 59 textes dits par le jeu ont chacun leur fichier dans `static/voice/fr/`.
