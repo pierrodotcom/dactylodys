@@ -53,7 +53,7 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 5;
+export const PROFILE_SCHEMA_VERSION = 6;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -72,7 +72,8 @@ const PROFILE_KEYS = [
 	'lastGameByWorld',
 	'ghosts',
 	'earnedRewardIds',
-	'helpQuest'
+	'helpQuest',
+	'gamePlays'
 ] as const satisfies readonly (keyof Profile)[];
 const SETTINGS_KEYS = [
 	'layoutId',
@@ -157,7 +158,8 @@ export function createProfile(input: NewProfileInput): Profile {
 		lastGameByWorld: {},
 		ghosts: {},
 		earnedRewardIds: [],
-		helpQuest: null
+		helpQuest: null,
+		gamePlays: {}
 	};
 }
 
@@ -209,6 +211,13 @@ export function withEarnedRewards(profile: Profile, rewardIds: readonly string[]
 		...profile,
 		earnedRewardIds: parseEarnedRewards([...profile.earnedRewardIds, ...added], 'earnedRewardIds')
 	};
+}
+
+/** One more play finished with this mini-game. */
+export function withGamePlayed(profile: Profile, gameId: string): Profile {
+	const id = expectIdentifier(gameId, 'gameId');
+	const played = Object.hasOwn(profile.gamePlays, id) ? (profile.gamePlays[id] ?? 0) : 0;
+	return { ...profile, gamePlays: { ...profile.gamePlays, [id]: played + 1 } };
 }
 
 export function withHelpQuest(profile: Profile, record: HelpQuestRecord): Profile {
@@ -430,6 +439,7 @@ export function parseProfile(data: unknown): Profile {
 		),
 		ghosts: parseRecordOf(root['ghosts'], 'profile.ghosts', parseGhostRun),
 		earnedRewardIds: parseEarnedRewards(root['earnedRewardIds'], 'profile.earnedRewardIds'),
-		helpQuest: parseHelpQuest(root['helpQuest'], 'profile.helpQuest')
+		helpQuest: parseHelpQuest(root['helpQuest'], 'profile.helpQuest'),
+		gamePlays: parseRecordOf(root['gamePlays'], 'profile.gamePlays', expectCount)
 	};
 }

@@ -7,11 +7,15 @@ export const PROBE_STEPS = 100;
 
 const HASH_BASE = 31;
 
-/** The drawing of a lesson: always the same for a given lesson, never at random. */
-export function pictureFor(lessonId: string): DrawingPicture {
+/**
+ * The drawing of a play, never at random: each new play of the game takes the next subject, from
+ * a starting point that depends on the lesson (ADR-049).
+ */
+export function pictureFor(lessonId: string, playCount = 0): DrawingPicture {
 	let hash = 0;
 	for (const char of lessonId) hash = (hash * HASH_BASE + (char.codePointAt(0) ?? 0)) >>> 0;
-	return DRAWINGS[hash % DRAWINGS.length] ?? DRAWINGS[0];
+	const turn = Number.isSafeInteger(playCount) && playCount > 0 ? playCount : 0;
+	return DRAWINGS[(hash + turn) % DRAWINGS.length] ?? DRAWINGS[0];
 }
 
 /**

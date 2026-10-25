@@ -250,3 +250,9 @@ Réalise le dernier point de l'ADR-022 avec les réponses du porteur aux proposi
 - **Bilan** : inchangé (étoiles sur la précision seule), plus une phrase sans chiffre ni temps : « Ton fantôme copieur est arrivé après toi : tu tapes plus vite qu'avant ! » ou « … est arrivé le premier cette fois. Le plus important, ce sont tes étoiles. » Égalité : l'enfant arrive le premier. Une partie réussie devient le nouveau fantôme (déjà le cas depuis le lot 0).
 - **Refuser** : ne pas cocher ; pendant la course, « Continuer sans le fantôme » dans la pause retire la piste et la phrase du bilan. Pas de réglage en plus, pas de voix à enregistrer.
 - **Contrats** : `GameProps.ghost` reçoit l'allure déjà ralentie (`slowGhostRun`), `GameProps.ghostGreeting` le salut ; `GameOutcome.race` (`'child' | 'ghost'`) dit qui est arrivé le premier quand la course est allée au bout. La course vit dans `GameShell` : aucun jeu n'a de code à lui pour le fantôme.
+
+## 049 — Un dessin différent à chaque partie du dessin magique (2026-10-25, acceptée)
+Demande du porteur : « il faudrait que ce soit à chaque fois un dessin différent ». Le sujet ne dépendait que de la leçon (amende l'ADR-040, « 6 sujets fixes ») : rejouer donnait toujours le même.
+- **Le profil compte les parties finies de chaque jeu** (`gamePlays`, profil **version 6**, migration sans perte : aucun compte au départ). Une partie quittée ne compte pas.
+- **Le dessin magique prend le sujet suivant à chaque partie**, à partir d'un point de départ propre à la leçon : jamais deux fois le même d'affilée, et les six sujets passent avant qu'un revienne. Jamais de hasard (principe des récompenses prévisibles).
+- `GameProps.playCount` donne ce compte à tout jeu qui voudrait varier de même.

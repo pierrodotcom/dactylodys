@@ -14,7 +14,7 @@ import {
 	withProgress
 } from './profile';
 import { firstVersionProfileArb, profileArb } from './test-arbitraries';
-import { asVersion1, asVersion2, asVersion3, asVersion4 } from './test-support';
+import { asVersion1, asVersion2, asVersion3, asVersion4, asVersion5 } from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
@@ -224,9 +224,20 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 5,
+			schemaVersion: 6,
 			earnedRewardIds: [],
-			helpQuest: null
+			helpQuest: null,
+			gamePlays: {}
+		});
+	});
+
+	it('brings a version 5 profile to the current version with no play counted yet', () => {
+		const current = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+		const stored = { ...asVersion5(current), earnedRewardIds: ['fr.reward.a'] };
+		expect(parseProfile(migrateProfile(stored))).toEqual({
+			...current,
+			earnedRewardIds: ['fr.reward.a'],
+			gamePlays: {}
 		});
 	});
 
@@ -280,9 +291,10 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 5,
+			schemaVersion: 6,
 			earnedRewardIds: [],
-			helpQuest: null
+			helpQuest: null,
+			gamePlays: {}
 		});
 		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
 	});

@@ -21,8 +21,17 @@ function typeAll(state: GameState, text: string): GameState {
 }
 
 describe('pictureFor', () => {
-	it('gives the same drawing to the same lesson, always', () => {
-		expect(pictureFor('fr.lesson.oeufs-f-j')).toBe(pictureFor('fr.lesson.oeufs-f-j'));
+	it('gives the same drawing to the same play of a lesson, never at random', () => {
+		expect(pictureFor('fr.lesson.oeufs-f-j', 3)).toBe(pictureFor('fr.lesson.oeufs-f-j', 3));
+	});
+
+	it('draws another subject at each new play, and every subject before the first comes back', () => {
+		const lesson = 'fr.lesson.oeufs-f-j';
+		const plays = DRAWINGS.map((_, count) => pictureFor(lesson, count).id);
+		expect(new Set(plays).size).toBe(DRAWINGS.length);
+		for (let count = 0; count < 3 * DRAWINGS.length; count++) {
+			expect(pictureFor(lesson, count + 1).id).not.toBe(pictureFor(lesson, count).id);
+		}
 	});
 
 	it('spreads the lessons over several drawings', () => {

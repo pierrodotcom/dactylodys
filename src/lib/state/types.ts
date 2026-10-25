@@ -29,7 +29,7 @@ export type { CompanionChoice, HandGuidePreference, HelpQuestRecord };
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 5;
+	readonly schemaVersion: 6;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;
@@ -54,6 +54,11 @@ export interface Profile {
 	readonly lastGameByWorld: Readonly<Record<string, string>>;
 	/** Pace of the last passed play of each lesson, by lesson identifier. */
 	readonly ghosts: Readonly<Record<string, GhostRun>>;
+	/**
+	 * Plays finished with each mini-game, by game identifier (version 6): a game whose picture
+	 * changes from one play to the next reads its count (ADR-049).
+	 */
+	readonly gamePlays: Readonly<Record<string, number>>;
 }
 
 /**

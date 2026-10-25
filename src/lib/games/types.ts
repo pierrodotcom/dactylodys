@@ -61,6 +61,8 @@ export interface GameProps {
 	readonly ghost?: GhostRun;
 	/** Which greeting the ghost makes when the child arrives; they follow one another. */
 	readonly ghostGreeting?: number;
+	/** Plays of this game the child has finished: a game may change its picture from one to the next. */
+	readonly playCount?: number;
 	readonly onComplete: (outcome: GameOutcome) => void;
 	readonly onQuit: () => void;
 	/** Says the reminders of the game aloud; absent: they are only shown. */

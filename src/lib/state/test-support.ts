@@ -114,3 +114,10 @@ export function asVersion4(profile: Profile): Record<string, unknown> {
 		}
 	};
 }
+
+/** The record version 5 of the app stored: the same profile without the plays of each game. */
+export function asVersion5(profile: Profile): Record<string, unknown> {
+	const stored: Record<string, unknown> = { ...profile, schemaVersion: 5 };
+	delete stored['gamePlays'];
+	return stored;
+}
