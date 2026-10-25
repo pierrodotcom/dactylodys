@@ -122,7 +122,7 @@ Ne jamais déclarer « terminé » sans avoir exécuté la vérification et en d
 - Commits conventionnels (vérifiés par commitlint) : `<type>(<portée>): <description en français>` avec `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `content`, `a11y`, `ci`, `perf`, `revert`.
 - Jamais de commit direct sur `main` après le jalon J0 : une branche par lot, une PR, CI verte, fusion par squash.
 - Petits commits cohérents. Pas de `--no-verify`, pas de `push --force` sur `main`.
-- **Décisions du porteur (2026-10-11)** : le chef d'orchestre active l'Auto-fix sur chaque PR et la fusionne lui-même dès que la CI est verte. La CI (3 navigateurs, Linux) fait foi. En local, Firefox et WebKit marchent (copies de Playwright) : lancer `--project=firefox` sur les specs touchées, surtout au clavier ; un `page.goto` expiré vient d'un poste saturé, pas du code (L-070).
+- **Décisions du porteur (2026-10-11)** : le chef d'orchestre active l'Auto-fix sur chaque PR et la fusionne lui-même dès que la CI est verte. La CI (3 navigateurs, Linux) fait foi, **sauf tant que le quota gratuit de minutes GitHub Actions est épuisé (ADR-050, 2026-10-25) : `npm run verify` en local fait foi, un seul push par lot, jamais de push « pour voir », jamais d'attente de CI**. En local, Firefox et WebKit marchent (copies de Playwright) : lancer `--project=firefox` sur les specs touchées, surtout au clavier ; un `page.goto` expiré vient d'un poste saturé, pas du code (L-070).
 - Les agents ne peuvent pas réécrire l'historique git : si c'est nécessaire, donner la commande au porteur.
 - Tout asset tiers est déclaré dans `static/ATTRIBUTIONS.md` (source, auteur, licence) **dans le même commit**.
 
