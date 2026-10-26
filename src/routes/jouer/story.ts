@@ -36,3 +36,11 @@ export function wholeStory(story: StoryDefinition): readonly StoryMoment[] {
 		}
 	]);
 }
+
+/** The moments not told yet during this visit, by picture: each picture is one moment. */
+export function notYetTold(
+	moments: readonly StoryMoment[],
+	told: ReadonlySet<string>
+): readonly StoryMoment[] {
+	return moments.filter((moment) => !told.has(moment.art));
+}

@@ -285,13 +285,10 @@ describe('screen automaton', () => {
 			});
 		});
 
-		it('leads to the map after the story', () => {
-			expect(
-				run(
-					[{ type: 'tell', moments: [LINE], then: { name: 'map' } }, { type: 'story-next' }],
-					RESULT
-				)
-			).toEqual({ name: 'map' });
+		it('goes straight to the map: the line won waits in the notebook (ADR-051)', () => {
+			expect(transition(RESULT, { type: 'tell', moments: [LINE], then: { name: 'map' } })).toEqual({
+				name: 'map'
+			});
 		});
 
 		it('goes straight to the break: a child who asked for a break is not told the story first', () => {
@@ -300,17 +297,11 @@ describe('screen automaton', () => {
 			).toEqual({ name: 'break' });
 		});
 
-		it('waits for the game to be loaded before a replay', () => {
+		it('ignores a replay while the story is told', () => {
 			const story = run(
-				[{ type: 'tell', moments: [LINE], then: { name: 'replay', lessonId: LESSON } }],
+				[{ type: 'tell', moments: [LINE], then: { name: 'intro', lessonId: NEXT } }],
 				RESULT
 			);
-			expect(transition(story, { type: 'story-next' })).toEqual(story);
-			expect(transition(story, { type: 'replay' })).toEqual({ name: 'game', lessonId: LESSON });
-		});
-
-		it('ignores a replay while the story leads elsewhere', () => {
-			const story = run([{ type: 'tell', moments: [LINE], then: { name: 'map' } }], RESULT);
 			expect(transition(story, { type: 'replay' })).toEqual(story);
 		});
 
@@ -329,7 +320,11 @@ describe('screen automaton', () => {
 		});
 
 		it('opens neither settings nor the companion over the story', () => {
-			const story = run([{ type: 'tell', moments: [LINE], then: { name: 'map' } }], RESULT);
+			const story = run(
+				[{ type: 'tell', moments: [LINE], then: { name: 'intro', lessonId: NEXT } }],
+				RESULT
+			);
+			expect(story).toMatchObject({ name: 'story' });
 			expect(transition(story, { type: 'open-settings' })).toEqual(story);
 			expect(transition(story, { type: 'open-companion' })).toEqual(story);
 			expect(transition(story, { type: 'change-player' })).toEqual(story);
