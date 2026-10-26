@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { validateStory } from '$lib/engine/story';
 import { STORY_ART_IDS } from '$lib/ui/story/art-ids';
 import { progressionFor } from './content';
-import { STORY, storyFor, wholeStory } from './story';
+import { STORY, notYetTold, storyFor, wholeStory } from './story';
 
 const progression = progressionFor('fr-fr-azerty-pc');
 
@@ -22,5 +22,14 @@ describe('the shipped story', () => {
 		const named = wholeStory(STORY).map((moment) => moment.art);
 		expect(new Set(named).size).toBe(named.length);
 		expect([...named].sort()).toEqual([...STORY_ART_IDS].sort());
+	});
+});
+
+describe('notYetTold', () => {
+	it('keeps only the moments whose picture was not told yet, in their order', () => {
+		const [opening, line, other] = wholeStory(STORY);
+		if (!opening || !line || !other) throw new Error('The story is too short for this test');
+		expect(notYetTold([opening, line, other], new Set([line.art]))).toEqual([opening, other]);
+		expect(notYetTold([opening], new Set([opening.art]))).toEqual([]);
 	});
 });

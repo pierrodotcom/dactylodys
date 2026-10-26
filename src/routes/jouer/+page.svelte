@@ -69,13 +69,7 @@
 	} from './companion';
 	import CompanionPanel from './CompanionPanel.svelte';
 	import { progressionFor } from './content';
-	import {
-		INITIAL_SCREEN,
-		transition,
-		type FlowEvent,
-		type Screen,
-		type StoryDestination
-	} from './flow';
+	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
 	import { gameForLesson, gameOptions } from './game-choice';
 	import HelpThanks from './HelpThanks.svelte';
 	import { isMotionReduced, toGameSettings } from './game-settings';
@@ -96,7 +90,7 @@
 	import { HELP_QUEST_RULES, rewardCatalogueFor } from './rewards';
 	import SettingsPanel from './SettingsPanel.svelte';
 	import { createProfileSounds } from './sounds';
-	import { storyFor } from './story';
+	import { notYetTold, storyFor } from './story';
 	import StoryScreen from './StoryScreen.svelte';
 	import StorySoFar from './StorySoFar.svelte';
 	import { summarizeMetrics, type ResultSummary } from './summary';
@@ -140,6 +134,8 @@
 	}
 
 	let screen = $state.raw<Screen>(INITIAL_SCREEN);
+	/** Pictures of the story already told during this visit (ADR-051). */
+	let toldThisVisit: ReadonlySet<string> = new Set();
 	let store: ProfileStore = createMemoryProfileStore();
 	let profiles = $state.raw<readonly Profile[]>([]);
 	let profile = $state.raw<Profile | null>(null);
@@ -292,6 +288,7 @@
 
 	async function enter(chosen: Profile): Promise<boolean> {
 		loadFailed = false;
+		toldThisVisit = new Set();
 		try {
 			assets = await loadKeyboardAssets(chosen.settings);
 		} catch {
@@ -423,7 +420,14 @@
 		if (!profile || !progression) return;
 		gameLoadFailed = false;
 		if (!isLessonUnlocked(progression, profile.progress, lessonId)) return;
-		go({ type: 'tell', moments: openingOf(lessonId), then: { name: 'intro', lessonId } });
+		tellOnTheWay(openingOf(lessonId), lessonId);
+	}
+
+	/** Each moment is told once per visit: back to the map and in again, the child is not told twice. */
+	function tellOnTheWay(moments: readonly StoryMoment[], lessonId: string) {
+		const fresh = notYetTold(moments, toldThisVisit);
+		toldThisVisit = new Set([...toldThisVisit, ...fresh.map((moment) => moment.art)]);
+		go({ type: 'tell', moments: fresh, then: { name: 'intro', lessonId } });
 	}
 
 	/** The opening of the world of the lesson, while the child has played none of its lessons. */
@@ -432,26 +436,16 @@
 		return storyBeforeLesson(story, progression, profile.progress, lessonId);
 	}
 
-	/** Leaves the result: what the play won of the story is told first. */
-	function leaveResult(then: StoryDestination) {
-		const moments = result?.story ?? [];
-		if (then.name === 'replay' && moments.length === 0) {
-			void beginGame(then.lessonId, { type: 'replay' });
-			return;
-		}
-		if (then.name === 'break') playClock = createPlayClock();
-		go({ type: 'tell', moments, then });
+	/** A break starts the play time again. */
+	function takeBreak() {
+		playClock = createPlayClock();
+		go({ type: 'take-break' });
 	}
 
 	function continueStory() {
 		if (screen.name !== 'story') return;
 		// "Continue" may have scrolled a small screen: the next screen starts from its top.
 		window.scrollTo({ top: 0 });
-		const last = screen.index + 1 >= screen.moments.length;
-		if (last && screen.then.name === 'replay') {
-			void beginGame(screen.then.lessonId, { type: 'replay' });
-			return;
-		}
 		go({ type: 'story-next' });
 	}
 
@@ -634,11 +628,7 @@
 		const followingId = nextLessonId(progression, result.lessonId);
 		if (followingId === null) return;
 		// The ending of a world leads into the opening of the next one.
-		go({
-			type: 'tell',
-			moments: [...result.story, ...openingOf(followingId)],
-			then: { name: 'intro', lessonId: followingId }
-		});
+		tellOnTheWay([...result.story, ...openingOf(followingId)], followingId);
 	}
 </script>
 
@@ -800,9 +790,9 @@
 			still={isMotionReduced(profile.settings, systemPrefersReduced)}
 			{sounds}
 			onnext={playNext}
-			onreplay={() => leaveResult({ name: 'replay', lessonId })}
-			onmap={() => leaveResult({ name: 'map' })}
-			onbreak={() => leaveResult({ name: 'break' })}
+			onreplay={() => void beginGame(lessonId, { type: 'replay' })}
+			onmap={() => go({ type: 'back-to-map' })}
+			onbreak={takeBreak}
 		>
 			{#snippet news()}
 				{@render rewardNews(view.rewards, askNameNow)}

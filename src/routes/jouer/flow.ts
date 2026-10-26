@@ -4,9 +4,7 @@ import type { StoryMoment } from '$lib/engine/story';
 export type StoryDestination =
 	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'map' }
-	| { readonly name: 'break' }
-	/** The lesson is played again: the page loads the game, then sends `replay`. */
-	| { readonly name: 'replay'; readonly lessonId: string };
+	| { readonly name: 'break' };
 
 export type Screen =
 	| { readonly name: 'loading' }
@@ -110,17 +108,14 @@ function openSettings(screen: Screen): Screen {
 	return back === null ? screen : { name: 'settings', back };
 }
 
-function destination(then: StoryDestination, screen: Screen): Screen {
-	return then.name === 'replay' ? screen : then;
-}
-
 /**
- * The story screen, or the destination at once when there is nothing to tell. A child who asks
- * for a break goes to it at once: the story waits in the notebook (`storySoFar`).
+ * The story screen, or the destination at once. The story is told only on the way to a lesson,
+ * the adventure going on (ADR-051): the map and the break are reached straight away, and what was
+ * won waits in the notebook (`storySoFar`).
  */
-function tell(moments: readonly StoryMoment[], then: StoryDestination, screen: Screen): Screen {
-	return moments.length === 0 || then.name === 'break'
-		? destination(then, screen)
+function tell(moments: readonly StoryMoment[], then: StoryDestination): Screen {
+	return moments.length === 0 || then.name !== 'intro'
+		? then
 		: { name: 'story', moments, index: 0, then };
 }
 
@@ -165,7 +160,7 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			}
 			if (event.type === 'start-help') return { name: 'help-game' };
 			if (event.type === 'tell' && event.then.name === 'intro') {
-				return tell(event.moments, event.then, screen);
+				return tell(event.moments, event.then);
 			}
 			if (event.type === 'open-story-so-far') return { name: 'story-so-far' };
 			return screen;
@@ -186,7 +181,7 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			if (event.type === 'replay') return { name: 'game', lessonId: screen.lessonId };
 			if (event.type === 'back-to-map') return { name: 'map' };
 			if (event.type === 'take-break') return { name: 'break' };
-			if (event.type === 'tell') return tell(event.moments, event.then, screen);
+			if (event.type === 'tell') return tell(event.moments, event.then);
 			return screen;
 		case 'break':
 			return event.type === 'back-to-map' ? { name: 'map' } : screen;
@@ -200,13 +195,8 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			if (event.type === 'story-next') {
 				return screen.index + 1 < screen.moments.length
 					? { ...screen, index: screen.index + 1 }
-					: destination(screen.then, screen);
+					: screen.then;
 			}
-			if (event.type === 'replay' && screen.then.name === 'replay') {
-				return { name: 'game', lessonId: screen.then.lessonId };
-			}
-			// The game of a replay could not be loaded.
-			if (event.type === 'back-to-map') return { name: 'map' };
 			return screen;
 		case 'story-so-far':
 			return event.type === 'back-to-map' ? { name: 'map' } : screen;

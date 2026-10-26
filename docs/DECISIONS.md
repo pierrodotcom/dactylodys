@@ -267,3 +267,10 @@ Constat du porteur : le quota gratuit de minutes de GitHub Actions est épuisé,
 - **Tant que le quota n'est pas rétabli** : `npm run verify` en local fait foi ; son résultat réel (nombre de tests, échecs) est écrit dans la PR. Le chef d'orchestre fusionne sur cette base, sans attendre la CI.
 - **Consommer le moins possible, même après le retour du quota** : un lot = une PR ; commits regroupés et un seul `push` par lot (chaque push déclenche la CI) ; jamais de push « pour voir » ; pas d'Auto-fix qui relance la CI pour des broutilles ; docs seules : pas de CI utile (piste : filtrer `paths-ignore: docs/**` dans le workflow, à faire par le chef d'orchestre) ; aucun relancement d'une CI en échec sans cause comprise.
 - **Pas de repli payant décidé** : Cloudflare Pages / exécuteur local restent des pistes (porteur à consulter).
+
+## 051 — Chaque bouton mène là où il le dit (2026-10-26, acceptée)
+Retour du porteur : « il y a encore des problèmes de logique dans les boutons (par exemple : Retourner à la carte) ». Revue de chaque bouton du parcours `/jouer` ; règle : un bouton mène directement à ce que dit son libellé, sans écran intermédiaire.
+- **Le récit n'est raconté que sur le chemin d'une leçon** (« Leçon suivante », ouverture d'une leçon d'un monde nouveau) : c'est l'aventure qui continue. « Retour à la carte » et « Rejouer » mènent directement à la carte et au jeu (amende l'ADR-043, et complète l'ADR-048 pour la pause). Ce qui a été gagné attend dans le carnet « L'histoire jusqu'ici ».
+- **Chaque moment n'est raconté qu'une fois par visite** : l'ouverture d'un monde ne revient plus quand l'enfant retourne à la carte puis rouvre la leçon (en mémoire seulement ; une nouvelle visite la raconte encore tant qu'aucune leçon du monde n'est jouée).
+- **L'écran de pause** disait « Revenir au jeu » et menait à la carte : il dit « Retour à la carte ».
+- Les autres boutons ont été vérifiés un à un et font ce qu'ils annoncent : joueurs, nouveau joueur, clavier, carte, avant-leçon, jeu (pause, reprendre, quitter, réglages, sans le fantôme), bilan (objets, nom, plus tard), récit, carnet, compagnon, réglages, quête d'aide.

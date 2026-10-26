@@ -201,7 +201,10 @@ test.describe('the story between two exercises', () => {
 		await expect(heading(page, FIRST_KITCHEN.title)).toBeVisible();
 	});
 
-	test('tells the line before the map, and before the game of a replay', async ({ page }) => {
+	// ADR-051: a button goes where it says; the line won waits in the notebook.
+	test('goes straight to a replay and to the map, without telling the line first', async ({
+		page
+	}) => {
 		await reachMapAs(page, advancedProfile({ name: 'Ilan', passed: {} }));
 		await page.getByRole('button', { name: FIRST.title }).click();
 		await throughStory(page, heading(page, FIRST.title));
@@ -209,9 +212,33 @@ test.describe('the story between two exercises', () => {
 		await typeToResult(page);
 
 		await button(page, message('play_result_replay')).click();
-		await expect(told(page)).toHaveAttribute('data-art', TOLD_DINOS.lessons[0]?.art ?? '');
-		await continueButton(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+		await expect(told(page)).toHaveCount(0);
+		await typeToResult(page);
+
+		await button(page, message('play_result_map')).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		await expect(told(page)).toHaveCount(0);
+
+		await button(page, message('play_story_so_far_open')).click();
+		await expect(
+			page.locator(`[data-story-art="${TOLD_DINOS.lessons[0]?.art ?? ''}"]`).first()
+		).toBeAttached();
+	});
+
+	test('opens a world once per visit, even when the child goes back to the map', async ({
+		page
+	}) => {
+		await reachMapAs(page, advancedProfile({ name: 'Lune', passed: {} }));
+		await page.getByRole('button', { name: FIRST.title }).click();
+		await expect(told(page)).toHaveAttribute('data-art', TOLD_DINOS.openingArt);
+		await continueButton(page).click();
+		await expect(heading(page, FIRST.title)).toBeVisible();
+
+		await button(page, message('play_intro_back')).click();
+		await page.getByRole('button', { name: FIRST.title }).click();
+		await expect(heading(page, FIRST.title)).toBeVisible();
+		await expect(told(page)).toHaveCount(0);
 	});
 });
 
