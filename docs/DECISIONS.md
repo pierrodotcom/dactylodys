@@ -274,3 +274,9 @@ Retour du porteur : « il y a encore des problèmes de logique dans les boutons 
 - **Chaque moment n'est raconté qu'une fois par visite** : l'ouverture d'un monde ne revient plus quand l'enfant retourne à la carte puis rouvre la leçon (en mémoire seulement ; une nouvelle visite la raconte encore tant qu'aucune leçon du monde n'est jouée).
 - **L'écran de pause** disait « Revenir au jeu » et menait à la carte : il dit « Retour à la carte ».
 - Les autres boutons ont été vérifiés un à un et font ce qu'ils annoncent : joueurs, nouveau joueur, clavier, carte, avant-leçon, jeu (pause, reprendre, quitter, réglages, sans le fantôme), bilan (objets, nom, plus tard), récit, carnet, compagnon, réglages, quête d'aide.
+
+## 052 — Mains guides : la rangée du bas lisible (2026-10-27, acceptée)
+Demande du porteur : les jonctions des doigts des mains transparentes masquaient la rangée du bas. Trois maquettes nouvelles (trait fin, silhouette, verre) ont été refusées comme « difformes », puis deux versions intermédiaires (doigts parallèles, puis doigts pliés sous la rangée du bas) ; le porteur a retenu la version la plus proche du dessin d'origine.
+- **Le dessin d'origine est gardé** : paume en trapèze, doigts droits en traits arrondis, pouce droit seul sur l'espace (ADR-041).
+- **Jointures un peu plus bas** (`knuckleDrop` 1,5 → 1,65 pas de touche) : la paume commence sous la rangée du bas.
+- **Doigts moins penchés vers le milieu** (`fan` réduit) **et un peu plus fins** (`HAND_STROKES` 0,56 → 0,5) : sur ce clavier, chaque touche de repos est au-dessus de l'espace entre deux lettres de la rangée du bas, si bien qu'un doigt presque droit passe à côté des lettres. Un test vérifie qu'au repos aucun doigt ne passe sur le milieu d'une lettre de la rangée du bas et que la paume reste dessous.
