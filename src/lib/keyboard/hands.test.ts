@@ -88,10 +88,10 @@ describe('restingHands', () => {
 		expect(thumbs.map((shape) => shape.finger)).toEqual(['left-thumb']);
 	});
 
-	it('leaves every letter of the bottom row clear: the fingers pass between them, the palm below', () => {
-		// A letter is drawn in the middle of its key: measured on the screen, about 0.16 key pitch
-		// from its centre across and 0.12 up and down, with a margin.
-		const glyph = { x: 0.18, y: 0.16 };
+	it('leaves the bottom row readable at rest: no finger on the middle of a letter, the palm below', () => {
+		// A letter is drawn in the middle of its key: measured on the screen, about 0.12 key pitch
+		// above and below its centre, with a margin.
+		const glyphHeight = 0.16;
 		const halfStroke = HAND_STROKES.finger / 2 + HAND_STROKES.outline;
 		const bottomRow = geometry.rows[3]?.keys ?? [];
 		const letters = bottomRow
@@ -110,24 +110,21 @@ describe('restingHands', () => {
 		};
 		for (const hand of hands) {
 			for (const letter of letters) {
-				const corners = [-1, 0, 1].flatMap((sx) =>
-					[-1, 0, 1].map((sy) => ({ x: letter.x + sx * glyph.x, y: letter.y + sy * glyph.y }))
-				);
+				const middle = [-1, 0, 1].map((sy) => ({ x: letter.x, y: letter.y + sy * glyphHeight }));
 				for (const shape of hand.fingers) {
-					for (const corner of corners) {
-						expect(distance(corner, shape.tip, shape.joint)).toBeGreaterThan(halfStroke);
-						expect(distance(corner, shape.joint, shape.base)).toBeGreaterThan(halfStroke);
+					for (const point of middle) {
+						expect(distance(point, shape.base, shape.tip)).toBeGreaterThan(halfStroke);
 					}
 				}
 			}
 			const palmTop = Math.min(...hand.palm.map((point) => point.y)) - halfStroke;
-			expect(palmTop).toBeGreaterThan((letters[0]?.y ?? 0) + glyph.y);
+			expect(palmTop).toBeGreaterThan((letters[0]?.y ?? 0) + glyphHeight);
 		}
 	});
 
-	it('gives each hand a palm under its knuckles', () => {
+	it('gives each hand a palm of four corners under its knuckles', () => {
 		for (const hand of hands) {
-			expect(hand.palm.length).toBeGreaterThanOrEqual(4);
+			expect(hand.palm).toHaveLength(4);
 			const knuckles = Math.max(...hand.fingers.map((shape) => shape.base.y));
 			expect(Math.max(...hand.palm.map((point) => point.y))).toBeGreaterThan(knuckles);
 		}

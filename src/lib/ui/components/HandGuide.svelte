@@ -107,12 +107,6 @@
 		return moves.some((move) => move.finger === shape.finger);
 	}
 
-	/** A resting finger bends under the bottom row; a moving one goes straight to its key. */
-	function fingerPoints(shape: FingerShape): string {
-		const tip = tipOf(shape);
-		return isActive(shape) ? pointsOf([shape.base, tip]) : pointsOf([shape.base, shape.joint, tip]);
-	}
-
 	function pointsOf(points: readonly Point[]): string {
 		return points.map((point) => `${point.x},${point.y}`).join(' ');
 	}
@@ -133,11 +127,14 @@
 					stroke-linejoin="round"
 				/>
 				{#each hand.fingers as shape (shape.finger)}
-					<polyline
-						points={fingerPoints(shape)}
+					{@const tip = tipOf(shape)}
+					<line
+						x1={shape.base.x}
+						y1={shape.base.y}
+						x2={tip.x}
+						y2={tip.y}
 						stroke-width={OUTLINE_WIDTH}
 						stroke-linecap="round"
-						stroke-linejoin="round"
 					/>
 				{/each}
 			</g>
@@ -148,11 +145,14 @@
 					stroke-linejoin="round"
 				/>
 				{#each hand.fingers as shape (shape.finger)}
-					<polyline
-						points={fingerPoints(shape)}
+					{@const tip = tipOf(shape)}
+					<line
+						x1={shape.base.x}
+						y1={shape.base.y}
+						x2={tip.x}
+						y2={tip.y}
 						stroke-width={HAND_STROKES.finger}
 						stroke-linecap="round"
-						stroke-linejoin="round"
 						data-finger={shape.finger}
 						data-active={isActive(shape) || undefined}
 					/>
@@ -179,30 +179,19 @@
 		overflow: hidden;
 	}
 
-	.outline polygon {
-		fill: var(--dd-color-hand-outline);
-	}
-
 	.outline polygon,
-	.outline polyline {
+	.outline line {
+		fill: var(--dd-color-hand-outline);
 		stroke: var(--dd-color-hand-outline);
 	}
 
-	.fill polygon {
-		fill: var(--dd-color-hand-fill);
-	}
-
 	.fill polygon,
-	.fill polyline {
+	.fill line {
+		fill: var(--dd-color-hand-fill);
 		stroke: var(--dd-color-hand-fill);
 	}
 
-	/* A finger is a stroke along its bones: filling it would close the bend into a triangle. */
-	polyline {
-		fill: none;
-	}
-
-	.fill polyline[data-active] {
+	.fill line[data-active] {
 		stroke: var(--dd-color-hand-active);
 	}
 </style>

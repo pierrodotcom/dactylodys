@@ -30,11 +30,6 @@ export interface FingerShape {
 	readonly tip: Point;
 	/** The knuckle the finger grows from. */
 	readonly base: Point;
-	/**
-	 * Where a resting finger bends towards its knuckle: it goes straight down from its tip to here,
-	 * between two keys of the bottom row, then leans in (ADR-052). The tip when it does not bend.
-	 */
-	readonly joint: Point;
 }
 
 export interface HandShape {
@@ -55,17 +50,15 @@ export interface FingerMove {
 /** Proportions of the drawn hands, in key pitches. */
 const SHAPE = {
 	/**
-	 * From a fingertip on the home row down to its knuckle, just under the bottom row so that its
-	 * letters stay clear: the middle finger longest, the little finger shortest.
+	 * From a fingertip on the home row down to its knuckle: low enough that the palm stays under the
+	 * letters of the bottom row (ADR-052).
 	 */
-	knuckleDrop: { pinky: 1.6, ring: 1.7, middle: 1.75, index: 1.7 },
-	/** How far each knuckle leans towards the middle of the keyboard: the knuckles are closer than the tips. */
-	fan: { pinky: 0.4, ring: 0.18, middle: 0, index: -0.08 },
+	knuckleDrop: 1.65,
 	/**
-	 * From a fingertip down to where the finger leans in: the home keys sit right above the gaps of
-	 * the bottom row, so a finger that goes straight down to here crosses that row between letters.
+	 * How far each knuckle leans towards the middle of the keyboard: little enough that a finger
+	 * crossing the bottom row passes beside its letters, never over their middle.
 	 */
-	jointDrop: 1.3,
+	fan: { pinky: 0.25, ring: 0.12, middle: 0, index: -0.06 },
 	/** From the knuckles down to the wrist. */
 	wristDrop: 1.7,
 	/** How much narrower the wrist is than the knuckles, on each side. */
@@ -73,7 +66,7 @@ const SHAPE = {
 	/** From the tip of the index towards the middle, where the thumb rests on the bottom row. */
 	thumbReach: 1.1,
 	/** From the knuckle of the index down to the root of the thumb. */
-	thumbRootDrop: 0.7,
+	thumbRootDrop: 1,
 	/** A key the finger already rests on is shown by a little press downwards. */
 	pressDip: 0.3,
 	/** How close to the edge of a wide key the finger goes. */
@@ -130,8 +123,7 @@ function handShape(
 		fingers.push({
 			finger,
 			tip,
-			joint: { x: tip.x, y: tip.y + SHAPE.jointDrop },
-			base: { x: tip.x + side * SHAPE.fan[name], y: tip.y + SHAPE.knuckleDrop[name] }
+			base: { x: tip.x + side * SHAPE.fan[name], y: tip.y + SHAPE.knuckleDrop }
 		});
 	}
 	const outer = fingers[0];
@@ -142,11 +134,9 @@ function handShape(
 	const thumbKey = fingering.homeKeys[`${hand}-thumb`];
 	const thumbBox = thumbKey === undefined ? undefined : boxes.get(thumbKey);
 	if (thumbBox !== undefined) {
-		const thumbTip = { x: index.tip.x + side * SHAPE.thumbReach, y: thumbBox.center.y };
 		fingers.push({
 			finger: `${hand}-thumb`,
-			tip: thumbTip,
-			joint: thumbTip,
+			tip: { x: index.tip.x + side * SHAPE.thumbReach, y: thumbBox.center.y },
 			base: { x: index.base.x, y: index.base.y + SHAPE.thumbRootDrop }
 		});
 	}
@@ -155,9 +145,9 @@ function handShape(
 	return {
 		hand,
 		fingers,
-		// The top of the palm follows every knuckle, from the little finger to the index.
 		palm: [
-			...fingers.filter((shape) => !shape.finger.endsWith('thumb')).map((shape) => shape.base),
+			outer.base,
+			index.base,
 			{ x: index.base.x - side * SHAPE.wristInset, y: wristY(index.base) },
 			{ x: outer.base.x + side * SHAPE.wristInset, y: wristY(outer.base) }
 		]
@@ -212,7 +202,7 @@ export function fingerMoves(
 }
 
 /** Thickness of the drawn fingers and of their outline, in key pitches. */
-export const HAND_STROKES = { finger: 0.48, outline: 0.05 } as const;
+export const HAND_STROKES = { finger: 0.5, outline: 0.06 } as const;
 
 /** Where a moving finger is, `progress` going from 0 (at rest) to 1 (on the key). */
 export function tipAt(move: FingerMove, progress: number): Point {
