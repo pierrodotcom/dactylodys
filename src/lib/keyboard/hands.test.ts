@@ -3,7 +3,15 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseFingeringProfile } from './fingering';
 import { parseGeometry } from './geometry';
-import { fingerMoves, keyBoxes, keyboardSize, restingHands, tipAt } from './hands';
+import {
+	HAND_STROKES,
+	fingerMoves,
+	keyBoxes,
+	keyboardSize,
+	restingHands,
+	tipAt,
+	type Point
+} from './hands';
 import type { ModifierLevel } from './types';
 
 const geometry = parseGeometry(
@@ -78,6 +86,40 @@ describe('restingHands', () => {
 			hand.fingers.filter((shape) => shape.finger.endsWith('thumb'))
 		);
 		expect(thumbs.map((shape) => shape.finger)).toEqual(['left-thumb']);
+	});
+
+	it('leaves the bottom row readable at rest: no finger on the middle of a letter, the palm below', () => {
+		// A letter is drawn in the middle of its key: measured on the screen, about 0.12 key pitch
+		// above and below its centre, with a margin.
+		const glyphHeight = 0.16;
+		const halfStroke = HAND_STROKES.finger / 2 + HAND_STROKES.outline;
+		const bottomRow = geometry.rows[3]?.keys ?? [];
+		const letters = bottomRow
+			.map((key) => boxes.get(key.code))
+			.filter((box) => box !== undefined && box.right - box.left === 1)
+			.map((box) => box?.center as Point);
+		expect(letters.length).toBeGreaterThanOrEqual(10);
+
+		const distance = (point: Point, from: Point, to: Point) => {
+			const dx = to.x - from.x;
+			const dy = to.y - from.y;
+			const length = dx * dx + dy * dy;
+			const along = length === 0 ? 0 : ((point.x - from.x) * dx + (point.y - from.y) * dy) / length;
+			const t = Math.max(0, Math.min(1, along));
+			return Math.hypot(point.x - (from.x + t * dx), point.y - (from.y + t * dy));
+		};
+		for (const hand of hands) {
+			for (const letter of letters) {
+				const middle = [-1, 0, 1].map((sy) => ({ x: letter.x, y: letter.y + sy * glyphHeight }));
+				for (const shape of hand.fingers) {
+					for (const point of middle) {
+						expect(distance(point, shape.base, shape.tip)).toBeGreaterThan(halfStroke);
+					}
+				}
+			}
+			const palmTop = Math.min(...hand.palm.map((point) => point.y)) - halfStroke;
+			expect(palmTop).toBeGreaterThan((letters[0]?.y ?? 0) + glyphHeight);
+		}
 	});
 
 	it('gives each hand a palm of four corners under its knuckles', () => {

@@ -49,10 +49,16 @@ export interface FingerMove {
 
 /** Proportions of the drawn hands, in key pitches. */
 const SHAPE = {
-	/** From a fingertip on the home row down to its knuckle. */
-	knuckleDrop: 1.5,
-	/** How far each knuckle leans towards the middle of the keyboard. */
-	fan: { pinky: 0.35, ring: 0.15, middle: 0, index: -0.1 },
+	/**
+	 * From a fingertip on the home row down to its knuckle: low enough that the palm stays under the
+	 * letters of the bottom row (ADR-052).
+	 */
+	knuckleDrop: 1.65,
+	/**
+	 * How far each knuckle leans towards the middle of the keyboard: little enough that a finger
+	 * crossing the bottom row passes beside its letters, never over their middle.
+	 */
+	fan: { pinky: 0.25, ring: 0.12, middle: 0, index: -0.06 },
 	/** From the knuckles down to the wrist. */
 	wristDrop: 1.7,
 	/** How much narrower the wrist is than the knuckles, on each side. */
@@ -196,7 +202,7 @@ export function fingerMoves(
 }
 
 /** Thickness of the drawn fingers and of their outline, in key pitches. */
-export const HAND_STROKES = { finger: 0.56, outline: 0.08 } as const;
+export const HAND_STROKES = { finger: 0.5, outline: 0.06 } as const;
 
 /** Where a moving finger is, `progress` going from 0 (at rest) to 1 (on the key). */
 export function tipAt(move: FingerMove, progress: number): Point {
