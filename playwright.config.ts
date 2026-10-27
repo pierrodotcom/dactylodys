@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const HOST = '127.0.0.1';
-const PORT = 4273;
+// Windows sometimes reserves a range of ports that holds 4273 (L-091): E2E_PORT picks another one.
+const PORT = Number(process.env['E2E_PORT'] ?? 4273);
 const IS_CI = Boolean(process.env.CI);
 // axe audits the DOM and computed styles, which do not depend on the engine: one browser is enough.
 const ACCESSIBILITY_AUDIT = /axe/i;
