@@ -89,8 +89,9 @@ describe('restingHands', () => {
 	});
 
 	it('leaves every letter of the bottom row clear: the fingers pass between them, the palm below', () => {
-		// A letter is drawn in the middle of its key, about this far from its centre.
-		const glyph = { x: 0.2, y: 0.28 };
+		// A letter is drawn in the middle of its key: measured on the screen, about 0.16 key pitch
+		// from its centre across and 0.12 up and down, with a margin.
+		const glyph = { x: 0.18, y: 0.16 };
 		const halfStroke = HAND_STROKES.finger / 2 + HAND_STROKES.outline;
 		const bottomRow = geometry.rows[3]?.keys ?? [];
 		const letters = bottomRow
@@ -102,10 +103,9 @@ describe('restingHands', () => {
 		const distance = (point: Point, from: Point, to: Point) => {
 			const dx = to.x - from.x;
 			const dy = to.y - from.y;
-			const t = Math.max(
-				0,
-				Math.min(1, ((point.x - from.x) * dx + (point.y - from.y) * dy) / (dx * dx + dy * dy))
-			);
+			const length = dx * dx + dy * dy;
+			const along = length === 0 ? 0 : ((point.x - from.x) * dx + (point.y - from.y) * dy) / length;
+			const t = Math.max(0, Math.min(1, along));
 			return Math.hypot(point.x - (from.x + t * dx), point.y - (from.y + t * dy));
 		};
 		for (const hand of hands) {
@@ -115,7 +115,8 @@ describe('restingHands', () => {
 				);
 				for (const shape of hand.fingers) {
 					for (const corner of corners) {
-						expect(distance(corner, shape.base, shape.tip)).toBeGreaterThan(halfStroke);
+						expect(distance(corner, shape.tip, shape.joint)).toBeGreaterThan(halfStroke);
+						expect(distance(corner, shape.joint, shape.base)).toBeGreaterThan(halfStroke);
 					}
 				}
 			}

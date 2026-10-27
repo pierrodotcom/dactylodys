@@ -107,6 +107,12 @@
 		return moves.some((move) => move.finger === shape.finger);
 	}
 
+	/** A resting finger bends under the bottom row; a moving one goes straight to its key. */
+	function fingerPoints(shape: FingerShape): string {
+		const tip = tipOf(shape);
+		return isActive(shape) ? pointsOf([shape.base, tip]) : pointsOf([shape.base, shape.joint, tip]);
+	}
+
 	function pointsOf(points: readonly Point[]): string {
 		return points.map((point) => `${point.x},${point.y}`).join(' ');
 	}
@@ -127,14 +133,11 @@
 					stroke-linejoin="round"
 				/>
 				{#each hand.fingers as shape (shape.finger)}
-					{@const tip = tipOf(shape)}
-					<line
-						x1={shape.base.x}
-						y1={shape.base.y}
-						x2={tip.x}
-						y2={tip.y}
+					<polyline
+						points={fingerPoints(shape)}
 						stroke-width={OUTLINE_WIDTH}
 						stroke-linecap="round"
+						stroke-linejoin="round"
 					/>
 				{/each}
 			</g>
@@ -145,14 +148,11 @@
 					stroke-linejoin="round"
 				/>
 				{#each hand.fingers as shape (shape.finger)}
-					{@const tip = tipOf(shape)}
-					<line
-						x1={shape.base.x}
-						y1={shape.base.y}
-						x2={tip.x}
-						y2={tip.y}
+					<polyline
+						points={fingerPoints(shape)}
 						stroke-width={HAND_STROKES.finger}
 						stroke-linecap="round"
+						stroke-linejoin="round"
 						data-finger={shape.finger}
 						data-active={isActive(shape) || undefined}
 					/>
@@ -179,19 +179,30 @@
 		overflow: hidden;
 	}
 
-	.outline polygon,
-	.outline line {
+	.outline polygon {
 		fill: var(--dd-color-hand-outline);
+	}
+
+	.outline polygon,
+	.outline polyline {
 		stroke: var(--dd-color-hand-outline);
 	}
 
-	.fill polygon,
-	.fill line {
+	.fill polygon {
 		fill: var(--dd-color-hand-fill);
+	}
+
+	.fill polygon,
+	.fill polyline {
 		stroke: var(--dd-color-hand-fill);
 	}
 
-	.fill line[data-active] {
+	/* A finger is a stroke along its bones: filling it would close the bend into a triangle. */
+	polyline {
+		fill: none;
+	}
+
+	.fill polyline[data-active] {
 		stroke: var(--dd-color-hand-active);
 	}
 </style>
