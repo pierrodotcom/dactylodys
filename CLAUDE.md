@@ -48,6 +48,7 @@ Références : synthèse de recherche `reports/Dactylo ludique TDAH dysgraphie.m
 | `npm run test` | Tests unitaires et de propriétés |
 | `npm run test:e2e` | Playwright sur 3 moteurs + axe |
 | `npm run verify` | **Tout ce qui précède** — obligatoire avant tout commit |
+| `npm run clean:worktrees` | Liste les copies de travail d'agents devenues inutiles ; `-- --apply` les retire |
 | `npm run build` | Build statique |
 
 Les scripts utilisent des rapporteurs silencieux : seuls les échecs s'affichent.
@@ -131,6 +132,7 @@ Ne jamais déclarer « terminé » sans avoir exécuté la vérification et en d
 La session principale est **chef d'orchestre** : elle découpe, délègue, vérifie, fusionne et tient `docs/SUIVI.md`. Elle ne délègue pas ce qui tient en quelques appels d'outils.
 
 - Un lot parallèle = un worktree = une branche. Deux agents ne modifient jamais les mêmes fichiers ; les contrats partagés (types d'`engine/`, schémas JSON) sont figés **avant** de paralléliser.
+- **Une copie de travail ne survit jamais à sa PR** : à la fin de chaque lot, après la fusion, le chef d'orchestre lance `npm run clean:worktrees -- --apply` (il ne retire que les copies sans modification en cours dont le travail est déjà fusionné ; branches et commits restent). Chaque copie pèse environ 400 Mo : 17 oubliées ont rempli 6,6 Go (L-092).
 - Chaque ordre de mission contient : objectif, fichiers autorisés, contrat d'interface, tests attendus, ce qui est déjà décidé, format de retour (≤ 15 lignes : fait / non fait / résultat de `verify` / leçons).
 - Le résultat d'un agent est vérifié (diff + `verify`) avant fusion ; son compte rendu n'est pas une preuve.
 - Un champ obligatoire ajouté à un type partagé casse les autres lots en cours : après chaque fusion, fusionner `main` dans les branches encore ouvertes et relancer `npm run check` avant de les fusionner (L-035, L-042).
