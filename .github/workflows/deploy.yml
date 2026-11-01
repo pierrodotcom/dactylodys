@@ -1,8 +1,15 @@
 name: Deploy
 
+# Changes to documentation or agent rules alone leave the site as it is (ADR-053).
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'reports/**'
+      - '.claude/**'
+      - '**/*.md'
+  workflow_dispatch:
 
 concurrency:
   group: pages

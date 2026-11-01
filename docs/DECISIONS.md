@@ -280,3 +280,10 @@ Demande du porteur : les jonctions des doigts des mains transparentes masquaient
 - **Le dessin d'origine est gardé** : paume en trapèze, doigts droits en traits arrondis, pouce droit seul sur l'espace (ADR-041).
 - **Jointures un peu plus bas** (`knuckleDrop` 1,5 → 1,65 pas de touche) : la paume commence sous la rangée du bas.
 - **Doigts moins penchés vers le milieu** (`fan` réduit) **et un peu plus fins** (`HAND_STROKES` 0,56 → 0,5) : sur ce clavier, chaque touche de repos est au-dessus de l'espace entre deux lettres de la rangée du bas, si bien qu'un doigt presque droit passe à côté des lettres. Un test vérifie qu'au repos aucun doigt ne passe sur le milieu d'une lettre de la rangée du bas et que la paume reste dessous.
+
+## 053 — La CI ne démarre qu'à la demande (2026-11-01, acceptée)
+Décision du porteur : le quota gratuit de GitHub Actions est revenu le 1er novembre, mais il est partagé avec ses autres projets ; « on en consomme le moins possible et seulement quand c'est nécessaire ». Remplace la partie « tant que le quota n'est pas rétabli » de l'ADR-050, qui devient la règle permanente.
+- **`npm run verify` en local fait foi** pour fusionner ; son résultat réel est écrit dans la PR. Un seul push par lot.
+- **La CI ne se déclenche plus d'elle-même** : ni à l'ouverture d'une PR, ni après la fusion sur `main` (ce second passage refaisait les mêmes vérifications sur le même code). Elle démarre quand l'étiquette `ci` est posée sur une PR, ou à la main depuis l'onglet Actions.
+- **Le chef d'orchestre la propose au porteur, avec la raison**, seulement quand le local ne suffit pas : fin de jalon, mise à jour de dépendances, changement du clavier ou propre à un navigateur à confirmer sur Linux et les 3 moteurs. Il pose l'étiquette après son accord. Les autres sessions ne la lancent pas.
+- **Le déploiement** reste automatique après chaque fusion, sauf quand seuls la documentation ou les règles des agents changent (`docs/`, `reports/`, `.claude/`, fichiers `.md`) : le site ne change pas.
