@@ -189,3 +189,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-25** — Dessin magique : un sujet différent à chaque partie (ADR-049, profil version 6 qui compte les parties de chaque jeu).
 - **2026-10-26** — Chaque bouton mène là où il le dit (ADR-051) : le récit n'est plus raconté avant la carte ni avant « Rejouer », l'ouverture d'un monde une seule fois par visite, l'écran de pause dit « Retour à la carte ». Leçon L-089.
 - **2026-10-27** — Mains guides retouchées (ADR-052) : jointures sous la rangée du bas, doigts droits un peu moins penchés et plus fins ; validé par le porteur à la quatrième version. Leçon L-090.
+- **2026-11-01** — Ménage du disque : 17 copies de travail d'agents oubliées retirées (6,6 Go libérés, travail déjà fusionné, branches conservées). Nouveau script `npm run clean:worktrees` et règle « une copie de travail ne survit jamais à sa PR » (L-092).
