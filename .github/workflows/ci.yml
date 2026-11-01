@@ -1,9 +1,11 @@
 name: CI
 
+# Free minutes are shared with other projects (ADR-053): never on its own. Started only when the
+# owner agrees, by the `ci` label on a pull request or by hand from the Actions tab.
 on:
   pull_request:
-  push:
-    branches: [main]
+    types: [labeled]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -14,6 +16,7 @@ permissions:
 
 jobs:
   verify:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.label.name == 'ci' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
