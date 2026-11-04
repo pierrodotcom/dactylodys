@@ -12,10 +12,11 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | J2 Tranche jouable | Critère de sortie atteint au premier test (2026-10-13) | L'enfant a joué environ 15 minutes et voulait recommencer ; il regardait ses mains |
 | J3 Pédagogie complète | Mots et phrases relus par le porteur ; test avec un enfant à faire | 5 mondes, 24 leçons, 926 mots et 216 phrases relus par le porteur, 3 mini-jeux |
 | J4 Aventure | Code terminé : récompenses, compagnon, récit dit et illustré, fantôme, carte aux flèches ; test avec un enfant à faire | Cadrage validé le 2026-10-13 (ADR-022) |
-| J5 Version 1.0 | — | |
+| J5 Version 1.0 | Cadrage validé (2026-11-04, ADR-054) ; lot 1 à lancer | Espace adulte, sauvegarde, hors-ligne, audit, documentation |
 
 ## Prochaines actions
 
+0. **J5 (ADR-054)**, une session par lot : **lot 1 socle** (journal des séances, profil version 7, fichier de sauvegarde et rechargement) → lot 2 espace adulte et lot 3 hors-ligne (en parallèle) → lot 4 audit d'accessibilité → lot 5 documentation et fin de jalon.
 1. **Test avec un enfant** par le porteur (grille d'observation ci-dessous), puis ajustements.
 2. **Voix** : voix humaine (ADR-028), **tous les textes enregistrés par le porteur** : les 24 consignes, le rappel « regarde l'écran » et les 34 textes du récit (59 fichiers MP3, 3 Mo, contribution anonyme ; archives dans `docs/voix/`, hors dépôt). Page `/dev/voix`, lecteur, bouton « Écouter » sur l'avant-leçon et sur les écrans du récit, outil `tools/voice/import.js` (mode d'emploi dans `tools/voice/README.md`). Un texte réécrit perd son enregistrement : le réenregistrer sur `/dev/voix`, puis importer l'archive avec `--prune`.
 3. ~~Écrire aux auteurs de Lexique (Q9)~~ : levée le 2026-10-23, la licence est écrite par les auteurs dans l'archive (voir Q9). Un courriel de courtoisie reste possible (`docs/COURRIEL_LEXIQUE.md`), mais rien n'en dépend.
@@ -111,7 +112,7 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 | # | Question | Bloque |
 |---|---|---|
 | Q9 | ~~Confirmer la licence de Lexique~~ **Levée (2026-10-23)** : le `README-Lexique.txt` de l'archive Lexique383.zip dit « License : CC BY SA 4.0 » ; les pages actuelles de lexique.org n'indiquent aucune licence, demandent seulement de citer les publications, et ne donnent aucune adresse (forum Google Groups seulement) | — |
-| Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? | J2 |
+| Q6 | Nom définitif et ton du jeu (nom du compagnon, humour) ? « DactyloDys » retenu pour l'application installée (ADR-054). Vérifié le 2026-11-04 : aucun domaine `dactylodys` (.fr, .com, .org, .net, .app) enregistré, aucun produit publié sous ce nom ; un dépôt GitHub isolé (DamienRichir2007/dactylodys-reparee, aide à l'écriture pour dyslexiques, 1 commit, sans licence ni site) porte le même nom. Base INPI inaccessible aux agents : recherche à faire par le porteur | J5 lot 3 |
 | Q7 | Trouver des testeurs sur Mac/Safari, Firefox Linux, Chromebook : le porteur n'a que Windows | J1 |
 
 ## Réponses acquises
@@ -191,3 +192,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-10-27** — Mains guides retouchées (ADR-052) : jointures sous la rangée du bas, doigts droits un peu moins penchés et plus fins ; validé par le porteur à la quatrième version. Leçon L-090.
 - **2026-11-01** — Ménage du disque : 17 copies de travail d'agents oubliées retirées (6,6 Go libérés, travail déjà fusionné, branches conservées). Nouveau script `npm run clean:worktrees` et règle « une copie de travail ne survit jamais à sa PR » (L-092).
 - **2026-11-01** — Quota de CI revenu, mais partagé avec les autres projets du porteur : la CI ne démarre plus qu'à la demande (étiquette `ci`, proposée au porteur quand le local ne suffit pas) ; plus de second passage après fusion ; pas de déploiement pour la documentation seule (ADR-053, CLAUDE.md § 10).
+- **2026-11-04** — Cadrage de J5 validé par le porteur (ADR-054) : espace adulte avec barrière légère et code facultatif, bilan, évolution, cible personnelle, fichier des mesures, placer plus loin, mots de l'adulte ; sauvegarde par fichier ; hors-ligne installable ; audit avec essai NVDA ; page « Pour les adultes » imprimable. Durée de séance réglable et doigtés simplifiés reportés.
