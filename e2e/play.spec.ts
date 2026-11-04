@@ -14,6 +14,7 @@ import { seededRng } from '../src/lib/engine/progression/test-support';
 import type { ExerciseContext, StarCount } from '../src/lib/engine/progression/types';
 import { readProfile } from '../src/lib/state/migrations';
 import {
+	localDay,
 	MAX_NAME_LENGTH,
 	MIN_NAME_LENGTH,
 	PROFILE_SCHEMA_VERSION,
@@ -1172,6 +1173,31 @@ test.describe('play route', () => {
 		await playButton(page, DRAWING).click();
 		await expect(subject).toHaveAttribute('data-picture', /./);
 		expect(await subject.getAttribute('data-picture')).not.toBe(first);
+	});
+
+	test('writes each finished play and its day in the journal of the profile (ADR-054)', async ({
+		page
+	}) => {
+		const profile = profileAfter(FIRST.id);
+		await reachMapAs(page, profile);
+		await openIntro(page, FIRST);
+		await playButton(page, DRAWING).click();
+		const startedAt = Date.now();
+		await typeToResult(page, { skipDelay: true });
+
+		const journal = async () => {
+			const reading = readProfile(await storedRecord(page, profile));
+			return reading.ok ? reading.profile : undefined;
+		};
+		await expect.poll(async () => (await journal())?.sessions.length).toBe(1);
+		const saved = await journal();
+		const session = saved?.sessions[0];
+		expect(session).toMatchObject({ lessonId: FIRST.id, gameId: DRAWING });
+		expect(session?.finishedAt).toBeGreaterThanOrEqual(startedAt);
+		expect(session?.totalKeystrokes).toBeGreaterThan(0);
+		expect(saved?.practiceDays).toEqual([
+			localDay(session?.finishedAt ?? 0, session?.utcOffsetMinutes ?? 0)
+		]);
 	});
 
 	test('puts real words of the banks in the groups of a lesson that asks for words', async ({

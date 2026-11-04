@@ -19,9 +19,11 @@ import {
 import type { LayoutPlatform } from '../keyboard/types';
 import type {
 	CompanionChoice,
+	HandwritingSample,
 	HelpQuestRecord,
 	MotionPreference,
 	Profile,
+	SessionRecord,
 	Settings,
 	TextScale,
 	TextSpacing,
@@ -53,11 +55,16 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 6;
+export const PROFILE_SCHEMA_VERSION = 7;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
 const MAX_ACCURACY = 100;
+/** Time zones of the world lie from 12 hours behind UTC to 14 hours ahead: a margin either way. */
+const MAX_UTC_OFFSET_MINUTES = 14 * 60;
+const MS_PER_MINUTE = 60_000;
+const LOCAL_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const LOCAL_DAY_LENGTH = 10;
 const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
 
 const PROFILE_KEYS = [
@@ -73,8 +80,31 @@ const PROFILE_KEYS = [
 	'ghosts',
 	'earnedRewardIds',
 	'helpQuest',
-	'gamePlays'
+	'gamePlays',
+	'sessions',
+	'practiceDays',
+	'handwritingSamples',
+	'adultWords',
+	'openedWorldIds'
 ] as const satisfies readonly (keyof Profile)[];
+const SESSION_KEYS = [
+	'lessonId',
+	'gameId',
+	'finishedAt',
+	'utcOffsetMinutes',
+	'durationMs',
+	'totalKeystrokes',
+	'correctKeystrokes',
+	'errorCount',
+	'accuracy',
+	'correctCharsPerMinute',
+	'stars',
+	'passed'
+] as const satisfies readonly (keyof SessionRecord)[];
+const HANDWRITING_KEYS = [
+	'measuredAt',
+	'wordsPerMinute'
+] as const satisfies readonly (keyof HandwritingSample)[];
 const SETTINGS_KEYS = [
 	'layoutId',
 	'fingeringProfileId',
@@ -159,7 +189,12 @@ export function createProfile(input: NewProfileInput): Profile {
 		ghosts: {},
 		earnedRewardIds: [],
 		helpQuest: null,
-		gamePlays: {}
+		gamePlays: {},
+		sessions: [],
+		practiceDays: [],
+		handwritingSamples: [],
+		adultWords: [],
+		openedWorldIds: []
 	};
 }
 
@@ -222,6 +257,37 @@ export function withGamePlayed(profile: Profile, gameId: string): Profile {
 
 export function withHelpQuest(profile: Profile, record: HelpQuestRecord): Profile {
 	return { ...profile, helpQuest: parseHelpQuest(record, 'helpQuest') };
+}
+
+/**
+ * The local day (`YYYY-MM-DD`) of an instant, for a device that was `utcOffsetMinutes` ahead of
+ * UTC then. Throws a `RangeError` for an offset out of the time zones or a date out of reach.
+ */
+export function localDay(at: number, utcOffsetMinutes: number): string {
+	if (!isUtcOffset(utcOffsetMinutes)) {
+		throw new RangeError(
+			`utcOffsetMinutes must be whole minutes within ${MAX_UTC_OFFSET_MINUTES} of UTC`
+		);
+	}
+	const local = new Date(at + utcOffsetMinutes * MS_PER_MINUTE);
+	const day = Number.isNaN(local.getTime()) ? '' : local.toISOString().slice(0, LOCAL_DAY_LENGTH);
+	if (!isLocalDay(day)) throw new RangeError(`no local day for ${at}`);
+	return day;
+}
+
+/** A real day of the calendar written `YYYY-MM-DD`, from year 0000 to 9999. */
+export function isLocalDay(value: unknown): value is string {
+	if (typeof value !== 'string' || !LOCAL_DAY_PATTERN.test(value)) return false;
+	const date = new Date(`${value}T00:00:00Z`);
+	return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, LOCAL_DAY_LENGTH) === value;
+}
+
+function isUtcOffset(value: unknown): value is number {
+	return (
+		typeof value === 'number' &&
+		Number.isSafeInteger(value) &&
+		Math.abs(value) <= MAX_UTC_OFFSET_MINUTES
+	);
 }
 
 function fail(path: string, message: string): never {
@@ -404,6 +470,99 @@ function parseHelpQuest(data: unknown, path: string): HelpQuestRecord | null {
 	};
 }
 
+function expectFiniteNumber(value: unknown, path: string, min: number, max: number): number {
+	if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+		fail(path, `expected a number from ${min} to ${max}`);
+	}
+	return value;
+}
+
+function expectArray(value: unknown, path: string): readonly unknown[] {
+	if (!Array.isArray(value)) fail(path, 'expected an array');
+	return value as readonly unknown[];
+}
+
+/** Strict, like `parseProfile`: one finished play as the profile keeps it. */
+export function parseSessionRecord(data: unknown, path: string): SessionRecord {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, SESSION_KEYS, path);
+	const finishedAt = record['finishedAt'];
+	if (!isTimestamp(finishedAt)) fail(`${path}.finishedAt`, 'expected a timestamp');
+	const utcOffsetMinutes = record['utcOffsetMinutes'];
+	if (!isUtcOffset(utcOffsetMinutes)) {
+		fail(
+			`${path}.utcOffsetMinutes`,
+			`expected whole minutes within ${MAX_UTC_OFFSET_MINUTES} of UTC`
+		);
+	}
+	const totalKeystrokes = expectCount(record['totalKeystrokes'], `${path}.totalKeystrokes`);
+	const correctKeystrokes = expectCount(record['correctKeystrokes'], `${path}.correctKeystrokes`);
+	if (correctKeystrokes > totalKeystrokes) {
+		fail(`${path}.correctKeystrokes`, `expected at most ${totalKeystrokes}`);
+	}
+	const stars = STAR_COUNTS.find((count) => count === record['stars']);
+	if (stars === undefined) fail(`${path}.stars`, `expected one of ${STAR_COUNTS.join(', ')}`);
+	return {
+		lessonId: expectIdentifier(record['lessonId'], `${path}.lessonId`),
+		gameId: expectIdentifier(record['gameId'], `${path}.gameId`),
+		finishedAt,
+		utcOffsetMinutes,
+		durationMs: expectCount(record['durationMs'], `${path}.durationMs`),
+		totalKeystrokes,
+		correctKeystrokes,
+		errorCount: expectCount(record['errorCount'], `${path}.errorCount`),
+		accuracy: expectFiniteNumber(record['accuracy'], `${path}.accuracy`, 0, MAX_ACCURACY),
+		correctCharsPerMinute: expectFiniteNumber(
+			record['correctCharsPerMinute'],
+			`${path}.correctCharsPerMinute`,
+			0,
+			Number.MAX_VALUE
+		),
+		stars,
+		passed: expectBoolean(record['passed'], `${path}.passed`)
+	};
+}
+
+/* Sorted and each once is checked, never repaired: what is read comes back as it was stored. */
+function parsePracticeDays(data: unknown, path: string): string[] {
+	const days: string[] = [];
+	expectArray(data, path).forEach((raw, index) => {
+		if (!isLocalDay(raw)) fail(`${path}[${index}]`, 'expected a day written YYYY-MM-DD');
+		const previous = days.at(-1);
+		if (previous !== undefined && raw <= previous) {
+			fail(`${path}[${index}]`, 'expected days sorted, each once');
+		}
+		days.push(raw);
+	});
+	return days;
+}
+
+function parseHandwritingSample(data: unknown, path: string): HandwritingSample {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, HANDWRITING_KEYS, path);
+	const measuredAt = record['measuredAt'];
+	if (!isTimestamp(measuredAt)) fail(`${path}.measuredAt`, 'expected a timestamp');
+	const wordsPerMinute = record['wordsPerMinute'];
+	if (
+		typeof wordsPerMinute !== 'number' ||
+		!Number.isFinite(wordsPerMinute) ||
+		wordsPerMinute <= 0
+	) {
+		fail(`${path}.wordsPerMinute`, 'expected a positive number');
+	}
+	return { measuredAt, wordsPerMinute };
+}
+
+function parseUniqueIdentifiers(data: unknown, path: string): string[] {
+	const ids: string[] = [];
+	expectArray(data, path).forEach((raw, index) => {
+		const id = expectIdentifier(raw, `${path}[${index}]`);
+		if (ids.includes(id)) fail(`${path}[${index}]`, `duplicate "${id}"`);
+		ids.push(id);
+	});
+	return ids;
+}
+
 /** Strict, and only for the current version: stored data goes through `readProfile` instead. */
 export function parseProfile(data: unknown): Profile {
 	const root = expectRecord(data, 'profile');
@@ -440,6 +599,17 @@ export function parseProfile(data: unknown): Profile {
 		ghosts: parseRecordOf(root['ghosts'], 'profile.ghosts', parseGhostRun),
 		earnedRewardIds: parseEarnedRewards(root['earnedRewardIds'], 'profile.earnedRewardIds'),
 		helpQuest: parseHelpQuest(root['helpQuest'], 'profile.helpQuest'),
-		gamePlays: parseRecordOf(root['gamePlays'], 'profile.gamePlays', expectCount)
+		gamePlays: parseRecordOf(root['gamePlays'], 'profile.gamePlays', expectCount),
+		sessions: expectArray(root['sessions'], 'profile.sessions').map((raw, index) =>
+			parseSessionRecord(raw, `profile.sessions[${index}]`)
+		),
+		practiceDays: parsePracticeDays(root['practiceDays'], 'profile.practiceDays'),
+		handwritingSamples: expectArray(root['handwritingSamples'], 'profile.handwritingSamples').map(
+			(raw, index) => parseHandwritingSample(raw, `profile.handwritingSamples[${index}]`)
+		),
+		adultWords: expectArray(root['adultWords'], 'profile.adultWords').map((raw, index) =>
+			expectIdentifier(raw, `profile.adultWords[${index}]`)
+		),
+		openedWorldIds: parseUniqueIdentifiers(root['openedWorldIds'], 'profile.openedWorldIds')
 	};
 }

@@ -115,9 +115,25 @@ export function asVersion4(profile: Profile): Record<string, unknown> {
 	};
 }
 
-/** The record version 5 of the app stored: the same profile without the plays of each game. */
+/** What version 7 added: a profile migrated from an older version has these empty. */
+export const EMPTY_JOURNAL = {
+	sessions: [],
+	practiceDays: [],
+	handwritingSamples: [],
+	adultWords: [],
+	openedWorldIds: []
+} as const satisfies Partial<Profile>;
+
+/** The record version 6 of the app stored: the same profile without the journal. */
+export function asVersion6(profile: Profile): Record<string, unknown> {
+	const stored: Record<string, unknown> = { ...profile, schemaVersion: 6 };
+	for (const key of Object.keys(EMPTY_JOURNAL)) delete stored[key];
+	return stored;
+}
+
+/** The record version 5 of the app stored: version 6 without the plays of each game. */
 export function asVersion5(profile: Profile): Record<string, unknown> {
-	const stored: Record<string, unknown> = { ...profile, schemaVersion: 5 };
+	const stored: Record<string, unknown> = { ...asVersion6(profile), schemaVersion: 5 };
 	delete stored['gamePlays'];
 	return stored;
 }

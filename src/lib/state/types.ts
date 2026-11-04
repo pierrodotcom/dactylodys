@@ -1,5 +1,5 @@
 import type { GhostRun } from '../engine/ghost/types';
-import type { HandGuidePreference, ProgressState } from '../engine/progression/types';
+import type { HandGuidePreference, ProgressState, StarCount } from '../engine/progression/types';
 import type { CompanionChoice, HelpQuestRecord } from '../engine/rewards/types';
 import type { FingeringProfileId, LayoutId } from '../keyboard/layout-ids';
 
@@ -27,9 +27,42 @@ export interface Settings {
 
 export type { CompanionChoice, HandGuidePreference, HelpQuestRecord };
 
+/**
+ * One finished play of a lesson, passed or not (version 7): what the adult space follows from one
+ * play to the next. Not the detail of each key, which `progress.chars` keeps.
+ */
+export interface SessionRecord {
+	readonly lessonId: string;
+	readonly gameId: string;
+	/** When the play was finished, in milliseconds since the epoch. */
+	readonly finishedAt: number;
+	/**
+	 * Minutes to add to `finishedAt` to get the local time of the device then (positive east of
+	 * UTC): the local day of the play stays the same whatever the time zone it is read in.
+	 */
+	readonly utcOffsetMinutes: number;
+	/** Time spent typing, in whole milliseconds. */
+	readonly durationMs: number;
+	readonly totalKeystrokes: number;
+	readonly correctKeystrokes: number;
+	readonly errorCount: number;
+	/** 0 to 100. */
+	readonly accuracy: number;
+	readonly correctCharsPerMinute: number;
+	readonly stars: StarCount;
+	/** The play opened the next lesson. */
+	readonly passed: boolean;
+}
+
+/** A handwriting speed measured by the adult (one minute of copying). */
+export interface HandwritingSample {
+	readonly measuredAt: number;
+	readonly wordsPerMinute: number;
+}
+
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 6;
+	readonly schemaVersion: 7;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;
@@ -59,6 +92,22 @@ export interface Profile {
 	 * changes from one play to the next reads its count (ADR-049).
 	 */
 	readonly gamePlays: Readonly<Record<string, number>>;
+	/**
+	 * The finished plays of lessons, in the order they were played (version 7): only the most
+	 * recent ones are kept (`JOURNAL_RULES.maxSessions`).
+	 */
+	readonly sessions: readonly SessionRecord[];
+	/**
+	 * Local days (`YYYY-MM-DD`) on which at least one play was finished, sorted, each once. Never
+	 * shortened, so that the count of days played never goes down when old sessions are dropped.
+	 */
+	readonly practiceDays: readonly string[];
+	/** Handwriting speeds entered by the adult, in the order they were entered. */
+	readonly handwritingSamples: readonly HandwritingSample[];
+	/** Words given by the adult, to type in free practice. */
+	readonly adultWords: readonly string[];
+	/** Worlds the adult opened ahead of the progress, each once. */
+	readonly openedWorldIds: readonly string[];
 }
 
 /**

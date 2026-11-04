@@ -18,7 +18,7 @@ import {
 	withLastGame,
 	withProgress
 } from './profile';
-import type { CompanionChoice, HelpQuestRecord, Profile, Settings } from './types';
+import type { CompanionChoice, HelpQuestRecord, Profile, SessionRecord, Settings } from './types';
 
 const LESSON = 'fr.lesson.home-row-01';
 const WORLD = 'fr.world.garden';
@@ -67,11 +67,35 @@ function sampleProfile(name = 'Léa'): Profile {
 	return createProfile({ id: 'p-1', name, now: 1_700_000_000_000, platform: 'pc' });
 }
 
+const SAMPLE_SESSION: SessionRecord = {
+	lessonId: LESSON,
+	gameId: 'rocket',
+	finishedAt: 1_793_800_000_000,
+	utcOffsetMinutes: 60,
+	durationMs: 95_000,
+	totalKeystrokes: 40,
+	correctKeystrokes: 38,
+	errorCount: 2,
+	accuracy: 95,
+	correctCharsPerMinute: 24,
+	stars: 2,
+	passed: true
+};
+const SESSION = ['sessions', '0'] as const;
+
 function fullProfile(): Profile {
 	const played = withProgress(sampleProfile(), SAMPLE_PROGRESS);
 	const dressed = withCompanion(played, SAMPLE_COMPANION);
 	const played2 = withGhost(withLastGame(dressed, WORLD, 'rocket'), LESSON, SAMPLE_GHOST);
-	return withHelpQuest(withEarnedRewards(played2, SAMPLE_EARNED), SAMPLE_HELP_QUEST);
+	const helped = withHelpQuest(withEarnedRewards(played2, SAMPLE_EARNED), SAMPLE_HELP_QUEST);
+	return {
+		...helped,
+		sessions: [SAMPLE_SESSION],
+		practiceDays: ['2026-11-02', '2026-11-04'],
+		handwritingSamples: [{ measuredAt: 1_793_000_000_000, wordsPerMinute: 9.5 }],
+		adultWords: ['château', 'vélo'],
+		openedWorldIds: [WORLD]
+	};
 }
 
 type Json = { [key: string]: unknown };
@@ -118,7 +142,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 6,
+			schemaVersion: 7,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -130,7 +154,12 @@ describe('createProfile', () => {
 			ghosts: {},
 			earnedRewardIds: [],
 			helpQuest: null,
-			gamePlays: {}
+			gamePlays: {},
+			sessions: [],
+			practiceDays: [],
+			handwritingSamples: [],
+			adultWords: [],
+			openedWorldIds: []
 		});
 	});
 
@@ -390,8 +419,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 5, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 7, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 6, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 8, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -487,7 +516,61 @@ describe('parseProfile', () => {
 		['a help quest without count', ['helpQuest', 'lessonPlays'], REMOVE, /helpQuest\.lessonPlays/],
 		['a negative help quest count', ['helpQuest', 'lessonPlays'], -1, /helpQuest\.lessonPlays/],
 		['a fractional help quest count', ['helpQuest', 'lessonPlays'], 2.5, /helpQuest\.lessonPlays/],
-		['a string help quest count', ['helpQuest', 'lessonPlays'], '4', /helpQuest\.lessonPlays/]
+		['a string help quest count', ['helpQuest', 'lessonPlays'], '4', /helpQuest\.lessonPlays/],
+		['missing sessions', ['sessions'], REMOVE, /profile\.sessions/],
+		['sessions that are not a list', ['sessions'], {}, /profile\.sessions/],
+		['a session that is not an object', [...SESSION], 'play', /sessions\[0\]/],
+		['an unknown session property', [...SESSION, 'mood'], 'ok', /sessions\[0\]\.mood/],
+		['a session without lesson', [...SESSION, 'lessonId'], REMOVE, /sessions\[0\]\.lessonId/],
+		['a session with an empty game', [...SESSION, 'gameId'], '', /sessions\[0\]\.gameId/],
+		['a session with a negative date', [...SESSION, 'finishedAt'], -1, /finishedAt/],
+		['a fractional time zone', [...SESSION, 'utcOffsetMinutes'], 1.5, /utcOffsetMinutes/],
+		['a time zone too far ahead', [...SESSION, 'utcOffsetMinutes'], 841, /utcOffsetMinutes/],
+		['a time zone too far behind', [...SESSION, 'utcOffsetMinutes'], -841, /utcOffsetMinutes/],
+		['a fractional duration', [...SESSION, 'durationMs'], 2.5, /durationMs/],
+		['a negative keystroke count', [...SESSION, 'totalKeystrokes'], -1, /totalKeystrokes/],
+		[
+			'more correct than typed keystrokes',
+			[...SESSION, 'correctKeystrokes'],
+			41,
+			/correctKeystrokes/
+		],
+		['a string error count', [...SESSION, 'errorCount'], '2', /errorCount/],
+		['a session accuracy over 100', [...SESSION, 'accuracy'], 100.5, /accuracy/],
+		['a negative speed', [...SESSION, 'correctCharsPerMinute'], -1, /correctCharsPerMinute/],
+		['an endless speed', [...SESSION, 'correctCharsPerMinute'], null, /correctCharsPerMinute/],
+		['four stars', [...SESSION, 'stars'], 4, /sessions\[0\]\.stars/],
+		['a session passed as text', [...SESSION, 'passed'], 'yes', /sessions\[0\]\.passed/],
+		['missing days', ['practiceDays'], REMOVE, /profile\.practiceDays/],
+		['a day written otherwise', ['practiceDays'], ['04/11/2026'], /practiceDays\[0\]/],
+		['a day that does not exist', ['practiceDays'], ['2026-02-30'], /practiceDays\[0\]/],
+		['a day with a time', ['practiceDays'], ['2026-11-04T10:00'], /practiceDays\[0\]/],
+		['days out of order', ['practiceDays'], ['2026-11-04', '2026-11-02'], /practiceDays\[1\]/],
+		['a day twice', ['practiceDays'], ['2026-11-04', '2026-11-04'], /practiceDays\[1\]/],
+		['missing handwriting samples', ['handwritingSamples'], REMOVE, /handwritingSamples/],
+		[
+			'a handwriting sample without date',
+			['handwritingSamples', '0', 'measuredAt'],
+			REMOVE,
+			/measuredAt/
+		],
+		[
+			'a zero handwriting speed',
+			['handwritingSamples', '0', 'wordsPerMinute'],
+			0,
+			/wordsPerMinute/
+		],
+		[
+			'an unknown sample property',
+			['handwritingSamples', '0', 'by'],
+			'me',
+			/handwritingSamples\[0\]\.by/
+		],
+		['missing adult words', ['adultWords'], REMOVE, /profile\.adultWords/],
+		['an empty adult word', ['adultWords'], ['vélo', ''], /adultWords\[1\]/],
+		['missing opened worlds', ['openedWorldIds'], REMOVE, /profile\.openedWorldIds/],
+		['a world opened twice', ['openedWorldIds'], [WORLD, WORLD], /openedWorldIds\[1\]/],
+		['an opened world that is not text', ['openedWorldIds'], [3], /openedWorldIds\[0\]/]
 	])('rejects %s', (_label, path, value, message) => {
 		expect(() => parseProfile(mutate(path, value))).toThrow(message);
 	});

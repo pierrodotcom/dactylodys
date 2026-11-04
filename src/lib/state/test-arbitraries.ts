@@ -5,6 +5,7 @@ import type { CharSample, ProgressState, StarCount } from '../engine/progression
 import {
 	createProfile,
 	markCalibrated,
+	parseProfile,
 	updateSettings,
 	withCompanion,
 	withEarnedRewards,
@@ -13,7 +14,14 @@ import {
 	withLastGame,
 	withProgress
 } from './profile';
-import type { CompanionChoice, HelpQuestRecord, Profile, Settings } from './types';
+import type {
+	CompanionChoice,
+	HandwritingSample,
+	HelpQuestRecord,
+	Profile,
+	SessionRecord,
+	Settings
+} from './types';
 
 const NAME_UNITS = [
 	'a',
@@ -116,6 +124,49 @@ export const helpQuestRecordArb: fc.Arbitrary<HelpQuestRecord> = fc.record({
 	lessonPlays: countArb
 });
 
+const MS_PER_DAY = 86_400_000;
+/** Instants the calendar of a device can show, up to the year 2200. */
+export const realisticInstantArb = fc.integer({ min: 0, max: 7_258_118_400_000 });
+export const utcOffsetArb = fc.integer({ min: -14 * 60, max: 14 * 60 });
+
+export const sessionRecordArb: fc.Arbitrary<SessionRecord> = fc
+	.record({
+		lessonId: identifierArb,
+		gameId: identifierArb,
+		finishedAt: realisticInstantArb,
+		utcOffsetMinutes: utcOffsetArb,
+		durationMs: fc.nat({ max: 600_000 }),
+		totalKeystrokes: fc.nat({ max: 500 }),
+		correctShare: fc.double({ min: 0, max: 1, noNaN: true }),
+		correctCharsPerMinute: fc.double({ min: 0, max: 1000, noNaN: true }),
+		stars: starsArb,
+		passed: fc.boolean()
+	})
+	.map(({ correctShare, totalKeystrokes, ...rest }) => {
+		const correctKeystrokes = Math.floor(correctShare * totalKeystrokes);
+		return {
+			...rest,
+			totalKeystrokes,
+			correctKeystrokes,
+			errorCount: totalKeystrokes - correctKeystrokes,
+			accuracy: totalKeystrokes === 0 ? 100 : (100 * correctKeystrokes) / totalKeystrokes
+		};
+	});
+
+/** Sorted days, each once, as `YYYY-MM-DD`. */
+export const practiceDaysArb: fc.Arbitrary<string[]> = fc
+	.uniqueArray(fc.nat({ max: 80_000 }), { maxLength: 8 })
+	.map((days) =>
+		[...days]
+			.sort((a, b) => a - b)
+			.map((day) => new Date(day * MS_PER_DAY).toISOString().slice(0, 10))
+	);
+
+const handwritingSampleArb: fc.Arbitrary<HandwritingSample> = fc.record({
+	measuredAt: timestampArb,
+	wordsPerMinute: fc.double({ min: 0.5, max: 60, noNaN: true })
+});
+
 /** A profile that holds nothing of what version 2 added. */
 export const firstVersionProfileArb: fc.Arbitrary<Profile> = fc
 	.record({
@@ -142,9 +193,16 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 		games: fc.dictionary(fc.string({ maxLength: 12 }), identifierArb, { maxKeys: 3 }),
 		ghosts: fc.dictionary(fc.string({ maxLength: 12 }), ghostArb, { maxKeys: 3 }),
 		earned: earnedRewardsArb,
-		helpQuest: fc.option(helpQuestRecordArb, { nil: null })
+		helpQuest: fc.option(helpQuestRecordArb, { nil: null }),
+		journal: fc.record({
+			sessions: fc.array(sessionRecordArb, { maxLength: 4 }),
+			practiceDays: practiceDaysArb,
+			handwritingSamples: fc.array(handwritingSampleArb, { maxLength: 3 }),
+			adultWords: fc.array(identifierArb, { maxLength: 4 }),
+			openedWorldIds: fc.uniqueArray(identifierArb, { maxLength: 3 })
+		})
 	})
-	.map(({ base, companion, games, ghosts, earned, helpQuest }) => {
+	.map(({ base, companion, games, ghosts, earned, helpQuest, journal }) => {
 		let profile = withCompanion(base, companion);
 		for (const [worldId, gameId] of Object.entries(games)) {
 			profile = withLastGame(profile, worldId, gameId);
@@ -153,5 +211,6 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 			profile = withGhost(profile, lessonId, run);
 		}
 		profile = withEarnedRewards(profile, earned);
-		return helpQuest === null ? profile : withHelpQuest(profile, helpQuest);
+		profile = helpQuest === null ? profile : withHelpQuest(profile, helpQuest);
+		return parseProfile({ ...profile, ...journal });
 	});
