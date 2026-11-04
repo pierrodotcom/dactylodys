@@ -86,6 +86,7 @@ docs/               feuille de route, suivi, décisions, leçons
 - **Texte** : aucune chaîne visible dans le code ; tout passe par `messages/`.
 - **Pédagogie** : seuils, durées, ordre des touches, listes de mots sont dans `content/` ou dans une configuration typée, jamais dans la logique.
 - **Clavier** : aucune hypothèse AZERTY dans le code ; tout vient de `layouts/`.
+- **Nom de l'appli** : il peut changer. Écrit une seule fois par langue, dans la clé `app_name` de `messages/` ; tout autre texte le reçoit en paramètre (`{appName}`), un test le vérifie. Les identifiants techniques (base IndexedDB, clés de stockage, format des fichiers de sauvegarde) gardent `dactylodys` et ne changent jamais avec le nom, sinon les données des enfants seraient perdues (ADR-055).
 
 ## 8. Conventions de nommage
 

@@ -684,7 +684,7 @@
 {/snippet}
 
 <svelte:head>
-	<title>{m.play_page_title()}</title>
+	<title>{m.play_page_title({ appName: m.app_name() })}</title>
 </svelte:head>
 
 {#if profile && TOP_BAR_SCREENS.has(screen.name)}

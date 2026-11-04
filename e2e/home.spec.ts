@@ -19,8 +19,8 @@ test.describe('home page', () => {
 		await openPage(page, '/');
 
 		await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-		await expect(page).toHaveTitle(messages.home_title ?? '');
-		await expect(page.getByRole('heading', { level: 1, name: messages.home_title })).toBeVisible();
+		await expect(page).toHaveTitle(messages.app_name ?? '');
+		await expect(page.getByRole('heading', { level: 1, name: messages.app_name })).toBeVisible();
 		await expect(page.getByText(messages.home_tagline ?? '')).toBeVisible();
 	});
 

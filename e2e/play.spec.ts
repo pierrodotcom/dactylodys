@@ -795,7 +795,7 @@ test.describe('play route', () => {
 		});
 
 		await openPage(page, '/');
-		await expect(heading(page, message('home_title'))).toBeVisible();
+		await expect(heading(page, message('app_name'))).toBeVisible();
 
 		await reachMap(page);
 		await startLesson(page, FIRST);
