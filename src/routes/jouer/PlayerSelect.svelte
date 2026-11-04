@@ -74,7 +74,7 @@
 						<p>
 							<strong>{labelOf(record)}</strong> —
 							{record.reason === 'newer-version'
-								? m.play_unreadable_newer()
+								? m.play_unreadable_newer({ appName: m.app_name() })
 								: m.play_unreadable_invalid()}
 						</p>
 						{#if record.id !== null}
