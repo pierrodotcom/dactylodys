@@ -5,11 +5,11 @@
 </script>
 
 <svelte:head>
-	<title>{m.home_title()}</title>
+	<title>{m.app_name()}</title>
 </svelte:head>
 
 <main>
-	<h1>{m.home_title()}</h1>
+	<h1>{m.app_name()}</h1>
 	<p>{m.home_tagline()}</p>
 	<LinkButton size="lg" href={resolve('/jouer')}>{m.home_play()}</LinkButton>
 </main>

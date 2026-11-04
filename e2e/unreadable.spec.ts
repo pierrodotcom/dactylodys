@@ -33,7 +33,9 @@ test.describe('profiles the app cannot open', () => {
 		await reachPlayers(page);
 		await expect(page.getByRole('button', { name: readable.name })).toBeVisible();
 		await expect(section(page)).toContainText(later.name);
-		await expect(section(page)).toContainText(message('play_unreadable_newer'));
+		await expect(section(page)).toContainText(
+			message('play_unreadable_newer', { appName: message('app_name') })
+		);
 
 		await section(page)
 			.getByRole('button', { name: message('play_unreadable_delete') })
