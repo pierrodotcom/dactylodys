@@ -136,6 +136,13 @@ async function startDevGame(page: Page, gameId: string) {
 
 async function focusByTab(page: Page, target: Locator) {
 	await expect(target).toBeVisible();
+	// Like Safari by default, Playwright's WebKit leaves links out of Tab, Option held or not (L-105):
+	// there, a link is focused directly and the walk goes on from it.
+	const isWebKit = page.context().browser()?.browserType().name() === 'webkit';
+	if (isWebKit && (await target.evaluate((element) => element instanceof HTMLAnchorElement))) {
+		await target.focus();
+		return;
+	}
 	for (let press = 0; press < PRESS_BUDGET; press++) {
 		if (await target.evaluate((element) => element === document.activeElement)) return;
 		await page.keyboard.press('Tab');
