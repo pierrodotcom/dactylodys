@@ -18,11 +18,21 @@
 	interface Props {
 		settings: Settings;
 		saveState: 'idle' | 'saved' | 'error';
+		/** The adult space names the child whose settings these are; the game says "Settings". */
+		title?: string;
+		backLabel?: string;
 		onchange: (patch: Partial<Settings>) => void;
 		onback: () => void;
 	}
 
-	let { settings, saveState, onchange, onback }: Props = $props();
+	let {
+		settings,
+		saveState,
+		title = m.settings_title(),
+		backLabel = m.settings_back(),
+		onchange,
+		onback
+	}: Props = $props();
 
 	const YES = 'yes';
 	const NO = 'no';
@@ -61,7 +71,7 @@
 	const flag = (value: boolean) => (value ? YES : NO);
 </script>
 
-<ScreenFrame title={m.settings_title()} wide back={{ label: m.settings_back(), onclick: onback }}>
+<ScreenFrame {title} wide back={{ label: backLabel, onclick: onback }}>
 	<div class="status" role="status">
 		{#if saveState === 'saved'}
 			<p>{m.settings_saved()}</p>

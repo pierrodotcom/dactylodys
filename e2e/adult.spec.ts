@@ -11,7 +11,8 @@ import {
 	openPage,
 	readJson,
 	reloadPage,
-	storedRecord
+	storedRecord,
+	throughStory
 } from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
@@ -27,9 +28,20 @@ const APP_NAME = message('app_name');
 const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
 	'content/fr/adult/gate-numbers.json'
 ).numbers;
-const world = readJson<{ worlds: { title: string; lessons: { id: string; title: string }[] }[] }>(
+interface World {
+	id: string;
+	title: string;
+	lessons: { id: string; title: string }[];
+}
+
+const worlds = readJson<{ worlds: World[] }>(
 	'content/fr/progression/azerty-decouverte.json'
-).worlds[0];
+).worlds;
+const world = worlds[0];
+const ZOO = worlds[2] as World;
+const story = readJson<{ worlds: { worldId: string; opening: string }[] }>(
+	'content/fr/story/azerty-decouverte.json'
+).worlds;
 const FIRST = world?.lessons[0] as { id: string; title: string };
 
 function sample(attempts: number, errors: number): CharProgress {
@@ -341,6 +353,134 @@ test.describe('adult space', () => {
 		await loadFile(page, backupFile('coupe.json', text.slice(0, text.length / 2)));
 		await expect(result).toHaveText(message('adult_import_refused_invalid'));
 	});
+
+	test('opens a world ahead, which the child then finds open, its story told on the way in', async ({
+		page
+	}) => {
+		await reachPlayers(page);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, ali);
+
+		const place = page.locator('[data-child-worlds]');
+		const zoo = place.getByRole('radio', { name: ZOO.title });
+		await zoo.focus();
+		await page.keyboard.press('Space');
+		await expect(zoo).toBeChecked();
+		await place.locator('[data-world-open]').focus();
+		await page.keyboard.press('Enter');
+		const question = message('adult_worlds_confirm_question', { world: ZOO.title, name: ali.name });
+		await expect(place.getByText(question)).toBeFocused();
+		// Cancel gives the focus back to the button that asked.
+		await place.getByRole('button', { name: message('adult_worlds_cancel') }).focus();
+		await page.keyboard.press('Enter');
+		await expect(place.locator('[data-world-open]')).toBeFocused();
+		await page.keyboard.press('Enter');
+		await place.locator('[data-world-confirm]').focus();
+		await page.keyboard.press('Enter');
+		await expect(place.getByRole('status')).toHaveText(
+			message('adult_worlds_opened', { world: ZOO.title, name: ali.name })
+		);
+		await expect(place.getByRole('radio', { name: ZOO.title })).toHaveCount(0);
+		await expect(place.locator('[data-worlds-opened]')).toHaveText(
+			message('adult_worlds_already', { worlds: ZOO.title })
+		);
+		await expect
+			.poll(async () => (await storedRecord(page, ali))?.['openedWorldIds'])
+			.toEqual([ZOO.id]);
+
+		await page.keyboard.press('Escape');
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await button(page, ali.name).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		const [zooFirst, zooSecond] = ZOO.lessons as [World['lessons'][0], World['lessons'][0]];
+		const opened = page.getByRole('button', { name: zooFirst.title });
+		await expect(opened).toBeVisible();
+		await expect(page.getByRole('button', { name: zooSecond.title })).toHaveCount(0);
+		await expect(
+			page.getByRole('button', { name: worlds[1]?.lessons[0]?.title ?? '' })
+		).toHaveCount(0);
+
+		// The arrows walk from the first lesson to the opened one, over the closed ones.
+		await page.getByRole('button', { name: FIRST.title }).focus();
+		await page.keyboard.press('ArrowDown');
+		await expect(opened).toBeFocused();
+		await page.keyboard.press('Enter');
+		const opening = story.find((told) => told.worldId === ZOO.id)?.opening ?? '';
+		await expect(page.getByText(opening)).toBeVisible();
+		expect(
+			await throughStory(page, heading(page, zooFirst.title), { keyboard: true })
+		).toBeGreaterThan(0);
+	});
+
+	test('keeps the words of the adult the keyboard types, and lists the others', async ({
+		page
+	}) => {
+		await reachPlayers(page);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, lou);
+
+		const words = page.locator('[data-child-words]');
+		await expect(words.locator('[data-words-current]')).toHaveText(
+			message('adult_words_current_none')
+		);
+		await words.locator('[data-words-input]').focus();
+		await page.keyboard.insertText('lune, vélo; Ça\nlune ÉTÉ');
+		await words.locator('[data-words-save]').focus();
+		await page.keyboard.press('Enter');
+		const outcome = words.locator('[data-words-outcome]');
+		await expect(outcome).toHaveAttribute('aria-live', 'polite');
+		await expect(outcome.locator('[data-words-status]')).toHaveText(plural('adult_words_saved', 2));
+		const refused = [
+			message('adult_words_refused_word', { word: 'Ça', chars: 'Ç' }),
+			message('adult_words_refused_word', { word: 'ÉTÉ', chars: 'É' })
+		];
+		await expect(outcome.locator('[data-words-refused]')).toHaveText(
+			message('adult_words_refused', {
+				name: lou.name,
+				words: new Intl.ListFormat('fr', { type: 'conjunction' }).format(refused)
+			})
+		);
+		await expect(words.locator('[data-words-current]')).toHaveText(
+			message('adult_words_current', { words: 'lune et vélo' })
+		);
+		await expect
+			.poll(async () => (await storedRecord(page, lou))?.['adultWords'])
+			.toEqual(['lune', 'vélo']);
+
+		await words.locator('[data-words-clear]').click();
+		await expect(outcome.locator('[data-words-status]')).toHaveText(message('adult_words_cleared'));
+		await expect.poll(async () => (await storedRecord(page, lou))?.['adultWords']).toEqual([]);
+	});
+
+	test('changes a setting of a child, which the child then finds in the game', async ({ page }) => {
+		await reachPlayers(page);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, lou);
+
+		await page.locator('[data-child-settings]').focus();
+		await page.keyboard.press('Enter');
+		await expect(heading(page, message('adult_settings_title', { name: lou.name }))).toBeVisible();
+		const larger = page.getByRole('radio', { name: message('settings_scale_xl') });
+		await larger.focus();
+		await page.keyboard.press('Space');
+		await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
+		await expect
+			.poll(async () => (await storedRecord(page, lou))?.['settings'])
+			.toMatchObject({ textScale: 'xl' });
+
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
+		await page.keyboard.press('Escape');
+		await page.keyboard.press('Escape');
+		await button(page, lou.name).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		await button(page, message('play_settings_open')).click();
+		await expect(page.getByRole('radio', { name: message('settings_scale_xl') })).toBeChecked();
+	});
 });
 
 for (const colorScheme of COLOR_SCHEMES) {
@@ -372,6 +512,20 @@ for (const colorScheme of COLOR_SCHEMES) {
 				await summary.click();
 			}
 			await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
+			await expectNoAxeViolation(page);
+
+			// The question of a world to open, words half refused, then the settings of the child.
+			await page.locator('[data-world-open]').click();
+			await expect(page.locator('[data-world-confirm]')).toBeVisible();
+			await expectNoAxeViolation(page);
+			await page.locator('[data-words-input]').fill('lune Ça');
+			await page.locator('[data-words-save]').click();
+			await expect(page.locator('[data-words-refused]')).toBeVisible();
+			await expectNoAxeViolation(page);
+			await page.locator('[data-child-settings]').click();
+			await expect(
+				heading(page, message('adult_settings_title', { name: lou.name }))
+			).toBeVisible();
 			await expectNoAxeViolation(page);
 		});
 	});

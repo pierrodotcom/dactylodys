@@ -30,7 +30,13 @@ export type Screen =
 			readonly then: StoryDestination;
 	  }
 	/** The travel notebook: every moment already won (ADR-027). */
-	| { readonly name: 'story-so-far' };
+	| { readonly name: 'story-so-far' }
+	/** The free practice of the words of the adult: the choice of the game. */
+	| { readonly name: 'free-intro' }
+	/** Its game: no lesson, no stars. */
+	| { readonly name: 'free-game' }
+	/** Its end: the child is told well done, then goes back to the map. */
+	| { readonly name: 'free-done' };
 
 /**
  * Screens that the settings and the companion open from and come back to. A game paused for the
@@ -39,11 +45,14 @@ export type Screen =
 export type SettingsOrigin =
 	| { readonly name: 'game'; readonly lessonId: string }
 	| { readonly name: 'help-game' }
+	| { readonly name: 'free-game' }
 	| { readonly name: 'map' }
 	| { readonly name: 'intro'; readonly lessonId: string }
 	| { readonly name: 'result'; readonly lessonId: string }
 	| { readonly name: 'break' }
-	| { readonly name: 'help-done' };
+	| { readonly name: 'help-done' }
+	| { readonly name: 'free-intro' }
+	| { readonly name: 'free-done' };
 
 export type FlowEvent =
 	| { readonly type: 'profiles-loaded' }
@@ -56,6 +65,7 @@ export type FlowEvent =
 	| { readonly type: 'open-companion' }
 	| { readonly type: 'close-companion' }
 	| { readonly type: 'start-help' }
+	| { readonly type: 'open-free' }
 	| { readonly type: 'change-player' }
 	| { readonly type: 'open-lesson'; readonly lessonId: string; readonly unlocked: boolean }
 	| { readonly type: 'start' }
@@ -85,7 +95,9 @@ const CAN_CHANGE_PLAYER: ReadonlySet<Screen['name']> = new Set([
 	'keyboard-check',
 	'companion',
 	'help-done',
-	'story-so-far'
+	'story-so-far',
+	'free-intro',
+	'free-done'
 ]);
 
 function originOf(screen: Screen): SettingsOrigin | null {
@@ -95,6 +107,8 @@ function originOf(screen: Screen): SettingsOrigin | null {
 		case 'result':
 		case 'break':
 		case 'help-done':
+		case 'free-intro':
+		case 'free-done':
 			return screen;
 		default:
 			return null;
@@ -102,7 +116,7 @@ function originOf(screen: Screen): SettingsOrigin | null {
 }
 
 function openSettings(screen: Screen): Screen {
-	if (screen.name === 'game' || screen.name === 'help-game')
+	if (screen.name === 'game' || screen.name === 'help-game' || screen.name === 'free-game')
 		return { name: 'settings', back: screen };
 	const back = originOf(screen);
 	return back === null ? screen : { name: 'settings', back };
@@ -163,6 +177,7 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 				return tell(event.moments, event.then);
 			}
 			if (event.type === 'open-story-so-far') return { name: 'story-so-far' };
+			if (event.type === 'open-free') return { name: 'free-intro' };
 			return screen;
 		case 'settings':
 			return event.type === 'close-settings' ? screen.back : screen;
@@ -199,6 +214,16 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			}
 			return screen;
 		case 'story-so-far':
+			return event.type === 'back-to-map' ? { name: 'map' } : screen;
+		case 'free-intro':
+			if (event.type === 'start') return { name: 'free-game' };
+			if (event.type === 'back-to-map') return { name: 'map' };
+			return screen;
+		case 'free-game':
+			if (event.type === 'quit') return { name: 'map' };
+			if (event.type === 'completed') return { name: 'free-done' };
+			return screen;
+		case 'free-done':
 			return event.type === 'back-to-map' ? { name: 'map' } : screen;
 	}
 }

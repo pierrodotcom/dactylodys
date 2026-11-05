@@ -119,19 +119,37 @@ export function isLessonPassed(
 	return lesson !== undefined && reaches(lesson.bestAccuracy, rules.unlockAccuracy);
 }
 
+/**
+ * The first lesson is always open; another one opens once the lesson before is passed. A world
+ * that the adult opened ahead (`openedWorldIds`) has its first lesson open, and only that one: the
+ * lessons after it follow the usual rule. Identifiers of no world of the progression are ignored.
+ */
 export function isLessonUnlocked(
 	progression: ProgressionDefinition,
 	progress: ProgressState,
-	lessonId: string
+	lessonId: string,
+	openedWorldIds: readonly string[] = []
 ): boolean {
 	const ids = lessonIds(progression);
 	const index = ids.indexOf(lessonId);
 	if (index < 0) return false;
 	if (index === 0) return true;
+	if (opensWorld(progression, lessonId, openedWorldIds)) return true;
 	// A lesson passed once stays open, even when new lessons are later inserted before it.
 	return (
 		isLessonPassed(progression.rules, progress, ids[index - 1] as string) ||
 		isLessonPassed(progression.rules, progress, lessonId)
+	);
+}
+
+/** Whether the lesson is the first one of a world the adult opened. */
+function opensWorld(
+	progression: ProgressionDefinition,
+	lessonId: string,
+	openedWorldIds: readonly string[]
+): boolean {
+	return progression.worlds.some(
+		(world) => openedWorldIds.includes(world.id) && world.lessons[0]?.id === lessonId
 	);
 }
 
