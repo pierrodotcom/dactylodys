@@ -54,7 +54,7 @@ describe('checkPlayerName and the profile contract', () => {
 		const samples = fc.oneof(
 			fc.string({ unit: 'binary', maxLength: MAX_NAME_LENGTH + 5 }),
 			fc.string({ unit: 'grapheme', maxLength: MAX_NAME_LENGTH + 5 }),
-			fc.constantFrom('', ' ', '\u0007', ' Lé́a ', ' ﻿', '\u0085')
+			fc.constantFrom('', ' ', '\u0007', ' Lé́a ', '\u00A0\uFEFF', '\u0085')
 		);
 
 		fc.assert(

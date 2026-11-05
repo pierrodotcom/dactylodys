@@ -81,7 +81,26 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 		background,
 		min: NON_TEXT_MIN
 	})),
-	{ foreground: 'color.text.primary', background: 'color.typing.current-surface', min: TEXT_MIN }
+	{ foreground: 'color.text.primary', background: 'color.typing.current-surface', min: TEXT_MIN },
+	// The keyboard of the adult space: the label on a coloured key, the frame around it.
+	...['color.mastery.acquired-surface', 'color.mastery.fragile-surface'].map((background) => ({
+		foreground: 'color.key.text',
+		background,
+		min: TEXT_MIN
+	})),
+	...['color.mastery.acquired-line', 'color.mastery.fragile-line'].map((foreground) => ({
+		foreground,
+		background: 'color.surface.sunken',
+		min: NON_TEXT_MIN
+	})),
+	// The charts of the adult space, drawn on the page.
+	...['color.chart.line', 'color.chart.reference'].map((foreground) => ({
+		foreground,
+		background: 'color.surface.base',
+		min: NON_TEXT_MIN
+	})),
+	{ foreground: 'color.chart.text', background: 'color.surface.base', min: TEXT_MIN },
+	{ foreground: 'color.chart.line', background: 'color.chart.point', min: NON_TEXT_MIN }
 ];
 
 /** Every colour the companion can take, in every reward catalogue: each needs its own tokens. */

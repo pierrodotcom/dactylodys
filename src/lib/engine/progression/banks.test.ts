@@ -147,7 +147,7 @@ describe('parsePhraseBank', () => {
 		],
 		[
 			'non-breaking space',
-			(raw) => (raw.phrases[0]!['text'] = 'Je lis.'),
+			(raw) => (raw.phrases[0]!['text'] = 'Je\u00A0lis.'),
 			/phrases\[0\]\.text.*plain spaces/
 		],
 		['line break', (raw) => (raw.phrases[0]!['text'] = 'Je\nlis.'), /phrases\[0\]\.text/],

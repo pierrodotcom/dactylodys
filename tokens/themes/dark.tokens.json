@@ -119,6 +119,37 @@
 				"$value": "{color.amber.300}"
 			}
 		},
+		"mastery": {
+			"acquired-surface": {
+				"$value": "{color.green.900}"
+			},
+			"acquired-line": {
+				"$value": "{color.green.300}"
+			},
+			"fragile-surface": {
+				"$value": "{color.red.900}"
+			},
+			"fragile-line": {
+				"$value": "{color.red.300}"
+			}
+		},
+		"chart": {
+			"line": {
+				"$value": "{color.teal.400}"
+			},
+			"grid": {
+				"$value": "{color.charcoal.600}"
+			},
+			"text": {
+				"$value": "{color.brown.100}"
+			},
+			"reference": {
+				"$value": "{color.amber.300}"
+			},
+			"point": {
+				"$value": "{color.charcoal.700}"
+			}
+		},
 		"drawing": {
 			"line": {
 				"$value": "{color.brown.50}"

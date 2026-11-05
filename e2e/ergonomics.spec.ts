@@ -95,6 +95,30 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await expectWayOutAtTop(page, message('play_intro_back'));
 });
 
+test('puts the way out of the adult space at the top of each of its screens', async ({ page }) => {
+	const child = advancedProfile({ name: 'Lou', passed: {} });
+	const numbers = readJson<{ numbers: { value: number; words: string }[] }>(
+		'content/fr/adult/gate-numbers.json'
+	).numbers;
+	await openPage(page, '/jouer');
+	await installProfile(page, child);
+	await reloadPage(page);
+	await page.getByRole('link', { name: message('adult_entry_link') }).click();
+	await expect(heading(page, message('adult_title'))).toBeVisible();
+	await expectWayOutAtTop(page, message('adult_back_to_players'));
+
+	const words = (await page.locator('[data-gate-words]').textContent())?.trim();
+	const asked = numbers.find((number) => number.words === words)?.value;
+	await page.getByLabel(message('adult_gate_answer_label')).fill(String(asked));
+	await button(page, message('adult_gate_enter')).click();
+	await expect(page.locator('[data-adult-home]')).toBeVisible();
+	await expectWayOutAtTop(page, message('adult_back_to_players'));
+
+	await page.getByRole('button', { name: child.name }).click();
+	await expect(heading(page, message('adult_child_title', { name: child.name }))).toBeVisible();
+	await expectWayOutAtTop(page, message('adult_back_to_list'));
+});
+
 test('keeps the race choice in view with the games, and the race above the game', async ({
 	page
 }) => {

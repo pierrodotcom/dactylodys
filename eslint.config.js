@@ -34,6 +34,13 @@ export default defineConfig(
 				...globals.browser,
 				...globals.node
 			}
+		},
+		rules: {
+			// Invisible characters are written as escapes; the file tools turn escapes into the real thing (L-094).
+			'no-irregular-whitespace': [
+				'error',
+				{ skipStrings: false, skipTemplates: false, skipRegExps: false, skipJSXText: false }
+			]
 		}
 	},
 	{

@@ -38,7 +38,7 @@ describe('toGraphemes', () => {
 	});
 
 	it('keeps apostrophes and space variants distinct', () => {
-		expect(toGraphemes("'’  ")).toEqual(["'", '’', ' ', ' ']);
+		expect(toGraphemes("'’\u00A0 ")).toEqual(["'", '’', '\u00A0', ' ']);
 	});
 
 	it('is idempotent on its own output', () => {
