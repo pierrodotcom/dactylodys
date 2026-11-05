@@ -86,6 +86,18 @@ const ts = [
 	''
 ].join('\n');
 
+/** @param {{ name: string, $value: unknown }[]} tokens */
+function valuesOf(tokens) {
+	return Object.fromEntries(
+		tokens.map((token) => [token.name.slice(PREFIX.length + 1), token.$value])
+	);
+}
+
+// Resolved values for the tools that cannot read CSS variables: the web manifest and the icons.
+const lightValues = valuesOf(base);
+const values = { light: lightValues, dark: { ...lightValues, ...valuesOf(themes.dark) } };
+
 await mkdir(OUT_DIR, { recursive: true });
+await writeFile(`${OUT_DIR}/token-values.json`, `${JSON.stringify(values, null, '\t')}\n`);
 await writeFile(`${OUT_DIR}/tokens.css`, css);
 await writeFile(`${OUT_DIR}/tokens.ts`, ts);
