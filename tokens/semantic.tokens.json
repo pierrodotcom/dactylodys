@@ -114,6 +114,37 @@
 				"$value": "{color.amber.700}"
 			}
 		},
+		"mastery": {
+			"acquired-surface": {
+				"$value": "{color.green.100}"
+			},
+			"acquired-line": {
+				"$value": "{color.green.700}"
+			},
+			"fragile-surface": {
+				"$value": "{color.red.100}"
+			},
+			"fragile-line": {
+				"$value": "{color.red.700}"
+			}
+		},
+		"chart": {
+			"line": {
+				"$value": "{color.teal.600}"
+			},
+			"grid": {
+				"$value": "{color.cream.300}"
+			},
+			"text": {
+				"$value": "{color.brown.600}"
+			},
+			"reference": {
+				"$value": "{color.amber.700}"
+			},
+			"point": {
+				"$value": "{color.cream.50}"
+			}
+		},
 		"typing": {
 			"done": {
 				"$value": "{color.brown.500}"
