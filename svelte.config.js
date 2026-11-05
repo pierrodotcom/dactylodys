@@ -6,6 +6,10 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter(),
+		serviceWorker: {
+			// Dotfiles of `static/` (`.nojekyll`) are for the host, which does not serve them.
+			files: (file) => !file.split('/').some((part) => part.startsWith('.'))
+		},
 		paths: {
 			base: process.env.BASE_PATH ?? ''
 		},
