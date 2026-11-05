@@ -47,8 +47,10 @@
 </section>
 
 <style>
+	/* One column no wider than the page: at 320 pixels or 400 % zoom, nothing scrolls sideways. */
 	.frame {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: var(--dd-space-lg);
 		justify-items: center;
 		align-content: center;
@@ -56,6 +58,7 @@
 		min-block-size: var(--dd-size-viewport-full);
 		margin: auto;
 		padding: var(--dd-space-xl) var(--dd-space-lg);
+		overflow-wrap: break-word;
 		text-align: center;
 	}
 

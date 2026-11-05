@@ -23,11 +23,15 @@
 	let second = $state('');
 	let status = $state('');
 	let problem = $state('');
+	/** The field the problem is about, which a screen reader reads it with. */
+	let faulty = $state<'first' | 'second' | null>(null);
+	const PROBLEM_ID = 'code-problem';
 
 	function startEditing() {
 		first = '';
 		second = '';
 		problem = '';
+		faulty = null;
 		status = '';
 		editing = true;
 	}
@@ -36,13 +40,16 @@
 		event.preventDefault();
 		if (!isValidCode(first, codeLength)) {
 			problem = m.adult_code_invalid({ length: codeLength });
+			faulty = 'first';
 			return;
 		}
 		if (first !== second) {
 			problem = m.adult_code_mismatch();
+			faulty = 'second';
 			return;
 		}
 		problem = '';
+		faulty = null;
 		editing = false;
 		status = writeAdultCode(first, codeLength) ? m.adult_code_saved() : m.adult_code_failed();
 		stored = readAdultCode(codeLength);
@@ -74,6 +81,8 @@
 						inputmode="numeric"
 						autocomplete="off"
 						maxlength={codeLength}
+						aria-invalid={faulty === 'first' || undefined}
+						aria-describedby={faulty === 'first' ? PROBLEM_ID : undefined}
 						{@attach focusOnMount}
 						data-code-new
 					/>
@@ -86,11 +95,13 @@
 						inputmode="numeric"
 						autocomplete="off"
 						maxlength={codeLength}
+						aria-invalid={faulty === 'second' || undefined}
+						aria-describedby={faulty === 'second' ? PROBLEM_ID : undefined}
 						data-code-repeat
 					/>
 				</label>
 				{#if problem}
-					<p class="problem" role="alert">{problem}</p>
+					<p id={PROBLEM_ID} class="problem" role="alert">{problem}</p>
 				{/if}
 				<div class="actions">
 					<Button type="submit">{m.adult_code_save()}</Button>

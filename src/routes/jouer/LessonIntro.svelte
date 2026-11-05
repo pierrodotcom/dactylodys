@@ -174,6 +174,7 @@
 	.keys {
 		--dd-size-key-unit: var(--dd-size-key-unit-compact);
 		display: grid;
+		justify-self: stretch;
 		gap: var(--dd-space-sm);
 		justify-items: center;
 	}

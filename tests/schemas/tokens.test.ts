@@ -100,7 +100,16 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 		min: NON_TEXT_MIN
 	})),
 	{ foreground: 'color.chart.text', background: 'color.surface.base', min: TEXT_MIN },
-	{ foreground: 'color.chart.line', background: 'color.chart.point', min: NON_TEXT_MIN }
+	{ foreground: 'color.chart.line', background: 'color.chart.point', min: NON_TEXT_MIN },
+	// Audit of J5: an error said on the page itself, and the speech bubbles over the games.
+	...TEXT_SURFACES.map((background) => ({
+		foreground: 'color.error.text',
+		background,
+		min: TEXT_MIN
+	})),
+	{ foreground: 'color.bubble.text', background: 'color.bubble.surface', min: TEXT_MIN },
+	// The bubble keeps its light surface in the dark theme: its outline is drawn on that surface.
+	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN }
 ];
 
 /** Every colour the companion can take, in every reward catalogue: each needs its own tokens. */

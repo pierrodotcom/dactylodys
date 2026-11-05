@@ -1635,6 +1635,9 @@
 		"text-zone-min": {
 			"$value": "28rem"
 		},
+		"text-zone-side-min": {
+			"$value": "16rem"
+		},
 		"choice-card-min": {
 			"$value": "14rem"
 		},
@@ -1676,6 +1679,17 @@
 		},
 		"map-companion": {
 			"$value": "4rem"
+		},
+		"map-shift": {
+			"$description": "How far a lesson of the map stands aside: less on a narrow page (WCAG 1.4.10).",
+			"$value": "min({space.3xl}, 15%)"
+		},
+		"map-walker": {
+			"$description": "The companion beside a lesson of the map, no bigger than the room left by map-shift.",
+			"$value": "min({size.map-companion}, 12%)"
+		},
+		"map-world-padding": {
+			"$value": "min({space.lg}, 5%)"
 		},
 		"key-hint": {
 			"$value": "2rem"

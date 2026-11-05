@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
+	import { spokenGrapheme } from './spoken';
 	import { toTargetUnits } from './target-text';
 
 	interface Props {
@@ -19,12 +20,6 @@
 		return grapheme;
 	}
 
-	function spokenGlyph(grapheme: string): string {
-		if (grapheme === SPACE) return m.ui_target_char_space();
-		if (grapheme === LINE_BREAK) return m.ui_target_char_enter();
-		return grapheme;
-	}
-
 	const units = $derived(toTargetUnits(graphemes));
 
 	const alternative = $derived.by(() => {
@@ -32,7 +27,7 @@
 		const expected = graphemes[position];
 		return expected === undefined
 			? m.ui_target_text_done({ text })
-			: m.ui_target_text_label({ text, char: spokenGlyph(expected) });
+			: m.ui_target_text_label({ text, char: spokenGrapheme(expected) });
 	});
 
 	function stateOf(index: number): 'done' | 'current' | 'next' {

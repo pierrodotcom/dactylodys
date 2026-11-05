@@ -92,11 +92,13 @@
 				type="text"
 				inputmode="numeric"
 				autocomplete="off"
+				aria-invalid={problem !== '' || undefined}
+				aria-describedby={problem ? 'measure-problem' : undefined}
 				data-measure-words
 			/>
 		</label>
 		{#if problem}
-			<p class="problem" role="alert">{problem}</p>
+			<p id="measure-problem" class="problem" role="alert">{problem}</p>
 		{/if}
 		<Button type="submit">{m.adult_measure_save()}</Button>
 		<p role="status">{status}</p>

@@ -19,6 +19,8 @@
 		type GameState
 	} from './game-state';
 	import { viewOf, type GameView } from './game-view';
+	import { typingAnnouncement, type TypingWords } from './announce';
+	import { spokenGrapheme } from '$lib/ui/components/spoken';
 	import { isGuided } from '$lib/engine/progression/guide';
 	import { isLookReminderDue, needsCapsLockHelp } from './help';
 	import { targetKeyPress } from './target';
@@ -63,6 +65,11 @@
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
+	const TYPING_WORDS: TypingWords = {
+		group: (text) => m.game_shared_announce_group({ text }),
+		error: (char) => m.game_shared_announce_error({ char }),
+		spoken: spokenGrapheme
+	};
 
 	let {
 		exercise,
@@ -115,7 +122,14 @@
 	const expected = $derived(view.group[view.position]);
 	const target = $derived(typing ? targetKeyPress(charIndex, expected) : null);
 	const capsHelp = $derived(typing && needsCapsLockHelp(capsLock, expected));
-	const announcement = $derived(announce(view));
+	// The reward of the game, else the text to type or the key expected after a mistake. Empty until
+	// the game is on screen: a live region only speaks what changes after it appeared.
+	let speaking = $state(false);
+	const announcement = $derived(
+		speaking ? announce(view) || typingAnnouncement(view, TYPING_WORDS) : ''
+	);
+	// A new node for each key: the same mistake twice in a row is said twice.
+	const announcementKey = $derived(game.session.records.length);
 	// A group typed without a single mistake sends a music note out of its last key.
 	const noteCode = $derived.by(() => {
 		if (phase !== 'celebrating') return null;
@@ -196,6 +210,7 @@
 
 	onMount(() => {
 		field?.focus();
+		speaking = true;
 	});
 
 	// The ghost moves on its own while the clock runs; nothing ticks when it is stopped.
@@ -365,7 +380,9 @@
 		</div>
 	{/if}
 
-	<div class="dd-visually-hidden" role="status">{announcement}</div>
+	<div class="dd-visually-hidden" role="status" data-game-announcement>
+		{#key announcementKey}<span>{announcement}</span>{/key}
+	</div>
 </div>
 
 <!-- Hidden behind the settings: back from them, it opens again with the focus on "Resume". -->
@@ -392,6 +409,7 @@
 <style>
 	.game {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: var(--dd-space-lg);
 		max-inline-size: var(--dd-size-page-wide);
 		margin: auto;
@@ -418,12 +436,15 @@
 		gap: var(--dd-space-xl);
 	}
 
+	/* On one line when there is room; on a narrow page, the text goes below the scene. */
 	.stage[data-arrangement='side'] {
-		grid-template-columns: auto 1fr;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 	}
 
-	.stage[data-arrangement='side'][data-aside] {
-		grid-template-columns: auto 1fr auto;
+	.stage[data-arrangement='side'] .text-zone {
+		flex: 1 1 var(--dd-size-text-zone-side-min);
 	}
 
 	.stage[data-arrangement='wide'] {

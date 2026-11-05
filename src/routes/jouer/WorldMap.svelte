@@ -356,8 +356,8 @@
 		top: 0;
 		left: 0;
 		z-index: var(--dd-z-index-raised);
-		inline-size: var(--dd-size-map-companion);
-		block-size: var(--dd-size-map-companion);
+		inline-size: var(--dd-size-map-walker);
+		aspect-ratio: 1;
 		translate: var(--dd-map-companion-x) var(--dd-map-companion-y);
 		visibility: hidden;
 		pointer-events: none;
@@ -380,12 +380,13 @@
 		block-size: 100%;
 	}
 
+	/* On a narrow page the path zigzags less, so that nothing scrolls sideways (1.4.10). */
 	.world {
 		display: grid;
 		gap: var(--dd-space-md);
 		justify-items: center;
 		inline-size: 100%;
-		padding: var(--dd-space-lg);
+		padding: var(--dd-size-map-world-padding);
 		border-width: var(--dd-border-width-thick);
 		border-style: solid;
 		border-color: var(--dd-color-border-subtle);
@@ -426,15 +427,16 @@
 	}
 
 	.stop[data-side='1'] {
-		margin-inline-start: var(--dd-space-3xl);
+		margin-inline-start: var(--dd-size-map-shift);
 	}
 
 	.stop[data-side='0'] {
-		margin-inline-end: var(--dd-space-3xl);
+		margin-inline-end: var(--dd-size-map-shift);
 	}
 
 	.node {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--dd-space-md);
