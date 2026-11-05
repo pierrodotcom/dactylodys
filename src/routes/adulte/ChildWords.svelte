@@ -27,11 +27,15 @@
 	let status = $state('');
 	let failed = $state(false);
 
+	/** Loaded again only when the layout changes, not each time the profile is saved. */
+	const layoutId = $derived(profile.settings.layoutId);
+
 	// The words are checked against the keyboard of this child, never another one.
 	$effect(() => {
 		let cancelled = false;
 		index = null;
-		loadLayout(profile.settings.layoutId).then(
+		keyboardFailed = false;
+		loadLayout(layoutId).then(
 			(layout) => {
 				if (!cancelled) index = buildCharIndex(layout);
 			},
