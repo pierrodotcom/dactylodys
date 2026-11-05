@@ -14,7 +14,15 @@ import {
 	withProgress
 } from './profile';
 import { firstVersionProfileArb, profileArb } from './test-arbitraries';
-import { asVersion1, asVersion2, asVersion3, asVersion4, asVersion5 } from './test-support';
+import {
+	asVersion1,
+	asVersion2,
+	asVersion3,
+	asVersion4,
+	asVersion5,
+	asVersion6,
+	EMPTY_JOURNAL
+} from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
@@ -224,10 +232,11 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 6,
+			schemaVersion: 7,
 			earnedRewardIds: [],
 			helpQuest: null,
-			gamePlays: {}
+			gamePlays: {},
+			...EMPTY_JOURNAL
 		});
 	});
 
@@ -291,10 +300,11 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 6,
+			schemaVersion: 7,
 			earnedRewardIds: [],
 			helpQuest: null,
-			gamePlays: {}
+			gamePlays: {},
+			...EMPTY_JOURNAL
 		});
 		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
 	});
@@ -326,7 +336,8 @@ describe('migrateProfile', () => {
 					settings: { ...profile.settings, handGuide: 'auto' },
 					progress: migratedProgress(profile.progress),
 					earnedRewardIds: [],
-					helpQuest: null
+					helpQuest: null,
+					...EMPTY_JOURNAL
 				});
 				for (const [char, stats] of Object.entries(migrated.progress.chars)) {
 					expect(stats.recent.length).toBeLessThanOrEqual(1);
@@ -350,7 +361,8 @@ describe('migrateProfile', () => {
 					...profile,
 					settings: { ...profile.settings, handGuide: 'auto' },
 					earnedRewardIds: [],
-					helpQuest: null
+					helpQuest: null,
+					...EMPTY_JOURNAL
 				});
 			})
 		);
@@ -360,9 +372,52 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion4(profile))));
-				expect(migrated).toEqual({ ...profile, earnedRewardIds: [], helpQuest: null });
+				expect(migrated).toEqual({
+					...profile,
+					earnedRewardIds: [],
+					helpQuest: null,
+					...EMPTY_JOURNAL
+				});
 			})
 		);
+	});
+
+	it('changes nothing but the plays of each game and the journal of any version 5 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion5(profile))));
+				expect(migrated).toEqual({ ...profile, gamePlays: {}, ...EMPTY_JOURNAL });
+			})
+		);
+	});
+
+	it('changes nothing but the journal of any version 6 profile, which starts empty', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion6(profile))));
+				expect(migrated).toEqual({ ...profile, ...EMPTY_JOURNAL });
+			})
+		);
+	});
+
+	it('does not rebuild the days played of a version 6 profile from the last play of its lessons', () => {
+		const current = parseProfile(migrateProfile(STORED_BY_VERSION_2));
+		expect(Object.keys(current.progress.lessons).length).toBeGreaterThan(0);
+		const migrated = parseProfile(migrateProfile(asVersion6(current)));
+		expect(migrated.practiceDays).toEqual([]);
+		expect(migrated.sessions).toEqual([]);
+		expect(migrated.progress).toEqual(current.progress);
+	});
+
+	it('keeps the journal of a version 6 record that already holds it', () => {
+		const stored = {
+			...asVersion6(parseProfile(migrateProfile(STORED_BY_VERSION_4))),
+			practiceDays: ['2026-11-03'],
+			openedWorldIds: ['fr.world.x']
+		};
+		const migrated = parseProfile(migrateProfile(stored));
+		expect(migrated.practiceDays).toEqual(['2026-11-03']);
+		expect(migrated.openedWorldIds).toEqual(['fr.world.x']);
 	});
 
 	it('brings any version 1 profile to the current version, with nothing earned yet', () => {
@@ -394,7 +449,9 @@ describe('migrateProfile', () => {
 					asVersion1(profile),
 					asVersion2(profile),
 					asVersion3(profile),
-					asVersion4(profile)
+					asVersion4(profile),
+					asVersion5(profile),
+					asVersion6(profile)
 				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);

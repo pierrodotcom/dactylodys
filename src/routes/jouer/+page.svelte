@@ -39,12 +39,20 @@
 	import {
 		createProfile,
 		defaultSettings,
+		localDay,
 		markCalibrated,
 		updateSettings,
 		withCompanion,
 		withGamePlayed,
 		withLastGame
 	} from '$lib/state/profile';
+	import {
+		toSessionRecord,
+		utcOffsetAt,
+		withPracticeDay,
+		withSessionRecorded
+	} from '$lib/state/journal';
+	import { JOURNAL_RULES } from '$lib/state/journal-rules';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings, UnreadableProfile } from '$lib/state/types';
 	import { provideCompanionAppearance } from '$lib/ui/companion/appearance';
@@ -546,10 +554,23 @@
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
 		playClock = finishPlaying(playClock, now());
-		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, Date.now());
+		const finishedAt = Date.now();
+		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, finishedAt);
 		const { evaluation } = recorded;
 		const earned = earnRewards(recorded.profile, catalogue, progression);
-		const next = withGamePlayed(earned.profile, activeGameId);
+		const session = toSessionRecord({
+			lessonId,
+			gameId: activeGameId,
+			finishedAt,
+			utcOffsetMinutes: utcOffsetAt(finishedAt),
+			metrics: outcome.metrics,
+			evaluation
+		});
+		const next = withSessionRecorded(
+			withGamePlayed(earned.profile, activeGameId),
+			session,
+			JOURNAL_RULES
+		);
 		const { announced } = earned;
 		const progress = next.progress;
 		const told = story
@@ -612,7 +633,12 @@
 		const quest = helpRun;
 		playClock = stopPlaying(playClock, now());
 		const recorded = recordHelpOutcome(profile, progression, catalogue, quest, outcome.metrics);
-		const next = withGamePlayed(recorded.profile, activeGameId);
+		// Not a play of a lesson (no stars, one key): its day is counted, the journal does not keep it.
+		const finishedAt = Date.now();
+		const next = withPracticeDay(
+			withGamePlayed(recorded.profile, activeGameId),
+			localDay(finishedAt, utcOffsetAt(finishedAt))
+		);
 		const { announced } = recorded;
 		helpDone = {
 			rewards: announced,

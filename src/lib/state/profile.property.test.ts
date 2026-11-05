@@ -182,7 +182,13 @@ describe('profile properties', () => {
 			'lastGameByWorld',
 			'ghosts',
 			'earnedRewardIds',
-			'helpQuest'
+			'helpQuest',
+			'gamePlays',
+			'sessions',
+			'practiceDays',
+			'handwritingSamples',
+			'adultWords',
+			'openedWorldIds'
 		];
 		fc.assert(
 			fc.property(

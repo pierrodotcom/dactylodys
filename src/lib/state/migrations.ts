@@ -93,13 +93,31 @@ function toVersion6(record: StoredRecord): StoredRecord {
 	return { gamePlays: {}, ...record, schemaVersion: 6 };
 }
 
+/*
+ * Version 7 (ADR-054): the journal starts empty. The days played are not rebuilt from
+ * `lastPlayedAt`: it keeps only the last play of each lesson, without the time zone of the device
+ * then, so the days would be partial and some on the wrong date; the count starts with version 7.
+ */
+function toVersion7(record: StoredRecord): StoredRecord {
+	return {
+		sessions: [],
+		practiceDays: [],
+		handwritingSamples: [],
+		adultWords: [],
+		openedWorldIds: [],
+		...record,
+		schemaVersion: 7
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
 	[2, toVersion3],
 	[3, toVersion4],
 	[4, toVersion5],
-	[5, toVersion6]
+	[5, toVersion6],
+	[6, toVersion7]
 ]);
 
 function versionOf(record: StoredRecord): number {
