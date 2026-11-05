@@ -100,7 +100,14 @@ for (const worktree of listWorktrees()) {
 }
 
 if (apply) {
-	for (const worktree of removable) git(['worktree', 'remove', '--force', worktree.path]);
+	for (const worktree of removable) {
+		try {
+			git(['worktree', 'remove', '--force', worktree.path]);
+		} catch {
+			// Windows keeps the folder while a process still has it as its current directory.
+			console.log(`dossier vide resté : ${worktree.path} (en cours d'usage, à retirer plus tard)`);
+		}
+	}
 	git(['worktree', 'prune']);
 }
 
