@@ -308,6 +308,8 @@
 	"play_game_play": "Jouer à {game}",
 	"play_game_load_error": "Oups, ce jeu n'a pas pu démarrer. Essaie encore ou choisis un autre jeu.",
 	"game_shared_input_label": "Zone de saisie : tape ce que tu vois",
+	"game_shared_announce_group": "À taper : {text}",
+	"game_shared_announce_error": "Pas cette touche. Il faut taper : {char}",
 	"game_shared_caps_lock": "La touche Verr. Maj est allumée, alors tes lettres sortent en majuscules. Appuie une fois dessus pour revenir aux minuscules.",
 	"game_shared_look_reminder": "Regarde toujours l'écran, jamais tes doigts ;-)",
 	"game_shared_pause": "Pause",
