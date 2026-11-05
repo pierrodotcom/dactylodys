@@ -6,6 +6,7 @@
 	import BackupLoad from './BackupLoad.svelte';
 	import CodeSettings from './CodeSettings.svelte';
 	import type { Formatters } from './format';
+	import InstallSection from './InstallSection.svelte';
 
 	interface Props {
 		/** In the order to show them: never a ranking. */
@@ -89,6 +90,8 @@
 			<p role="status">{fileStatus}</p>
 			<BackupLoad {profiles} onsave={onimport} />
 		</section>
+
+		<InstallSection />
 
 		<CodeSettings {codeLength} />
 	</div>

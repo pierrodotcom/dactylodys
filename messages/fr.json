@@ -1,6 +1,7 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 	"app_name": "DactyloDys",
+	"app_description": "Jeux pour apprendre à taper au clavier, gratuits, sans compte ni publicité.",
 	"home_tagline": "Apprends à taper au clavier en t'amusant.",
 	"home_play": "Jouer",
 	"traces_title": "Enregistrer des traces de clavier",
@@ -712,5 +713,13 @@
 	"adult_words_too_long": "Trop longs (plus de {max} caractères) : {words}.",
 	"adult_words_left_over_one": "{count} mot de plus n'a pas été gardé : la liste en garde {max} au plus.",
 	"adult_words_left_over_other": "{count} mots de plus n'ont pas été gardés : la liste en garde {max} au plus.",
-	"adult_words_keyboard_failed": "Le clavier de {name} n'a pas pu être chargé : les mots ne peuvent pas être vérifiés."
+	"adult_words_keyboard_failed": "Le clavier de {name} n'a pas pu être chargé : les mots ne peuvent pas être vérifiés.",
+	"adult_install_title": "Installer sur cet appareil",
+	"adult_install_note": "Installé, le jeu s'ouvre comme une appli, sans barre d'adresse. Il marche déjà sans connexion après une première visite.",
+	"adult_install_button": "Installer",
+	"adult_install_started": "L'installation est lancée : suivez les indications du navigateur.",
+	"adult_install_declined": "L'installation n'a pas eu lieu. Vous pourrez la relancer plus tard, ou depuis le menu du navigateur.",
+	"adult_install_done": "{appName} est déjà installé sur cet appareil.",
+	"adult_install_ios": "Sur iPhone et iPad : touchez le bouton Partager de Safari, puis « Sur l'écran d'accueil ».",
+	"adult_install_other": "Ce navigateur ne propose pas l'installation depuis cette page. Ce n'est pas grave : après une première visite, le jeu marche aussi sans connexion."
 }
