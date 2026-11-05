@@ -109,7 +109,10 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	})),
 	{ foreground: 'color.bubble.text', background: 'color.bubble.surface', min: TEXT_MIN },
 	// The bubble keeps its light surface in the dark theme: its outline is drawn on that surface.
-	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN }
+	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN },
+	// A printed page keeps dark ink on light paper, whatever the theme of the screen.
+	{ foreground: 'color.print.text', background: 'color.print.surface', min: BODY_TEXT_MIN },
+	{ foreground: 'color.print.border', background: 'color.print.surface', min: NON_TEXT_MIN }
 ];
 
 /** Every colour the companion can take, in every reward catalogue: each needs its own tokens. */

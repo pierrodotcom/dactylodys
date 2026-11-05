@@ -1411,6 +1411,18 @@
 			"cone": {
 				"$value": "{color.orange.500}"
 			}
+		},
+		"print": {
+			"$description": "Ink and paper of a printed page: the same in every theme, a dark theme never prints light text.",
+			"text": {
+				"$value": "{color.brown.900}"
+			},
+			"surface": {
+				"$value": "{color.cream.50}"
+			},
+			"border": {
+				"$value": "{color.brown.500}"
+			}
 		}
 	},
 	"typing": {
@@ -2045,6 +2057,42 @@
 		},
 		"xl": {
 			"$value": "80rem"
+		}
+	},
+	"print": {
+		"$description": "A printed page: the guide for adults fits on one A4 sheet, both sides.",
+		"page-margin": {
+			"$type": "dimension",
+			"$value": "12mm"
+		},
+		"font-size": {
+			"$type": "dimension",
+			"base": {
+				"$value": "10.5pt"
+			},
+			"heading": {
+				"$value": "12.5pt"
+			},
+			"title": {
+				"$value": "18pt"
+			}
+		},
+		"line-height": {
+			"$type": "number",
+			"$value": 1.35
+		},
+		"space": {
+			"$type": "dimension",
+			"sm": {
+				"$value": "1mm"
+			},
+			"md": {
+				"$value": "2.5mm"
+			}
+		},
+		"border-width": {
+			"$type": "dimension",
+			"$value": "0.5pt"
 		}
 	}
 }
