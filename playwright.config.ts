@@ -1,8 +1,18 @@
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 
 const HOST = '127.0.0.1';
-// Windows sometimes reserves a range of ports that holds 4273 (L-091): E2E_PORT picks another one.
-const PORT = Number(process.env['E2E_PORT'] ?? 4273);
+const PREFERRED_PORT = 4273;
+// Windows sometimes reserves a range of ports that holds 4273 (L-091, L-093): unless E2E_PORT names
+// one, a free port is picked, then stored in the environment so that every worker, which reloads
+// this config, keeps the same one.
+process.env['E2E_PORT'] ??= execFileSync(
+	process.execPath,
+	[fileURLToPath(new URL('tools/e2e-port.js', import.meta.url)), HOST, String(PREFERRED_PORT)],
+	{ encoding: 'utf8' }
+).trim();
+const PORT = Number(process.env['E2E_PORT']);
 const IS_CI = Boolean(process.env.CI);
 // axe audits the DOM and computed styles, which do not depend on the engine: one browser is enough.
 const ACCESSIBILITY_AUDIT = /axe/i;
