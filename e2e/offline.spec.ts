@@ -18,7 +18,16 @@ const STEP_TIMEOUT = 15_000;
 const IPHONE_USER_AGENT =
 	'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 /** Every page that is prerendered, which must open without a connection. */
-const PAGES = ['/', '/jouer', '/adulte', '/dev/ui', '/dev/compagnon'];
+const PAGES = [
+	'/',
+	'/jouer',
+	'/adulte',
+	'/pour-les-adultes',
+	'/confidentialite',
+	'/accessibilite',
+	'/dev/ui',
+	'/dev/compagnon'
+];
 
 const { message, templateRegex } = loadMessages();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
