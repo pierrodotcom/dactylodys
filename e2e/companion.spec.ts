@@ -445,7 +445,11 @@ test.describe('companion and rewards', () => {
 	}) => {
 		const child = profileWithWords('Mia');
 		await reachMapAs(page, child);
-		await activateByTab(page, button(page, message('play_free_open')));
+		// The proposed lesson has the focus; the entry comes just before it, out of the arrows' path.
+		await expect(page.getByRole('button', { name: FIRST.title })).toBeFocused();
+		await page.keyboard.press('Shift+Tab');
+		await expect(button(page, message('play_free_open'))).toBeFocused();
+		await page.keyboard.press('Enter');
 		await expect(heading(page, message('play_free_title'))).toBeVisible();
 		await expect(page.locator('button[data-proposed]')).toBeFocused();
 		await page.keyboard.press('Enter');
