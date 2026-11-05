@@ -733,6 +733,89 @@ describe('isLessonUnlocked', () => {
 	});
 });
 
+describe('isLessonUnlocked with worlds opened by the adult', () => {
+	const ONE = 'fr.world.one';
+	const TWO = 'fr.world.two';
+
+	it('changes nothing for the first world, already open', () => {
+		const progress = emptyProgress();
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.a', [ONE])).toBe(true);
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.b', [ONE])).toBe(false);
+	});
+
+	it('opens the first lesson of an opened world, and nothing before it', () => {
+		const progress = emptyProgress();
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c', [TWO])).toBe(true);
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.b', [TWO])).toBe(false);
+	});
+
+	it('keeps the second lesson of an opened world closed until its first one is passed', () => {
+		const progression = withThirdWorldLesson();
+		let progress = emptyProgress();
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.d', [TWO])).toBe(false);
+		progress = applyResult(progress, resultOf('fr.lesson.c', 50));
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.d', [TWO])).toBe(false);
+		progress = applyResult(progress, resultOf('fr.lesson.c', 90));
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.d', [TWO])).toBe(true);
+	});
+
+	it('ignores identifiers of no world of the progression', () => {
+		const progress = emptyProgress();
+		for (const id of ['fr.lesson.b', 'fr.lesson.c']) {
+			expect(isLessonUnlocked(PROGRESSION, progress, id, ['fr.world.unknown', 'fr.lesson.c'])).toBe(
+				isLessonUnlocked(PROGRESSION, progress, id)
+			);
+		}
+	});
+
+	it('only ever opens more, and the same whatever the order or repeats of the worlds', () => {
+		const progression = withThirdWorldLesson();
+		const ids = progression.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.id));
+		const worldIds = [ONE, TWO, 'fr.world.unknown'];
+		const played = fc.record({
+			lessonIndex: fc.integer({ min: 0, max: ids.length - 1 }),
+			accuracy: fc.double({ min: 0, max: 100, noNaN: true })
+		});
+		fc.assert(
+			fc.property(
+				fc.array(played, { maxLength: 6 }),
+				fc.array(fc.constantFrom(...worldIds), { maxLength: 5 }),
+				(plays, opened) => {
+					let progress = emptyProgress();
+					for (const { lessonIndex, accuracy } of plays) {
+						progress = applyResult(progress, resultOf(ids[lessonIndex] as string, accuracy));
+					}
+					const twice = [...opened, ...opened].reverse();
+					for (const id of ids) {
+						const plain = isLessonUnlocked(progression, progress, id);
+						const withOpened = isLessonUnlocked(progression, progress, id, opened);
+						if (plain) expect(withOpened).toBe(true);
+						expect(isLessonUnlocked(progression, progress, id, twice)).toBe(withOpened);
+					}
+				}
+			)
+		);
+	});
+});
+
+/** The test progression with a second lesson in its second world. */
+function withThirdWorldLesson(): ProgressionDefinition {
+	const [one, two] = PROGRESSION.worlds;
+	if (!one || !two) throw new Error('two worlds expected');
+	const first = two.lessons[0];
+	if (!first) throw new Error('a lesson expected');
+	return {
+		...PROGRESSION,
+		worlds: [
+			one,
+			{
+				...two,
+				lessons: [first, { ...first, id: 'fr.lesson.d', title: 'D', newChars: ['g', 'h'] }]
+			}
+		]
+	};
+}
+
 describe('shipped progressions', () => {
 	it.each(loadShippedProgressions().map((shipped) => [shipped.file, shipped.progression] as const))(
 		'%s: is playable from the first lesson to the last without a speed requirement',

@@ -6,19 +6,21 @@
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 
 	interface Props {
+		/** What the companion says: by default, the thanks of a help quest. */
+		title?: string;
 		/** Which dance the companion does: the one of the lesson of the key. */
 		dance: number;
 		saveFailed: boolean;
-		/** What the quest earned, if anything. */
+		/** What the play earned, if anything. */
 		news?: Snippet;
 		onmap: () => void;
 	}
 
-	let { dance, saveFailed, news, onmap }: Props = $props();
+	let { title = m.play_help_thanks(), dance, saveFailed, news, onmap }: Props = $props();
 </script>
 
-<!-- No stars, no percentage: whatever the result, the companion only says thank you. -->
-<ScreenFrame title={m.play_help_thanks()}>
+<!-- No stars, no percentage: whatever the result, the companion only says thank you or well done. -->
+<ScreenFrame {title}>
 	<Companion mood="cheer" {dance} />
 	{@render news?.()}
 	{#if saveFailed}

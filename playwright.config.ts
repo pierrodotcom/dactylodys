@@ -27,6 +27,9 @@ export default defineConfig({
 	reporter: IS_CI ? [['github'], ['html', { open: 'never' }]] : 'dot',
 	use: {
 		baseURL: `http://${HOST}:${PORT}`,
+		// The service worker answers from its cache, out of reach of `page.route` and of the tests that
+		// count network requests: only `offline.spec.ts` lets it in.
+		serviceWorkers: 'block',
 		trace: 'retain-on-failure'
 	},
 	projects: [

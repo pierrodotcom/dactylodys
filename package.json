@@ -9,8 +9,9 @@
 	},
 	"scripts": {
 		"tokens": "node tools/build-tokens.js",
+		"pwa": "node tools/build-pwa.js",
 		"i18n": "paraglide-js compile --project ./project.inlang --silent",
-		"generate": "npm run -s tokens && npm run -s i18n",
+		"generate": "npm run -s tokens && npm run -s pwa && npm run -s i18n",
 		"predev": "npm run -s generate",
 		"dev": "vite dev",
 		"prebuild": "npm run -s generate",

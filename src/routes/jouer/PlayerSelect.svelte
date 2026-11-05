@@ -106,7 +106,10 @@
 			{/if}
 		</section>
 	{/if}
-	<a class="home" href={resolve('/')}>{m.play_back_home()}</a>
+	<nav class="links" aria-label={m.play_players_links_label()}>
+		<a class="home" href={resolve('/')}>{m.play_back_home()}</a>
+		<a class="home" href={resolve('/adulte')} data-adult-entry>{m.adult_entry_link()}</a>
+	</nav>
 </ScreenFrame>
 
 <style>
@@ -163,6 +166,13 @@
 		border-color: var(--dd-color-oops-outline);
 		border-radius: var(--dd-radius-md);
 		background-color: var(--dd-color-surface-sunken);
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--dd-space-lg);
 	}
 
 	.home {

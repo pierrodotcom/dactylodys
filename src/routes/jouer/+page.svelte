@@ -8,6 +8,7 @@
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
+	import { generateFreeExercise } from '$lib/engine/free-practice/exercise';
 	import type { RaceWinner } from '$lib/engine/ghost/race';
 	import type { GhostRun } from '$lib/engine/ghost/types';
 	import {
@@ -78,7 +79,14 @@
 	import CompanionPanel from './CompanionPanel.svelte';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
-	import { gameForLesson, gameOptions } from './game-choice';
+	import FreeIntro from './FreeIntro.svelte';
+	import {
+		FREE_PRACTICE_RULES,
+		freePracticeWorld,
+		freeWordsFor,
+		recordFreePractice
+	} from './free-practice';
+	import { gameForLesson, gameOptions, selectedGame } from './game-choice';
 	import HelpThanks from './HelpThanks.svelte';
 	import { isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
@@ -89,7 +97,7 @@
 	import { recordLessonOutcome } from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
-	import { nextLessonId, worldOfLesson } from './map';
+	import { focusLessonId, nextLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
 	import { platformFromUserAgent } from './player';
 	import PlayerSelect from './PlayerSelect.svelte';
@@ -111,8 +119,11 @@
 		'intro',
 		'result',
 		'break',
-		'help-done'
+		'help-done',
+		'free-intro',
+		'free-done'
 	]);
+	const NO_WORDS: readonly string[] = [];
 	const NO_REWARDS: ReadonlySet<string> = new Set();
 
 	interface ResultView {
@@ -167,6 +178,8 @@
 	/** The help quest being played. */
 	let helpRun = $state.raw<HelpQuest | null>(null);
 	let helpDone = $state.raw<HelpDoneView | null>(null);
+	/** The end of a free practice: the same as the thanks of a help quest. */
+	let freeDone = $state.raw<HelpDoneView | null>(null);
 	/** "Later" to the name of the companion: not asked again during this visit. */
 	let nameLater = $state(false);
 	let companionSaveFailed = $state(false);
@@ -192,6 +205,13 @@
 		profile && progression
 			? helpQuestFor(progression, profile.progress, HELP_QUEST_RULES, profile.helpQuest)
 			: null
+	);
+	/** The words of the adult that this keyboard types; none: no free practice on the map. */
+	const freeWords = $derived(
+		profile && assets ? freeWordsFor(profile, assets.charIndex) : NO_WORDS
+	);
+	const freeWorld = $derived(
+		profile && progression ? freePracticeWorld(progression, profile) : undefined
 	);
 	const askNameNow = $derived(
 		result !== null &&
@@ -381,7 +401,7 @@
 
 	async function openSettings() {
 		saveState = 'idle';
-		const fromGame = screen.name === 'game' || screen.name === 'help-game';
+		const fromGame = isGame(screen);
 		scrollBeforeSettings = fromGame ? 0 : window.scrollY;
 		if (fromGame) playClock = stopPlaying(playClock, now());
 		go({ type: 'open-settings' });
@@ -392,11 +412,15 @@
 	async function closeSettings() {
 		go({ type: 'close-settings' });
 		// The paused game is given back as it was: its play time goes on.
-		if (screen.name === 'game' || screen.name === 'help-game') {
+		if (isGame(screen)) {
 			playClock = startPlaying(playClock, now());
 		}
 		await tick();
 		window.scrollTo(0, scrollBeforeSettings);
+	}
+
+	function isGame(current: Screen): boolean {
+		return current.name === 'game' || current.name === 'help-game' || current.name === 'free-game';
 	}
 
 	function openCompanion() {
@@ -427,7 +451,7 @@
 	function openLesson(lessonId: string) {
 		if (!profile || !progression) return;
 		gameLoadFailed = false;
-		if (!isLessonUnlocked(progression, profile.progress, lessonId)) return;
+		if (!isLessonUnlocked(progression, profile.progress, lessonId, profile.openedWorldIds)) return;
 		tellOnTheWay(openingOf(lessonId), lessonId);
 	}
 
@@ -480,6 +504,15 @@
 
 	function gameFor(world: WorldDefinition, lessonId: string, current: Profile) {
 		return gameForLesson(world, lessonId, current.lastGameByWorld);
+	}
+
+	/**
+	 * The hand of the free practice: that of the lesson the map proposes, with no key new to it.
+	 */
+	function freeGuideFor(current: Profile): GameGuide {
+		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
+		const focus = focusLessonId(progression, current.progress, current.openedWorldIds);
+		return { ...guideFor(current, focus ?? ''), freshChars: [] };
 	}
 
 	/** What the hand on the keyboard shows in this lesson, for this child. */
@@ -578,7 +611,8 @@
 			: [];
 		const followingId = nextLessonId(progression, lessonId);
 		const hasOpenNext =
-			followingId !== null && isLessonUnlocked(progression, progress, followingId);
+			followingId !== null &&
+			isLessonUnlocked(progression, progress, followingId, next.openedWorldIds);
 		const ids = lessonIds(progression);
 		result = {
 			lessonId,
@@ -649,6 +683,44 @@
 		if (!(await commit(next)) && helpDone) helpDone = { ...helpDone, saveFailed: true };
 	}
 
+	/** The words of the adult, in the game the child took: no lesson, no stars, no ghost. */
+	async function startFree(gameId: string) {
+		if (!profile || !progression || freeWords.length === 0) return;
+		const definition = findGame(gameId);
+		if (!definition) return;
+		const words = freeWords;
+		if ((await loadGame(definition, progression)) === null) return;
+		exercise = generateFreeExercise(words, FREE_PRACTICE_RULES, Math.random);
+		raceGhost = null;
+		playClock = startPlaying(playClock, now());
+		go({ type: 'start' });
+	}
+
+	/** Whatever the result, the child is told well done: the keys and the day count, nothing else. */
+	async function finishFree(outcome: GameOutcome) {
+		if (!profile || !progression) return;
+		playClock = stopPlaying(playClock, now());
+		const finishedAt = Date.now();
+		const recorded = recordFreePractice(profile, progression, catalogue, {
+			metrics: outcome.metrics,
+			gameId: activeGameId,
+			finishedAt,
+			utcOffsetMinutes: utcOffsetAt(finishedAt)
+		});
+		freeDone = {
+			rewards: recorded.announced,
+			dance: freeWorld ? progression.worlds.indexOf(freeWorld) : 0,
+			saveFailed: false
+		};
+		go({ type: 'completed' });
+		if (!(await commit(recorded.profile)) && freeDone) freeDone = { ...freeDone, saveFailed: true };
+	}
+
+	function openFree() {
+		gameLoadFailed = false;
+		go({ type: 'open-free' });
+	}
+
 	function playNext() {
 		if (!progression || !result) return;
 		const followingId = nextLessonId(progression, result.lessonId);
@@ -660,7 +732,7 @@
 
 {#snippet playing(
 	current: Profile,
-	lessonId: string,
+	guide: GameGuide,
 	oncomplete: (outcome: GameOutcome) => void,
 	suspended: boolean
 )}
@@ -675,7 +747,7 @@
 			settings={toGameSettings(
 				current.settings,
 				systemPrefersReduced,
-				guideFor(current, lessonId),
+				guide,
 				PLAY_RULES.lookReminderEveryGroups,
 				unlockedScenes(
 					SCENE_SCHEDULE,
@@ -755,6 +827,7 @@
 			onopen={openLesson}
 			onhelp={startHelp}
 			onstory={story ? () => go({ type: 'open-story-so-far' }) : undefined}
+			onfree={freeWords.length > 0 && freeWorld ? openFree : undefined}
 			onchangeplayer={changePlayer}
 		/>
 	{:else if screen.name === 'settings'}
@@ -856,6 +929,26 @@
 				{@render rewardNews(done.rewards, false)}
 			{/snippet}
 		</HelpThanks>
+	{:else if screen.name === 'free-intro' && freeWorld}
+		<FreeIntro
+			games={gameOptions(freeWorld)}
+			gameId={selectedGame(freeWorld, profile.lastGameByWorld)?.id ?? ''}
+			loadFailed={gameLoadFailed}
+			onplay={startFree}
+			onback={() => go({ type: 'back-to-map' })}
+		/>
+	{:else if screen.name === 'free-done' && freeDone}
+		{@const done = freeDone}
+		<HelpThanks
+			title={m.play_free_done()}
+			dance={done.dance}
+			saveFailed={done.saveFailed}
+			onmap={() => go({ type: 'back-to-map' })}
+		>
+			{#snippet news()}
+				{@render rewardNews(done.rewards, false)}
+			{/snippet}
+		</HelpThanks>
 	{/if}
 
 	<!--
@@ -870,14 +963,18 @@
 			<div hidden={settingsOver}>
 				{@render playing(
 					profile,
-					lessonId,
+					guideFor(profile, lessonId),
 					(outcome) => finishGame(lessonId, outcome),
 					settingsOver
 				)}
 			</div>
 		{:else if shown.name === 'help-game' && helpRun}
 			<div hidden={settingsOver}>
-				{@render playing(profile, helpRun.lessonId, finishHelp, settingsOver)}
+				{@render playing(profile, guideFor(profile, helpRun.lessonId), finishHelp, settingsOver)}
+			</div>
+		{:else if shown.name === 'free-game'}
+			<div hidden={settingsOver}>
+				{@render playing(profile, freeGuideFor(profile), finishFree, settingsOver)}
 			</div>
 		{/if}
 	{/if}

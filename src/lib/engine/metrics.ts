@@ -2,7 +2,8 @@ import { computeAccuracy } from './accuracy';
 import type { CharStats, SessionMetrics, SessionState } from './types';
 
 const MS_PER_MINUTE = 60_000;
-const CHARS_PER_WORD = 5;
+/** Characters that make one word in a speed in words per minute, as typing tests count it. */
+export const CHARS_PER_WORD = 5;
 
 interface CharTally {
 	attempts: number;

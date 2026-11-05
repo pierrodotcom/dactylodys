@@ -217,6 +217,40 @@ describe('screen automaton', () => {
 		expect(transition(screen, { type: 'close-settings' })).toEqual({ name: 'help-game' });
 	});
 
+	it('plays the free practice from the map, through the choice of a game, up to its end', () => {
+		const choice = transition({ name: 'map' }, { type: 'open-free' });
+		expect(choice).toEqual({ name: 'free-intro' });
+		expect(transition(choice, { type: 'back-to-map' })).toEqual({ name: 'map' });
+		const game = transition(choice, { type: 'start' });
+		expect(game).toEqual({ name: 'free-game' });
+		expect(transition(game, { type: 'quit' })).toEqual({ name: 'map' });
+		const done = transition(game, { type: 'completed' });
+		expect(done).toEqual({ name: 'free-done' });
+		expect(transition(done, { type: 'back-to-map' })).toEqual({ name: 'map' });
+	});
+
+	it('pauses the free practice for the settings and gives it back', () => {
+		const screen = transition({ name: 'free-game' }, { type: 'open-settings' });
+		expect(screen).toEqual({ name: 'settings', back: { name: 'free-game' } });
+		expect(transition(screen, { type: 'close-settings' })).toEqual({ name: 'free-game' });
+		expect(transition({ name: 'free-game' }, { type: 'change-player' })).toEqual({
+			name: 'free-game'
+		});
+		expect(transition({ name: 'free-done' }, { type: 'change-player' })).toEqual({
+			name: 'players'
+		});
+	});
+
+	it('opens the free practice from the map only', () => {
+		for (const screen of [
+			{ name: 'intro', lessonId: LESSON },
+			{ name: 'help-done' },
+			{ name: 'free-done' }
+		] as Screen[]) {
+			expect(transition(screen, { type: 'open-free' })).toBe(screen);
+		}
+	});
+
 	it('starts a help quest from the map only', () => {
 		for (const screen of [
 			{ name: 'intro', lessonId: LESSON },

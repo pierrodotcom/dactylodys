@@ -31,6 +31,11 @@
 		still?: boolean;
 		/** A music note flies out of this key: the group typed without a mistake ended on it. */
 		noteCode?: KeyCode | null;
+		/**
+		 * How well each key is known, for the report of the adult space: a colour and a frame,
+		 * solid or dashed, so that the colour is never the only sign.
+		 */
+		mastery?: ReadonlyMap<KeyCode, 'acquired' | 'fragile' | 'learning'>;
 	}
 
 	let {
@@ -43,7 +48,8 @@
 		marked = [],
 		hands = null,
 		still = false,
-		noteCode = null
+		noteCode = null,
+		mastery
 	}: Props = $props();
 
 	const NOTE_PATHS = ['M9 3V15', 'M9 3L17 5V9L9 7'] as const;
@@ -83,6 +89,7 @@
 					data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
 					data-modifier={modifiers.has(key.code) || undefined}
 					data-wrong={wrongCode === key.code || undefined}
+					data-mastery={mastery?.get(key.code)}
 				>
 					<span class="label" data-long={key.isLong || undefined}>{key.label}</span>
 					{#if homeKeys.has(key.code)}
@@ -299,6 +306,22 @@
 		outline-color: var(--dd-color-key-target-outline);
 		outline-offset: 0;
 		scale: var(--dd-scale-target);
+	}
+
+	.key[data-mastery='acquired'] {
+		outline-style: solid;
+		outline-width: var(--dd-border-width-target);
+		outline-color: var(--dd-color-mastery-acquired-line);
+		outline-offset: 0;
+		background-color: var(--dd-color-mastery-acquired-surface);
+	}
+
+	.key[data-mastery='fragile'] {
+		outline-style: dashed;
+		outline-width: var(--dd-border-width-target);
+		outline-color: var(--dd-color-mastery-fragile-line);
+		outline-offset: 0;
+		background-color: var(--dd-color-mastery-fragile-surface);
 	}
 
 	.key[data-wrong] {

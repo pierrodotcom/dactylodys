@@ -259,6 +259,19 @@ export function withHelpQuest(profile: Profile, record: HelpQuestRecord): Profil
 	return { ...profile, helpQuest: parseHelpQuest(record, 'helpQuest') };
 }
 
+/** A world opened ahead by the adult, after the others; the same profile when it already is. */
+export function withOpenedWorld(profile: Profile, worldId: string): Profile {
+	const id = expectIdentifier(worldId, 'worldId');
+	if (profile.openedWorldIds.includes(id)) return profile;
+	return { ...profile, openedWorldIds: [...profile.openedWorldIds, id] };
+}
+
+/** The words given by the adult, in place of the previous ones; an empty list removes them. */
+export function withAdultWords(profile: Profile, words: readonly string[]): Profile {
+	const adultWords = words.map((word, index) => expectIdentifier(word, `adultWords[${index}]`));
+	return { ...profile, adultWords };
+}
+
 /**
  * The local day (`YYYY-MM-DD`) of an instant, for a device that was `utcOffsetMinutes` ahead of
  * UTC then. Throws a `RangeError` for an offset out of the time zones or a date out of reach.

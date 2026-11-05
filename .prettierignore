@@ -19,3 +19,4 @@ project.inlang/.meta.json
 project.inlang/README.md
 playwright-report/
 test-results/
+static/manifest.webmanifest

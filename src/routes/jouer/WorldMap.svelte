@@ -29,10 +29,13 @@
 		onhelp: () => void;
 		/** Opens the travel notebook; absent when the progression has no story. */
 		onstory?: () => void;
+		/** Opens the free practice of the words of the adult; absent without any word. */
+		onfree?: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { profile, progression, helpKey, onopen, onhelp, onstory, onchangeplayer }: Props = $props();
+	let { profile, progression, helpKey, onopen, onhelp, onstory, onfree, onchangeplayer }: Props =
+		$props();
 
 	/** "Later" hides the bubble until the map is shown again. */
 	let helpLater = $state(false);
@@ -44,7 +47,7 @@
 		hero?.focus();
 	}
 
-	const layout = $derived(layoutMap(progression, profile.progress));
+	const layout = $derived(layoutMap(progression, profile.progress, profile.openedWorldIds));
 	/** The map scrolls to the bubble rather than to the lesson, so that the child sees the request. */
 	const asking = $derived(helpKey !== null && !helpLater);
 
@@ -129,6 +132,11 @@
 			<p class="greeting">{m.play_map_greeting({ name: profile.name })}</p>
 			{#if onstory}
 				<Button variant="secondary" onclick={onstory}>{m.play_story_so_far_open()}</Button>
+			{/if}
+			<!-- Outside the path: the arrows keep walking from lesson to lesson, Tab reaches it. -->
+			{#if onfree}
+				<Button variant="secondary" onclick={onfree} data-free-practice>{m.play_free_open()}</Button
+				>
 			{/if}
 			{#if asking && helpKey !== null}
 				<section class="help" aria-labelledby="help-ask" {@attach centerInView}>

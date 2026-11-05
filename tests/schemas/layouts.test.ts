@@ -310,7 +310,7 @@ describe('French text on the shipped layouts', () => {
 	});
 
 	it('types non-breaking space only on fr-fr-azerty-mac', () => {
-		expect(findUnproducible(PC_INDEX, ' ')).toEqual([' ']);
-		expect(findUnproducible(MAC_INDEX, ' ')).toEqual([]);
+		expect(findUnproducible(PC_INDEX, '\u00A0')).toEqual(['\u00A0']);
+		expect(findUnproducible(MAC_INDEX, '\u00A0')).toEqual([]);
 	});
 });
