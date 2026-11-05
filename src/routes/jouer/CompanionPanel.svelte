@@ -235,6 +235,14 @@
 </ScreenFrame>
 
 <style>
+	/* What the keyboard reaches scrolls into view below the companion, never under it (2.4.11). */
+	:global(html:has([data-companion-stage])) {
+		scroll-padding-block-start: calc(
+			var(--dd-size-companion-preview) + var(--dd-space-sm) * 2 + var(--dd-border-width-thick) +
+				var(--dd-space-md)
+		);
+	}
+
 	/* The companion stays in view while the child scrolls down to choose what it wears. */
 	.stage {
 		position: sticky;

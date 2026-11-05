@@ -7,6 +7,7 @@
 		KeyPress,
 		LayoutDefinition
 	} from '$lib/keyboard/types';
+	import type { Attachment } from 'svelte/attachments';
 	import HandGuide from './HandGuide.svelte';
 	import { homeKeyCodes, keyLabel, modifierCodes } from './key-labels';
 	import { keyName } from './names';
@@ -53,6 +54,31 @@
 	}: Props = $props();
 
 	const NOTE_PATHS = ['M9 3V15', 'M9 3L17 5V9L9 7'] as const;
+	const ZOOM_PROPERTY = '--dd-keyboard-zoom';
+
+	/**
+	 * A keyboard wider than its room is drawn smaller, whole, so that a narrow page never scrolls
+	 * sideways (WCAG 1.4.10). The zoom is computed from measures, like a position (rule 7 of the
+	 * tokens): the room of the box, and the width the keyboard takes at its own size.
+	 */
+	const fitRoom: Attachment<HTMLElement> = (room) => {
+		const keyboard = room.firstElementChild;
+		if (!(keyboard instanceof HTMLElement)) return;
+		let zoom = 1;
+		const fit = () => {
+			const natural = keyboard.getBoundingClientRect().width / zoom;
+			if (natural <= 0) return;
+			const next = Math.min(1, room.clientWidth / natural);
+			if (Math.abs(next - zoom) < 0.001) return;
+			zoom = next;
+			if (zoom < 1) keyboard.style.setProperty(ZOOM_PROPERTY, String(zoom));
+			else keyboard.style.removeProperty(ZOOM_PROPERTY);
+		};
+		fit();
+		const watcher = new ResizeObserver(fit);
+		watcher.observe(room);
+		return () => watcher.disconnect();
+	};
 
 	const markedKeys = $derived(new Set(marked));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
@@ -74,53 +100,67 @@
 	);
 </script>
 
-<div class="keyboard" aria-hidden="true">
-	{#each rows as row, rowIndex (rowIndex)}
-		<div class="row">
-			{#if row.offset > 0}
-				<span class="slot" data-width={row.offset}></span>
-			{/if}
-			{#each row.keys as key (key.code)}
-				<span
-					class="key"
-					data-code={key.code}
-					data-width={key.width}
-					data-finger={(showFingers && key.finger) || undefined}
-					data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
-					data-modifier={modifiers.has(key.code) || undefined}
-					data-wrong={wrongCode === key.code || undefined}
-					data-mastery={mastery?.get(key.code)}
-				>
-					<span class="label" data-long={key.isLong || undefined}>{key.label}</span>
-					{#if homeKeys.has(key.code)}
-						<span class="home-mark"></span>
-					{/if}
-					{#if noteCode === key.code && !still}
-						<svg class="note" viewBox="0 0 20 20" focusable="false" aria-hidden="true">
-							<ellipse cx="6" cy="15" rx="4" ry="3" />
-							{#each NOTE_PATHS as path (path)}
-								<path d={path} />
-							{/each}
-						</svg>
-					{/if}
-				</span>
-			{/each}
-		</div>
-	{/each}
-	{#if hands}
-		<HandGuide
-			{geometry}
-			{fingering}
-			presses={hands.presses}
-			trigger={hands.trigger}
-			repeat={hands.repeat ?? false}
-			{still}
-		/>
-	{/if}
+<div class="room" {@attach fitRoom}>
+	<div class="keyboard" aria-hidden="true">
+		{#each rows as row, rowIndex (rowIndex)}
+			<div class="row">
+				{#if row.offset > 0}
+					<span class="slot" data-width={row.offset}></span>
+				{/if}
+				{#each row.keys as key (key.code)}
+					<span
+						class="key"
+						data-code={key.code}
+						data-width={key.width}
+						data-finger={(showFingers && key.finger) || undefined}
+						data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
+						data-modifier={modifiers.has(key.code) || undefined}
+						data-wrong={wrongCode === key.code || undefined}
+						data-mastery={mastery?.get(key.code)}
+					>
+						<span class="label" data-long={key.isLong || undefined}>{key.label}</span>
+						{#if homeKeys.has(key.code)}
+							<span class="home-mark"></span>
+						{/if}
+						{#if noteCode === key.code && !still}
+							<svg class="note" viewBox="0 0 20 20" focusable="false" aria-hidden="true">
+								<ellipse cx="6" cy="15" rx="4" ry="3" />
+								{#each NOTE_PATHS as path (path)}
+									<path d={path} />
+								{/each}
+							</svg>
+						{/if}
+					</span>
+				{/each}
+			</div>
+		{/each}
+		{#if hands}
+			<HandGuide
+				{geometry}
+				{fingering}
+				presses={hands.presses}
+				trigger={hands.trigger}
+				repeat={hands.repeat ?? false}
+				{still}
+			/>
+		{/if}
+	</div>
 </div>
 
 <style>
+	/*
+	 * The room the keyboard has: as wide as its parent allows, whatever the keyboard needs (the
+	 * containment keeps the keyboard out of the width of the page), the keyboard centred in it.
+	 */
+	.room {
+		contain: inline-size;
+		display: grid;
+		justify-items: center;
+		inline-size: 100%;
+	}
+
 	.keyboard {
+		zoom: var(--dd-keyboard-zoom);
 		position: relative;
 		display: inline-grid;
 		gap: var(--dd-size-key-gap);

@@ -45,6 +45,15 @@ p {
 	outline-offset: var(--dd-space-xs);
 }
 
+/*
+ * A table wider than a narrow page scrolls on its own, not the page (WCAG 1.4.10 leaves data
+ * tables their two dimensions); browsers let the keyboard focus a box that scrolls.
+ */
+.dd-table-scroll {
+	max-inline-size: 100%;
+	overflow-x: auto;
+}
+
 .dd-visually-hidden {
 	position: absolute;
 	inline-size: var(--dd-size-visually-hidden);

@@ -94,8 +94,7 @@
 	}
 
 	.board {
-		justify-self: center;
-		max-inline-size: 100%;
+		justify-self: stretch;
 	}
 
 	.legend,

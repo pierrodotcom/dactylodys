@@ -108,6 +108,7 @@
 <style>
 	.report {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: var(--dd-space-2xl);
 		justify-self: stretch;
 	}

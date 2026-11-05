@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { focusableWhileScrolling } from '$lib/ui/focus';
 	import { m } from '$lib/paraglide/messages.js';
 	import type { Profile } from '$lib/state/types';
 	import LineChart from '$lib/ui/components/LineChart.svelte';
@@ -67,29 +68,36 @@
 		</div>
 		<details>
 			<summary>{m.adult_table_show()}</summary>
-			<table data-sessions-table>
-				<caption>{m.adult_sessions_caption()}</caption>
-				<thead>
-					<tr>
-						<th scope="col">{m.adult_table_session()}</th>
-						<th scope="col">{m.adult_table_date()}</th>
-						<th scope="col">{m.adult_table_lesson()}</th>
-						<th scope="col">{m.adult_table_accuracy()}</th>
-						<th scope="col">{m.adult_table_speed()}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each points as point (point.rank)}
+			<div
+				class="dd-table-scroll"
+				role="region"
+				aria-labelledby="sessions-caption"
+				{@attach focusableWhileScrolling}
+			>
+				<table data-sessions-table>
+					<caption id="sessions-caption">{m.adult_sessions_caption()}</caption>
+					<thead>
 						<tr>
-							<th scope="row">{point.rank}</th>
-							<td>{format.sessionDate(point.finishedAt, point.utcOffsetMinutes)}</td>
-							<td>{lessonTitle(point.lessonId)}</td>
-							<td>{format.number(point.accuracy, ONE_DECIMAL)}</td>
-							<td>{format.number(point.wordsPerMinute, ONE_DECIMAL)}</td>
+							<th scope="col">{m.adult_table_session()}</th>
+							<th scope="col">{m.adult_table_date()}</th>
+							<th scope="col">{m.adult_table_lesson()}</th>
+							<th scope="col">{m.adult_table_accuracy()}</th>
+							<th scope="col">{m.adult_table_speed()}</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{#each points as point (point.rank)}
+							<tr>
+								<th scope="row">{point.rank}</th>
+								<td>{format.sessionDate(point.finishedAt, point.utcOffsetMinutes)}</td>
+								<td>{lessonTitle(point.lessonId)}</td>
+								<td>{format.number(point.accuracy, ONE_DECIMAL)}</td>
+								<td>{format.number(point.wordsPerMinute, ONE_DECIMAL)}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
 		</details>
 	{/if}
 
@@ -109,25 +117,32 @@
 		</figure>
 		<details>
 			<summary>{m.adult_table_show()}</summary>
-			<table data-weeks-table>
-				<caption>{m.adult_weeks_caption()}</caption>
-				<thead>
-					<tr>
-						<th scope="col">{m.adult_table_week()}</th>
-						<th scope="col">{m.adult_table_week_days()}</th>
-						<th scope="col">{m.adult_table_week_total()}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each weeks as week (week.weekStart)}
+			<div
+				class="dd-table-scroll"
+				role="region"
+				aria-labelledby="weeks-caption"
+				{@attach focusableWhileScrolling}
+			>
+				<table data-weeks-table>
+					<caption id="weeks-caption">{m.adult_weeks_caption()}</caption>
+					<thead>
 						<tr>
-							<th scope="row">{format.day(week.weekStart)}</th>
-							<td>{week.days}</td>
-							<td>{week.cumulativeDays}</td>
+							<th scope="col">{m.adult_table_week()}</th>
+							<th scope="col">{m.adult_table_week_days()}</th>
+							<th scope="col">{m.adult_table_week_total()}</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{#each weeks as week (week.weekStart)}
+							<tr>
+								<th scope="row">{format.day(week.weekStart)}</th>
+								<td>{week.days}</td>
+								<td>{week.cumulativeDays}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
 		</details>
 	{/if}
 </section>

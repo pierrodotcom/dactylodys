@@ -152,6 +152,7 @@
 	.load,
 	.conflicts {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: var(--dd-space-md);
 		justify-items: start;
 		text-align: start;
@@ -159,11 +160,13 @@
 
 	.file {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: var(--dd-space-xs);
 		font-weight: var(--dd-font-weight-bold);
 	}
 
 	input[type='file'] {
+		inline-size: 100%;
 		min-block-size: var(--dd-size-touch-target-min);
 		font-family: inherit;
 		font-size: var(--dd-font-size-base);
