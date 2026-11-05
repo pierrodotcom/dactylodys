@@ -6,7 +6,7 @@ Application web **libre et gratuite** pour apprendre à taper au clavier en joua
 - Séances courtes, récompenses liées aux progrès, aucun mécanisme addictif.
 - Français et clavier AZERTY d'abord ; autres langues et dispositions ensuite.
 
-**État : cadrage terminé, développement à venir.** DactyloDys est un outil d'apprentissage, pas un traitement médical.
+**État : version 1.0 en préparation** : six mini-jeux, une progression en mondes, un espace adulte, jouable hors connexion et installable. DactyloDys est un outil d'apprentissage, pas un traitement médical.
 
 ## Pages pour les adultes
 

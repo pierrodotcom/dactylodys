@@ -24,7 +24,7 @@ paths:
 ## Règles
 
 1. Correction de bogue : écrire **d'abord** le test qui échoue.
-2. Jamais de `.skip`, `.only`, `expect` commenté ou délai arbitraire (`waitForTimeout`) dans un commit.
+2. Jamais de `.skip`, `.only`, `expect` commenté ou délai arbitraire (`waitForTimeout`) dans un commit. Seule exception : `test.skip(<moteur>, '<raison>')` quand l'API testée n'existe que dans un moteur (impression PDF, enregistrement de la voix), la raison écrite dans l'appel.
 3. Tests déterministes : horloge et aléa injectés, aucune dépendance réseau.
 4. Invariants minimaux du moteur (propriétés) :
    - une séquence tapée sans faute donne 100 % de précision ;
