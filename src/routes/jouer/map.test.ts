@@ -58,7 +58,7 @@ function played(progress: ProgressState, lessonId: string, accuracy: number, sta
 
 describe('lessonStatus', () => {
 	it('opens the first lesson and closes the others for a new player', () => {
-		const statuses = IDS.map((id) => lessonStatus(progression, emptyProgress(), id));
+		const statuses = IDS.map((id) => lessonStatus(progression, emptyProgress(), id, []));
 
 		expect(statuses[0]).toBe('current');
 		expect(statuses.slice(1).every((status) => status === 'locked')).toBe(true);
@@ -67,22 +67,22 @@ describe('lessonStatus', () => {
 	it('marks a passed lesson as done and opens the next one', () => {
 		const progress = played(emptyProgress(), IDS[0] as string, 100, 3);
 
-		expect(lessonStatus(progression, progress, IDS[0] as string)).toBe('done');
-		expect(lessonStatus(progression, progress, IDS[1] as string)).toBe('current');
-		expect(lessonStatus(progression, progress, IDS[2] as string)).toBe('locked');
+		expect(lessonStatus(progression, progress, IDS[0] as string, [])).toBe('done');
+		expect(lessonStatus(progression, progress, IDS[1] as string, [])).toBe('current');
+		expect(lessonStatus(progression, progress, IDS[2] as string, [])).toBe('locked');
 	});
 
 	it('keeps a lesson open, not done, when it was played below the unlock accuracy', () => {
 		const progress = played(emptyProgress(), IDS[0] as string, 40, 0);
 
-		expect(lessonStatus(progression, progress, IDS[0] as string)).toBe('current');
-		expect(lessonStatus(progression, progress, IDS[1] as string)).toBe('locked');
+		expect(lessonStatus(progression, progress, IDS[0] as string, [])).toBe('current');
+		expect(lessonStatus(progression, progress, IDS[1] as string, [])).toBe('locked');
 	});
 
 	it('treats the exact unlock accuracy as passed', () => {
 		const progress = played(emptyProgress(), IDS[0] as string, progression.rules.unlockAccuracy, 1);
 
-		expect(lessonStatus(progression, progress, IDS[0] as string)).toBe('done');
+		expect(lessonStatus(progression, progress, IDS[0] as string, [])).toBe('done');
 	});
 });
 
@@ -163,7 +163,7 @@ function passed(count: number): ProgressState {
 
 describe('layoutMap', () => {
 	it('shows every world one after the other, with all their lessons, closed ones too', () => {
-		const layout = layoutMap(MANY_WORLDS, emptyProgress());
+		const layout = layoutMap(MANY_WORLDS, emptyProgress(), []);
 
 		expect(layout.worlds.map((world) => world.title)).toEqual(['World 1', 'World 2', 'World 3']);
 		expect(layout.worlds.map((world) => world.lessons.length)).toEqual([2, 2, 2]);
@@ -178,7 +178,7 @@ describe('layoutMap', () => {
 	});
 
 	it('numbers the lessons along the whole path, not world by world', () => {
-		const layout = layoutMap(MANY_WORLDS, emptyProgress());
+		const layout = layoutMap(MANY_WORLDS, emptyProgress(), []);
 
 		expect(layout.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.number))).toEqual([
 			1, 2, 3, 4, 5, 6
@@ -186,7 +186,7 @@ describe('layoutMap', () => {
 	});
 
 	it('alternates the side of the lessons along the whole path', () => {
-		const layout = layoutMap(MANY_WORLDS, emptyProgress());
+		const layout = layoutMap(MANY_WORLDS, emptyProgress(), []);
 
 		expect(layout.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.side))).toEqual([
 			0, 1, 0, 1, 0, 1
@@ -194,28 +194,28 @@ describe('layoutMap', () => {
 	});
 
 	it('marks the first world as current for a new player', () => {
-		const layout = layoutMap(MANY_WORLDS, emptyProgress());
+		const layout = layoutMap(MANY_WORLDS, emptyProgress(), []);
 
 		expect(layout.worlds.map((world) => world.current)).toEqual([true, false, false]);
 		expect(layout.focusId).toBe('xx.lesson.1a');
 	});
 
 	it('marks the world of the most advanced open lesson as current', () => {
-		const layout = layoutMap(MANY_WORLDS, passed(3));
+		const layout = layoutMap(MANY_WORLDS, passed(3), []);
 
 		expect(layout.worlds.map((world) => world.current)).toEqual([false, true, false]);
 		expect(layout.focusId).toBe('xx.lesson.2b');
 	});
 
 	it('moves to the next world as soon as its first lesson opens', () => {
-		const layout = layoutMap(MANY_WORLDS, passed(2));
+		const layout = layoutMap(MANY_WORLDS, passed(2), []);
 
 		expect(layout.worlds.map((world) => world.current)).toEqual([false, true, false]);
 		expect(layout.focusId).toBe('xx.lesson.2a');
 	});
 
 	it('keeps the last lesson in focus when everything is passed', () => {
-		const layout = layoutMap(MANY_WORLDS, passed(MANY_IDS.length));
+		const layout = layoutMap(MANY_WORLDS, passed(MANY_IDS.length), []);
 
 		expect(layout.focusId).toBe('xx.lesson.3b');
 		expect(layout.worlds.map((world) => world.current)).toEqual([false, false, true]);
@@ -225,7 +225,7 @@ describe('layoutMap', () => {
 	});
 
 	it('gives the stars of every lesson, in any world', () => {
-		const layout = layoutMap(MANY_WORLDS, passed(3));
+		const layout = layoutMap(MANY_WORLDS, passed(3), []);
 
 		expect(layout.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.stars))).toEqual([
 			3, 3, 3, 0, 0, 0
@@ -233,7 +233,7 @@ describe('layoutMap', () => {
 	});
 
 	it('handles a progression without world', () => {
-		const layout = layoutMap({ ...MANY_WORLDS, worlds: [] }, emptyProgress());
+		const layout = layoutMap({ ...MANY_WORLDS, worlds: [] }, emptyProgress(), []);
 
 		expect(layout).toEqual({ worlds: [], focusId: null });
 	});
@@ -241,7 +241,26 @@ describe('layoutMap', () => {
 
 describe('focusLessonId', () => {
 	it('is the last open lesson', () => {
-		expect(focusLessonId(MANY_WORLDS, passed(4))).toBe('xx.lesson.3a');
+		expect(focusLessonId(MANY_WORLDS, passed(4), [])).toBe('xx.lesson.3a');
+	});
+});
+
+describe('a world opened by the adult', () => {
+	const OPENED = ['xx.world.3'];
+
+	it('opens its first lesson on the map and takes the focus there', () => {
+		const layout = layoutMap(MANY_WORLDS, emptyProgress(), OPENED);
+		const statuses = layout.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.status));
+		expect(statuses).toEqual(['current', 'locked', 'locked', 'locked', 'current', 'locked']);
+		expect(layout.focusId).toBe('xx.lesson.3a');
+		expect(layout.worlds.map((world) => world.current)).toEqual([false, false, true]);
+	});
+
+	it('lets the arrows walk between the lessons it opened and the others', () => {
+		const layout = layoutMap(MANY_WORLDS, emptyProgress(), OPENED);
+		expect(moveOnMap(layout, 'xx.lesson.1a', 'next')).toBe('xx.lesson.3a');
+		expect(moveOnMap(layout, 'xx.lesson.3a', 'previous')).toBe('xx.lesson.1a');
+		expect(isOpenOnMap(layout, 'xx.lesson.3b')).toBe(false);
 	});
 });
 
@@ -277,7 +296,7 @@ function mapOf(statuses: readonly (readonly LessonStatus[])[]): WorldMapLayout {
 }
 
 describe('moveOnMap', () => {
-	const layout = layoutMap(MANY_WORLDS, passed(3));
+	const layout = layoutMap(MANY_WORLDS, passed(3), []);
 
 	it('goes to the next and the previous open lesson, from one world to the next', () => {
 		expect(moveOnMap(layout, 'xx.lesson.1a', 'next')).toBe('xx.lesson.1b');
@@ -317,7 +336,7 @@ describe('moveOnMap', () => {
 	it('always leads to an open lesson of the map', () => {
 		const moves = ['next', 'previous', 'first', 'last'] as const;
 		for (let count = 0; count <= MANY_IDS.length; count++) {
-			const map = layoutMap(MANY_WORLDS, passed(count));
+			const map = layoutMap(MANY_WORLDS, passed(count), []);
 			for (const from of MANY_IDS) {
 				for (const move of moves) {
 					const target = moveOnMap(map, from, move);
@@ -330,7 +349,7 @@ describe('moveOnMap', () => {
 
 describe('isOpenOnMap', () => {
 	it('tells an open lesson from a locked or unknown one', () => {
-		const layout = layoutMap(MANY_WORLDS, passed(1));
+		const layout = layoutMap(MANY_WORLDS, passed(1), []);
 
 		expect(isOpenOnMap(layout, 'xx.lesson.1b')).toBe(true);
 		expect(isOpenOnMap(layout, 'xx.lesson.2a')).toBe(false);
@@ -340,12 +359,12 @@ describe('isOpenOnMap', () => {
 
 describe('showsKeysHint', () => {
 	it('hides the hint while a single lesson is open: the arrows would move nothing', () => {
-		expect(showsKeysHint(layoutMap(MANY_WORLDS, emptyProgress()))).toBe(false);
+		expect(showsKeysHint(layoutMap(MANY_WORLDS, emptyProgress(), []))).toBe(false);
 		expect(showsKeysHint(mapOf([]))).toBe(false);
 	});
 
 	it('shows the hint from two open lessons on, in any world', () => {
-		expect(showsKeysHint(layoutMap(MANY_WORLDS, passed(1)))).toBe(true);
+		expect(showsKeysHint(layoutMap(MANY_WORLDS, passed(1), []))).toBe(true);
 		expect(showsKeysHint(mapOf([['current'], ['locked', 'done']]))).toBe(true);
 	});
 });

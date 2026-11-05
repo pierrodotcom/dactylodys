@@ -2,7 +2,12 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { parseRewardCatalogue, type RewardDefinition } from '../src/lib/engine/rewards';
 import type { StarCount } from '../src/lib/engine/progression/types';
-import { withCompanion, withEarnedRewards, withProgress } from '../src/lib/state/profile';
+import {
+	withAdultWords,
+	withCompanion,
+	withEarnedRewards,
+	withProgress
+} from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
 import {
 	advancedProfile,
@@ -178,6 +183,14 @@ function profileWithFragileKey(name: string): Profile {
 		...passed.progress,
 		chars: { [FRAGILE_KEY]: { ...FRAGILE, recent: [FRAGILE] } }
 	});
+}
+
+/** Words given by the adult, typed in free practice. */
+const FREE_WORDS = ['lune', 'vélo', 'chat'];
+
+/** A new child whose adult gave words to type. */
+function profileWithWords(name: string): Profile {
+	return withAdultWords(advancedProfile({ name, passed: {} }), FREE_WORDS);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -421,6 +434,52 @@ test.describe('companion and rewards', () => {
 		expect(record.helpQuest).toBeNull();
 		expect(record.progress.chars[FRAGILE_KEY]?.attempts).toBe(FRAGILE.attempts);
 	});
+
+	test('offers no free practice without words of the adult', async ({ page }) => {
+		await reachMapAs(page, advancedProfile({ name: 'Rio', passed: {} }));
+		await expect(button(page, message('play_free_open'))).toHaveCount(0);
+	});
+
+	test('plays the words of the adult by the keyboard up to the well done, with no stars nor session', async ({
+		page
+	}) => {
+		const child = profileWithWords('Mia');
+		await reachMapAs(page, child);
+		await activateByTab(page, button(page, message('play_free_open')));
+		await expect(heading(page, message('play_free_title'))).toBeVisible();
+		await expect(page.locator('button[data-proposed]')).toBeFocused();
+		await page.keyboard.press('Enter');
+
+		expect(FREE_WORDS).toContain(await currentGroup(page));
+		await typeToEnd(page, message('play_help_back'));
+		await expect(heading(page, message('play_free_done'))).toBeVisible();
+		await expect(page.locator('.photo')).toHaveCount(0);
+		await expect(page.getByText(/%/)).toHaveCount(0);
+
+		await expect
+			.poll(async () => {
+				const record = await stored(page, child);
+				return {
+					lessons: record.progress.lessons,
+					sessions: record.sessions,
+					days: record.practiceDays.length,
+					typedL: (record.progress.chars['l']?.attempts ?? 0) > 0
+				};
+			})
+			.toEqual({ lessons: {}, sessions: [], days: 1, typedL: true });
+
+		await activateByTab(page, button(page, message('play_help_back')));
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+		await expect(button(page, message('play_free_open'))).toBeVisible();
+	});
+
+	test('leaves the free practice for the map from the choice of the game', async ({ page }) => {
+		await reachMapAs(page, profileWithWords('Lin'));
+		await button(page, message('play_free_open')).click();
+		await expect(heading(page, message('play_free_title'))).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+	});
 });
 
 for (const colorScheme of COLOR_SCHEMES) {
@@ -462,6 +521,24 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await button(page, message('play_help_yes')).click();
 			await typeToEnd(page, message('play_help_back'));
 			await expect(heading(page, message('play_help_thanks'))).toBeVisible();
+			await expectNoAxeViolation(page);
+		});
+
+		test('has no axe violation on the free practice, from the map to the well done', async ({
+			page
+		}) => {
+			test.slow();
+			await reachMapAs(page, profileWithWords('Eden'));
+			await expect(button(page, message('play_free_open'))).toBeVisible();
+			await expectNoAxeViolation(page);
+
+			await button(page, message('play_free_open')).click();
+			await expect(page.locator('button[data-proposed]')).toBeFocused();
+			await expectNoAxeViolation(page);
+
+			await page.locator('button[data-proposed]').click();
+			await typeToEnd(page, message('play_help_back'));
+			await expect(heading(page, message('play_free_done'))).toBeVisible();
 			await expectNoAxeViolation(page);
 		});
 	});

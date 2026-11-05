@@ -17,12 +17,14 @@ function progressOf(progress: ProgressState, lessonId: string) {
 	return Object.hasOwn(progress.lessons, lessonId) ? progress.lessons[lessonId] : undefined;
 }
 
+/** `openedWorldIds`: the worlds the adult opened ahead (`Profile.openedWorldIds`). */
 export function lessonStatus(
 	progression: ProgressionDefinition,
 	progress: ProgressState,
-	lessonId: string
+	lessonId: string,
+	openedWorldIds: readonly string[]
 ): LessonStatus {
-	if (!isLessonUnlocked(progression, progress, lessonId)) return 'locked';
+	if (!isLessonUnlocked(progression, progress, lessonId, openedWorldIds)) return 'locked';
 	const best = progressOf(progress, lessonId)?.bestAccuracy;
 	const passed = best !== undefined && best + ACCURACY_EPSILON >= progression.rules.unlockAccuracy;
 	return passed ? 'done' : 'current';
@@ -48,10 +50,11 @@ export function worldOfLesson(
 /** The most advanced lesson the child can play: the last open one, in the order of the progression. */
 export function focusLessonId(
 	progression: ProgressionDefinition,
-	progress: ProgressState
+	progress: ProgressState,
+	openedWorldIds: readonly string[]
 ): string | null {
 	const open = lessonIds(progression).filter(
-		(id) => lessonStatus(progression, progress, id) !== 'locked'
+		(id) => lessonStatus(progression, progress, id, openedWorldIds) !== 'locked'
 	);
 	return open.at(-1) ?? null;
 }
@@ -84,9 +87,10 @@ export interface WorldMapLayout {
 /** Every world one after the other, locked lessons included, the current world and lesson marked. */
 export function layoutMap(
 	progression: ProgressionDefinition,
-	progress: ProgressState
+	progress: ProgressState,
+	openedWorldIds: readonly string[]
 ): WorldMapLayout {
-	const focusId = focusLessonId(progression, progress);
+	const focusId = focusLessonId(progression, progress, openedWorldIds);
 	let number = 0;
 	const worlds = progression.worlds.map((world): MapWorld => {
 		const lessons = world.lessons.map((lesson): MapLesson => {
@@ -95,7 +99,7 @@ export function layoutMap(
 				id: lesson.id,
 				title: lesson.title,
 				number,
-				status: lessonStatus(progression, progress, lesson.id),
+				status: lessonStatus(progression, progress, lesson.id, openedWorldIds),
 				stars: lessonStars(progress, lesson.id),
 				side: number % 2 === 0 ? 1 : 0
 			};

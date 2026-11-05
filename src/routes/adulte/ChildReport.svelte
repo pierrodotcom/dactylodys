@@ -4,11 +4,14 @@
 	import type { Profile } from '$lib/state/types';
 	import Button from '$lib/ui/components/Button.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
+	import type { FreePracticeRules } from '../jouer/free-practice';
 	import type { AdultRules } from './adult-rules';
 	import ChildEvolution from './ChildEvolution.svelte';
 	import ChildKeyboard from './ChildKeyboard.svelte';
 	import ChildLessons from './ChildLessons.svelte';
 	import ChildTarget from './ChildTarget.svelte';
+	import ChildWords from './ChildWords.svelte';
+	import ChildWorlds from './ChildWorlds.svelte';
 	import type { Formatters } from './format';
 	import { latestHandwriting } from './target';
 
@@ -16,12 +19,17 @@
 		profile: Profile;
 		progression: ProgressionDefinition | undefined;
 		rules: AdultRules;
+		freeRules: FreePracticeRules;
 		format: Formatters;
 		today: string;
 		lessonTitle: (lessonId: string) => string;
 		/** What the last download of this screen gave, said in its live region. */
 		fileStatus: string;
 		onmeasure: (wordsPerMinute: number) => Promise<boolean>;
+		onopenworld: (worldId: string) => Promise<boolean>;
+		onsavewords: (words: readonly string[]) => Promise<boolean>;
+		/** Opens the settings of the child, the same as in the game. */
+		onsettings: () => void;
 		onmeasures: () => void;
 		onbackup: () => void;
 		onback: () => void;
@@ -31,11 +39,15 @@
 		profile,
 		progression,
 		rules,
+		freeRules,
 		format,
 		today,
 		lessonTitle,
 		fileStatus,
 		onmeasure,
+		onopenworld,
+		onsavewords,
+		onsettings,
 		onmeasures,
 		onbackup,
 		onback
@@ -66,6 +78,17 @@
 			{lessonTitle}
 		/>
 		<ChildTarget {profile} {rules} {format} {handwriting} {onmeasure} />
+		{#if progression}
+			<ChildWorlds {profile} {progression} {format} {onopenworld} />
+		{/if}
+		<ChildWords {profile} rules={freeRules} {format} onsave={onsavewords} />
+		<section class="files" aria-labelledby="child-settings-title">
+			<h2 id="child-settings-title">{m.settings_title()}</h2>
+			<p>{m.adult_settings_note({ name: profile.name })}</p>
+			<Button variant="secondary" onclick={onsettings} data-child-settings>
+				{m.adult_settings_open({ name: profile.name })}
+			</Button>
+		</section>
 		<section class="files" aria-labelledby="child-files-title">
 			<h2 id="child-files-title">{m.adult_files_title()}</h2>
 			<p>{m.adult_measures_note()}</p>

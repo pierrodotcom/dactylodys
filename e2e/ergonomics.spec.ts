@@ -1,6 +1,6 @@
 import { expect as baseExpect, test, type Page } from '@playwright/test';
 import type { StarCount } from '../src/lib/engine/progression/types';
-import { withGhost } from '../src/lib/state/profile';
+import { withAdultWords, withGhost } from '../src/lib/state/profile';
 import {
 	advancedProfile,
 	installProfile,
@@ -58,7 +58,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('puts the way out of every screen at the top of the page', async ({ page }) => {
-	const child = advancedProfile({ name: 'Lou', passed: { [FIRST.id]: PASSED_STARS } });
+	const child = withAdultWords(
+		advancedProfile({ name: 'Lou', passed: { [FIRST.id]: PASSED_STARS } }),
+		['lune']
+	);
 	await openPage(page, '/jouer');
 	await installProfile(page, child);
 	await reloadPage(page);
@@ -90,6 +93,11 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await page.keyboard.press('Escape');
 	await expect(heading(page, message('play_map_title'))).toBeVisible();
 
+	await button(page, message('play_free_open')).click();
+	await expect(heading(page, message('play_free_title'))).toBeVisible();
+	await expectWayOutAtTop(page, message('play_free_back'));
+	await button(page, message('play_free_back')).click();
+
 	await page.getByRole('button', { name: FIRST.title }).click();
 	await throughStory(page, heading(page, FIRST.title));
 	await expectWayOutAtTop(page, message('play_intro_back'));
@@ -117,6 +125,10 @@ test('puts the way out of the adult space at the top of each of its screens', as
 	await page.getByRole('button', { name: child.name }).click();
 	await expect(heading(page, message('adult_child_title', { name: child.name }))).toBeVisible();
 	await expectWayOutAtTop(page, message('adult_back_to_list'));
+
+	await page.locator('[data-child-settings]').click();
+	await expect(heading(page, message('adult_settings_title', { name: child.name }))).toBeVisible();
+	await expectWayOutAtTop(page, message('adult_settings_back', { name: child.name }));
 });
 
 test('keeps the race choice in view with the games, and the race above the game', async ({

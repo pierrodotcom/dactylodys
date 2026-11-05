@@ -8,12 +8,14 @@
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { BACKUP_FILE_EXTENSION, backupFileName, exportBackup } from '$lib/state/backup';
 	import { utcOffsetAt } from '$lib/state/journal';
-	import { localDay } from '$lib/state/profile';
+	import { localDay, updateSettings, withAdultWords, withOpenedWorld } from '$lib/state/profile';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
-	import type { Profile, ProfileStore } from '$lib/state/types';
+	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { downloadTextFile } from '$lib/ui/download';
 	import { progressionFor } from '../jouer/content';
+	import { FREE_PRACTICE_RULES } from '../jouer/free-practice';
 	import { forgetLastPlayerId } from '../jouer/last-player';
+	import SettingsPanel from '../jouer/SettingsPanel.svelte';
 	import AdultGate from './AdultGate.svelte';
 	import AdultHome from './AdultHome.svelte';
 	import { ADULT_RULES } from './adult-rules';
@@ -34,7 +36,9 @@
 		| { readonly name: 'loading' }
 		| { readonly name: 'gate' }
 		| { readonly name: 'home' }
-		| { readonly name: 'child'; readonly id: string };
+		| { readonly name: 'child'; readonly id: string }
+		/** The settings of one child, the same screen as in the game. */
+		| { readonly name: 'settings'; readonly id: string };
 
 	const JSON_TYPE = 'application/json';
 	const CSV_TYPE = 'text/csv;charset=utf-8';
@@ -52,11 +56,12 @@
 	let lastBackupAt = $state<number | null>(null);
 	let fileStatus = $state('');
 	let today = $state('');
+	let settingsSave = $state<'idle' | 'saved' | 'error'>('idle');
 
 	const children = $derived(sortChildren(profiles, collator.compare));
 	const shown = $derived.by(() => {
 		const current = view;
-		if (current.name !== 'child') return null;
+		if (current.name !== 'child' && current.name !== 'settings') return null;
 		return profiles.find((profile) => profile.id === current.id) ?? null;
 	});
 
@@ -83,6 +88,7 @@
 
 	async function show(next: View) {
 		fileStatus = '';
+		settingsSave = 'idle';
 		view = next;
 		await tick();
 		window.scrollTo(0, 0);
@@ -181,6 +187,18 @@
 		}
 	}
 
+	async function openWorld(child: Profile, worldId: string): Promise<boolean> {
+		return saveProfiles([withOpenedWorld(child, worldId)]);
+	}
+
+	async function saveWords(child: Profile, words: readonly string[]): Promise<boolean> {
+		return saveProfiles([withAdultWords(child, words)]);
+	}
+
+	async function changeSettings(child: Profile, patch: Partial<Settings>) {
+		settingsSave = (await saveProfiles([updateSettings(child, patch)])) ? 'saved' : 'error';
+	}
+
 	async function measure(child: Profile, wordsPerMinute: number): Promise<boolean> {
 		const next = withHandwritingSample(child, { measuredAt: Date.now(), wordsPerMinute });
 		return saveProfiles([next]);
@@ -209,14 +227,28 @@
 			profile={child}
 			progression={progressionFor(child.settings.layoutId)}
 			rules={ADULT_RULES}
+			freeRules={FREE_PRACTICE_RULES}
 			{format}
 			{today}
 			{lessonTitle}
 			{fileStatus}
 			onmeasure={(wordsPerMinute) => measure(child, wordsPerMinute)}
+			onopenworld={(worldId) => openWorld(child, worldId)}
+			onsavewords={(words) => saveWords(child, words)}
+			onsettings={() => show({ name: 'settings', id: child.id })}
 			onmeasures={() => downloadMeasures(child)}
 			onbackup={() => downloadBackup(child)}
 			onback={() => show({ name: 'home' })}
+		/>
+	{:else if view.name === 'settings' && shown}
+		{@const child = shown}
+		<SettingsPanel
+			settings={child.settings}
+			saveState={settingsSave}
+			title={m.adult_settings_title({ name: child.name })}
+			backLabel={m.adult_settings_back({ name: child.name })}
+			onchange={(patch) => changeSettings(child, patch)}
+			onback={() => show({ name: 'child', id: child.id })}
 		/>
 	{:else}
 		<AdultHome

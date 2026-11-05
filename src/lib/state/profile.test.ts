@@ -15,7 +15,9 @@ import {
 	withEarnedRewards,
 	withGhost,
 	withHelpQuest,
+	withAdultWords,
 	withLastGame,
+	withOpenedWorld,
 	withProgress
 } from './profile';
 import type { CompanionChoice, HelpQuestRecord, Profile, SessionRecord, Settings } from './types';
@@ -390,6 +392,33 @@ describe('profile updates', () => {
 		];
 		for (const result of results) expect(result).not.toBe(profile);
 		expect(profile).toEqual(snapshot);
+	});
+});
+
+describe('withOpenedWorld', () => {
+	it('keeps each world once, in the order they were opened', () => {
+		const once = withOpenedWorld(sampleProfile(), WORLD);
+		const twice = withOpenedWorld(withOpenedWorld(once, 'fr.world.kitchen'), WORLD);
+		expect(twice.openedWorldIds).toEqual([WORLD, 'fr.world.kitchen']);
+		expect(withOpenedWorld(once, WORLD)).toBe(once);
+		expect(parseProfile(twice)).toEqual(twice);
+	});
+
+	it('refuses an empty identifier', () => {
+		expect(() => withOpenedWorld(sampleProfile(), '')).toThrow(/worldId/);
+	});
+});
+
+describe('withAdultWords', () => {
+	it('replaces the words, and an empty list removes them', () => {
+		const given = withAdultWords(sampleProfile(), ['vélo', 'lune']);
+		expect(given.adultWords).toEqual(['vélo', 'lune']);
+		expect(parseProfile(given)).toEqual(given);
+		expect(withAdultWords(given, []).adultWords).toEqual([]);
+	});
+
+	it('refuses an empty word', () => {
+		expect(() => withAdultWords(sampleProfile(), ['vélo', ''])).toThrow(/adultWords\[1\]/);
 	});
 });
 
