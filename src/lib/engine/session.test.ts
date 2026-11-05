@@ -215,8 +215,8 @@ describe.each(POLICIES)('applyKeystroke with the %s policy', (errorPolicy) => {
 	});
 
 	it('does not treat a non-breaking space as a plain space', () => {
-		expect(applyKeystroke(start(' '), char(' ', 1)).events[0]?.type).toBe('error');
-		expect(applyKeystroke(start(' '), char(' ', 1)).events[0]?.type).toBe('error');
+		expect(applyKeystroke(start(' '), char('\u00A0', 1)).events[0]?.type).toBe('error');
+		expect(applyKeystroke(start('\u00A0'), char(' ', 1)).events[0]?.type).toBe('error');
 	});
 
 	it('does not treat a typographic apostrophe as a straight one', () => {
