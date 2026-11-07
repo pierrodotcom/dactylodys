@@ -1,4 +1,4 @@
-import { gameDescription, gameTitle } from '$lib/games/labels';
+import { gameDescription, gamePlayLabel, gameTitle } from '$lib/games/labels';
 import { gamesForWorld } from '$lib/games/registry';
 import type { GameDefinition } from '$lib/games/types';
 
@@ -17,6 +17,8 @@ export interface WorldLessons extends WorldGames {
 export interface GameOption {
 	readonly value: string;
 	readonly title: string;
+	/** The sentence on the button that starts it. */
+	readonly playLabel: string;
 	readonly description: string;
 }
 
@@ -35,6 +37,7 @@ export function gameOptions(world: WorldGames): readonly GameOption[] {
 	return gamesForWorld(world).map((game) => ({
 		value: game.id,
 		title: gameTitle(game.id),
+		playLabel: gamePlayLabel(game.id),
 		description: gameDescription(game.id)
 	}));
 }

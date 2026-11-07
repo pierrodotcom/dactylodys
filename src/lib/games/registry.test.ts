@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameDescription, gameTitle } from './labels';
+import { gameDescription, gamePlayLabel, gameTitle } from './labels';
 import { GAMES, findGame, gamesForWorld } from './registry';
 
 const ids = (games: readonly { id: string }[]) => games.map((game) => game.id);
@@ -17,6 +17,13 @@ describe('GAMES', () => {
 		expect(gameTitle(id)).not.toBe(id);
 		expect(gameTitle(id).trim()).not.toBe('');
 		expect(gameDescription(id).trim()).not.toBe('');
+	});
+
+	it.each(GAMES.map((game) => game.id))('says how to play %s as a whole sentence', (id) => {
+		const label = gamePlayLabel(id);
+		expect(label.trim()).not.toBe('');
+		// French contracts « à le » into « au » and « à les » into « aux »: a title pasted after « à » breaks.
+		expect(label).not.toMatch(/à (le|les) |à (Le|La|Les|L')/u);
 	});
 
 	it('loads every game on demand, without loading any now', () => {

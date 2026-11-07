@@ -36,7 +36,7 @@
 				<span class="picture" aria-hidden="true">
 					<GamePicture gameId={game.value} />
 				</span>
-				<span class="title">{m.play_game_play({ game: game.title })}</span>
+				<span class="title">{game.playLabel}</span>
 			</button>
 		</li>
 	{/each}
