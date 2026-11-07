@@ -142,10 +142,6 @@ function groupLabel(page: Page): Locator {
 	return page.locator('.target-text > .dd-visually-hidden').first();
 }
 
-function gameTitle(gameId: string): string {
-	return message(`game_${gameId}_title`);
-}
-
 /** The name of the picture of the progress of a game, with the total of groups captured. */
 function progressPattern(gameId: string, done: number): RegExp {
 	const text = plural(`game_${gameId}_progress`, done, {
@@ -295,7 +291,7 @@ async function resultToMap(page: Page, next: Locator = heading(page, message('pl
 
 /** The picture of a game on the lesson screen: it starts the lesson with that game. */
 function playButton(page: Page, gameId: string): Locator {
-	return button(page, message('play_game_play', { game: gameTitle(gameId) }));
+	return button(page, message(`game_${gameId}_play`));
 }
 
 /** The game the lesson screen proposes: the first and biggest picture, focused. */
