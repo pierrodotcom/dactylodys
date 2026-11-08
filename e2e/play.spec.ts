@@ -1390,7 +1390,11 @@ test.describe('play route', () => {
 			const progress = saved.progress.chars[char];
 			expect(progress?.attempts).toBe(OLD_KEYSTROKES + asked);
 			expect(progress?.errors).toBe(OLD_KEYSTROKES);
-			expect(progress?.recent.at(-1)).toEqual({ attempts: asked, errors: 0 });
+			expect(progress?.recent.at(-1)).toEqual({
+				attempts: asked,
+				errors: 0,
+				latencyMs: expect.any(Number)
+			});
 			expect(recentCharStats(saved.progress, char).attempts).toBeLessThan(OLD_KEYSTROKES + asked);
 		}
 		expect(saved.progress.lessons[FIRST.id]?.stars).toBe(PASSED_STARS);
