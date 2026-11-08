@@ -14,6 +14,34 @@ function progressBeforeVersion3(progress: ProgressState): Record<string, unknown
 	};
 }
 
+/** The progress as versions 3 to 7 stored it: recent plays without the time before a right keystroke. */
+function progressBeforeVersion8(progress: ProgressState): Record<string, unknown> {
+	return {
+		lessons: structuredClone(progress.lessons),
+		chars: Object.fromEntries(
+			Object.entries(progress.chars).map(([char, stats]) => [
+				char,
+				{
+					attempts: stats.attempts,
+					errors: stats.errors,
+					recent: stats.recent.map(({ attempts, errors }) => ({ attempts, errors }))
+				}
+			])
+		)
+	};
+}
+
+/** What a profile becomes once its times are lost, as in a migration to version 8. */
+export function withUnknownLatency(profile: Profile): Profile {
+	const chars = Object.fromEntries(
+		Object.entries(profile.progress.chars).map(([char, stats]) => [
+			char,
+			{ ...stats, recent: stats.recent.map((sample) => ({ ...sample, latencyMs: null })) }
+		])
+	);
+	return { ...profile, progress: { ...profile.progress, chars } };
+}
+
 /**
  * The record version 1 of the app stored for this profile. The fields are listed one by one so
  * that this stays the format of that time whatever is added to `Profile` later.
@@ -91,7 +119,7 @@ export function asVersion3(profile: Profile): Record<string, unknown> {
 			textSpacing: settings.textSpacing,
 			showKeyboard: settings.showKeyboard
 		},
-		progress: structuredClone(profile.progress),
+		progress: progressBeforeVersion8(profile.progress),
 		companion: {
 			name: companion.name,
 			colorId: companion.colorId,
@@ -124,9 +152,14 @@ export const EMPTY_JOURNAL = {
 	openedWorldIds: []
 } as const satisfies Partial<Profile>;
 
-/** The record version 6 of the app stored: the same profile without the journal. */
+/** The record version 7 of the app stored: the same profile without the times of the recent plays. */
+export function asVersion7(profile: Profile): Record<string, unknown> {
+	return { ...profile, schemaVersion: 7, progress: progressBeforeVersion8(profile.progress) };
+}
+
+/** The record version 6 of the app stored: version 7 without the journal. */
 export function asVersion6(profile: Profile): Record<string, unknown> {
-	const stored: Record<string, unknown> = { ...profile, schemaVersion: 6 };
+	const stored: Record<string, unknown> = { ...asVersion7(profile), schemaVersion: 6 };
 	for (const key of Object.keys(EMPTY_JOURNAL)) delete stored[key];
 	return stored;
 }

@@ -36,7 +36,9 @@ export function describeProfileStoreContract(
 			const store = await createStore();
 			const profile = withProgress(updateSettings(profileAt('a', 10), { theme: 'dark' }), {
 				lessons: { 'fr.lesson.x': { bestAccuracy: 92.5, stars: 2, attempts: 4, lastPlayedAt: 99 } },
-				chars: { é: { attempts: 3, errors: 1, recent: [{ attempts: 3, errors: 1 }] } }
+				chars: {
+					é: { attempts: 3, errors: 1, recent: [{ attempts: 3, errors: 1, latencyMs: null }] }
+				}
 			});
 			await store.save(profile);
 			expect(await store.get('a')).toEqual(profile);
@@ -118,7 +120,9 @@ export function describeProfileStoreContract(
 		it('opens a record of the second version with its stars and its totals per character', async () => {
 			const profile = withProgress(profileAt('a', 10), {
 				lessons: { 'fr.lesson.x': { bestAccuracy: 92.5, stars: 2, attempts: 4, lastPlayedAt: 99 } },
-				chars: { é: { attempts: 3, errors: 1, recent: [{ attempts: 3, errors: 1 }] } }
+				chars: {
+					é: { attempts: 3, errors: 1, recent: [{ attempts: 3, errors: 1, latencyMs: null }] }
+				}
 			});
 			const store = await createStore([asVersion2(profile)]);
 			expect(await store.get('a')).toEqual(profile);

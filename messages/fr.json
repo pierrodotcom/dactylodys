@@ -628,6 +628,8 @@
 	"adult_keys_fragile": "Fragiles : {keys}",
 	"adult_keys_learning": "Pas encore assez tapées : {keys}",
 	"adult_keys_none": "aucune",
+	"adult_keys_hesitant": "Justes mais longues à trouver : {keys}. Comparées à ses autres touches, pas à une vitesse à atteindre.",
+	"adult_keys_hesitant_none": "Justes mais longues à trouver : aucune pour l'instant. Comparées à ses autres touches, pas à une vitesse à atteindre.",
 	"adult_keyboard_failed": "Le clavier n'a pas pu être affiché.",
 	"adult_evolution_title": "Évolution",
 	"adult_evolution_empty": "{name} n'a encore fini aucune séance : l'évolution s'affichera après la première.",

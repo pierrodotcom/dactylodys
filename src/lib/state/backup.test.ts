@@ -12,14 +12,14 @@ import {
 } from './backup';
 import { withSessionRecorded } from './journal';
 import { JOURNAL_RULES } from './journal-rules';
-import { createProfile, PROFILE_SCHEMA_VERSION, renameProfile } from './profile';
+import { createProfile, PROFILE_SCHEMA_VERSION, renameProfile, withProgress } from './profile';
 import {
 	profileArb,
 	realisticInstantArb,
 	sessionRecordArb,
 	utcOffsetArb
 } from './test-arbitraries';
-import { asVersion1, asVersion4 } from './test-support';
+import { asVersion1, asVersion4, asVersion7, withUnknownLatency } from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
@@ -261,6 +261,25 @@ describe('planImport', () => {
 	it('brings the profiles of an older version to the current one', () => {
 		const text = backupOf({ profiles: [asVersion1(LEA), asVersion4(NOE)] });
 		expect(ready(planImport(text, [])).importable).toEqual([LEA, NOE]);
+	});
+
+	it('keeps the time of the recent plays, and reads a version 7 profile without it', () => {
+		const timed = withProgress(LEA, {
+			lessons: {},
+			chars: {
+				f: {
+					attempts: 12,
+					errors: 2,
+					recent: [
+						{ attempts: 8, errors: 2, latencyMs: 640.5 },
+						{ attempts: 4, errors: 0, latencyMs: null }
+					]
+				}
+			}
+		});
+		expect(ready(planImport(exportBackup([timed], EXPORTED_AT), [])).importable).toEqual([timed]);
+		const old = backupOf({ profiles: [asVersion7(timed)] });
+		expect(ready(planImport(old, [])).importable).toEqual([withUnknownLatency(timed)]);
 	});
 
 	it('sets apart the children already on the device, with the profile each one would replace', () => {

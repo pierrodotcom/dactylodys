@@ -134,7 +134,7 @@ La session principale est **chef d'orchestre** : elle découpe, délègue, véri
 
 - Un lot parallèle = un worktree = une branche. Deux agents ne modifient jamais les mêmes fichiers ; les contrats partagés (types d'`engine/`, schémas JSON) sont figés **avant** de paralléliser.
 - **Une copie de travail ne survit jamais à sa PR** : à la fin de chaque lot, après la fusion, le chef d'orchestre lance `npm run clean:worktrees -- --apply` (il ne retire que les copies sans modification en cours dont le travail est déjà fusionné ; branches et commits restent). Chaque copie pèse environ 400 Mo : 17 oubliées ont rempli 6,6 Go (L-092).
-- Chaque ordre de mission contient : objectif, fichiers autorisés, contrat d'interface, tests attendus, ce qui est déjà décidé, format de retour (≤ 15 lignes : fait / non fait / résultat de `verify` / leçons).
+- Chaque ordre de mission contient : objectif, fichiers autorisés, contrat d'interface, tests attendus, ce qui est déjà décidé, format de retour (≤ 15 lignes : fait / non fait / résultat de `verify` / leçons). Il commence par : « dans une copie de travail neuve, `npm ci` d'abord » (sans `node_modules`, Paraglide casse `check` : L-098, deux fois).
 - Le résultat d'un agent est vérifié (diff + `verify`) avant fusion ; son compte rendu n'est pas une preuve.
 - Un champ obligatoire ajouté à un type partagé casse les autres lots en cours : après chaque fusion, fusionner `main` dans les branches encore ouvertes et relancer `npm run check` avant de les fusionner (L-035, L-042).
 - Seul le chef d'orchestre modifie `CLAUDE.md`, `.claude/` et `docs/DECISIONS.md`.

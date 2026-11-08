@@ -61,7 +61,7 @@ describe('recordLessonOutcome', () => {
 		expect(recorded.profile.progress.chars['f']).toEqual({
 			attempts: 10,
 			errors: 0,
-			recent: [{ attempts: 10, errors: 0 }]
+			recent: [{ attempts: 10, errors: 0, latencyMs: 300 }]
 		});
 	});
 
@@ -76,8 +76,8 @@ describe('recordLessonOutcome', () => {
 			attempts: 30,
 			errors: 0,
 			recent: [
-				{ attempts: 10, errors: 0 },
-				{ attempts: 10, errors: 0 }
+				{ attempts: 10, errors: 0, latencyMs: 300 },
+				{ attempts: 10, errors: 0, latencyMs: 300 }
 			]
 		});
 	});

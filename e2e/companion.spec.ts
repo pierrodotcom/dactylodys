@@ -181,7 +181,7 @@ function profileWithFragileKey(name: string): Profile {
 	const passed = profileWithNecklace(name);
 	return withProgress(passed, {
 		...passed.progress,
-		chars: { [FRAGILE_KEY]: { ...FRAGILE, recent: [FRAGILE] } }
+		chars: { [FRAGILE_KEY]: { ...FRAGILE, recent: [{ ...FRAGILE, latencyMs: null }] } }
 	});
 }
 

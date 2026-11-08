@@ -21,7 +21,9 @@ import {
 	asVersion4,
 	asVersion5,
 	asVersion6,
-	EMPTY_JOURNAL
+	asVersion7,
+	EMPTY_JOURNAL,
+	withUnknownLatency
 } from './test-support';
 import type { Profile } from './types';
 
@@ -42,7 +44,9 @@ function playedProfile(): Profile {
 	const tuned = updateSettings(markCalibrated(created), { soundEnabled: false, theme: 'dark' });
 	return withProgress(tuned, {
 		lessons: { 'fr.lesson.x': { bestAccuracy: 96.5, stars: 2, attempts: 3, lastPlayedAt: 5 } },
-		chars: { f: { attempts: 20, errors: 2, recent: [{ attempts: 20, errors: 2 }] } }
+		chars: {
+			f: { attempts: 20, errors: 2, recent: [{ attempts: 20, errors: 2, latencyMs: null }] }
+		}
 	});
 }
 
@@ -133,11 +137,11 @@ function profileOfVersion2(): Profile {
 	const played = withProgress(tuned, {
 		lessons: STORED_BY_VERSION_2.progress.lessons as ProgressState['lessons'],
 		chars: {
-			f: { attempts: 20, errors: 2, recent: [{ attempts: 20, errors: 2 }] },
+			f: { attempts: 20, errors: 2, recent: [{ attempts: 20, errors: 2, latencyMs: null }] },
 			j: { attempts: 0, errors: 0, recent: [] },
-			e: { attempts: 100, errors: 7, recent: [{ attempts: 30, errors: 2 }] },
-			ù: { attempts: 90, errors: 89, recent: [{ attempts: 30, errors: 30 }] },
-			q: { attempts: 5, errors: 9, recent: [{ attempts: 5, errors: 5 }] }
+			e: { attempts: 100, errors: 7, recent: [{ attempts: 30, errors: 2, latencyMs: null }] },
+			ù: { attempts: 90, errors: 89, recent: [{ attempts: 30, errors: 30, latencyMs: null }] },
+			q: { attempts: 5, errors: 9, recent: [{ attempts: 5, errors: 5, latencyMs: null }] }
 		}
 	});
 	const dressed = withCompanion(played, STORED_BY_VERSION_2.companion);
@@ -183,7 +187,7 @@ function migratedChar({ attempts, errors }: Pick<CharProgress, 'attempts' | 'err
 	if (attempts === 0) return { attempts, errors, recent: [] };
 	const kept = Math.min(attempts, WINDOW_AT_VERSION_3);
 	const scaled = Math.min(kept, Math.round((errors * kept) / attempts));
-	return { attempts, errors, recent: [{ attempts: kept, errors: scaled }] };
+	return { attempts, errors, recent: [{ attempts: kept, errors: scaled, latencyMs: null }] };
 }
 
 function migratedProgress(progress: ProgressState): ProgressState {
@@ -232,7 +236,13 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 7,
+			schemaVersion: 8,
+			progress: {
+				...STORED_BY_VERSION_4.progress,
+				chars: {
+					f: { attempts: 40, errors: 9, recent: [{ attempts: 30, errors: 6, latencyMs: null }] }
+				}
+			},
 			earnedRewardIds: [],
 			helpQuest: null,
 			gamePlays: {},
@@ -283,7 +293,7 @@ describe('migrateProfile', () => {
 		expect(parseProfile(migrateProfile(stored)).progress.chars['f']).toEqual({
 			attempts,
 			errors,
-			recent
+			recent: recent.map((sample) => ({ ...sample, latencyMs: null }))
 		});
 	});
 
@@ -300,13 +310,24 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 7,
+			schemaVersion: 8,
+			progress: {
+				...STORED_BY_VERSION_4.progress,
+				chars: {
+					f: { attempts: 40, errors: 9, recent: [{ attempts: 30, errors: 6, latencyMs: 250 }] }
+				}
+			},
 			earnedRewardIds: [],
 			helpQuest: null,
 			gamePlays: {},
 			...EMPTY_JOURNAL
 		});
 		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
+		expect(asVersion7(profileOfVersion4)).toEqual({
+			...profileOfVersion4,
+			schemaVersion: 7,
+			progress: STORED_BY_VERSION_4.progress
+		});
 	});
 
 	it('keeps the id, the name, the date, the settings, the lessons and the totals of any version 1 profile', () => {
@@ -358,7 +379,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion3(profile))));
 				expect(migrated).toEqual({
-					...profile,
+					...withUnknownLatency(profile),
 					settings: { ...profile.settings, handGuide: 'auto' },
 					earnedRewardIds: [],
 					helpQuest: null,
@@ -373,7 +394,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion4(profile))));
 				expect(migrated).toEqual({
-					...profile,
+					...withUnknownLatency(profile),
 					earnedRewardIds: [],
 					helpQuest: null,
 					...EMPTY_JOURNAL
@@ -386,7 +407,11 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion5(profile))));
-				expect(migrated).toEqual({ ...profile, gamePlays: {}, ...EMPTY_JOURNAL });
+				expect(migrated).toEqual({
+					...withUnknownLatency(profile),
+					gamePlays: {},
+					...EMPTY_JOURNAL
+				});
 			})
 		);
 	});
@@ -395,7 +420,7 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion6(profile))));
-				expect(migrated).toEqual({ ...profile, ...EMPTY_JOURNAL });
+				expect(migrated).toEqual({ ...withUnknownLatency(profile), ...EMPTY_JOURNAL });
 			})
 		);
 	});
@@ -432,6 +457,62 @@ describe('migrateProfile', () => {
 		);
 	});
 
+	it('says that no play of a version 7 profile kept its time, and changes nothing else', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion7(profile))));
+				expect(migrated).toEqual(withUnknownLatency(profile));
+			})
+		);
+	});
+
+	it('gives a time of null to every recent play of a version 7 record', () => {
+		const stored = {
+			...asVersion7(parseProfile(migrateProfile(STORED_BY_VERSION_4))),
+			progress: {
+				lessons: {},
+				chars: {
+					f: {
+						attempts: 50,
+						errors: 6,
+						recent: [
+							{ attempts: 30, errors: 6 },
+							{ attempts: 20, errors: 0 }
+						]
+					},
+					j: { attempts: 0, errors: 0, recent: [] }
+				}
+			}
+		};
+		const migrated = parseProfile(migrateProfile(stored));
+		expect(migrated.schemaVersion).toBe(8);
+		expect(migrated.progress.chars).toEqual({
+			f: {
+				attempts: 50,
+				errors: 6,
+				recent: [
+					{ attempts: 30, errors: 6, latencyMs: null },
+					{ attempts: 20, errors: 0, latencyMs: null }
+				]
+			},
+			j: { attempts: 0, errors: 0, recent: [] }
+		});
+	});
+
+	it('passes on a damaged version 7 progress for the parser to refuse', () => {
+		const current = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+		for (const progress of [
+			null,
+			{ lessons: {}, chars: null },
+			{ lessons: {}, chars: { f: 3 } },
+			{ lessons: {}, chars: { f: { attempts: 1, errors: 0, recent: 'x' } } },
+			{ lessons: {}, chars: { f: { attempts: 1, errors: 0, recent: [7] } } }
+		]) {
+			const stored = { ...asVersion7(current), progress };
+			expect(readProfile(stored).ok).toBe(false);
+		}
+	});
+
 	it('leaves a profile of the current version as it is', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
@@ -451,7 +532,8 @@ describe('migrateProfile', () => {
 					asVersion3(profile),
 					asVersion4(profile),
 					asVersion5(profile),
-					asVersion6(profile)
+					asVersion6(profile),
+					asVersion7(profile)
 				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);
