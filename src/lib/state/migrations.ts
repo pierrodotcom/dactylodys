@@ -110,6 +110,37 @@ function toVersion7(record: StoredRecord): StoredRecord {
 	};
 }
 
+/*
+ * Version 8: the time before the right keystrokes of a play was not kept until then; every sample
+ * already stored says it is unknown.
+ */
+function withUnknownLatency(totals: unknown): unknown {
+	if (!isRecord(totals)) return totals;
+	const recent = totals['recent'];
+	if (!Array.isArray(recent)) return totals;
+	return {
+		...totals,
+		recent: recent.map((sample: unknown) =>
+			isRecord(sample) ? { latencyMs: null, ...sample } : sample
+		)
+	};
+}
+
+function toVersion8(record: StoredRecord): StoredRecord {
+	const progress = record['progress'];
+	const chars = isRecord(progress) ? progress['chars'] : undefined;
+	if (!isRecord(progress) || !isRecord(chars)) return { ...record, schemaVersion: 8 };
+	const withLatency = Object.entries(chars).map(([char, totals]) => [
+		char,
+		withUnknownLatency(totals)
+	]);
+	return {
+		...record,
+		progress: { ...progress, chars: Object.fromEntries(withLatency) },
+		schemaVersion: 8
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -117,7 +148,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[3, toVersion4],
 	[4, toVersion5],
 	[5, toVersion6],
-	[6, toVersion7]
+	[6, toVersion7],
+	[7, toVersion8]
 ]);
 
 function versionOf(record: StoredRecord): number {

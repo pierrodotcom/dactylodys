@@ -72,6 +72,7 @@
 			progress={profile.progress}
 			settings={profile.settings}
 			rules={rules.mastery}
+			hesitation={rules.hesitation}
 			{format}
 		/>
 		<ChildEvolution

@@ -55,7 +55,7 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 7;
+export const PROFILE_SCHEMA_VERSION = 8;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -124,7 +124,11 @@ const CHAR_PROGRESS_KEYS = [
 	'errors',
 	'recent'
 ] as const satisfies readonly (keyof CharProgress)[];
-const CHAR_SAMPLE_KEYS = ['attempts', 'errors'] as const satisfies readonly (keyof CharSample)[];
+const CHAR_SAMPLE_KEYS = [
+	'attempts',
+	'errors',
+	'latencyMs'
+] as const satisfies readonly (keyof CharSample)[];
 const COMPANION_KEYS = [
 	'name',
 	'colorId',
@@ -398,7 +402,14 @@ function parseCharSample(data: unknown, path: string): CharSample {
 	if (attempts < 1) fail(`${path}.attempts`, 'expected at least 1');
 	const errors = expectCount(record['errors'], `${path}.errors`);
 	if (errors > attempts) fail(`${path}.errors`, `expected at most ${attempts}`);
-	return { attempts, errors };
+	const latencyMs = record['latencyMs'];
+	if (
+		latencyMs !== null &&
+		(typeof latencyMs !== 'number' || !Number.isFinite(latencyMs) || latencyMs < 0)
+	) {
+		fail(`${path}.latencyMs`, 'expected a finite number of at least 0, or null');
+	}
+	return { attempts, errors, latencyMs };
 }
 
 function parseCharProgress(data: unknown, path: string): CharProgress {

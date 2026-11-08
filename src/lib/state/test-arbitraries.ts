@@ -44,9 +44,23 @@ const starsArb = fc.constantFrom<StarCount>(0, 1, 2, 3);
 const accuracyArb = fc.integer({ min: 0, max: 1000 }).map((tenths) => tenths / 10);
 const identifierArb = fc.string({ minLength: 1, maxLength: 12 });
 
+/* Quarters of a millisecond: not only whole numbers, and never `-0`, which JSON turns into `0`. */
+const latencyArb = fc.option(
+	fc.nat({ max: 20_000 }).map((quarters) => quarters / 4),
+	{ nil: null }
+);
+
 const charSampleArb: fc.Arbitrary<CharSample> = fc
-	.record({ attempts: fc.integer({ min: 1, max: 200 }), errors: fc.nat({ max: 200 }) })
-	.map(({ attempts, errors }) => ({ attempts, errors: Math.min(attempts, errors) }));
+	.record({
+		attempts: fc.integer({ min: 1, max: 200 }),
+		errors: fc.nat({ max: 200 }),
+		latencyMs: latencyArb
+	})
+	.map(({ attempts, errors, latencyMs }) => ({
+		attempts,
+		errors: Math.min(attempts, errors),
+		latencyMs
+	}));
 
 export const progressArb: fc.Arbitrary<ProgressState> = fc.record({
 	lessons: fc.dictionary(

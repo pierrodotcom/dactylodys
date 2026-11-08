@@ -33,8 +33,8 @@ const SAMPLE_PROGRESS: ProgressState = {
 			attempts: 20,
 			errors: 2,
 			recent: [
-				{ attempts: 12, errors: 2 },
-				{ attempts: 8, errors: 0 }
+				{ attempts: 12, errors: 2, latencyMs: null },
+				{ attempts: 8, errors: 0, latencyMs: null }
 			]
 		}
 	}
@@ -42,8 +42,8 @@ const SAMPLE_PROGRESS: ProgressState = {
 
 const RECENT = ['progress', 'chars', 'f', 'recent'] as const;
 
-function sample(attempts: number, errors: number) {
-	return { attempts, errors };
+function sample(attempts: number, errors: number, latencyMs: unknown = null) {
+	return { attempts, errors, latencyMs };
 }
 
 const SAMPLE_GHOST: GhostRun = {
@@ -144,7 +144,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 7,
+			schemaVersion: 8,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -448,8 +448,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 6, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 8, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 7, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 9, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -501,6 +501,16 @@ describe('parseProfile', () => {
 			/recent\[1\]\.errors/
 		],
 		['a recent play without errors', [...RECENT], [{ attempts: 3 }], /recent\[0\]\.errors/],
+		[
+			'a recent play without its time',
+			[...RECENT],
+			[{ attempts: 3, errors: 0 }],
+			/recent\[0\]\.latencyMs/
+		],
+		['a negative time', [...RECENT], [sample(3, 0, -1)], /recent\[0\]\.latencyMs/],
+		['an endless time', [...RECENT], [sample(3, 0, Infinity)], /recent\[0\]\.latencyMs/],
+		['a time that is not a number', [...RECENT], [sample(3, 0, '300')], /recent\[0\]\.latencyMs/],
+		['a time that is not a number at all', [...RECENT], [sample(3, 0, Number.NaN)], /latencyMs/],
 		[
 			'a recent play with an unknown property',
 			[...RECENT],
@@ -608,6 +618,11 @@ describe('parseProfile', () => {
 		expect(parseProfile(mutate([...RECENT], [])).progress.chars['f']?.recent).toEqual([]);
 		const wrong = [sample(5, 5)];
 		expect(parseProfile(mutate([...RECENT], wrong)).progress.chars['f']?.recent).toEqual(wrong);
+	});
+
+	it('accepts a time of 0, a fractional time and no time at all', () => {
+		const plays = [sample(3, 0, 0), sample(5, 1, 412.75), sample(2, 2, null)];
+		expect(parseProfile(mutate([...RECENT], plays)).progress.chars['f']?.recent).toEqual(plays);
 	});
 
 	it('returns recent plays that do not share anything with the data', () => {
