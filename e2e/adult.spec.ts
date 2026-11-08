@@ -252,6 +252,9 @@ test.describe('adult space', () => {
 
 		await page.keyboard.press('Escape');
 		await openReport(page, ali);
+		await expect(
+			heading(page, message('adult_child_title_elided', { name: ali.name }))
+		).toBeVisible();
 		await expect(page.locator('[data-evolution-empty]')).toHaveText(
 			message('adult_evolution_empty', { name: ali.name })
 		);
