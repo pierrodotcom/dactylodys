@@ -12,6 +12,7 @@
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { downloadTextFile } from '$lib/ui/download';
+	import { isElidedBefore } from '$lib/ui/elision';
 	import { progressionFor } from '../jouer/content';
 	import { FREE_PRACTICE_RULES } from '../jouer/free-practice';
 	import { forgetLastPlayerId } from '../jouer/last-player';
@@ -242,11 +243,16 @@
 		/>
 	{:else if view.name === 'settings' && shown}
 		{@const child = shown}
+		{@const elided = isElidedBefore(child.name)}
 		<SettingsPanel
 			settings={child.settings}
 			saveState={settingsSave}
-			title={m.adult_settings_title({ name: child.name })}
-			backLabel={m.adult_settings_back({ name: child.name })}
+			title={elided
+				? m.adult_settings_title_elided({ name: child.name })
+				: m.adult_settings_title({ name: child.name })}
+			backLabel={elided
+				? m.adult_settings_back_elided({ name: child.name })
+				: m.adult_settings_back({ name: child.name })}
 			onchange={(patch) => changeSettings(child, patch)}
 			onback={() => show({ name: 'child', id: child.id })}
 		/>

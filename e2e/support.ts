@@ -81,8 +81,16 @@ type MessageParams = Record<string, string | number>;
 export function loadMessages() {
 	const messages = readJson<Record<string, string>>('messages/fr.json');
 
+	/** Like the app, picks the `_elided` variant before a name such as « Ali » (« Bilan d'Ali »). */
 	function message(key: string, params: MessageParams = {}): string {
-		const template = messages[key] ?? key;
+		const elided = messages[`${key}_elided`];
+		const initial = String(params.name ?? '')
+			.charAt(0)
+			.toLocaleLowerCase('fr');
+		const template =
+			elided !== undefined && initial !== '' && messages.ui_elision_initials?.includes(initial)
+				? elided
+				: (messages[key] ?? key);
 		return template.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? ''));
 	}
 

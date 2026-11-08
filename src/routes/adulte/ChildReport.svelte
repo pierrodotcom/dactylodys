@@ -4,6 +4,7 @@
 	import type { Profile } from '$lib/state/types';
 	import Button from '$lib/ui/components/Button.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
+	import { isElidedBefore } from '$lib/ui/elision';
 	import type { FreePracticeRules } from '../jouer/free-practice';
 	import type { AdultRules } from './adult-rules';
 	import ChildEvolution from './ChildEvolution.svelte';
@@ -53,11 +54,15 @@
 		onback
 	}: Props = $props();
 
+	const elided = $derived(isElidedBefore(profile.name));
+
 	const handwriting = $derived(latestHandwriting(profile.handwritingSamples));
 </script>
 
 <ScreenFrame
-	title={m.adult_child_title({ name: profile.name })}
+	title={elided
+		? m.adult_child_title_elided({ name: profile.name })
+		: m.adult_child_title({ name: profile.name })}
 	wide
 	back={{ label: m.adult_back_to_list(), onclick: onback }}
 >
@@ -86,7 +91,9 @@
 			<h2 id="child-settings-title">{m.settings_title()}</h2>
 			<p>{m.adult_settings_note({ name: profile.name })}</p>
 			<Button variant="secondary" onclick={onsettings} data-child-settings>
-				{m.adult_settings_open({ name: profile.name })}
+				{elided
+					? m.adult_settings_open_elided({ name: profile.name })
+					: m.adult_settings_open({ name: profile.name })}
 			</Button>
 		</section>
 		<section class="files" aria-labelledby="child-files-title">
@@ -94,7 +101,9 @@
 			<p>{m.adult_measures_note()}</p>
 			<div class="actions">
 				<Button variant="secondary" onclick={onmeasures} data-measures-child>
-					{m.adult_measures_child({ name: profile.name })}
+					{elided
+						? m.adult_measures_child_elided({ name: profile.name })
+						: m.adult_measures_child({ name: profile.name })}
 				</Button>
 				<Button variant="secondary" onclick={onbackup} data-backup-child>
 					{m.adult_backup_child({ name: profile.name })}

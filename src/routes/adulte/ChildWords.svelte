@@ -6,6 +6,7 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import type { Profile } from '$lib/state/types';
 	import Button from '$lib/ui/components/Button.svelte';
+	import { isElidedBefore } from '$lib/ui/elision';
 	import { isOne } from '$lib/ui/plural';
 	import type { FreePracticeRules } from '../jouer/free-practice';
 	import type { Formatters } from './format';
@@ -19,6 +20,8 @@
 	}
 
 	let { profile, rules, format, onsave }: Props = $props();
+
+	const elided = $derived(isElidedBefore(profile.name));
 
 	let index = $state.raw<CharIndex | null>(null);
 	let keyboardFailed = $state(false);
@@ -94,7 +97,11 @@
 	</p>
 
 	{#if keyboardFailed}
-		<p class="problem" role="alert">{m.adult_words_keyboard_failed({ name: profile.name })}</p>
+		<p class="problem" role="alert">
+			{elided
+				? m.adult_words_keyboard_failed_elided({ name: profile.name })
+				: m.adult_words_keyboard_failed({ name: profile.name })}
+		</p>
 	{:else}
 		<form class="form" onsubmit={save}>
 			<label class="field">
@@ -131,7 +138,11 @@
 			<p data-words-status>{status}</p>
 		{/if}
 		{#if reading && reading.unproducible.length > 0}
-			<p data-words-refused>{m.adult_words_refused({ name: profile.name, words: refused })}</p>
+			<p data-words-refused>
+				{elided
+					? m.adult_words_refused_elided({ name: profile.name, words: refused })
+					: m.adult_words_refused({ name: profile.name, words: refused })}
+			</p>
 		{/if}
 		{#if reading && reading.tooLong.length > 0}
 			<p data-words-too-long>
