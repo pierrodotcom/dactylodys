@@ -7,17 +7,19 @@
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
 	import { loadKeyboardAssets, type KeyboardAssets } from '../jouer/assets';
 	import { keyLabel } from '../jouer/companion';
+	import type { HesitationRules } from './adult-rules';
 	import type { Formatters } from './format';
-	import { keyMasteries } from './report';
+	import { hesitantKeys, keyMasteries } from './report';
 
 	interface Props {
 		progress: ProgressState;
 		settings: Settings;
 		rules: MasteryRules;
+		hesitation: HesitationRules;
 		format: Formatters;
 	}
 
-	let { progress, settings, rules, format }: Props = $props();
+	let { progress, settings, rules, hesitation, format }: Props = $props();
 
 	let assets = $state.raw<KeyboardAssets | null>(null);
 	let failed = $state(false);
@@ -42,6 +44,9 @@
 	const collator = new Intl.Collator(locale);
 	const groups = $derived(masteryGroups(progress, rules, collator.compare));
 	const keys = $derived(assets ? keyMasteries(progress, assets.charIndex, rules) : new Map());
+	const hesitant = $derived(
+		assets ? hesitantKeys(progress, assets.charIndex, rules, hesitation, collator.compare) : []
+	);
 
 	function written(chars: readonly string[]): string {
 		if (chars.length === 0) return m.adult_keys_none();
@@ -78,6 +83,13 @@
 		<li data-keys="acquired">{m.adult_keys_acquired({ keys: written(groups.acquired) })}</li>
 		<li data-keys="fragile">{m.adult_keys_fragile({ keys: written(groups.fragile) })}</li>
 		<li data-keys="learning">{m.adult_keys_learning({ keys: written(groups.learning) })}</li>
+		{#if assets}
+			<li data-keys="hesitant">
+				{hesitant.length === 0
+					? m.adult_keys_hesitant_none()
+					: m.adult_keys_hesitant({ keys: written(hesitant) })}
+			</li>
+		{/if}
 	</ul>
 </section>
 

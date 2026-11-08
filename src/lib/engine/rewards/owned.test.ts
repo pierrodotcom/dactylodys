@@ -144,7 +144,8 @@ describe('properties', () => {
 			fc.integer({ min: 1, max: 30 }).chain((attempts) =>
 				fc.record({
 					attempts: fc.constant(attempts),
-					errors: fc.integer({ min: 0, max: attempts })
+					errors: fc.integer({ min: 0, max: attempts }),
+					latencyMs: fc.constant(null)
 				})
 			),
 			{ maxLength: 4 }

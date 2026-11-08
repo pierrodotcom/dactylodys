@@ -44,8 +44,8 @@ const story = readJson<{ worlds: { worldId: string; opening: string }[] }>(
 ).worlds;
 const FIRST = world?.lessons[0] as { id: string; title: string };
 
-function sample(attempts: number, errors: number): CharProgress {
-	return { attempts, errors, recent: [{ attempts, errors }] };
+function sample(attempts: number, errors: number, latencyMs: number | null = null): CharProgress {
+	return { attempts, errors, recent: [{ attempts, errors, latencyMs }] };
 }
 
 function session(index: number, accuracy: number, correctCharsPerMinute: number): SessionRecord {
@@ -74,6 +74,15 @@ function preparedChild(name: string): Profile {
 		sessions: [session(0, 80, 40), session(1, 90, 50), session(2, 95, 60)],
 		practiceDays: ['2026-10-20', '2026-10-21', '2026-10-22']
 	};
+}
+
+/** A child whose acquired keys are all found in 300 ms, but L, found in 900 ms. */
+function hesitantChild(name: string): Profile {
+	const base = advancedProfile({ name, passed: { [FIRST.id]: 2 } });
+	const steady = Object.fromEntries(
+		['s', 'd', 'f', 'j', 'k'].map((char) => [char, sample(30, 0, 300)])
+	);
+	return { ...base, progress: { ...base.progress, chars: { ...steady, l: sample(30, 0, 900) } } };
 }
 
 const lou = preparedChild('Lou');
@@ -216,6 +225,9 @@ test.describe('adult space', () => {
 		await expect(page.locator('[data-keys="fragile"]')).toHaveText(
 			message('adult_keys_fragile', { keys: 'S' })
 		);
+		await expect(page.locator('[data-keys="hesitant"]')).toHaveText(
+			message('adult_keys_hesitant_none')
+		);
 
 		const evolution = page.locator('[data-child-evolution]');
 		await expect(
@@ -257,6 +269,24 @@ test.describe('adult space', () => {
 		).toBeVisible();
 		await expect(page.locator('[data-evolution-empty]')).toHaveText(
 			message('adult_evolution_empty', { name: ali.name })
+		);
+	});
+
+	test('lists the acquired key the child takes much longer to find than the others', async ({
+		page
+	}) => {
+		const sam = hesitantChild('Sam');
+		await reachPlayers(page, [sam]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, sam);
+
+		await expect(page.locator('[data-keys="hesitant"]')).toHaveText(
+			message('adult_keys_hesitant', { keys: 'L' })
+		);
+		await expect(page.locator('.key[data-code="KeyL"]')).toHaveAttribute(
+			'data-mastery',
+			'acquired'
 		);
 	});
 

@@ -388,7 +388,9 @@ describe('generateExercise', () => {
 		const before = clone(SYNTHETIC);
 		const progress: ProgressState = {
 			lessons: {},
-			chars: { k: { attempts: 4, errors: 2, recent: [{ attempts: 4, errors: 2 }] } }
+			chars: {
+				k: { attempts: 4, errors: 2, recent: [{ attempts: 4, errors: 2, latencyMs: null }] }
+			}
 		};
 		const context = deepFreeze({ ...FULL_CONTEXT, progress: clone(progress) });
 		generate(deepFreeze(clone(SYNTHETIC)), 'fr.lesson.dot', 3, context);
@@ -887,7 +889,10 @@ describe('generateExercise', () => {
 		});
 
 		it('picks words that contain a character the child gets wrong more often', () => {
-			const progress = weak({ k: { attempts: 10, errors: 10 }, d: { attempts: 10, errors: 10 } });
+			const progress = weak({
+				k: { attempts: 10, errors: 10, latencyMs: null },
+				d: { attempts: 10, errors: 10, latencyMs: null }
+			});
 			const withWeak = ['dis'];
 			const runs = 600;
 			const count = (context: ExerciseContext, rules: Record<string, unknown>) => {
@@ -933,7 +938,7 @@ describe('generateExercise', () => {
 				}
 				return share(k, all);
 			};
-			const progress = weak({ k: { attempts: 20, errors: 20 } });
+			const progress = weak({ k: { attempts: 20, errors: 20, latencyMs: null } });
 			const boosted = frequency({ progress }, 2);
 			const plain = frequency({}, 2);
 			expect(plain).toBeGreaterThan(0.1);
@@ -963,11 +968,15 @@ describe('generateExercise', () => {
 			};
 			const tamed: ProgressState = {
 				lessons: {},
-				chars: { k: { attempts: 500, errors: 500, recent: [{ attempts: 30, errors: 0 }] } }
+				chars: {
+					k: { attempts: 500, errors: 500, recent: [{ attempts: 30, errors: 0, latencyMs: null }] }
+				}
 			};
 			const slipping: ProgressState = {
 				lessons: {},
-				chars: { k: { attempts: 500, errors: 0, recent: [{ attempts: 20, errors: 20 }] } }
+				chars: {
+					k: { attempts: 500, errors: 0, recent: [{ attempts: 20, errors: 20, latencyMs: null }] }
+				}
 			};
 			const plain = frequency({});
 			expect(frequency({ progress: tamed })).toBe(plain);
@@ -981,7 +990,7 @@ describe('generateExercise', () => {
 
 		it('treats missing or empty statistics as no error', () => {
 			const progression = SYNTHETIC;
-			const empty = weak({ k: { attempts: 0, errors: 0 } });
+			const empty = weak({ k: { attempts: 0, errors: 0, latencyMs: null } });
 			expect(generate(progression, 'fr.lesson.dk', 9, { progress: empty })).toEqual(
 				generate(progression, 'fr.lesson.dk', 9)
 			);
@@ -1225,7 +1234,7 @@ describe('generateExercise', () => {
 							.slice(0, 4)
 							.map((char) => [
 								char,
-								{ attempts: 5, errors: 3, recent: [{ attempts: 5, errors: 3 }] }
+								{ attempts: 5, errors: 3, recent: [{ attempts: 5, errors: 3, latencyMs: null }] }
 							])
 					)
 				};

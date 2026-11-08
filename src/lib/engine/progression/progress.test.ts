@@ -11,6 +11,7 @@ import {
 	evaluateLesson,
 	isLessonPassed,
 	isLessonUnlocked,
+	recentCharLatency,
 	recentCharStats,
 	recentErrorRate
 } from './progress';
@@ -293,11 +294,28 @@ describe('applyLessonResult', () => {
 			resultOf('fr.lesson.b', 90, {}, { f: stats(5, 2), d: stats(4, 1) })
 		);
 		expect(second.chars['f']?.recent).toEqual([
-			{ attempts: 10, errors: 1 },
-			{ attempts: 5, errors: 2 }
+			{ attempts: 10, errors: 1, latencyMs: null },
+			{ attempts: 5, errors: 2, latencyMs: null }
 		]);
-		expect(second.chars['j']?.recent).toEqual([{ attempts: 8, errors: 0 }]);
-		expect(second.chars['d']?.recent).toEqual([{ attempts: 4, errors: 1 }]);
+		expect(second.chars['j']?.recent).toEqual([{ attempts: 8, errors: 0, latencyMs: null }]);
+		expect(second.chars['d']?.recent).toEqual([{ attempts: 4, errors: 1, latencyMs: null }]);
+	});
+
+	it('keeps in each sample the mean time before the right keystrokes of the play', () => {
+		const played = applyResult(
+			emptyProgress(),
+			resultOf(
+				'fr.lesson.a',
+				90,
+				{},
+				{
+					f: { attempts: 6, errors: 1, meanLatencyMs: 420 },
+					j: { attempts: 3, errors: 3, meanLatencyMs: null }
+				}
+			)
+		);
+		expect(played.chars['f']?.recent).toEqual([{ attempts: 6, errors: 1, latencyMs: 420 }]);
+		expect(played.chars['j']?.recent).toEqual([{ attempts: 3, errors: 3, latencyMs: null }]);
 	});
 
 	it('adds no sample for a character that was not typed', () => {
@@ -308,7 +326,7 @@ describe('applyLessonResult', () => {
 		expect(again.chars['f']).toEqual({
 			attempts: 6,
 			errors: 1,
-			recent: [{ attempts: 6, errors: 1 }]
+			recent: [{ attempts: 6, errors: 1, latencyMs: null }]
 		});
 	});
 
@@ -336,8 +354,8 @@ describe('applyLessonResult', () => {
 			attempts: 47,
 			errors: 12,
 			recent: [
-				{ attempts: 20, errors: 0 },
-				{ attempts: 15, errors: 0 }
+				{ attempts: 20, errors: 0, latencyMs: null },
+				{ attempts: 15, errors: 0, latencyMs: null }
 			]
 		});
 	});
@@ -348,7 +366,7 @@ describe('applyLessonResult', () => {
 			resultOf('fr.lesson.a', 90, {}, { f: stats(10, 9) })
 		);
 		const second = applyResult(first, resultOf('fr.lesson.a', 90, {}, { f: stats(30, 3) }));
-		expect(second.chars['f']?.recent).toEqual([{ attempts: 30, errors: 3 }]);
+		expect(second.chars['f']?.recent).toEqual([{ attempts: 30, errors: 3, latencyMs: null }]);
 	});
 
 	it('reads the window from the rules, not from a constant', () => {
@@ -439,7 +457,10 @@ describe('recent results per character', () => {
 
 					const candidates =
 						play.attempts > 0
-							? [...before, { attempts: play.attempts, errors: play.errors }]
+							? [
+									...before,
+									{ attempts: play.attempts, errors: play.errors, latencyMs: play.meanLatencyMs }
+								]
 							: before;
 					expect(after).toEqual(candidates.slice(candidates.length - after.length));
 					if (play.attempts > 0) expect(after.length).toBeGreaterThan(0);
@@ -563,8 +584,8 @@ describe('recentCharStats and recentErrorRate', () => {
 				attempts: 100,
 				errors: 60,
 				recent: [
-					{ attempts: 10, errors: 2 },
-					{ attempts: 30, errors: 0 }
+					{ attempts: 10, errors: 2, latencyMs: null },
+					{ attempts: 30, errors: 0, latencyMs: null }
 				]
 			},
 			j: { attempts: 0, errors: 0, recent: [] }
@@ -587,7 +608,9 @@ describe('recentCharStats and recentErrorRate', () => {
 	it('gives a rate of 1 when every recent keystroke was wrong', () => {
 		const wrong: ProgressState = {
 			lessons: {},
-			chars: { f: { attempts: 50, errors: 5, recent: [{ attempts: 5, errors: 5 }] } }
+			chars: {
+				f: { attempts: 50, errors: 5, recent: [{ attempts: 5, errors: 5, latencyMs: null }] }
+			}
 		};
 		expect(recentErrorRate(wrong, 'f')).toBe(1);
 	});
@@ -606,6 +629,85 @@ describe('recentCharStats and recentErrorRate', () => {
 				expect(rate).toBeLessThanOrEqual(1);
 				expect(rate).toBe(recent.attempts === 0 ? 0 : recent.errors / recent.attempts);
 				expect(recent.attempts).toBe(total(state.chars['f']?.recent ?? []));
+			})
+		);
+	});
+});
+
+describe('recentCharLatency', () => {
+	function progressOf(recent: readonly CharSample[]): ProgressState {
+		return { lessons: {}, chars: { f: { attempts: 500, errors: 400, recent } } };
+	}
+
+	it('weighs the time of each recent play by its right keystrokes', () => {
+		const progress = progressOf([
+			{ attempts: 10, errors: 2, latencyMs: 400 },
+			{ attempts: 4, errors: 2, latencyMs: 1000 }
+		]);
+		expect(recentCharLatency(progress, 'f')).toEqual({
+			latencyMs: (400 * 8 + 1000 * 2) / 10,
+			correct: 10
+		});
+	});
+
+	it('leaves out the plays without a time, and their right keystrokes', () => {
+		const progress = progressOf([
+			{ attempts: 30, errors: 0, latencyMs: null },
+			{ attempts: 5, errors: 1, latencyMs: 300 }
+		]);
+		expect(recentCharLatency(progress, 'f')).toEqual({ latencyMs: 300, correct: 4 });
+	});
+
+	it('gives no time when no recent play has one, or for a character never met', () => {
+		const progress = progressOf([{ attempts: 12, errors: 3, latencyMs: null }]);
+		expect(recentCharLatency(progress, 'f')).toEqual({ latencyMs: null, correct: 0 });
+		for (const char of ['j', 'constructor', '__proto__']) {
+			expect(recentCharLatency(progress, char)).toEqual({ latencyMs: null, correct: 0 });
+		}
+		expect(recentCharLatency(emptyProgress(), 'f')).toEqual({ latencyMs: null, correct: 0 });
+	});
+
+	it('reads the times kept by the plays applied to the progress', () => {
+		const once = applyResult(
+			emptyProgress(),
+			resultOf('fr.lesson.a', 90, {}, { f: { attempts: 6, errors: 1, meanLatencyMs: 500 } })
+		);
+		const twice = applyResult(
+			once,
+			resultOf('fr.lesson.a', 90, {}, { f: { attempts: 3, errors: 0, meanLatencyMs: 200 } })
+		);
+		expect(recentCharLatency(twice, 'f')).toEqual({
+			latencyMs: (500 * 5 + 200 * 3) / 8,
+			correct: 8
+		});
+	});
+
+	it('stays between the shortest and the longest time of the plays it reads', () => {
+		const sampleArb = fc
+			.record({
+				attempts: fc.integer({ min: 1, max: 60 }),
+				errors: fc.nat({ max: 60 }),
+				latencyMs: fc.option(fc.double({ min: 0, max: 10_000, noNaN: true }), { nil: null })
+			})
+			.map(({ attempts, errors, latencyMs }): CharSample => ({
+				attempts,
+				errors: Math.min(attempts, errors),
+				latencyMs
+			}));
+		fc.assert(
+			fc.property(fc.array(sampleArb, { maxLength: 8 }), (recent) => {
+				const { latencyMs, correct } = recentCharLatency(progressOf(recent), 'f');
+				const timed = recent.filter(
+					(sample) => sample.latencyMs !== null && sample.attempts > sample.errors
+				);
+				expect(correct).toBe(timed.reduce((sum, s) => sum + s.attempts - s.errors, 0));
+				if (timed.length === 0) {
+					expect(latencyMs).toBeNull();
+					return;
+				}
+				const times = timed.map((sample) => sample.latencyMs as number);
+				expect(latencyMs).toBeGreaterThanOrEqual(Math.min(...times) - 1e-9);
+				expect(latencyMs).toBeLessThanOrEqual(Math.max(...times) + 1e-9);
 			})
 		);
 	});

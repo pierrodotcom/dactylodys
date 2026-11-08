@@ -62,7 +62,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 7;
+	readonly schemaVersion: 8;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

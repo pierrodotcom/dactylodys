@@ -61,7 +61,11 @@ export function applyCharResults(
 	for (const [char, stats] of Object.entries(metrics.perChar)) {
 		const before = ownEntry(progress.chars, char);
 		const recent = before?.recent ?? [];
-		const sample: CharSample = { attempts: stats.attempts, errors: stats.errors };
+		const sample: CharSample = {
+			attempts: stats.attempts,
+			errors: stats.errors,
+			latencyMs: stats.meanLatencyMs
+		};
 		chars[char] = {
 			attempts: (before?.attempts ?? 0) + stats.attempts,
 			errors: (before?.errors ?? 0) + stats.errors,
@@ -100,6 +104,27 @@ export function recentCharStats(
 		errors += sample.errors;
 	}
 	return { attempts, errors };
+}
+
+/**
+ * Mean milliseconds before the right keystrokes of the character in its most recent plays,
+ * weighted by the right keystrokes of each play; samples without a time are left out, and
+ * `correct` counts the right keystrokes of those that have one. `null` when none has.
+ */
+export function recentCharLatency(
+	progress: ProgressState,
+	char: string
+): { readonly latencyMs: number | null; readonly correct: number } {
+	let correct = 0;
+	let weighted = 0;
+	for (const sample of ownEntry(progress.chars, char)?.recent ?? []) {
+		if (sample.latencyMs === null) continue;
+		const right = sample.attempts - sample.errors;
+		if (right <= 0) continue;
+		correct += right;
+		weighted += sample.latencyMs * right;
+	}
+	return { latencyMs: correct > 0 ? weighted / correct : null, correct };
 }
 
 /** Share (0 to 1) of the recent keystrokes of the character that were wrong; 0 without any. */

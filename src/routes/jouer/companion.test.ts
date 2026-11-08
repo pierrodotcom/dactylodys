@@ -93,7 +93,9 @@ describe('recordHelpOutcome', () => {
 	const quest = { char: 'f', lessonId: FIRST };
 	const start = profileWith({
 		lessons: { [FIRST]: PASSED },
-		chars: { f: { attempts: 10, errors: 5, recent: [{ attempts: 10, errors: 5 }] } }
+		chars: {
+			f: { attempts: 10, errors: 5, recent: [{ attempts: 10, errors: 5, latencyMs: null }] }
+		}
 	});
 
 	it('adds the keystrokes to the recent results of the keys, and to no lesson', () => {
@@ -109,8 +111,8 @@ describe('recordHelpOutcome', () => {
 			attempts: 16,
 			errors: 6,
 			recent: [
-				{ attempts: 10, errors: 5 },
-				{ attempts: 6, errors: 1 }
+				{ attempts: 10, errors: 5, latencyMs: null },
+				{ attempts: 6, errors: 1, latencyMs: null }
 			]
 		});
 		expect(profile.ghosts).toEqual(start.ghosts);
@@ -130,7 +132,7 @@ describe('recordHelpOutcome', () => {
 		const tamed = {
 			attempts: minAttempts,
 			errors: 0,
-			recent: [{ attempts: minAttempts, errors: 0 }]
+			recent: [{ attempts: minAttempts, errors: 0, latencyMs: null }]
 		};
 		const almost = profileWith({
 			lessons: {},

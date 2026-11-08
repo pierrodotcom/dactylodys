@@ -206,6 +206,12 @@ export interface LessonProgress {
 export interface CharSample {
 	readonly attempts: number;
 	readonly errors: number;
+	/**
+	 * Mean milliseconds before the right keystrokes of the character in this play
+	 * (`CharStats.meanLatencyMs`); `null` without any right keystroke, or for a sample of a profile
+	 * older than version 8. Shown to the adult only, never a goal for the child.
+	 */
+	readonly latencyMs: number | null;
 }
 
 export interface CharProgress {
