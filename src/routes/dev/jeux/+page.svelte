@@ -32,6 +32,8 @@
 	let step = $state<Step>('choose');
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let outcome = $state.raw<GameOutcome | null>(null);
+	/** Plays finished on this page, by game: like the play route, a replayed game goes on. */
+	let plays = $state<Record<string, number>>({});
 
 	const sounds = createSoundPlayer({ isEnabled: () => false });
 	const settings = $derived({
@@ -62,6 +64,7 @@
 
 	function finish(result: GameOutcome) {
 		outcome = result;
+		plays[gameId] = (plays[gameId] ?? 0) + 1;
 		step = 'done';
 	}
 
@@ -85,6 +88,7 @@
 			fingering={data.assets.fingering}
 			{settings}
 			{sounds}
+			playCount={plays[gameId] ?? 0}
 			onComplete={finish}
 			onQuit={backToChoice}
 		/>

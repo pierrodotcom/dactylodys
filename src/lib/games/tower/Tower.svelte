@@ -11,7 +11,7 @@
 	const props: GameProps = $props();
 
 	function quipFor(view: GameView): string {
-		return pickCyclic(QUIPS, view.groupIndex)?.() ?? '';
+		return pickCyclic(QUIPS, view.rewardIndex)?.() ?? '';
 	}
 
 	function announce(view: GameView): string {

@@ -14,7 +14,7 @@
 	const dish = $derived(dishName(props.exercise.groups, DISH_TEMPLATES));
 
 	function quipFor(view: GameView): string {
-		return pickCyclic(QUIPS, view.groupIndex)?.() ?? '';
+		return pickCyclic(QUIPS, view.rewardIndex)?.() ?? '';
 	}
 
 	function announce(view: GameView): string {
@@ -39,6 +39,7 @@
 
 {#snippet progress(view: GameView)}
 	<IngredientRow
+		offset={view.playOffset}
 		total={view.total}
 		done={view.completed}
 		current={isRewarded(view) ? -1 : view.groupIndex}

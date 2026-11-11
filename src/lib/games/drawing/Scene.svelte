@@ -54,7 +54,7 @@
 
 	const celebrating = $derived(view.phase === 'celebrating');
 	const share = $derived(drawnShare(view));
-	const tone = $derived(view.groupIndex % DROP_TONES);
+	const tone = $derived(view.rewardIndex % DROP_TONES);
 	const sceneId = $derived(celebrating && view.scene.kind === 'scene' ? view.scene.id : undefined);
 	const entrance = $derived(
 		celebrating && view.scene.kind === 'variant' ? view.scene.index : undefined

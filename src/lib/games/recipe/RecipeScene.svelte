@@ -64,7 +64,7 @@
 		place === 'pot' && view.scene.kind === 'scene' ? view.scene.id : undefined
 	);
 	const entrance = $derived(view.scene.kind === 'variant' ? view.scene.index : 0);
-	const steamShape = $derived(STEAM_SHAPES[view.groupIndex % STEAM_SHAPES.length] ?? []);
+	const steamShape = $derived(STEAM_SHAPES[view.rewardIndex % STEAM_SHAPES.length] ?? []);
 
 	function placeTransform(spot: { x: number; y: number; scale: number }): string {
 		return `translate(${spot.x} ${spot.y}) scale(${spot.scale})`;
@@ -273,14 +273,14 @@
 			{/if}
 			{#if sceneId === undefined}
 				<g data-reward data-reward-variant={entrance}>
-					<IngredientShape variant={view.groupIndex} {stage} />
+					<IngredientShape variant={view.rewardIndex} {stage} />
 				</g>
 			{:else}
 				<g class="diver">
 					{#if sceneId === 'balloon'}
 						<path class="cord balloon-string" d={BALLOON.stringPath} />
 					{/if}
-					<IngredientShape variant={view.groupIndex} {stage} />
+					<IngredientShape variant={view.rewardIndex} {stage} />
 					{#if sceneId === 'parachute'}
 						<g class="napkin">
 							{#each NAPKIN.cordPaths as cord (cord)}
@@ -459,7 +459,7 @@
 					<path class="open line" d={GIRAFFE.mouthPath} />
 				</g>
 				<g class="held" transform={GIRAFFE.heldTransform}>
-					<IngredientShape variant={view.groupIndex} {stage} />
+					<IngredientShape variant={view.rewardIndex} {stage} />
 				</g>
 			</g>
 		</g>
@@ -477,7 +477,7 @@
 	{#if place === 'board'}
 		<path class="ground" d={KITCHEN.boardShadow} />
 		<g transform={placeTransform(KITCHEN.boardIngredient)}>
-			<IngredientShape variant={view.groupIndex} {stage} />
+			<IngredientShape variant={view.rewardIndex} {stage} />
 		</g>
 	{/if}
 
