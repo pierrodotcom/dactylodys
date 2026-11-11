@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
 	CONFIG,
@@ -8,6 +9,7 @@ import {
 	writeBankJson,
 	writeText
 } from './lib/common.js';
+import { withStoryPhrases } from './lib/story-phrases.js';
 
 const THEME_TITLES = new Map(CONFIG.themes.map((theme) => [theme.id, theme.title]));
 const NO_THEME = 'Sans thème particulier';
@@ -55,13 +57,20 @@ function writeReviewDoc(phrases) {
 	writeText(join(REPO_ROOT, CONFIG.output.phraseReviewDoc), `${out.join('\n')}\n`);
 }
 
-const phrases = loadPhrases();
+const phrasesFile = join(REPO_ROOT, CONFIG.output.phrasesFile);
+const previous = existsSync(phrasesFile)
+	? JSON.parse(readFileSync(phrasesFile, 'utf8'))
+	: undefined;
+const generated = loadPhrases();
+const phrases = withStoryPhrases(generated, previous);
 const bank = {
 	schemaVersion: 1,
 	id: CONFIG.output.phraseBankId,
 	locale: CONFIG.output.locale,
 	phrases
 };
-writeBankJson(join(REPO_ROOT, CONFIG.output.phrasesFile), bank, 'phrases');
-writeReviewDoc(phrases);
-console.log(`Wrote ${phrases.length} phrases to ${CONFIG.output.phrasesFile}`);
+writeBankJson(phrasesFile, bank, 'phrases');
+writeReviewDoc(generated);
+console.log(
+	`Wrote ${phrases.length} phrases to ${CONFIG.output.phrasesFile}, ${phrases.length - generated.length} of them story phrases kept as they were`
+);

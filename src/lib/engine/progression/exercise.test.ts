@@ -1330,3 +1330,185 @@ describe('length slack', () => {
 		}
 	});
 });
+
+describe('story phrases', () => {
+	const STORY = withRules(SYNTHETIC, { newCharMinCount: 3, storyPhraseEvery: 2, lengthSlack: 5 });
+	const STORY_OF: Readonly<Record<string, readonly string[]>> = {
+		'fr.lesson.i': ['elle lisse ses skis', 'je lis les fils'],
+		'fr.lesson.caps': ['Elle lisse les skis'],
+		'fr.lesson.dot': ['Elle file.']
+	};
+	const OF_I = STORY_OF['fr.lesson.i'] ?? [];
+	const STORY_BANK = parsePhraseBank({
+		...PHRASE_BANK,
+		phrases: [
+			...PHRASE_BANK.phrases,
+			...Object.entries(STORY_OF).flatMap(([lessonId, texts]) =>
+				texts.map((text) => ({ text, themes: [], level: 1, review: 'human', lessonId }))
+			)
+		]
+	});
+	const STORY_TEXTS = new Set(Object.values(STORY_OF).flat());
+
+	function contextAfter(lessonId: string, plays: number): ExerciseContext {
+		const progress: ProgressState = {
+			lessons:
+				plays === 0
+					? {}
+					: { [lessonId]: { bestAccuracy: 90, stars: 2, attempts: plays, lastPlayedAt: 0 } },
+			chars: {}
+		};
+		return { ...FULL_CONTEXT, phrases: STORY_BANK, progress };
+	}
+
+	function storyGroups(exercise: Exercise): string[] {
+		return exercise.groups.filter((group) => STORY_TEXTS.has(group));
+	}
+
+	function lengthLimit(progression: ProgressionDefinition, lessonId: string): number {
+		const lessonDefinition = findLesson(progression, lessonId) as LessonDefinition;
+		return lessonDefinition.targetLength + (progression.rules.lengthSlack ?? 0);
+	}
+
+	/** The groups that open the exercise until the new character was asked the minimum times. */
+	function warmUpOf(groups: readonly string[], char: string, minimum: number): string[] {
+		const end = groups.findIndex((_, i) => countOf(groups.slice(0, i + 1), char) >= minimum);
+		return groups.slice(0, end + 1);
+	}
+
+	it('ends the first exercise of a lesson with one of its story phrases', () => {
+		for (let seed = 0; seed < 10; seed++) {
+			const exercise = generate(STORY, 'fr.lesson.i', seed, {
+				...FULL_CONTEXT,
+				phrases: STORY_BANK
+			});
+			expect(exercise.groups.at(-1)).toBe(OF_I[0]);
+			expect(storyGroups(exercise)).toEqual([OF_I[0]]);
+		}
+	});
+
+	it('asks a story phrase when the plays of the lesson are even, and none when they are odd', () => {
+		for (let plays = 0; plays < 8; plays++) {
+			for (let seed = 0; seed < 5; seed++) {
+				const exercise = generate(STORY, 'fr.lesson.i', seed, contextAfter('fr.lesson.i', plays));
+				expect(storyGroups(exercise), `plays ${plays} seed ${seed}`).toHaveLength(
+					plays % 2 === 0 ? 1 : 0
+				);
+			}
+		}
+	});
+
+	it('takes turns between the story phrases of the lesson', () => {
+		const asked = [0, 2, 4, 6].map((plays) =>
+			generate(STORY, 'fr.lesson.i', 3, contextAfter('fr.lesson.i', plays)).groups.at(-1)
+		);
+		expect(asked).toEqual([OF_I[0], OF_I[1], OF_I[0], OF_I[1]]);
+	});
+
+	it('opens with the warm-up and ends with the story phrase, within the length allowed', () => {
+		const minimum = STORY.rules.newCharMinCount;
+		const limit = lengthLimit(STORY, 'fr.lesson.i');
+		for (let seed = 0; seed < 20; seed++) {
+			const { groups } = generate(STORY, 'fr.lesson.i', seed, contextAfter('fr.lesson.i', 0));
+			const warmUp = warmUpOf(groups, 'i', minimum);
+			expect(groups.at(-1)).toBe(OF_I[0]);
+			expect(warmUp.length).toBeLessThan(groups.length);
+			for (const group of warmUp) expect(toGraphemes(group)).toContain('i');
+			expect(groups.reduce((sum, group) => sum + lengthOf(group), 0)).toBeLessThanOrEqual(limit);
+		}
+	});
+
+	it('fills the room left before the story phrase with mixed groups', () => {
+		const minimum = STORY.rules.newCharMinCount;
+		const limit = lengthLimit(STORY, 'fr.lesson.i');
+		const { words, phrases } = playableTexts(STORY, 'fr.lesson.i', FULL_CONTEXT);
+		for (let seed = 0; seed < 20; seed++) {
+			const { groups } = generate(STORY, 'fr.lesson.i', seed, contextAfter('fr.lesson.i', 0));
+			const fillers = groups.slice(warmUpOf(groups, 'i', minimum).length, -1);
+			expect(fillers.length, groups.join(' | ')).toBeGreaterThan(0);
+			for (const group of fillers) expect(STORY_TEXTS.has(group)).toBe(false);
+			expect(fillers.some((group) => words.has(group) || phrases.has(group))).toBe(true);
+			const total = groups.reduce((sum, group) => sum + lengthOf(group), 0);
+			// It stops when no group is left, or no room for one more group of the shortest kind.
+			const groupCount = (findLesson(STORY, 'fr.lesson.i') as LessonDefinition).groupCount;
+			const full = total + Math.min(...[...words].map(lengthOf)) > limit;
+			expect(groups.length === groupCount || full, groups.join(' | ')).toBe(true);
+		}
+	});
+
+	it('adds nothing when the warm-up and the story phrase already fill the length', () => {
+		const short: ProgressionDefinition = {
+			...STORY,
+			worlds: STORY.worlds.map((world) => ({
+				...world,
+				lessons: world.lessons.map((item) =>
+					item.id === 'fr.lesson.i' ? { ...item, targetLength: 10 } : item
+				)
+			}))
+		};
+		for (let seed = 0; seed < 20; seed++) {
+			const { groups } = generate(short, 'fr.lesson.i', seed, contextAfter('fr.lesson.i', 0));
+			expect(groups.slice(0, -1)).toEqual(warmUpOf(groups, 'i', STORY.rules.newCharMinCount));
+			expect(groups.at(-1)).toBe(OF_I[0]);
+		}
+	});
+
+	it('fills a lesson without new characters before its story phrase too', () => {
+		for (let seed = 0; seed < 10; seed++) {
+			const { groups } = generate(STORY, 'fr.lesson.caps', seed, contextAfter('fr.lesson.caps', 0));
+			expect(groups.length).toBeGreaterThanOrEqual(2);
+			expect(groups.at(-1)).toBe(STORY_OF['fr.lesson.caps']?.[0]);
+		}
+	});
+
+	it('never asks the story phrase of a lesson in another one', () => {
+		for (const lessonId of lessonIds(STORY)) {
+			const own = new Set(STORY_OF[lessonId] ?? []);
+			for (let plays = 0; plays < 4; plays++) {
+				for (let seed = 0; seed < 5; seed++) {
+					const exercise = generate(STORY, lessonId, seed, contextAfter(lessonId, plays));
+					for (const group of storyGroups(exercise)) expect(own.has(group), group).toBe(true);
+				}
+			}
+		}
+	});
+
+	it('asks no story phrase when the progression has no period for them', () => {
+		const without = withRules(STORY, { storyPhraseEvery: undefined });
+		for (let seed = 0; seed < 10; seed++) {
+			const exercise = generate(without, 'fr.lesson.i', seed, contextAfter('fr.lesson.i', 0));
+			expect(storyGroups(exercise)).toEqual([]);
+		}
+	});
+
+	it('only asks learned keys, and its story phrase last exactly when the plays are even', () => {
+		fc.assert(
+			fc.property(
+				SEEDS,
+				fc.integer({ min: 0, max: 60 }),
+				fc.constantFrom(...Object.keys(STORY_OF)),
+				(seed, plays, lessonId) => {
+					const context = contextAfter(lessonId, plays);
+					const exercise = generate(STORY, lessonId, seed, context);
+					const learned = new Set(learnedChars(STORY, lessonId));
+					for (const grapheme of graphemesOfGroups(exercise)) {
+						expect(learned.has(grapheme)).toBe(true);
+					}
+					const own = STORY_OF[lessonId] ?? [];
+					const asked = storyGroups(exercise);
+					if (plays % 2 === 0) {
+						expect(asked).toEqual([own[Math.floor(plays / 2) % own.length]]);
+						expect(exercise.groups.at(-1)).toBe(asked[0]);
+						expect(exercise.groups.length).toBeGreaterThanOrEqual(2);
+					} else {
+						expect(asked).toEqual([]);
+					}
+					expect(exercise.groups.length).toBeLessThanOrEqual(
+						(findLesson(STORY, lessonId) as LessonDefinition).groupCount
+					);
+					expect(generate(STORY, lessonId, seed, context)).toEqual(exercise);
+				}
+			)
+		);
+	});
+});

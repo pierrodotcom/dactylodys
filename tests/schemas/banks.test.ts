@@ -155,15 +155,21 @@ describe(PHRASES_FILE, () => {
 			expect(tier, phrase.text).toBeGreaterThanOrEqual(0);
 			const words = phrase.text.split(' ').filter((token) => /\p{L}/u.test(token)).length;
 			expect(words, phrase.text).toBeGreaterThanOrEqual(PHRASE_WORDS.min);
-			expect(words, phrase.text).toBeLessThanOrEqual(PHRASE_WORDS.max);
+			// A story phrase is bounded by its length (content-coherence), not by its words.
+			if (phrase.lessonId === undefined) {
+				expect(words, phrase.text).toBeLessThanOrEqual(PHRASE_WORDS.max);
+			}
 		}
 	});
 
-	it('starts with a capital and ends with . ? or ! as soon as it uses either', () => {
+	it('starts with a capital and ends with . ? or !, closing quote allowed, once it can', () => {
 		for (const { phrase, tier } of withTier) {
 			if (tier < STEP.capitalsAndPunctuation) continue;
 			expect(phrase.text, phrase.text).toMatch(/^[A-Z]/);
-			expect(phrase.text, phrase.text).toMatch(/[.?!]$/);
+			// The capitals come one lesson before the full stop: a phrase of that lesson has none.
+			if (tier > STEP.capitalsAndPunctuation) {
+				expect(phrase.text, phrase.text).toMatch(/[.?!]"?$/);
+			}
 		}
 	});
 

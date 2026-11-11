@@ -4,7 +4,7 @@ Cocher `[x]` = garder la phrase. Barrer (`~~phrase~~`) = retirer la phrase du je
 Pour corriger un thème ou une formulation, écrire la correction à la suite : `→ correction`.
 Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les décisions dans `tools/content/data/`.
 
-## Dinosaures (7)
+## Dinosaures (8)
 
 ### Niveau 1 (3)
 
@@ -12,25 +12,27 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] je sais où dort le dragon
 - [ ] Le dragon a faim !
 
-### Niveau 2 (3)
+### Niveau 2 (4)
 
 - [ ] Le tricératops a oublié son parapluie.
 - [ ] Le diplodocus passe sous la porte !
 - [ ] Petit ou grand, le dinosaure adore les bulles.
+- [ ] Le bébé dragon réclame "encore".
 
 ### Niveau 3 (1)
 
 - [ ] Le dragon a brûlé le dîner du pilote.
 
-## Cuisine (24)
+## Cuisine (25)
 
-### Niveau 1 (5)
+### Niveau 1 (6)
 
 - [ ] je lui sers du jus
 - [ ] elle se rue sur le jus
 - [ ] le fruit est sur le lit
 - [ ] je sens le fruit et je ris
 - [ ] les nouilles dorent au soleil
+- [ ] La soupe est chaude ; on souffle.
 
 ### Niveau 2 (13)
 
@@ -57,9 +59,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le robot pâtissier a brûlé les crêpes.
 - [ ] Ce poêle chante, le gâteau danse !
 
-## Animaux (79)
+## Animaux (86)
 
-### Niveau 1 (18)
+### Niveau 1 (22)
 
 - [ ] le dindon dort dans la salade
 - [ ] la tortue danse sur le toit
@@ -79,8 +81,12 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le chien ronfle comme un tracteur.
 - [ ] Le chat dort, le chien ronfle.
 - [ ] Tu as vu ce lapin bleu ?
+- [ ] Le chat dort ; la souris danse.
+- [ ] Il pleut ; le canard sourit.
+- [ ] Le perroquet dit "bonjour".
+- [ ] Le chien aboie "ouaf".
 
-### Niveau 2 (42)
+### Niveau 2 (45)
 
 - [ ] un renne tire un lutin sur ses skis
 - [ ] le crocodile joue de la trompette
@@ -124,6 +130,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Mon âne mange mon chapeau de paille.
 - [ ] Le canard dîne avec un chapeau.
 - [ ] Le castor range sa bûche dans le frigo.
+- [ ] La lune brille ; le loup chante.
+- [ ] La porte grince ; le chat sursaute.
+- [ ] Le chat répond "miaou" et s'en va.
 
 ### Niveau 3 (19)
 
@@ -147,14 +156,15 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Un drôle de hibou pilote la fusée.
 - [ ] Un caïman naïf attend le bus.
 
-## Espace (20)
+## Espace (23)
 
-### Niveau 1 (2)
+### Niveau 1 (3)
 
 - [ ] je dessine une lune
 - [ ] la lune sort et le soleil ronfle
+- [ ] Le robot tombe ; il se relève.
 
-### Niveau 2 (13)
+### Niveau 2 (15)
 
 - [ ] l'ours a écrit une carte pour la lune
 - [ ] l'étoile a sauté dans la marmite
@@ -169,6 +179,8 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Sur ma planète, la pluie sent la fraise.
 - [ ] Qui a rangé la lune dans le placard ?
 - [ ] Le dinosaure a dîné sur la lune.
+- [ ] La lune brille ; le loup chante.
+- [ ] Le robot dit "bip" puis il s'endort.
 
 ### Niveau 3 (5)
 
@@ -178,15 +190,16 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] La nuit, les planètes jouent aux billes.
 - [ ] Message de la fusée : le pilote dort !
 
-## Véhicules (37)
+## Véhicules (39)
 
-### Niveau 1 (3)
+### Niveau 1 (4)
 
 - [ ] Qui a pris mon vélo ?
 - [ ] Qui conduit le bus ?
 - [ ] Le train dîne à la gare.
+- [ ] Le panneau dit "attention".
 
-### Niveau 2 (24)
+### Niveau 2 (25)
 
 - [ ] la marmotte conduit un camion de pommes
 - [ ] la souris conduit le tracteur
@@ -212,6 +225,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Cet hôtel flotte sur un bateau.
 - [ ] Mon canoë a des roues carrées.
 - [ ] Le canoë file sur la route.
+- [ ] Le klaxon fait "pouet" ; tout le monde rit.
 
 ### Niveau 3 (10)
 
@@ -226,32 +240,40 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Règle du bus : on chante à chaque virage.
 - [ ] On a tout réparé : le klaxon, le sandwich.
 
-## Maison (3)
+## Maison (6)
 
-### Niveau 2 (2)
+### Niveau 1 (1)
+
+- [ ] Le chat dort ; la souris danse.
+
+### Niveau 2 (4)
 
 - [ ] Cet après-midi, le canapé fait du sport.
 - [ ] Qui a mis une boîte sur le toit ?
+- [ ] La porte grince ; le chat sursaute.
+- [ ] Sur la porte, on lit "entrez".
 
 ### Niveau 3 (1)
 
 - [ ] La mosaïque du garage a fondu.
 
-## Nature (6)
+## Nature (8)
 
-### Niveau 1 (3)
+### Niveau 1 (4)
 
 - [ ] je lis les feuilles
 - [ ] tu dessines un nid et des fruits
 - [ ] je te tends une fleur
+- [ ] Il pleut ; le canard sourit.
 
-### Niveau 2 (3)
+### Niveau 2 (4)
 
 - [ ] Un arc-en-ciel est tombé dans mon bol.
 - [ ] Sur mon île, les vélos poussent.
 - [ ] Le maïs pousse sur le toit du bus.
+- [ ] Le vent souffle ; le chapeau vole.
 
-## Sport et jeux (5)
+## Sport et jeux (6)
 
 ### Niveau 1 (5)
 
@@ -261,11 +283,19 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] elle skie le jeudi
 - [ ] le tennis est un jeu
 
-## L'école (1)
+### Niveau 2 (1)
+
+- [ ] Le clown glisse ; tout le monde rit.
+
+## L'école (2)
 
 ### Niveau 1 (1)
 
 - [ ] je finis le test et je file
+
+### Niveau 2 (1)
+
+- [ ] La cloche sonne ; la classe sort.
 
 ## Sans thème particulier (34)
 

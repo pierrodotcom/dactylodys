@@ -177,6 +177,41 @@ describe('parseProgression', () => {
 		expect(slack.rules.lengthSlack).toBe(12);
 	});
 
+	it('reads the optional period of the story phrases, absent by default', () => {
+		expect(parseProgression(BASE).rules.storyPhraseEvery).toBeUndefined();
+		const every = parseProgression(variant((raw) => (raw.rules['storyPhraseEvery'] = 2)));
+		expect(every.rules.storyPhraseEvery).toBe(2);
+	});
+
+	it.each([
+		['zero', 0, /rules\.storyPhraseEvery.*at least 1/],
+		['a fraction', 1.5, /rules\.storyPhraseEvery.*integer/],
+		['a string', '2', /rules\.storyPhraseEvery/]
+	])('rejects a period of the story phrases that is %s', (_name, value, message) => {
+		expect(() =>
+			parseProgression(variant((raw) => (raw.rules['storyPhraseEvery'] = value)))
+		).toThrow(message);
+	});
+
+	it('rejects story phrases when the warm-up can fill every group of a lesson', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					raw.rules['newCharMinCount'] = 5;
+					raw.rules['storyPhraseEvery'] = 2;
+				})
+			)
+		).toThrow(/lessons\[0\]\.groupCount: expected more than 5 groups.*storyPhraseEvery/);
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					raw.rules['newCharMinCount'] = 4;
+					raw.rules['storyPhraseEvery'] = 2;
+				})
+			)
+		).not.toThrow();
+	});
+
 	it('accepts any minimum count for a lesson without new characters', () => {
 		expect(() =>
 			parseProgression(

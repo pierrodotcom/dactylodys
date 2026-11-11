@@ -140,7 +140,8 @@ describe('azerty-decouverte', () => {
 			recentCharWindow: 30,
 			lengthSlack: 12,
 			handGuide: { everyKeyUntil: 2, newKeysUntil: 24, hesitationMs: 3000 },
-			starAlmostMargin: 3
+			starAlmostMargin: 3,
+			storyPhraseEvery: 2
 		});
 	});
 
