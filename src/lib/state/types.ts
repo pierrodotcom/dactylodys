@@ -29,6 +29,11 @@ export interface Settings {
 	 * a wrong key is written and the child erases it with Backspace before going on.
 	 */
 	readonly errorPolicy: ErrorPolicy;
+	/**
+	 * Chosen by the adult only (version 10): the keys the child knows well lose their letter on
+	 * the keyboard drawn in the games, so that the eyes stay on the text. On by default.
+	 */
+	readonly keyboardFade: boolean;
 }
 
 export type { CompanionChoice, ErrorPolicy, HandGuidePreference, HelpQuestRecord };
@@ -68,7 +73,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 9;
+	readonly schemaVersion: 10;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

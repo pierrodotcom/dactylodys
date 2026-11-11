@@ -152,16 +152,31 @@ export const EMPTY_JOURNAL = {
 	openedWorldIds: []
 } as const satisfies Partial<Profile>;
 
-/** What a profile becomes once migrated from version 8 or older: Backspace off, as before. */
-export function withRetryPolicy(profile: Profile): Profile {
-	return { ...profile, settings: { ...profile.settings, errorPolicy: 'retry' } };
+/** What a profile becomes once migrated from version 9 or older: the known keys fade. */
+export function withKeyboardFade(profile: Profile): Profile {
+	return { ...profile, settings: { ...profile.settings, keyboardFade: true } };
 }
 
-/** The record version 8 of the app stored: the same profile without the choice of Backspace. */
-export function asVersion8(profile: Profile): Record<string, unknown> {
+/** What a profile becomes once migrated from version 8 or older: Backspace off, as before. */
+export function withRetryPolicy(profile: Profile): Profile {
+	return withKeyboardFade({ ...profile, settings: { ...profile.settings, errorPolicy: 'retry' } });
+}
+
+/** The record version 9 of the app stored: the same profile without the choice of the fading keys. */
+export function asVersion9(profile: Profile): Record<string, unknown> {
 	const settings: Record<string, unknown> = { ...profile.settings };
+	delete settings['keyboardFade'];
+	return { ...profile, schemaVersion: 9, settings };
+}
+
+/** The record version 8 of the app stored: version 9 without the choice of Backspace. */
+export function asVersion8(profile: Profile): Record<string, unknown> {
+	const version9 = asVersion9(profile);
+	const settings: Record<string, unknown> = {
+		...(version9['settings'] as Record<string, unknown>)
+	};
 	delete settings['errorPolicy'];
-	return { ...profile, schemaVersion: 8, settings };
+	return { ...version9, schemaVersion: 8, settings };
 }
 
 /** The record version 7 of the app stored: version 8 without the times of the recent plays. */

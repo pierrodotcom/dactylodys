@@ -1953,6 +1953,12 @@
 		"scene": {
 			"$value": "{duration.2000}"
 		},
+		"key-fade-delay": {
+			"$value": "{duration.1000}"
+		},
+		"key-fade": {
+			"$value": "{duration.2000}"
+		},
 		"reminder": {
 			"$value": "{duration.4000}"
 		},

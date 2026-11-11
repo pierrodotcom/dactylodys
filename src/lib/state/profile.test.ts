@@ -125,7 +125,7 @@ describe('defaultSettings', () => {
 		expect(defaultSettings('mac').layoutId).toBe('fr-fr-azerty-mac');
 	});
 
-	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons and Backspace off', () => {
+	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons, Backspace off and the known keys fading', () => {
 		expect(defaultSettings('pc')).toEqual({
 			layoutId: 'fr-fr-azerty-pc',
 			fingeringProfileId: 'ten-fingers-iso',
@@ -137,7 +137,8 @@ describe('defaultSettings', () => {
 			textSpacing: 'normal',
 			showKeyboard: true,
 			handGuide: 'auto',
-			errorPolicy: 'retry'
+			errorPolicy: 'retry',
+			keyboardFade: true
 		});
 	});
 });
@@ -145,7 +146,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 9,
+			schemaVersion: 10,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -449,8 +450,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 8, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 10, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 9, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 11, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -477,6 +478,8 @@ describe('parseProfile', () => {
 		['a non-boolean keyboard flag', ['settings', 'showKeyboard'], null, /showKeyboard/],
 		['an unknown error policy', ['settings', 'errorPolicy'], 'skip', /settings\.errorPolicy/],
 		['a missing error policy', ['settings', 'errorPolicy'], REMOVE, /settings\.errorPolicy/],
+		['a non-boolean fading flag', ['settings', 'keyboardFade'], 'yes', /settings\.keyboardFade/],
+		['a missing fading flag', ['settings', 'keyboardFade'], REMOVE, /settings\.keyboardFade/],
 		['an unknown setting', ['settings', 'volume'], 3, /settings\.volume/],
 		['a missing setting', ['settings', 'theme'], REMOVE, /settings\.theme/],
 		['missing progress', ['progress'], REMOVE, /profile\.progress/],
