@@ -207,6 +207,9 @@ describe('progression and banks together', () => {
 					expect(exercise.groups.at(-1), `${lessonId} plays ${plays} seed ${seed}`).toBe(
 						story[turn % story.length]?.text
 					);
+					expect(exercise.groups.length, `${lessonId} plays ${plays} seed ${seed}`).toBeGreaterThan(
+						1
+					);
 				}
 			}
 		}
