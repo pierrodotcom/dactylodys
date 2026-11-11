@@ -236,7 +236,7 @@
 		{#each below as index (index)}
 			{@const at = blockSpot(index, size)}
 			<g transform="translate({at.x} {at.y})">
-				<BlockShape {size} look={blockLook(index)} />
+				<BlockShape {size} look={blockLook(view.playOffset + index)} />
 			</g>
 		{/each}
 
@@ -280,7 +280,7 @@
 				data-reward={entrance === null ? undefined : true}
 				data-reward-variant={entrance ?? undefined}
 			>
-				<BlockShape {size} look={blockLook(view.groupIndex)} />
+				<BlockShape {size} look={blockLook(view.rewardIndex)} />
 
 				{#if sceneId === 'slide-in'}
 					<g class="speed">

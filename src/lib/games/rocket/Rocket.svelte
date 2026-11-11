@@ -26,7 +26,7 @@
 	}
 
 	function greetingFor(view: GameView): string {
-		return pickCyclic(GREETINGS, view.groupIndex)?.() ?? '';
+		return pickCyclic(GREETINGS, view.rewardIndex)?.() ?? '';
 	}
 
 	function announce(view: GameView): string {
@@ -49,6 +49,7 @@
 
 {#snippet progress(view: GameView)}
 	<AstreRow
+		offset={view.playOffset}
 		total={view.total}
 		reached={view.completed}
 		current={isRewarded(view) ? -1 : view.groupIndex}

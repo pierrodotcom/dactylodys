@@ -9,9 +9,12 @@
 		done: number;
 		/** Index of the ingredient being prepared, `-1` between two ingredients. */
 		current: number;
+
+		/** Added to the index of each item, so that it looks like the big picture of the game. */
+		offset?: number;
 	}
 
-	let { total, done, current }: Props = $props();
+	let { total, done, current, offset = 0 }: Props = $props();
 
 	const items = $derived(Array.from({ length: total }, (_, index) => index));
 	const label = $derived(
@@ -25,7 +28,7 @@
 	{#each items as index (index)}
 		<span class="item" data-state={index < done ? 'done' : index === current ? 'current' : 'next'}>
 			<svg class="tile" viewBox="-49 -40 94 80" focusable="false" aria-hidden="true">
-				<IngredientShape variant={index} stage={index < done ? PREP_STAGES : 0} small />
+				<IngredientShape variant={offset + index} stage={index < done ? PREP_STAGES : 0} small />
 			</svg>
 		</span>
 	{/each}
