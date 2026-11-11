@@ -132,7 +132,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'recentCharWindow',
 			'lengthSlack',
 			'handGuide',
-			'starAlmostMargin'
+			'starAlmostMargin',
+			'storyPhraseEvery'
 		],
 		path
 	);
@@ -171,6 +172,13 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		record['starAlmostMargin'] === undefined
 			? undefined
 			: expectNonNegative(record['starAlmostMargin'], `${path}.starAlmostMargin`);
+	const storyPhraseEvery =
+		record['storyPhraseEvery'] === undefined
+			? undefined
+			: expectInteger(record['storyPhraseEvery'], `${path}.storyPhraseEvery`);
+	if (storyPhraseEvery !== undefined && storyPhraseEvery < 1) {
+		fail(`${path}.storyPhraseEvery`, 'expected an integer of at least 1');
+	}
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -181,7 +189,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		recentCharWindow,
 		...(lengthSlack === undefined ? {} : { lengthSlack }),
 		...(handGuide === undefined ? {} : { handGuide }),
-		...(starAlmostMargin === undefined ? {} : { starAlmostMargin })
+		...(starAlmostMargin === undefined ? {} : { starAlmostMargin }),
+		...(storyPhraseEvery === undefined ? {} : { storyPhraseEvery })
 	};
 }
 
@@ -379,6 +388,13 @@ function parseLesson(
 		groupLength: [min, max]
 	};
 	checkGeneratable(lesson, known, rules.newCharMinCount, path);
+	const warmUp = newChars.length === 0 ? 0 : rules.newCharMinCount;
+	if (rules.storyPhraseEvery !== undefined && warmUp >= groupCount) {
+		fail(
+			`${path}.groupCount`,
+			`expected more than ${warmUp} groups to leave room for a story phrase after the warm-up (rules.storyPhraseEvery)`
+		);
+	}
 	return lesson;
 }
 

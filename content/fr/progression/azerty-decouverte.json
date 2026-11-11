@@ -17,7 +17,8 @@
 			"newKeysUntil": 24,
 			"hesitationMs": 3000
 		},
-		"starAlmostMargin": 3
+		"starAlmostMargin": 3,
+		"storyPhraseEvery": 2
 	},
 	"worlds": [
 		{

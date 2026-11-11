@@ -1,5 +1,5 @@
 import { toGraphemes } from '../graphemes';
-import { usablePhrases, usableWords } from './banks';
+import { storyPhrases, usablePhrases, usableWords } from './banks';
 import { findLesson, freshChars, learnedChars } from './definition';
 import { recentErrorRate } from './progress';
 import type {
@@ -196,6 +196,27 @@ function chooseGenre(mix: ExerciseMix, hasWords: boolean, hasPhrases: boolean, r
 	);
 }
 
+/**
+ * The story phrase this exercise ends with, if the lesson has some and its plays so far are a
+ * multiple of `storyPhraseEvery`; the lesson's phrases take turns.
+ */
+function dueStoryPhrase(
+	progression: ProgressionDefinition,
+	lessonId: string,
+	learned: readonly string[],
+	context: ExerciseContext
+): string | undefined {
+	const every = progression.rules.storyPhraseEvery;
+	if (every === undefined || context.phrases === undefined) return undefined;
+	const known = new Set(learned);
+	const phrases = storyPhrases(context.phrases, lessonId).filter((phrase) =>
+		toGraphemes(phrase.text).every((char) => known.has(char))
+	);
+	const plays = context.progress?.lessons[lessonId]?.attempts ?? 0;
+	if (phrases.length === 0 || plays % every !== 0) return undefined;
+	return phrases[Math.floor(plays / every) % phrases.length]?.text;
+}
+
 export function generateExercise(
 	progression: ProgressionDefinition,
 	lessonId: string,
@@ -281,6 +302,41 @@ export function generateExercise(
 			: candidate;
 	};
 
+	/** A mixed group of at most `room` graphemes, different from `previous`, if one can be found. */
+	const buildFiller = (room: number, previous: string | undefined): Candidate | undefined => {
+		if (room < 1) return undefined;
+		for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+			const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
+			const genre = relaxed
+				? 'drill'
+				: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
+			const entry =
+				genre === 'drill'
+					? undefined
+					: buildEntry(
+							genre === 'word' ? words : phrases,
+							genre === 'word' ? lesson.newChars : fresh,
+							settings,
+							room
+						);
+			// A suite is never shorter than the lesson's minimum group length.
+			const candidate =
+				entry ?? (room >= lesson.groupLength[0] ? buildDrill([], settings, relaxed) : undefined);
+			if (
+				candidate !== undefined &&
+				candidate.text !== previous &&
+				toGraphemes(candidate.text).length <= room
+			) {
+				return candidate;
+			}
+		}
+		return undefined;
+	};
+
+	const story = dueStoryPhrase(progression, lessonId, learned, context);
+	// Without a slack, the story phrase and what comes before it keep to the target length.
+	const storyRoom =
+		story === undefined ? 0 : lesson.targetLength + (lengthSlack ?? 0) - toGraphemes(story).length;
 	const groups: string[] = [];
 	const asked = new Map<string, number>();
 	let total = 0;
@@ -288,21 +344,33 @@ export function generateExercise(
 	while (groups.length < lesson.groupCount) {
 		// Warm-up: suites that hold the new characters open the exercise until each was asked enough.
 		const lacking = lesson.newChars.filter((char) => (asked.get(char) ?? 0) < newCharMinCount);
-		if (lacking.length === 0 && total >= lesson.targetLength) break;
-		const missing = lesson.newChars.filter((char) => !asked.has(char));
 		const previous = groups[groups.length - 1];
 		let accepted: Candidate | undefined;
 
-		for (let attempt = 0; attempt < MAX_ATTEMPTS && accepted === undefined; attempt++) {
-			const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
-			const candidate =
-				lacking.length > 0
-					? buildDrill(lacking, settings, relaxed)
-					: buildMixed(missing, groups.length, total, relaxed);
-			if (candidate.text !== previous) accepted = candidate;
-		}
-		if (accepted === undefined) {
-			throw new Error(`Lesson ${lessonId}: cannot build two different consecutive groups`);
+		if (lacking.length === 0 && story !== undefined) {
+			// After the warm-up, mixed groups fill the room left before the story phrase, which ends
+			// the exercise whatever its length.
+			if (groups.length + 1 < lesson.groupCount) {
+				accepted = buildFiller(storyRoom - total, previous);
+			}
+			if (accepted === undefined) {
+				groups.push(story);
+				break;
+			}
+		} else {
+			if (lacking.length === 0 && total >= lesson.targetLength) break;
+			const missing = lesson.newChars.filter((char) => !asked.has(char));
+			for (let attempt = 0; attempt < MAX_ATTEMPTS && accepted === undefined; attempt++) {
+				const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
+				const candidate =
+					lacking.length > 0
+						? buildDrill(lacking, settings, relaxed)
+						: buildMixed(missing, groups.length, total, relaxed);
+				if (candidate.text !== previous) accepted = candidate;
+			}
+			if (accepted === undefined) {
+				throw new Error(`Lesson ${lessonId}: cannot build two different consecutive groups`);
+			}
 		}
 
 		accepted.reserve?.used.add(accepted.text);

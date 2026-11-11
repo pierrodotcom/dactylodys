@@ -224,3 +224,22 @@
 3 | maison | La mosaïque du garage a fondu.
 2 | nature | Le maïs pousse sur le toit du bus.
 2 | cuisine | La tomate est mûre, je la mange.
+
+# Phrases de l'ADR-045 (point-virgule, guillemets), relues par le porteur
+1 | animaux, maison | Le chat dort ; la souris danse.
+1 | animaux, nature | Il pleut ; le canard sourit.
+1 | cuisine | La soupe est chaude ; on souffle.
+1 | espace | Le robot tombe ; il se relève.
+2 | espace, animaux | La lune brille ; le loup chante.
+2 | nature | Le vent souffle ; le chapeau vole.
+2 | maison, animaux | La porte grince ; le chat sursaute.
+2 | ecole | La cloche sonne ; la classe sort.
+2 | sport | Le clown glisse ; tout le monde rit.
+1 | animaux | Le perroquet dit "bonjour".
+1 | animaux | Le chien aboie "ouaf".
+1 | vehicules | Le panneau dit "attention".
+2 | maison | Sur la porte, on lit "entrez".
+2 | dinos | Le bébé dragon réclame "encore".
+2 | animaux | Le chat répond "miaou" et s'en va.
+2 | vehicules | Le klaxon fait "pouet" ; tout le monde rit.
+2 | espace | Le robot dit "bip" puis il s'endort.

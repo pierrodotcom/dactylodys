@@ -4,6 +4,7 @@ import { toGraphemes } from '../src/lib/engine/graphemes';
 import {
 	parsePhraseBank,
 	parseWordBank,
+	storyPhrases,
 	usablePhrases,
 	usableWords
 } from '../src/lib/engine/progression/banks';
@@ -199,16 +200,23 @@ function profileAfter(lessonId: string, name = PLAYER_NAME): Profile {
 	return advancedProfile({ name, passed: passedThrough(lessonId) });
 }
 
-/** What the child can meet in an exercise of the lesson: its own words, and the banks' entries. */
+/**
+ * What the child can meet in an exercise of the lesson: its own words, the banks' entries and the
+ * story phrases of the lesson.
+ */
 function typableEntries(lesson: Lesson) {
 	const learned = learnedChars(progression, lesson.id);
 	const options = { maxLevel: playRules.maxWordLevel };
 	const bankWords = usableWords(wordBank, learned, options).map((entry) => entry.text);
+	const phrases = [
+		...usablePhrases(phraseBank, learned, options),
+		...storyPhrases(phraseBank, lesson.id)
+	];
 	return {
 		learned: new Set(learned),
 		bankWords: new Set(bankWords),
 		words: new Set([...lesson.words, ...bankWords]),
-		phrases: new Set(usablePhrases(phraseBank, learned, options).map((entry) => entry.text))
+		phrases: new Set(phrases.map((entry) => entry.text))
 	};
 }
 
@@ -1200,7 +1208,8 @@ test.describe('play route', () => {
 		page
 	}) => {
 		const entries = typableEntries(NEXT_FIRST);
-		const profile = profileAfter(lastLessonOf(world).id);
+		// One play already made: an odd play has no story phrase, so its groups mix words in.
+		const profile = profileAfter(NEXT_FIRST.id);
 		const { seed, exercise } = exerciseWith(
 			NEXT_FIRST.id,
 			{
