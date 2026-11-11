@@ -214,3 +214,20 @@ Le canoë file sur la route.
 La mosaïque du garage a fondu.
 Le maïs pousse sur le toit du bus.
 La tomate est mûre, je la mange.
+Le chat dort ; la souris danse.
+Il pleut ; le canard sourit.
+La soupe est chaude ; on souffle.
+Le robot tombe ; il se relève.
+La lune brille ; le loup chante.
+Le vent souffle ; le chapeau vole.
+La porte grince ; le chat sursaute.
+La cloche sonne ; la classe sort.
+Le clown glisse ; tout le monde rit.
+Le perroquet dit "bonjour".
+Le chien aboie "ouaf".
+Le panneau dit "attention".
+Sur la porte, on lit "entrez".
+Le bébé dragon réclame "encore".
+Le chat répond "miaou" et s'en va.
+Le klaxon fait "pouet" ; tout le monde rit.
+Le robot dit "bip" puis il s'endort.

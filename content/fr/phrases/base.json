@@ -1004,12 +1004,7 @@
 			"level": 1,
 			"review": "human"
 		},
-		{
-			"text": "Le chien aboie \"ouaf\".",
-			"themes": ["animaux"],
-			"level": 1,
-			"review": "human"
-		},
+		{ "text": "Le chien aboie \"ouaf\".", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
 			"text": "Le panneau dit \"attention\".",
 			"themes": ["vehicules"],
