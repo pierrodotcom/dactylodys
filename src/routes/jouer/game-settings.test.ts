@@ -21,6 +21,11 @@ describe('toGameSettings', () => {
 		expect(toGameSettings(base, false, NO_GUIDE).errorPolicy).toBe('retry');
 	});
 
+	it('passes the choice of the adult for Backspace through', () => {
+		const settings = { ...base, errorPolicy: 'backspace' as const };
+		expect(toGameSettings(settings, false, NO_GUIDE).errorPolicy).toBe('backspace');
+	});
+
 	it.each([
 		['system', false, false],
 		['system', true, true],

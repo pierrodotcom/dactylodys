@@ -1,4 +1,5 @@
 import type { GhostRun } from '../engine/ghost/types';
+import type { ErrorPolicy } from '../engine/types';
 import type { HandGuidePreference, ProgressState, StarCount } from '../engine/progression/types';
 import type { CompanionChoice, HelpQuestRecord } from '../engine/rewards/types';
 import type { FingeringProfileId, LayoutId } from '../keyboard/layout-ids';
@@ -23,9 +24,14 @@ export interface Settings {
 	readonly showKeyboard: boolean;
 	/** The hand drawn on the keyboard: as the lessons go, always, never. */
 	readonly handGuide: HandGuidePreference;
+	/**
+	 * Chosen by the adult only (version 9): `retry`, the game waits for the right key; `backspace`,
+	 * a wrong key is written and the child erases it with Backspace before going on.
+	 */
+	readonly errorPolicy: ErrorPolicy;
 }
 
-export type { CompanionChoice, HandGuidePreference, HelpQuestRecord };
+export type { CompanionChoice, ErrorPolicy, HandGuidePreference, HelpQuestRecord };
 
 /**
  * One finished play of a lesson, passed or not (version 7): what the adult space follows from one
@@ -62,7 +68,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 8;
+	readonly schemaVersion: 9;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

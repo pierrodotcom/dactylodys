@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick, untrack, type Snippet } from 'svelte';
 	import { createInputNormalizer } from '$lib/keyboard/input-adapter';
-	import type { RawInputEvent } from '$lib/keyboard/types';
+	import type { KeyPress, RawInputEvent } from '$lib/keyboard/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
@@ -65,9 +65,12 @@
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
+	/** The physical key that erases, whatever the layout: `KeyboardEvent.code` names it the same everywhere. */
+	const BACKSPACE_PRESS: KeyPress = { code: 'Backspace', level: 'base' };
 	const TYPING_WORDS: TypingWords = {
 		group: (text) => m.game_shared_announce_group({ text }),
 		error: (char) => m.game_shared_announce_error({ char }),
+		erase: (char) => m.game_shared_announce_erase({ char }),
 		spoken: spokenGrapheme
 	};
 
@@ -121,8 +124,12 @@
 	const typing = $derived(phase === 'typing');
 	const inFinale = $derived(phase === 'finale');
 	const expected = $derived(view.group[view.position]);
-	const target = $derived(typing ? targetKeyPress(charIndex, expected) : null);
-	const capsHelp = $derived(typing && needsCapsLockHelp(capsLock, expected));
+	// A wrong character is written (`backspace` policy): Backspace is the key to press first.
+	const erasing = $derived(typing && view.pending.length > 0);
+	const target = $derived(
+		erasing ? BACKSPACE_PRESS : typing ? targetKeyPress(charIndex, expected) : null
+	);
+	const capsHelp = $derived(typing && !erasing && needsCapsLockHelp(capsLock, expected));
 	// The reward of the game, else the text to type or the key expected after a mistake. Empty until
 	// the game is on screen: a live region only speaks what changes after it appeared.
 	let speaking = $state(false);
@@ -147,7 +154,9 @@
 	// A child who waits long on a key is helped: the hand shows it, then goes back to the new keys.
 	let hesitated = $state(false);
 	const guided = $derived(
-		typing && isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null, hesitated)
+		erasing ||
+			(typing &&
+				isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null, hesitated))
 	);
 	// Each keystroke shows the expected key again, so that a mistake brings the finger back.
 	const hands = $derived(
@@ -325,12 +334,13 @@
 					graphemes={view.group}
 					position={typing ? view.position : view.group.length}
 					errorIndex={view.errorIndex}
+					pending={typing ? view.pending : []}
 				/>
 				<!-- One place for what comes and goes (finger, reminder, Caps Lock): nothing below it moves. -->
 				<div class="slot">
 					{#if settings.showKeyboard}
 						<div class="hint">
-							{#if typing && !capsHelp}
+							{#if typing && !capsHelp && !erasing}
 								<FingerHint {target} {layout} {fingering} />
 							{/if}
 						</div>
@@ -350,6 +360,12 @@
 							<p class="notice">{m.game_shared_caps_lock()}</p>
 						{/if}
 					</div>
+					<!-- Said by the announcement of the game already, which names the character to erase. -->
+					{#if erasing}
+						<p class="notice" aria-hidden="true" data-erase-reminder>
+							{m.game_shared_erase_reminder()}
+						</p>
+					{/if}
 				</div>
 				<div class="dd-visually-hidden">
 					<label for={INPUT_ID}>{m.game_shared_input_label()}</label>

@@ -3,6 +3,7 @@
 	import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import type {
+		ErrorPolicy,
 		HandGuidePreference,
 		MotionPreference,
 		Settings,
@@ -21,6 +22,8 @@
 		/** The adult space names the child whose settings these are; the game says "Settings". */
 		title?: string;
 		backLabel?: string;
+		/** The settings only the adult chooses, such as Backspace, shown in the adult space only. */
+		adult?: boolean;
 		onchange: (patch: Partial<Settings>) => void;
 		onback: () => void;
 	}
@@ -30,6 +33,7 @@
 		saveState,
 		title = m.settings_title(),
 		backLabel = m.settings_back(),
+		adult = false,
 		onchange,
 		onback
 	}: Props = $props();
@@ -64,6 +68,10 @@
 		{ value: 'normal', label: m.settings_spacing_normal() },
 		{ value: 'wide', label: m.settings_spacing_wide() },
 		{ value: 'wider', label: m.settings_spacing_wider() }
+	];
+	const BACKSPACE_OPTIONS = [
+		{ value: 'backspace', label: m.settings_backspace_on() },
+		{ value: 'retry', label: m.settings_backspace_off() }
 	];
 	const LAYOUT_OPTIONS = LAYOUT_IDS.map((id) => ({ value: id, label: LAYOUT_LABELS[id]() }));
 	const sample = toGraphemes(m.settings_sample_text());
@@ -148,6 +156,18 @@
 			value={settings.layoutId}
 			onchange={(value) => onchange({ layoutId: value as LayoutId })}
 		/>
+		{#if adult}
+			<div class="adult-only" data-adult-setting="backspace">
+				<ChoiceGroup
+					legend={m.settings_backspace_label()}
+					name="setting-backspace"
+					options={BACKSPACE_OPTIONS}
+					value={settings.errorPolicy}
+					onchange={(value) => onchange({ errorPolicy: value as ErrorPolicy })}
+				/>
+				<p class="hint">{m.settings_backspace_hint()}</p>
+			</div>
+		{/if}
 	</div>
 </ScreenFrame>
 
@@ -184,6 +204,15 @@
 
 	.sample h2 {
 		font-size: var(--dd-font-size-lg);
+	}
+
+	.adult-only {
+		display: grid;
+		gap: var(--dd-space-sm);
+	}
+
+	.hint {
+		color: var(--dd-color-text-secondary);
 	}
 
 	.status {

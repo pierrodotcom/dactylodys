@@ -29,6 +29,7 @@
 	let reducedMotion = $state(false);
 	let showHand = $state(true);
 	let showScenes = $state(false);
+	let backspace = $state(false);
 	let step = $state<Step>('choose');
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let outcome = $state.raw<GameOutcome | null>(null);
@@ -39,7 +40,7 @@
 	const settings = $derived({
 		reducedMotion,
 		showKeyboard,
-		errorPolicy: 'retry' as const,
+		errorPolicy: backspace ? ('backspace' as const) : ('retry' as const),
 		guide: {
 			mode: showHand ? ('every-key' as const) : ('none' as const),
 			freshChars: [],
@@ -130,6 +131,10 @@
 				<label>
 					<input type="checkbox" bind:checked={showScenes} />
 					<span>{m.dev_games_scenes_label()}</span>
+				</label>
+				<label>
+					<input type="checkbox" bind:checked={backspace} />
+					<span>{m.dev_games_backspace_label()}</span>
 				</label>
 			</div>
 

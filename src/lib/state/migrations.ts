@@ -141,6 +141,16 @@ function toVersion8(record: StoredRecord): StoredRecord {
 	};
 }
 
+/* Version 9 (ADR-057): Backspace stays off, as before; only the adult turns it on. */
+function toVersion9(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { errorPolicy: 'retry', ...settings } : settings,
+		schemaVersion: 9
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -149,7 +159,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[4, toVersion5],
 	[5, toVersion6],
 	[6, toVersion7],
-	[7, toVersion8]
+	[7, toVersion8],
+	[8, toVersion9]
 ]);
 
 function versionOf(record: StoredRecord): number {
