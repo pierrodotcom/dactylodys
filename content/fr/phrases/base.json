@@ -1045,6 +1045,258 @@
 			"themes": ["espace"],
 			"level": 2,
 			"review": "human"
+		},
+		{
+			"text": "il entre et sent le dessert",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.tartine-t-n"
+		},
+		{
+			"text": "il se rue sur les fruits",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.tartine-t-n"
+		},
+		{
+			"text": "la tarte enfle et sort du four",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.gateau-a-o"
+		},
+		{
+			"text": "ton dino attend la tarte",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.gateau-a-o"
+		},
+		{
+			"text": "la tomate rit aussi sans raison",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.bras-q-m"
+		},
+		{
+			"text": "le melon met une toque",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.bras-q-m"
+		},
+		{
+			"text": "la casserole siffle un air de pirate",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.casserole-c-p"
+		},
+		{
+			"text": "le cuistot met du coton dans les oreilles",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.casserole-c-p"
+		},
+		{
+			"text": "une pincée d'épices et ton dino éternue",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.epices-accent-apostrophe"
+		},
+		{
+			"text": "ses narines lancent des étincelles",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.epices-accent-apostrophe"
+		},
+		{
+			"text": "la girafe espionne tout du haut de son cou",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.girafe-g-h"
+		},
+		{
+			"text": "les singes regardent ton dino",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.girafe-g-h"
+		},
+		{
+			"text": "la vache danse la polka en tutu",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.vache-v-b"
+		},
+		{
+			"text": "ton dino n'ose pas danser avec la vache",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.vache-v-b"
+		},
+		{
+			"text": "le yak cache un xylophone dans sa laine",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.yak-y-x"
+		},
+		{
+			"text": "ton dino examine la laine du yak",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.yak-y-x"
+		},
+		{
+			"text": "le bel équidé compte ses rayures",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.zebre-z-w"
+		},
+		{
+			"text": "il trouve douze rayures et demie",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.zebre-z-w"
+		},
+		{
+			"text": "le café s'élève et flotte hors de la tasse",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.lune-accents-graves"
+		},
+		{
+			"text": "ton dino boit son café à la paille",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.lune-accents-graves"
+		},
+		{
+			"text": "la comète file si vite qu'elle perd sa queue",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.comete-cedille-u-grave"
+		},
+		{
+			"text": "sa queue reste là où elle l'a oubliée",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.comete-cedille-u-grave"
+		},
+		{
+			"text": "Les géantes se penchent pour te voir",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.grandes-majuscules"
+		},
+		{
+			"text": "Une lune de Saturne salue ton dino",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.grandes-majuscules"
+		},
+		{
+			"text": "Sur Virgule, tout le monde fait une pause.",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.virgule-point"
+		},
+		{
+			"text": "Ton dino s'assied ; la fusée attend.",
+			"themes": ["espace"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.virgule-point"
+		},
+		{
+			"text": "Ton dino veut piloter ? Sans permis ?",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.klaxon-question-exclamation"
+		},
+		{
+			"text": "Pouet ! Tout le circuit éclate de rire.",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.klaxon-question-exclamation"
+		},
+		{
+			"text": "Le wagon-lit arrive en retard : il dort.",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.tiret-deux-points"
+		},
+		{
+			"text": "Le dernier wagon dit : \"pardon !\"",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.tiret-deux-points"
+		},
+		{
+			"text": "Le pilote râle : \"Pas sans mon chapeau !\"",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.chapeau-circonflexe"
+		},
+		{
+			"text": "Une plume de paon se dresse sur sa tête.",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.chapeau-circonflexe"
+		},
+		{
+			"text": "Son casque géant lui tombe sur le nez !",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.casque-circonflexe"
+		},
+		{
+			"text": "Il est sûr de lui, mais il ne voit rien.",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.casque-circonflexe"
+		},
+		{
+			"text": "Aïe ! Les deux phares du camion s'allument.",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.trema"
+		},
+		{
+			"text": "Le camion éteint un phare pour te saluer.",
+			"themes": ["vehicules"],
+			"level": 1,
+			"review": "human",
+			"lessonId": "fr.lesson.trema"
 		}
 	]
 }
