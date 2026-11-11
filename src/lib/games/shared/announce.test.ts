@@ -7,6 +7,7 @@ import { viewOf } from './game-view';
 const WORDS: TypingWords = {
 	group: (text) => `type ${text}`,
 	error: (char) => `expected ${char}`,
+	erase: (char) => `erase ${char}`,
 	spoken: (grapheme) => (grapheme === ' ' ? 'space' : grapheme)
 };
 
@@ -45,6 +46,26 @@ describe('typingAnnouncement', () => {
 	it('spells a space as a word, since a blank is not heard', () => {
 		expect(announced(type(createGame(['f j'], 'retry'), 'fx'))).toBe('expected space');
 		expect(announced(createGame([' '], 'retry'))).toBe('type space');
+	});
+
+	it('says the wrong character to erase, then the expected key once it is erased', () => {
+		const wrong = type(createGame(['fj'], 'backspace'), 'fx');
+		expect(announced(wrong)).toBe('erase x');
+		const twice = type(wrong, ' ');
+		expect(announced(twice)).toBe('erase space');
+
+		const backspace: NormalizedKeystroke = {
+			kind: 'backspace',
+			char: null,
+			code: 'Backspace',
+			timestamp: 1000,
+			composed: false
+		};
+		const once = reduce(twice, { type: 'keystroke', keystroke: backspace }).state;
+		expect(announced(once)).toBe('erase x');
+		const erased = reduce(once, { type: 'keystroke', keystroke: backspace }).state;
+		expect(announced(erased)).toBe('expected j');
+		expect(announced(type(erased, 'j'))).toBe('');
 	});
 
 	it('says the next group once the reward of the last one is over, and nothing in between', () => {

@@ -34,7 +34,10 @@ export interface GameState {
 	 */
 	readonly settled: boolean;
 	readonly paused: boolean;
-	/** Index in the current group of the character that was mistyped, `null` when there is none. */
+	/**
+	 * Index in the current group of the character that was mistyped, `null` when there is none. With
+	 * the `backspace` policy it stays set once the wrong characters are erased, until the right key.
+	 */
 	readonly errorIndex: number | null;
 	/** Physical key of the last mistake, shown on the keyboard until the next good key. */
 	readonly wrongCode: KeyCode | null;
@@ -132,7 +135,12 @@ function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
 	const sounds: SoundId[] = [];
 	for (const event of step.events) {
 		if (event.type === 'error') {
-			next = { ...next, errorIndex: event.index, wrongCode: keystroke.code, mood: 'oops' };
+			next = {
+				...next,
+				errorIndex: step.state.position,
+				wrongCode: keystroke.code,
+				mood: 'oops'
+			};
 			sounds.push('error');
 		} else if (event.type === 'correct') {
 			next = {

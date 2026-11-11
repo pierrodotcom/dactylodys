@@ -18,6 +18,11 @@ export interface GameView {
 	readonly mood: GameMood;
 	/** Index in the group of the character that was mistyped, `null` when there is none. */
 	readonly errorIndex: number | null;
+	/**
+	 * Wrong characters written after the good ones, waiting to be erased with Backspace, in the order
+	 * they were typed (`backspace` policy only; always empty with `retry`).
+	 */
+	readonly pending: readonly string[];
 	readonly wrongCode: KeyCode | null;
 	/** Draw the new state only: no movement. */
 	readonly reducedMotion: boolean;
@@ -55,6 +60,7 @@ export function viewOf(
 		phase: state.phase,
 		mood: state.mood,
 		errorIndex: state.errorIndex,
+		pending: state.session.pending,
 		wrongCode: state.wrongCode,
 		reducedMotion,
 		rewardIndex,

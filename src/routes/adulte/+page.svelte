@@ -253,6 +253,7 @@
 			backLabel={elided
 				? m.adult_settings_back_elided({ name: child.name })
 				: m.adult_settings_back({ name: child.name })}
+			adult
 			onchange={(patch) => changeSettings(child, patch)}
 			onback={() => show({ name: 'child', id: child.id })}
 		/>
