@@ -1,5 +1,5 @@
 import { toGraphemes } from '../graphemes';
-import { usablePhrases, usableWords } from './banks';
+import { storyPhrases, usablePhrases, usableWords } from './banks';
 import { findLesson, freshChars, learnedChars } from './definition';
 import { recentErrorRate } from './progress';
 import type {
@@ -196,6 +196,27 @@ function chooseGenre(mix: ExerciseMix, hasWords: boolean, hasPhrases: boolean, r
 	);
 }
 
+/**
+ * The story phrase this exercise ends with, if the lesson has some and its plays so far are a
+ * multiple of `storyPhraseEvery`; the lesson's phrases take turns.
+ */
+function dueStoryPhrase(
+	progression: ProgressionDefinition,
+	lessonId: string,
+	learned: readonly string[],
+	context: ExerciseContext
+): string | undefined {
+	const every = progression.rules.storyPhraseEvery;
+	if (every === undefined || context.phrases === undefined) return undefined;
+	const known = new Set(learned);
+	const phrases = storyPhrases(context.phrases, lessonId).filter((phrase) =>
+		toGraphemes(phrase.text).every((char) => known.has(char))
+	);
+	const plays = context.progress?.lessons[lessonId]?.attempts ?? 0;
+	if (phrases.length === 0 || plays % every !== 0) return undefined;
+	return phrases[Math.floor(plays / every) % phrases.length]?.text;
+}
+
 export function generateExercise(
 	progression: ProgressionDefinition,
 	lessonId: string,
@@ -281,6 +302,7 @@ export function generateExercise(
 			: candidate;
 	};
 
+	const story = dueStoryPhrase(progression, lessonId, learned, context);
 	const groups: string[] = [];
 	const asked = new Map<string, number>();
 	let total = 0;
@@ -288,6 +310,11 @@ export function generateExercise(
 	while (groups.length < lesson.groupCount) {
 		// Warm-up: suites that hold the new characters open the exercise until each was asked enough.
 		const lacking = lesson.newChars.filter((char) => (asked.get(char) ?? 0) < newCharMinCount);
+		// The story phrase follows the warm-up straight away and ends the exercise, whatever its length.
+		if (lacking.length === 0 && story !== undefined) {
+			groups.push(story);
+			break;
+		}
 		if (lacking.length === 0 && total >= lesson.targetLength) break;
 		const missing = lesson.newChars.filter((char) => !asked.has(char));
 		const previous = groups[groups.length - 1];

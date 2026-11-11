@@ -1,8 +1,10 @@
 import { toGraphemes } from '../graphemes';
+import { findLesson, learnedChars } from './definition';
 import type {
 	BankSource,
 	PhraseBank,
 	PhraseEntry,
+	ProgressionDefinition,
 	ReviewStatus,
 	ThemeDefinition,
 	WordBank,
@@ -177,27 +179,71 @@ export function parseWordBank(data: unknown): WordBank {
 	return { schemaVersion: 1, id, locale, sources, themes, words };
 }
 
+function parseLessonId(value: unknown, language: string, path: string): string {
+	const lessonId = expectString(value, path);
+	if (!new RegExp(`^${language}\\.lesson\\.${SLUG}$`).test(lessonId)) {
+		fail(path, `expected ${language}.lesson.<slug>`);
+	}
+	return lessonId;
+}
+
 export function parsePhraseBank(data: unknown): PhraseBank {
 	const root = expectRecord(data, 'phrases');
 	rejectUnknown(root, ['schemaVersion', 'id', 'locale', 'phrases'], 'phrases');
 	const { id, locale } = parseHeader(root, 'phrases', 'phrases');
+	const language = new Intl.Locale(locale).language;
 
 	const seen = new Set<string>();
 	const phrases = expectArray(root['phrases'], 'phrases.phrases').map((raw, i): PhraseEntry => {
 		const path = `phrases.phrases[${i}]`;
 		const record = expectRecord(raw, path);
-		rejectUnknown(record, ['text', 'themes', 'level', 'review'], path);
+		rejectUnknown(record, ['text', 'themes', 'level', 'review', 'lessonId'], path);
 		const text = parsePhraseText(record['text'], `${path}.text`);
 		if (seen.has(text)) fail(`${path}.text`, `duplicate phrase "${text}"`);
 		seen.add(text);
+		const lessonId =
+			record['lessonId'] === undefined
+				? undefined
+				: parseLessonId(record['lessonId'], language, `${path}.lessonId`);
 		return {
 			text,
 			themes: parseEntryThemes(record['themes'], null, `${path}.themes`),
 			level: parseLevel(record['level'], `${path}.level`),
-			review: parseReview(record['review'], `${path}.review`)
+			review: parseReview(record['review'], `${path}.review`),
+			...(lessonId === undefined ? {} : { lessonId })
 		};
 	});
 	return { schemaVersion: 1, id, locale, phrases };
+}
+
+/**
+ * What is wrong with the story phrases of the bank for this progression: a lesson it does not
+ * have, or a character not yet learned at that lesson. Empty when they are all right.
+ */
+export function validateStoryPhrases(
+	bank: PhraseBank,
+	progression: ProgressionDefinition
+): string[] {
+	const issues: string[] = [];
+	for (const phrase of bank.phrases) {
+		const { lessonId } = phrase;
+		if (lessonId === undefined) continue;
+		if (findLesson(progression, lessonId) === undefined) {
+			issues.push(`"${phrase.text}": unknown lesson ${lessonId}`);
+			continue;
+		}
+		const known = new Set(learnedChars(progression, lessonId));
+		const unknown = [...new Set(toGraphemes(phrase.text).filter((char) => !known.has(char)))];
+		if (unknown.length > 0) {
+			issues.push(`"${phrase.text}": not learned at ${lessonId}: ${unknown.join(' ')}`);
+		}
+	}
+	return issues;
+}
+
+/** The story phrases of a lesson, in the order of the bank. */
+export function storyPhrases(bank: PhraseBank, lessonId: string): PhraseEntry[] {
+	return bank.phrases.filter((phrase) => phrase.lessonId === lessonId);
 }
 
 function usable<T extends { readonly text: string; readonly level: WordLevel }>(
@@ -220,10 +266,15 @@ export function usableWords(
 	return usable(bank.words, learned, options);
 }
 
+/** Story phrases are left out: they belong to their lesson (`storyPhrases`). */
 export function usablePhrases(
 	bank: PhraseBank,
 	learned: Iterable<string>,
 	options: UsableOptions = {}
 ): PhraseEntry[] {
-	return usable(bank.phrases, learned, options);
+	return usable(
+		bank.phrases.filter((phrase) => phrase.lessonId === undefined),
+		learned,
+		options
+	);
 }

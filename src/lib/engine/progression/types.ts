@@ -39,6 +39,12 @@ export interface ProgressionRules {
 	 * and draws that star half full; absent: never.
 	 */
 	readonly starAlmostMargin?: number;
+	/**
+	 * Plays of a lesson between two exercises that end with one of its story phrases
+	 * (`PhraseEntry.lessonId`), at least 1: the exercise has one when the plays already made are a
+	 * multiple of it, so the first exercise always does. Absent: story phrases are never asked.
+	 */
+	readonly storyPhraseEvery?: number;
 }
 
 /**
@@ -155,6 +161,11 @@ export interface PhraseEntry {
 	readonly themes: readonly string[];
 	readonly level: WordLevel;
 	readonly review: ReviewStatus;
+	/**
+	 * A phrase that tells the story of this lesson's world: it is asked in this lesson only, as the
+	 * last group of an exercise (`ProgressionRules.storyPhraseEvery`), and never mixed elsewhere.
+	 */
+	readonly lessonId?: string;
 }
 
 export interface PhraseBank {

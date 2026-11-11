@@ -1,7 +1,15 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { toGraphemes } from '../graphemes';
-import { parsePhraseBank, parseWordBank, usablePhrases, usableWords } from './banks';
+import {
+	parsePhraseBank,
+	parseWordBank,
+	storyPhrases,
+	usablePhrases,
+	usableWords,
+	validateStoryPhrases
+} from './banks';
+import { parseProgression } from './definition';
 import { clone, deepFreeze } from './test-support';
 
 type RawBank = { [key: string]: unknown; words: Record<string, unknown>[] };
@@ -166,6 +174,26 @@ describe('parsePhraseBank', () => {
 		expect(() => parsePhraseBank(phraseVariant(change))).toThrow(message);
 	});
 
+	it('keeps the lesson of a story phrase, and adds nothing to the others', () => {
+		const bank = parsePhraseBank(
+			phraseVariant((raw) => (raw.phrases[1]!['lessonId'] = 'fr.lesson.chat-dort'))
+		);
+		expect(bank.phrases[1]?.lessonId).toBe('fr.lesson.chat-dort');
+		expect(bank.phrases[0]).not.toHaveProperty('lessonId');
+	});
+
+	it.each([
+		['an empty lesson', ''],
+		['a lesson of another language', 'en.lesson.cat'],
+		['a world instead of a lesson', 'fr.world.cuisine'],
+		['a lesson that is not a slug', 'fr.lesson.Chat'],
+		['a lesson that is not a string', 3]
+	])('rejects a story phrase of %s', (_name, lessonId) => {
+		expect(() =>
+			parsePhraseBank(phraseVariant((raw) => (raw.phrases[0]!['lessonId'] = lessonId)))
+		).toThrow(/phrases\[0\]\.lessonId/);
+	});
+
 	it('keeps a phrase with capitals, punctuation and single spaces', () => {
 		const bank = parsePhraseBank(
 			phraseVariant((raw) => (raw.phrases[0]!['text'] = 'Où est-il ? Là-bas, très loin!'))
@@ -256,5 +284,105 @@ describe('usablePhrases', () => {
 
 	it('returns nothing without known characters', () => {
 		expect(texts([])).toEqual([]);
+	});
+
+	it('leaves out the story phrases, which belong to their lesson', () => {
+		const story = parsePhraseBank(
+			phraseVariant((raw) => (raw.phrases[0]!['lessonId'] = 'fr.lesson.lis'))
+		);
+		expect(usablePhrases(story, [...'Jelis .']).map((entry) => entry.text)).toEqual([]);
+	});
+});
+
+describe('story phrases', () => {
+	const progression = parseProgression({
+		schemaVersion: 1,
+		id: 'fr.progression.story',
+		locale: 'fr-FR',
+		layoutIds: ['fr-fr-azerty-pc'],
+		rules: {
+			unlockAccuracy: 80,
+			starThresholds: [80, 90, 97],
+			newCharWeight: 0.6,
+			weakCharBoost: 2,
+			themeBoost: 2,
+			newCharMinCount: 0,
+			recentCharWindow: 30
+		},
+		worlds: [
+			{
+				id: 'fr.world.one',
+				title: 'One',
+				themeId: 'dinos',
+				gameIds: ['hatching'],
+				lessons: [
+					['fjds', ['f', 'j', 'd', 's', ' ']],
+					['el', ['e', 'l']],
+					['i', ['i']]
+				].map(([slug, newChars]) => ({
+					id: `fr.lesson.${String(slug)}`,
+					title: String(slug),
+					intro: 'Intro.',
+					newChars,
+					words: [],
+					mix: { drills: 1, words: 0, phrases: 0 },
+					unlocks: [],
+					groupCount: 8,
+					targetLength: 20,
+					groupLength: [5, 6]
+				}))
+			}
+		]
+	});
+	const bankOf = (entries: [string, string][]) =>
+		parsePhraseBank({
+			schemaVersion: 1,
+			id: 'fr.phrases.story',
+			locale: 'fr-FR',
+			phrases: [
+				{ text: 'je lis', themes: [], level: 1, review: 'agent' },
+				...entries.map(([text, lessonId]) => ({
+					text,
+					themes: [],
+					level: 1,
+					review: 'human',
+					lessonId
+				}))
+			]
+		});
+
+	it('lists the story phrases of one lesson, in the order of the bank', () => {
+		const bank = bankOf([
+			['elle se lasse', 'fr.lesson.el'],
+			['il lit', 'fr.lesson.i'],
+			['elle file', 'fr.lesson.el']
+		]);
+		expect(storyPhrases(bank, 'fr.lesson.el').map((entry) => entry.text)).toEqual([
+			'elle se lasse',
+			'elle file'
+		]);
+		expect(storyPhrases(bank, 'fr.lesson.fjds')).toEqual([]);
+	});
+
+	it('finds nothing wrong with phrases written with the keys of their lesson', () => {
+		const bank = bankOf([
+			['elle se fe', 'fr.lesson.el'],
+			['si je lis', 'fr.lesson.i']
+		]);
+		expect(validateStoryPhrases(bank, progression)).toEqual([]);
+	});
+
+	it('refuses a story phrase whose lesson does not exist', () => {
+		const bank = bankOf([['elle se fe', 'fr.lesson.zzz']]);
+		expect(validateStoryPhrases(bank, progression)).toEqual([
+			'"elle se fe": unknown lesson fr.lesson.zzz'
+		]);
+	});
+
+	it('refuses a story phrase that needs a key learned after its lesson', () => {
+		const bank = bankOf([['si je lis', 'fr.lesson.el']]);
+		expect(validateStoryPhrases(bank, progression)).toEqual([
+			'"si je lis": not learned at fr.lesson.el: i'
+		]);
 	});
 });
