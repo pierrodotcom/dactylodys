@@ -26,7 +26,7 @@
 	const props: GameProps = $props();
 
 	function cryFor(view: GameView): string {
-		return pickCyclic(CRIES, view.groupIndex)?.() ?? '';
+		return pickCyclic(CRIES, view.rewardIndex)?.() ?? '';
 	}
 
 	function crackStage(view: GameView): number {
@@ -53,6 +53,7 @@
 
 {#snippet progress(view: GameView)}
 	<EggRow
+		offset={view.playOffset}
 		total={view.total}
 		hatched={view.completed}
 		current={isRewarded(view) ? -1 : view.groupIndex}
@@ -71,7 +72,7 @@
 			<HatchEgg
 				stage={crackStage(view)}
 				hatched={isRewarded(view)}
-				variant={view.groupIndex}
+				variant={view.rewardIndex}
 				still={view.reducedMotion}
 				scene={view.scene}
 				big

@@ -44,7 +44,9 @@
 	const originX = $derived(trainOriginX(view.total));
 	const chimney = $derived(chimneyPoint(view.total));
 	const wagons = $derived(wagonIndexes(view));
-	const entrance = $derived(view.scene.kind === 'variant' ? view.scene.index : view.groupIndex % 4);
+	const entrance = $derived(
+		view.scene.kind === 'variant' ? view.scene.index : view.rewardIndex % 4
+	);
 	const ties = $derived(
 		Array.from({ length: Math.ceil(SCENE.width / TRACK.tieSpacing) + 1 }, (_, index) => index)
 	);

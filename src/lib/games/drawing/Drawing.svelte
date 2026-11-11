@@ -14,7 +14,7 @@
 	const picture = $derived(pictureFor(props.exercise.lessonId, props.playCount));
 
 	function quipFor(view: GameView): string {
-		return pickCyclic(QUIPS, view.groupIndex)?.() ?? '';
+		return pickCyclic(QUIPS, view.rewardIndex)?.() ?? '';
 	}
 
 	function announce(view: GameView): string {

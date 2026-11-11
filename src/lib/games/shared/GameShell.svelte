@@ -81,6 +81,7 @@
 		sounds,
 		ghost,
 		ghostGreeting = 0,
+		playCount = 0,
 		suspended = false,
 		onComplete,
 		onQuit,
@@ -113,7 +114,7 @@
 
 	const normalizer = createInputNormalizer();
 
-	const view = $derived(viewOf(game, settings.reducedMotion, settings.scenes));
+	const view = $derived(viewOf(game, settings.reducedMotion, settings.scenes, playCount));
 	const phase = $derived(game.phase);
 	const paused = $derived(game.paused);
 	const mood = $derived(game.mood);

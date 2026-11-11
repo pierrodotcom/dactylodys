@@ -79,7 +79,7 @@
 	const departure = $derived(departureIndex(view));
 	const lit = $derived(destinationLit(view));
 	const coughing = $derived(view.errorIndex !== null);
-	const destinationVariant = $derived(view.groupIndex);
+	const destinationVariant = $derived(view.rewardIndex);
 	const sceneId = $derived(lit && view.scene.kind === 'scene' ? view.scene.id : undefined);
 	const ringed = $derived(astreVariant(destinationVariant) === 0);
 	const heart = $derived(pose.landed ? HEART_OFFSET.landed : HEART_OFFSET.flying);
@@ -316,7 +316,7 @@
 	{/if}
 
 	<g transform={astreTransform(FLIGHT.departureX)}>
-		<AstreShape variant={departure ?? 0} lit={true} home={departure === null} />
+		<AstreShape variant={view.playOffset + (departure ?? 0)} lit={true} home={departure === null} />
 	</g>
 
 	{#if sceneId === 'hide-and-seek'}

@@ -155,6 +155,14 @@ interface PlayOptions {
 	from?: number;
 	/** Index after the last group to type. */
 	until?: number;
+	/** Plays of this game already finished on the page: the bubbles go on from one to the next. */
+	play?: number;
+}
+
+/** The bubble of the `rewardIndex`-th group of a game since the page opened, the list starting over. */
+function bubbleFor(game: Game, rewardIndex: number): string {
+	const keys = numbered(game.bubblePrefix);
+	return message(keys[rewardIndex % keys.length] ?? '');
 }
 
 /**
@@ -180,7 +188,7 @@ async function typeGroups(page: Page, game: Game, options: PlayOptions = {}) {
 		const group = await currentGroup(page);
 		expect(group).toBe(GROUPS[index]);
 		await page.keyboard.type(group);
-		await expectRewardShown(page, message(`${game.bubblePrefix}${index + 1}`));
+		await expectRewardShown(page, bubbleFor(game, (options.play ?? 0) * GROUPS.length + index));
 		await expect(page.getByRole('img', { name: progressLabel(game, index + 1) })).toBeVisible();
 		if (index < GROUPS.length - 1 && options.skipDelay) await page.keyboard.press(SKIP_KEY);
 	}
@@ -601,7 +609,7 @@ test.describe('game recipe', () => {
 		await expect(resultHeading(page)).toBeVisible();
 
 		await beginGame(page, recipe);
-		await typeGroups(page, recipe, { skipDelay: true });
+		await typeGroups(page, recipe, { skipDelay: true, play: 1 });
 
 		await expect(page.locator('.dish-name')).toHaveText(first ?? '');
 	});
@@ -644,6 +652,26 @@ test.describe('surprise scenes', () => {
 				await page.keyboard.type(FIRST_GROUP);
 				await expect(page.locator(`[data-scene="${SCENES.games[game.id]?.[0]}"]`)).toHaveCount(1);
 			}
+		});
+
+		test('goes on with the next scenes and bubbles when the child plays the game again', async ({
+			page
+		}) => {
+			const tower = gameNamed('tower');
+			const scenes = SCENES.games['tower'] ?? [];
+			await openChooser(page);
+			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
+			await beginGame(page, tower);
+			await typeGroups(page, tower, { skipDelay: true });
+			await leaveLastReward(page);
+
+			await beginGame(page, tower);
+			await page.keyboard.type(FIRST_GROUP);
+
+			await expectRewardShown(page, bubbleFor(tower, GROUPS.length));
+			expect(GROUPS.length).toBeLessThan(scenes.length);
+			await expect(page.locator(`[data-scene="${scenes[GROUPS.length]}"]`)).toHaveCount(1);
+			await expect(page.locator(`[data-scene="${scenes[0]}"]`)).toHaveCount(0);
 		});
 
 		test('plays the next recipe scenes group after group, with their own props', async ({

@@ -10,9 +10,12 @@
 		current: number;
 		/** Cracks of the egg being typed. */
 		stage: number;
+
+		/** Added to the index of each item, so that it looks like the big picture of the game. */
+		offset?: number;
 	}
 
-	let { total, hatched, current, stage }: Props = $props();
+	let { total, hatched, current, stage, offset = 0 }: Props = $props();
 
 	const eggs = $derived(Array.from({ length: total }, (_, index) => index));
 	const label = $derived(
@@ -28,7 +31,11 @@
 			class="item"
 			data-state={index < hatched ? 'hatched' : index === current ? 'current' : 'next'}
 		>
-			<HatchEgg stage={index === current ? stage : 0} hatched={index < hatched} variant={index} />
+			<HatchEgg
+				stage={index === current ? stage : 0}
+				hatched={index < hatched}
+				variant={offset + index}
+			/>
 		</span>
 	{/each}
 </div>

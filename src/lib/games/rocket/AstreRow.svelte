@@ -8,9 +8,12 @@
 		reached: number;
 		/** Index of the astre being flown to, `-1` between two astres. */
 		current: number;
+
+		/** Added to the index of each item, so that it looks like the big picture of the game. */
+		offset?: number;
 	}
 
-	let { total, reached, current }: Props = $props();
+	let { total, reached, current, offset = 0 }: Props = $props();
 
 	const astres = $derived(Array.from({ length: total }, (_, index) => index));
 	const label = $derived(
@@ -27,7 +30,7 @@
 			data-state={index < reached ? 'reached' : index === current ? 'current' : 'next'}
 		>
 			<svg class="tile" viewBox="0 0 100 100" focusable="false" aria-hidden="true">
-				<AstreShape variant={index} lit={index < reached} />
+				<AstreShape variant={offset + index} lit={index < reached} />
 			</svg>
 		</span>
 	{/each}

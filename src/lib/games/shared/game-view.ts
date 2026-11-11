@@ -21,16 +21,30 @@ export interface GameView {
 	readonly wrongCode: KeyCode | null;
 	/** Draw the new state only: no movement. */
 	readonly reducedMotion: boolean;
+	/**
+	 * Rank of the current group among all the groups of this game the child has played: it goes on
+	 * from one play to the next, so that a replayed game does not show the same things again.
+	 */
+	readonly rewardIndex: number;
+	/** Rank of the first group of this play: what the progress rows add to their own indexes. */
+	readonly playOffset: number;
 	/** What the reward of the current group shows: a surprise scene, or a common entrance. */
 	readonly scene: SceneChoice;
 }
 
-/** With calm motion, no scene: the common entrance, which then fades in without moving. */
+/**
+ * With calm motion, no scene: the common entrance, which then fades in without moving.
+ * `playCount` is the number of plays of this game the child has finished.
+ */
 export function viewOf(
 	state: GameState,
 	reducedMotion: boolean,
-	scenes: readonly string[] = []
+	scenes: readonly string[] = [],
+	playCount = 0
 ): GameView {
+	const plays = Number.isSafeInteger(playCount) && playCount > 0 ? playCount : 0;
+	const playOffset = plays * state.groups.length;
+	const rewardIndex = playOffset + state.groupIndex;
 	return {
 		groups: state.groups,
 		groupIndex: state.groupIndex,
@@ -43,7 +57,9 @@ export function viewOf(
 		errorIndex: state.errorIndex,
 		wrongCode: state.wrongCode,
 		reducedMotion,
-		scene: sceneForGroup(reducedMotion ? [] : scenes, state.groupIndex)
+		rewardIndex,
+		playOffset,
+		scene: sceneForGroup(reducedMotion ? [] : scenes, rewardIndex)
 	};
 }
 
