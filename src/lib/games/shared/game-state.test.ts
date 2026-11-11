@@ -168,6 +168,82 @@ describe('keys that are not characters', () => {
 	});
 });
 
+describe('the backspace policy', () => {
+	it('writes a wrong key after the good ones, flags the character it took the place of', () => {
+		const state = typeText(createGame(['fjd'], 'backspace'), 'f');
+
+		const step = reduce(state, char('k'));
+
+		expect(step.state.session.pending).toEqual(['k']);
+		expect(step.state.session.position).toBe(1);
+		expect(step.state.errorIndex).toBe(1);
+		expect(step.state.wrongCode).toBe('KeyK');
+		expect(step.state.mood).toBe('oops');
+		expect(step.sounds).toEqual(['error']);
+	});
+
+	it('takes no right key while a wrong one is written, and counts each one as a mistake', () => {
+		const state = play(createGame(['fj'], 'backspace'), [char('d'), char('f'), char('j')]);
+
+		expect(state.session.pending).toEqual(['d', 'f', 'j']);
+		expect(state.session.position).toBe(0);
+		expect(state.errorIndex).toBe(0);
+		expect(state.phase).toBe('typing');
+	});
+
+	it('erases one wrong character per Backspace, silently, and keeps the error until the right key', () => {
+		const wrong = play(createGame(['fj'], 'backspace'), [char('d'), char('s')]);
+
+		const once = reduce(wrong, key('backspace'));
+		expect(once.state.session.pending).toEqual(['d']);
+		expect(once.sounds).toEqual([]);
+
+		const twice = reduce(once.state, key('backspace'));
+		expect(twice.state.session.pending).toEqual([]);
+		expect(twice.state.errorIndex).toBe(0);
+		expect(twice.sounds).toEqual([]);
+
+		const right = reduce(twice.state, char('f'));
+		expect(right.state.session.position).toBe(1);
+		expect(right.state.errorIndex).toBeNull();
+		expect(right.state.wrongCode).toBeNull();
+		expect(right.sounds).toEqual(['correct']);
+	});
+
+	it('ignores a Backspace with nothing to erase', () => {
+		const state = typeText(createGame(['fj'], 'backspace'), 'f');
+
+		expect(reduce(state, key('backspace')).state).toBe(state);
+	});
+
+	it('counts the wrong keys and not the Backspaces in the metrics of the group', () => {
+		const state = play(createGame(['fj'], 'backspace'), [
+			char('d'),
+			char('s'),
+			key('backspace'),
+			key('backspace'),
+			char('f'),
+			char('j')
+		]);
+
+		const metrics = exerciseMetrics(state);
+
+		expect(state.phase).toBe('celebrating');
+		expect(metrics.totalKeystrokes).toBe(4);
+		expect(metrics.correctKeystrokes).toBe(2);
+		expect(metrics.errorCount).toBe(2);
+	});
+
+	it('starts the next group with nothing left to erase', () => {
+		let state = play(createGame(['f', 'j'], 'backspace'), [char('d'), key('backspace'), char('f')]);
+		state = reduce(state, { type: 'advance' }).state;
+
+		expect(state.session.pending).toEqual([]);
+		expect(state.errorIndex).toBeNull();
+		expect(state.session.options.errorPolicy).toBe('backspace');
+	});
+});
+
 describe('a group typed to the end', () => {
 	it('starts the reward with the group sound', () => {
 		const state = typeText(createGame(['fj', 'jf'], 'retry'), 'f');

@@ -19,6 +19,7 @@ import {
 import type { LayoutPlatform } from '../keyboard/types';
 import type {
 	CompanionChoice,
+	ErrorPolicy,
 	HandwritingSample,
 	HelpQuestRecord,
 	MotionPreference,
@@ -44,18 +45,20 @@ const DEFAULT_SETTINGS_COMMON = {
 	textScale: 'md',
 	textSpacing: 'normal',
 	showKeyboard: true,
-	handGuide: 'auto'
+	handGuide: 'auto',
+	errorPolicy: 'retry'
 } as const satisfies Omit<Settings, 'layoutId'>;
 
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
 const MOTIONS = ['system', 'reduced', 'full'] as const satisfies readonly MotionPreference[];
 const HAND_GUIDES = ['auto', 'always', 'off'] as const satisfies readonly HandGuidePreference[];
+const ERROR_POLICIES = ['retry', 'backspace'] as const satisfies readonly ErrorPolicy[];
 const TEXT_SCALES = ['md', 'lg', 'xl'] as const satisfies readonly TextScale[];
 const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly TextSpacing[];
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 8;
+export const PROFILE_SCHEMA_VERSION = 9;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -115,7 +118,8 @@ const SETTINGS_KEYS = [
 	'textScale',
 	'textSpacing',
 	'showKeyboard',
-	'handGuide'
+	'handGuide',
+	'errorPolicy'
 ] as const satisfies readonly (keyof Settings)[];
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
@@ -367,7 +371,8 @@ function parseSettings(data: unknown, path: string): Settings {
 		textScale: expectOneOf(record['textScale'], TEXT_SCALES, `${path}.textScale`),
 		textSpacing: expectOneOf(record['textSpacing'], TEXT_SPACINGS, `${path}.textSpacing`),
 		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
-		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`)
+		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`),
+		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`)
 	};
 }
 

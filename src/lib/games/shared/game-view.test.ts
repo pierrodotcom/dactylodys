@@ -43,6 +43,41 @@ describe('viewOf', () => {
 		expect(viewOf(state, false)).toMatchObject({ errorIndex: 0, mood: 'oops', wrongCode: 'KeyX' });
 	});
 
+	it('has nothing waiting to be erased with the retry policy', () => {
+		const state = type(createGame(['fj'], 'retry'), 'xk');
+
+		expect(viewOf(state, false).pending).toEqual([]);
+	});
+
+	it('shows the wrong characters written after the good ones, until they are erased', () => {
+		const backspace: NormalizedKeystroke = {
+			kind: 'backspace',
+			char: null,
+			code: 'Backspace',
+			timestamp: 1000,
+			composed: false
+		};
+		const wrong = type(createGame(['fjd'], 'backspace'), 'fxk');
+		expect(viewOf(wrong, false)).toMatchObject({
+			position: 1,
+			pending: ['x', 'k'],
+			errorIndex: 1,
+			mood: 'oops'
+		});
+
+		const once = reduce(wrong, { type: 'keystroke', keystroke: backspace }).state;
+		expect(viewOf(once, false).pending).toEqual(['x']);
+
+		const erased = reduce(once, {
+			type: 'keystroke',
+			keystroke: { ...backspace, timestamp: 1100 }
+		}).state;
+		expect(viewOf(erased, false)).toMatchObject({ position: 1, pending: [], errorIndex: 1 });
+
+		const resumed = type(erased, 'j');
+		expect(viewOf(resumed, false)).toMatchObject({ position: 2, pending: [], errorIndex: null });
+	});
+
 	it('counts the group whose reward is on screen as finished', () => {
 		const state = type(createGame(['fj', 'jf'], 'retry'), 'fj');
 

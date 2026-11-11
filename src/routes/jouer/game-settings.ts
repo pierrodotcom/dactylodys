@@ -17,7 +17,7 @@ export function toGameSettings(
 	return {
 		reducedMotion: isMotionReduced(settings, systemPrefersReduced),
 		showKeyboard: settings.showKeyboard,
-		errorPolicy: 'retry',
+		errorPolicy: settings.errorPolicy,
 		guide,
 		lookReminderEvery,
 		scenes

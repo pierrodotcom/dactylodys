@@ -152,9 +152,25 @@ export const EMPTY_JOURNAL = {
 	openedWorldIds: []
 } as const satisfies Partial<Profile>;
 
-/** The record version 7 of the app stored: the same profile without the times of the recent plays. */
+/** What a profile becomes once migrated from version 8 or older: Backspace off, as before. */
+export function withRetryPolicy(profile: Profile): Profile {
+	return { ...profile, settings: { ...profile.settings, errorPolicy: 'retry' } };
+}
+
+/** The record version 8 of the app stored: the same profile without the choice of Backspace. */
+export function asVersion8(profile: Profile): Record<string, unknown> {
+	const settings: Record<string, unknown> = { ...profile.settings };
+	delete settings['errorPolicy'];
+	return { ...profile, schemaVersion: 8, settings };
+}
+
+/** The record version 7 of the app stored: version 8 without the times of the recent plays. */
 export function asVersion7(profile: Profile): Record<string, unknown> {
-	return { ...profile, schemaVersion: 7, progress: progressBeforeVersion8(profile.progress) };
+	return {
+		...asVersion8(profile),
+		schemaVersion: 7,
+		progress: progressBeforeVersion8(profile.progress)
+	};
 }
 
 /** The record version 6 of the app stored: version 7 without the journal. */
