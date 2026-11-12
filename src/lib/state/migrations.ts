@@ -171,6 +171,16 @@ function toVersion11(record: StoredRecord): StoredRecord {
 	};
 }
 
+/* Version 12 (ADR-057, proposal 15): the words of the 8-9 year olds, as before. */
+function toVersion12(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { ageBand: '8-9', ...settings } : settings,
+		schemaVersion: 12
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -182,7 +192,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[7, toVersion8],
 	[8, toVersion9],
 	[9, toVersion10],
-	[10, toVersion11]
+	[10, toVersion11],
+	[11, toVersion12]
 ]);
 
 function versionOf(record: StoredRecord): number {

@@ -217,7 +217,7 @@ function dueStoryPhrase(
 	const every = progression.rules.storyPhraseEvery;
 	if (every === undefined || context.phrases === undefined) return undefined;
 	const known = new Set(learned);
-	const phrases = storyPhrases(context.phrases, lessonId).filter((phrase) =>
+	const phrases = storyPhrases(context.phrases, lessonId, context.ageBand).filter((phrase) =>
 		toGraphemes(phrase.text).every((char) => known.has(char))
 	);
 	const plays = context.progress?.lessons[lessonId]?.attempts ?? 0;
@@ -238,7 +238,7 @@ function dueText(
 	if (context.texts === undefined) return undefined;
 	const known = new Set(learned);
 	const maxLevel = context.maxLevel ?? 3;
-	const texts = lessonTexts(context.texts, lessonId).filter(
+	const texts = lessonTexts(context.texts, lessonId, context.ageBand).filter(
 		(entry) =>
 			entry.level <= maxLevel && toGraphemes(textOf(entry)).every((char) => known.has(char))
 	);
@@ -283,7 +283,7 @@ export function generateExercise(
 		return { text, graphemes, weight: themeFactor * weakFactor };
 	};
 
-	const options = { maxLevel: context.maxLevel };
+	const options = { maxLevel: context.maxLevel, ageBand: context.ageBand };
 	const wordItems = new Map<string, Item>();
 	for (const word of lesson.words) wordItems.set(word, toItem(word, []));
 	if (context.words !== undefined) {

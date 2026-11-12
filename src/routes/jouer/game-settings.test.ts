@@ -55,6 +55,11 @@ describe('toGameSettings', () => {
 		expect(toGameSettings(base, false, NO_GUIDE, 0, [], ['KeyF']).fadedKeys).toEqual(['KeyF']);
 	});
 
+	it('passes the age group of the child to the game, for its bubbles', () => {
+		expect(toGameSettings(base, false, NO_GUIDE).ageBand).toBe('8-9');
+		expect(toGameSettings({ ...base, ageBand: '10-12' }, false, NO_GUIDE).ageBand).toBe('10-12');
+	});
+
 	it('passes the guide of the lesson through', () => {
 		const guide: GameGuide = { mode: 'new-keys', freshChars: ['f', 'j'], hesitationMs: 3000 };
 		expect(toGameSettings(base, false, guide).guide).toBe(guide);

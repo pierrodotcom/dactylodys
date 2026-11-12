@@ -1,6 +1,7 @@
 import { toGraphemes } from '../graphemes';
 import { LINE_BREAK, findLesson, learnedChars } from './definition';
 import type {
+	AgeBand,
 	BankSource,
 	PhraseBank,
 	PhraseEntry,
@@ -22,9 +23,22 @@ const LEVELS: readonly WordLevel[] = [1, 2, 3];
 const REVIEWS: readonly ReviewStatus[] = ['agent', 'human'];
 const DEFAULT_MAX_LEVEL: WordLevel = 3;
 
+/** Every age group, youngest first. */
+export const AGE_BANDS: readonly AgeBand[] = ['8-9', '10-12'];
+
 export interface UsableOptions {
 	/** Highest level allowed; defaults to 3. */
 	readonly maxLevel?: WordLevel;
+	/** Age group of the child: entries meant for other groups only are left out; absent: none. */
+	readonly ageBand?: AgeBand;
+}
+
+/** Whether an entry is offered to this age group: unmarked entries are offered to every one. */
+export function fitsAgeBand(
+	entry: { readonly ages?: readonly AgeBand[] },
+	ageBand: AgeBand | undefined
+): boolean {
+	return ageBand === undefined || entry.ages === undefined || entry.ages.includes(ageBand);
 }
 
 function fail(path: string, message: string): never {
@@ -136,6 +150,22 @@ function parseReview(value: unknown, path: string): ReviewStatus {
 	return review;
 }
 
+/** A marked entry names one or more groups, never all of them: an unmarked entry means that. */
+function parseAges(value: unknown, path: string): { ages?: AgeBand[] } {
+	if (value === undefined) return {};
+	const ages: AgeBand[] = [];
+	expectArray(value, path).forEach((raw, i) => {
+		const band = AGE_BANDS.find((candidate) => candidate === raw);
+		if (band === undefined) fail(`${path}[${i}]`, `expected one of: ${AGE_BANDS.join(', ')}`);
+		if (ages.includes(band)) fail(`${path}[${i}]`, `duplicate age group "${band}"`);
+		ages.push(band);
+	});
+	if (ages.length === 0 || ages.length === AGE_BANDS.length) {
+		fail(path, 'expected some age groups but not all of them (leave it out for all)');
+	}
+	return { ages: AGE_BANDS.filter((band) => ages.includes(band)) };
+}
+
 function parseWordText(value: unknown, path: string): string {
 	const text = expectString(value, path);
 	if (text !== text.normalize('NFC')) fail(path, 'expected a word in NFC');
@@ -167,7 +197,7 @@ export function parseWordBank(data: unknown): WordBank {
 	const words = expectArray(root['words'], 'words.words').map((raw, i): WordEntry => {
 		const path = `words.words[${i}]`;
 		const record = expectRecord(raw, path);
-		rejectUnknown(record, ['text', 'themes', 'level', 'review'], path);
+		rejectUnknown(record, ['text', 'themes', 'level', 'review', 'ages'], path);
 		const text = parseWordText(record['text'], `${path}.text`);
 		if (seen.has(text)) fail(`${path}.text`, `duplicate word "${text}"`);
 		seen.add(text);
@@ -175,7 +205,8 @@ export function parseWordBank(data: unknown): WordBank {
 			text,
 			themes: parseEntryThemes(record['themes'], declared, `${path}.themes`),
 			level: parseLevel(record['level'], `${path}.level`),
-			review: parseReview(record['review'], `${path}.review`)
+			review: parseReview(record['review'], `${path}.review`),
+			...parseAges(record['ages'], `${path}.ages`)
 		};
 	});
 	return { schemaVersion: 1, id, locale, sources, themes, words };
@@ -199,7 +230,7 @@ export function parsePhraseBank(data: unknown): PhraseBank {
 	const phrases = expectArray(root['phrases'], 'phrases.phrases').map((raw, i): PhraseEntry => {
 		const path = `phrases.phrases[${i}]`;
 		const record = expectRecord(raw, path);
-		rejectUnknown(record, ['text', 'themes', 'level', 'review', 'lessonId'], path);
+		rejectUnknown(record, ['text', 'themes', 'level', 'review', 'lessonId', 'ages'], path);
 		const text = parsePhraseText(record['text'], `${path}.text`);
 		if (seen.has(text)) fail(`${path}.text`, `duplicate phrase "${text}"`);
 		seen.add(text);
@@ -212,7 +243,8 @@ export function parsePhraseBank(data: unknown): PhraseBank {
 			themes: parseEntryThemes(record['themes'], null, `${path}.themes`),
 			level: parseLevel(record['level'], `${path}.level`),
 			review: parseReview(record['review'], `${path}.review`),
-			...(lessonId === undefined ? {} : { lessonId })
+			...(lessonId === undefined ? {} : { lessonId }),
+			...parseAges(record['ages'], `${path}.ages`)
 		};
 	});
 	return { schemaVersion: 1, id, locale, phrases };
@@ -243,20 +275,27 @@ export function validateStoryPhrases(
 	return issues;
 }
 
-/** The story phrases of a lesson, in the order of the bank. */
-export function storyPhrases(bank: PhraseBank, lessonId: string): PhraseEntry[] {
-	return bank.phrases.filter((phrase) => phrase.lessonId === lessonId);
+/** The story phrases of a lesson, in the order of the bank, of this age group when one is given. */
+export function storyPhrases(bank: PhraseBank, lessonId: string, ageBand?: AgeBand): PhraseEntry[] {
+	return bank.phrases.filter(
+		(phrase) => phrase.lessonId === lessonId && fitsAgeBand(phrase, ageBand)
+	);
 }
 
-function usable<T extends { readonly text: string; readonly level: WordLevel }>(
-	entries: readonly T[],
-	learned: Iterable<string>,
-	options: UsableOptions
-): T[] {
+function usable<
+	T extends {
+		readonly text: string;
+		readonly level: WordLevel;
+		readonly ages?: readonly AgeBand[];
+	}
+>(entries: readonly T[], learned: Iterable<string>, options: UsableOptions): T[] {
 	const known = new Set(learned);
 	const maxLevel = options.maxLevel ?? DEFAULT_MAX_LEVEL;
 	return entries.filter(
-		(entry) => entry.level <= maxLevel && toGraphemes(entry.text).every((char) => known.has(char))
+		(entry) =>
+			entry.level <= maxLevel &&
+			fitsAgeBand(entry, options.ageBand) &&
+			toGraphemes(entry.text).every((char) => known.has(char))
 	);
 }
 
@@ -301,7 +340,7 @@ export function parseTextBank(data: unknown): TextBank {
 	const texts = expectArray(root['texts'], 'texts.texts').map((raw, i): TextEntry => {
 		const path = `texts.texts[${i}]`;
 		const record = expectRecord(raw, path);
-		rejectUnknown(record, ['id', 'lessonId', 'lines', 'level', 'review'], path);
+		rejectUnknown(record, ['id', 'lessonId', 'lines', 'level', 'review', 'ages'], path);
 		const textId = parseTextId(record['id'], language, `${path}.id`);
 		if (seen.has(textId)) fail(`${path}.id`, `duplicate text "${textId}"`);
 		seen.add(textId);
@@ -316,7 +355,8 @@ export function parseTextBank(data: unknown): TextBank {
 			lessonId: parseLessonId(record['lessonId'], language, `${path}.lessonId`),
 			lines,
 			level: parseLevel(record['level'], `${path}.level`),
-			review: parseReview(record['review'], `${path}.review`)
+			review: parseReview(record['review'], `${path}.review`),
+			...parseAges(record['ages'], `${path}.ages`)
 		};
 	});
 	return { schemaVersion: 1, id, locale, texts };
@@ -348,9 +388,9 @@ export function validateTexts(bank: TextBank, progression: ProgressionDefinition
 	return issues;
 }
 
-/** The texts of a lesson, in the order of the bank. */
-export function lessonTexts(bank: TextBank, lessonId: string): TextEntry[] {
-	return bank.texts.filter((entry) => entry.lessonId === lessonId);
+/** The texts of a lesson, in the order of the bank, of this age group when one is given. */
+export function lessonTexts(bank: TextBank, lessonId: string, ageBand?: AgeBand): TextEntry[] {
+	return bank.texts.filter((entry) => entry.lessonId === lessonId && fitsAgeBand(entry, ageBand));
 }
 
 /**

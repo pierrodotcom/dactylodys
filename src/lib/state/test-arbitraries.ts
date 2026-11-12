@@ -99,7 +99,8 @@ export const settingsPatchArb: fc.Arbitrary<Partial<Settings>> = fc.record(
 		errorPolicy: fc.constantFrom('retry', 'backspace'),
 		keyboardFade: fc.boolean(),
 		effects: fc.boolean(),
-		ambience: fc.constantFrom('none', 'soft-noise')
+		ambience: fc.constantFrom('none', 'soft-noise'),
+		ageBand: fc.constantFrom('8-9', '10-12')
 	},
 	{ requiredKeys: [] }
 );

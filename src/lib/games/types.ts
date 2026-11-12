@@ -2,7 +2,7 @@ import type { SoundPlayer } from '../audio';
 import type { VoicePlayer } from '../audio/voice-types';
 import type { RaceWinner } from '../engine/ghost/race';
 import type { GhostRun, PacePoint } from '../engine/ghost/types';
-import type { Exercise, GuideMode } from '../engine/progression/types';
+import type { AgeBand, Exercise, GuideMode } from '../engine/progression/types';
 import type { ErrorPolicy, SessionMetrics } from '../engine/types';
 import type {
 	CharIndex,
@@ -36,6 +36,11 @@ export interface GameSettings {
 	 * keyboard drawn, and comes back for the rest of the game after a mistake on them. Absent: none.
 	 */
 	readonly fadedKeys?: readonly KeyCode[];
+	/**
+	 * Age group of the child (ADR-057, proposal 15): a few bubbles have a variant for the older
+	 * children (`withOlderVariant`). Absent: the usual bubbles.
+	 */
+	readonly ageBand?: AgeBand;
 }
 
 export interface GameOutcome {

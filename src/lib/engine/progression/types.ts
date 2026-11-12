@@ -145,6 +145,12 @@ export interface ProgressionDefinition {
 
 export type WordLevel = 1 | 2 | 3;
 
+/**
+ * Age group of the child (ADR-057, proposal 15): it only changes which words, phrases and texts are offered,
+ * never the keys, the thresholds or the games.
+ */
+export type AgeBand = '8-9' | '10-12';
+
 /** `agent`: screened automatically and by an AI reviewer; `human`: validated by a person. */
 export type ReviewStatus = 'agent' | 'human';
 
@@ -155,6 +161,8 @@ export interface WordEntry {
 	/** 1: very common and short, for the youngest; 3: for the oldest. */
 	readonly level: WordLevel;
 	readonly review: ReviewStatus;
+	/** Age groups the word is offered to; absent: every one. */
+	readonly ages?: readonly AgeBand[];
 }
 
 export interface BankSource {
@@ -189,6 +197,8 @@ export interface PhraseEntry {
 	 * last group of an exercise (`ProgressionRules.storyPhraseEvery`), and never mixed elsewhere.
 	 */
 	readonly lessonId?: string;
+	/** Age groups the phrase is offered to; absent: every one. */
+	readonly ages?: readonly AgeBand[];
 }
 
 export interface PhraseBank {
@@ -212,6 +222,8 @@ export interface TextEntry {
 	readonly lines: readonly string[];
 	readonly level: WordLevel;
 	readonly review: ReviewStatus;
+	/** Age groups the text is offered to; absent: every one. */
+	readonly ages?: readonly AgeBand[];
 }
 
 export interface TextBank {
@@ -234,6 +246,8 @@ export interface ExerciseContext {
 	readonly maxLevel?: WordLevel;
 	/** Theme of the current world. */
 	readonly themeId?: string;
+	/** Age group of the child: only the entries of the banks meant for it are used; absent: all. */
+	readonly ageBand?: AgeBand;
 }
 
 /** What a mini-game receives: short targets typed one after the other. */

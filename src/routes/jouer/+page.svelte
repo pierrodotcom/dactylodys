@@ -62,7 +62,13 @@
 	} from '$lib/state/journal';
 	import { JOURNAL_RULES } from '$lib/state/journal-rules';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
-	import type { Profile, ProfileStore, Settings, UnreadableProfile } from '$lib/state/types';
+	import type {
+		AgeBand,
+		Profile,
+		ProfileStore,
+		Settings,
+		UnreadableProfile
+	} from '$lib/state/types';
 	import { provideCompanionAppearance } from '$lib/ui/companion/appearance';
 	import { loadKeyboardAssets, type KeyboardAssets } from './assets';
 	import { loadBanks, settleWithin, type LoadedBanks } from './banks';
@@ -367,13 +373,14 @@
 		return earnRewards(chosen, rewardCatalogueFor(source), source).profile;
 	}
 
-	async function createPlayer(name: string): Promise<boolean> {
-		const created = createProfile({
+	async function createPlayer(name: string, ageBand: AgeBand | null): Promise<boolean> {
+		const blank = createProfile({
 			id: crypto.randomUUID(),
 			name,
 			now: Date.now(),
 			platform: platformFromUserAgent(navigator.userAgent)
 		});
+		const created = ageBand === null ? blank : updateSettings(blank, { ageBand });
 		if (!(await commit(created))) return false;
 		return enter(created);
 	}
@@ -616,7 +623,8 @@
 			...banks,
 			progress: profile.progress,
 			themeId: world.themeId,
-			maxLevel: PLAY_RULES.maxWordLevel
+			maxLevel: PLAY_RULES.maxWordLevel,
+			ageBand: profile.settings.ageBand
 		});
 		raceGhost = race
 			? raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor)
@@ -698,7 +706,8 @@
 				...banks,
 				progress: profile.progress,
 				themeId: world.themeId,
-				maxLevel: PLAY_RULES.maxWordLevel
+				maxLevel: PLAY_RULES.maxWordLevel,
+				ageBand: profile.settings.ageBand
 			});
 		} catch {
 			return;
