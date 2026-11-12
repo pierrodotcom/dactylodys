@@ -187,6 +187,74 @@
 			],
 			"level": 2,
 			"review": "agent"
+		},
+		{
+			"id": "fr.text.score-match",
+			"lessonId": "fr.lesson.score-du-match",
+			"lines": ["Match de foot :", "les dinos 3,", "les yaks 2.", "Quel match !"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.liste-gouter",
+			"lessonId": "fr.lesson.score-du-match",
+			"lines": ["Pour le goûter :", "4 pommes", "2 bananes", "5 biscuits"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.rendez-vous-parc",
+			"lessonId": "fr.lesson.score-du-match",
+			"lines": ["Rendez-vous au parc,", "mercredi à 15 h.", "Apporte un ballon !"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.train-quai",
+			"lessonId": "fr.lesson.train-huit-heures",
+			"lines": ["Le train part à 8 h 30,", "quai numéro 6.", "Ne sois pas en retard !"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.fete-yak",
+			"lessonId": "fr.lesson.train-huit-heures",
+			"lines": ["Fête du yak :", "le 19 juin, à 17 h.", "Il aura 10 ans !"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.page-livre",
+			"lessonId": "fr.lesson.train-huit-heures",
+			"lines": ["Lis la page 76", "du livre des dinos :", "le T-rex fait du vélo !"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.adresse-dino",
+			"lessonId": "fr.lesson.adresse-du-dino",
+			"lines": ["Mon adresse :", "dino@exemple.org", "Réponds-moi vite !"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.club-yak",
+			"lessonId": "fr.lesson.adresse-du-dino",
+			"lines": ["Club des amis du yak,", "écris-nous à :", "yak@exemple.org"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.adresse-poste",
+			"lessonId": "fr.lesson.adresse-du-dino",
+			"lines": [
+				"La poste des dinos",
+				"change d'adresse :",
+				"poste@exemple.com",
+				"Merci et à bientôt !"
+			],
+			"level": 2,
+			"review": "agent"
 		}
 	]
 }

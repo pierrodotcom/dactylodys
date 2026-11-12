@@ -62,7 +62,10 @@ export const ITEM_ARTS: Readonly<Record<string, ItemArt>> = {
 	'napkin-bib': { slot: 'neck', frame: [41, 63, 43, 37] },
 	'artist-beret': { slot: 'head', frame: [27, 0, 71, 33] },
 	'reading-glasses': { slot: 'face', frame: [28, 44, 64, 15] },
-	'party-balloons': { slot: 'back', frame: [83, -8, 37, 75], pictureLayers: ['back'] }
+	'party-balloons': { slot: 'back', frame: [83, -8, 37, 75], pictureLayers: ['back'] },
+	'referee-whistle': { slot: 'neck', frame: [37, 70, 46, 29] },
+	'alarm-clock': { slot: 'hand', frame: [-11, -2, 22, 25] },
+	'snail-slippers': { slot: 'feet', frame: [26, 97, 68, 20] }
 };
 
 /** The worn items by slot, in drawing order: the first one of a slot wins, unknown drawings are left out. */
@@ -134,7 +137,7 @@ export type TrophyArt =
 	  }
 	| {
 			readonly kind: 'key';
-			readonly sign: 'top-row' | 'home-row' | 'bottom-row' | 'accents' | 'punctuation';
+			readonly sign: 'top-row' | 'home-row' | 'bottom-row' | 'accents' | 'punctuation' | 'digits';
 	  };
 
 /** One drawing per `artId` of a trophy: a medal with the symbol of its world, or a key. */
@@ -149,7 +152,8 @@ export const TROPHY_ARTS: Readonly<Record<string, TrophyArt>> = {
 	'keys-top-row': { kind: 'key', sign: 'top-row' },
 	'keys-bottom-row': { kind: 'key', sign: 'bottom-row' },
 	'keys-accents': { kind: 'key', sign: 'accents' },
-	'keys-punctuation': { kind: 'key', sign: 'punctuation' }
+	'keys-punctuation': { kind: 'key', sign: 'punctuation' },
+	'keys-digits': { kind: 'key', sign: 'digits' }
 };
 
 /** How many keys a trophy of a row shows, so that the three rows differ at a glance. */

@@ -1,7 +1,9 @@
 # Petits textes utiles du monde 6 (ADR-057, proposition n° 10), tapés ligne par ligne avec Entrée.
 # Un texte : un en-tête « @ identifiant | leçon | niveau », puis ses lignes, une par ligne du fichier.
 # Chaque texte n'utilise que les touches apprises à sa leçon ; une ligne fait au plus 24 caractères.
-# Pas de chiffre, de « œ », ni de majuscule accentuée : ils ne sont pas encore appris.
+# Pas de « œ » ni de majuscule accentuée ; les chiffres et @ seulement à partir de leurs leçons.
+# Une adresse de courriel est toujours inventée, sur un domaine réservé à l'exemple (exemple.org,
+# exemple.com ou example.org) ; jamais de vrai nom de famille ni de vrai numéro de téléphone.
 # Relecture humaine : les identifiants validés vont dans validated-texts.txt.
 
 # La liste du pique-nique : la touche Entrée arrive, listes courtes.
@@ -104,3 +106,48 @@ La casserole chante !
 Ce soir, en cuisine.
 Prends tes bouchons
 d'oreilles, au cas où.
+
+# Le score du match : les chiffres de 1 à 5 (Maj), un score, des quantités, une heure.
+@ score-match | fr.lesson.score-du-match | 1
+Match de foot :
+les dinos 3,
+les yaks 2.
+Quel match !
+@ liste-gouter | fr.lesson.score-du-match | 1
+Pour le goûter :
+4 pommes
+2 bananes
+5 biscuits
+@ rendez-vous-parc | fr.lesson.score-du-match | 2
+Rendez-vous au parc,
+mercredi à 15 h.
+Apporte un ballon !
+
+# Le train de huit heures : tous les chiffres, une heure, une date, un numéro de page.
+@ train-quai | fr.lesson.train-huit-heures | 1
+Le train part à 8 h 30,
+quai numéro 6.
+Ne sois pas en retard !
+@ fete-yak | fr.lesson.train-huit-heures | 1
+Fête du yak :
+le 19 juin, à 17 h.
+Il aura 10 ans !
+@ page-livre | fr.lesson.train-huit-heures | 2
+Lis la page 76
+du livre des dinos :
+le T-rex fait du vélo !
+
+# L'adresse du dino : l'arobase, dans des adresses inventées sur un domaine réservé à l'exemple.
+@ adresse-dino | fr.lesson.adresse-du-dino | 1
+Mon adresse :
+dino@exemple.org
+Réponds-moi vite !
+@ club-yak | fr.lesson.adresse-du-dino | 1
+Club des amis du yak,
+écris-nous à :
+yak@exemple.org
+@ adresse-poste | fr.lesson.adresse-du-dino | 2
+La poste des dinos
+change d'adresse :
+poste@exemple.com
+Merci et à bientôt !

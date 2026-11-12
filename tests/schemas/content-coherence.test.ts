@@ -35,6 +35,8 @@ const TEXTS_FILE = 'content/fr/texts/base.json';
 const LINE_BREAK = String.fromCharCode(10);
 const TEXT_LINES = { min: 2, max: 5 };
 const MIN_TEXTS_PER_LESSON = 2;
+/** The addresses of the texts are invented, on a domain reserved for examples. */
+const EXAMPLE_ADDRESS = /^[a-z0-9.-]+@(exemple\.org|exemple\.com|example\.org)$/;
 const REWARDS_FILE = 'content/fr/rewards/azerty-decouverte.json';
 const HELP_QUEST_FILE = 'content/common/help-quest.json';
 const CONDITION_KINDS = [
@@ -105,7 +107,9 @@ describe('progression and banks together', () => {
 		.filter(({ lesson }) => lesson.mix.phrases > 0)
 		.flatMap(({ lesson }) => {
 			const inWords = new Set([...usableWordTexts(lesson.id)].flatMap((text) => toGraphemes(text)));
-			// Enter is in no phrase: the texts of its world ask for it (tested below).
+			// Enter, the digits and @ are in no phrase: the warm-up and the texts of their lessons ask
+			// for them (tested below).
+			if (lessonTexts(texts, lesson.id).length > 0) return [];
 			return lesson.newChars
 				.filter((char) => !inWords.has(char) && char !== LINE_BREAK)
 				.map((char) => [lesson.id, char] as const);
@@ -380,7 +384,10 @@ describe('useful texts and progression together', () => {
 	it.each(textLessons.map(({ lesson }) => [lesson.id, lesson] as const))(
 		'fits the warm-up and every text of %s within its groups',
 		(lessonId, lesson) => {
-			const warmUp = lesson.newChars.length === 0 ? 0 : progression.rules.newCharMinCount;
+			const warmUp =
+				lesson.newChars.length === 0
+					? 0
+					: (lesson.warmUp?.length ?? progression.rules.newCharMinCount);
 			for (const entry of lessonTexts(texts, lessonId)) {
 				const groups = textGroups(entry, progression.rules.textGroupLength);
 				expect(warmUp + groups.length, entry.id).toBeLessThanOrEqual(lesson.groupCount);
@@ -415,4 +422,26 @@ describe('useful texts and progression together', () => {
 			}
 		}
 	);
+
+	it('writes every e-mail address on a domain reserved for examples, never a real one', () => {
+		const addresses = texts.texts.flatMap((entry) =>
+			entry.lines.flatMap((line) => line.split(' ').filter((token) => token.includes('@')))
+		);
+		expect(addresses.length).toBeGreaterThan(0);
+		for (const address of addresses) expect(address).toMatch(EXAMPLE_ADDRESS);
+	});
+
+	it.each(
+		textLessons
+			.filter(({ lesson }) => lesson.newChars.some((char) => char !== LINE_BREAK))
+			.map(({ lesson }) => [lesson.id, lesson] as const)
+	)('uses a new key of %s in every one of its texts', (_id, lesson) => {
+		for (const entry of lessonTexts(texts, lesson.id)) {
+			const typed = toGraphemes(textOf(entry));
+			expect(
+				lesson.newChars.some((char) => typed.includes(char)),
+				entry.id
+			).toBe(true);
+		}
+	});
 });

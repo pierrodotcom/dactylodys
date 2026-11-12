@@ -69,6 +69,19 @@
 			paper: 'invitation',
 			at: [136, 30, -8, 1]
 		},
+		'post-score': { base: ZooArt, baseArt: 'zoo-zebra', paper: 'list', at: [142, 30, 7, 1] },
+		'post-train': {
+			base: CircuitArt,
+			baseArt: 'circuit-train',
+			paper: 'envelope',
+			at: [134, 24, -8, 1]
+		},
+		'post-at': {
+			base: DinosaursArt,
+			baseArt: 'dino-nest',
+			paper: 'letters',
+			at: [140, 22, 6, 0.9]
+		},
 		'post-ending': {
 			base: DinosaursArt,
 			baseArt: 'dino-ending',
