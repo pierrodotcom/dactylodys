@@ -84,6 +84,38 @@
 				"$value": "{color.slate.300}"
 			}
 		},
+		"dialogue": {
+			"shadow": {
+				"$value": "{color.shadow.dark}"
+			},
+			"sky": {
+				"$value": "{color.navy.800}"
+			},
+			"hill": {
+				"$value": "{color.teal.700}"
+			},
+			"ground": {
+				"$value": "{color.green.900}"
+			},
+			"evening-hill": {
+				"$value": "{color.teal.700}"
+			},
+			"evening-ground": {
+				"$value": "{color.green.900}"
+			},
+			"sun": {
+				"$value": "{color.cream.200}"
+			},
+			"cloud": {
+				"$value": "{color.slate.600}"
+			},
+			"flower-petal": {
+				"$value": "{color.cream.200}"
+			},
+			"lantern-string": {
+				"$value": "{color.slate.300}"
+			}
+		},
 		"success": {
 			"text": {
 				"$value": "{color.green.300}"

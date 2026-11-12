@@ -10,7 +10,8 @@ export const GAME_DECORS = {
 	recipe: ['day', 'evening', 'winter'],
 	drawing: ['desk', 'meadow', 'beach'],
 	train: ['summer', 'autumn', 'winter'],
-	tower: ['summer', 'sunset', 'winter']
+	tower: ['summer', 'sunset', 'winter'],
+	dialogue: ['garden', 'evening', 'winter']
 } as const satisfies Record<string, readonly [string, string, string, ...string[]]>;
 
 export type DecorGameId = keyof typeof GAME_DECORS;

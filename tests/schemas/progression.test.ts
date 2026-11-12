@@ -152,11 +152,11 @@ describe('azerty-decouverte', () => {
 		expect(
 			progression.worlds.map((world) => [world.id, world.themeId, world.gameIds] as const)
 		).toEqual([
-			['fr.world.dinosaures', 'dinos', ['hatching', 'drawing']],
+			['fr.world.dinosaures', 'dinos', ['hatching', 'drawing', 'dialogue']],
 			['fr.world.cuisine', 'cuisine', ['recipe', 'tower']],
-			['fr.world.animaux', 'animaux', ['drawing', 'tower']],
+			['fr.world.animaux', 'animaux', ['drawing', 'tower', 'dialogue']],
 			['fr.world.espace', 'espace', ['rocket', 'tower']],
-			['fr.world.vehicules', 'vehicules', ['train', 'rocket']]
+			['fr.world.vehicules', 'vehicules', ['train', 'rocket', 'dialogue']]
 		]);
 	});
 

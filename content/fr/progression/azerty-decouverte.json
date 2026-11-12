@@ -31,7 +31,7 @@
 			"id": "fr.world.dinosaures",
 			"title": "Au pays des dinosaures",
 			"themeId": "dinos",
-			"gameIds": ["hatching", "drawing"],
+			"gameIds": ["hatching", "drawing", "dialogue"],
 			"lessons": [
 				{
 					"id": "fr.lesson.oeufs-f-j",
@@ -275,7 +275,7 @@
 			"id": "fr.world.animaux",
 			"title": "Le zoo des drôles d'animaux",
 			"themeId": "animaux",
-			"gameIds": ["drawing", "tower"],
+			"gameIds": ["drawing", "tower", "dialogue"],
 			"lessons": [
 				{
 					"id": "fr.lesson.girafe-g-h",
@@ -419,7 +419,7 @@
 			"id": "fr.world.vehicules",
 			"title": "Le grand circuit des bolides",
 			"themeId": "vehicules",
-			"gameIds": ["train", "rocket"],
+			"gameIds": ["train", "rocket", "dialogue"],
 			"lessons": [
 				{
 					"id": "fr.lesson.klaxon-question-exclamation",
