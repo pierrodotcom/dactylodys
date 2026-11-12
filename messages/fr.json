@@ -176,6 +176,7 @@
 	"dev_games_effects_label": "Effets lumineux",
 	"dev_games_faded_label": "Touches connues effacées (exemple : la rangée de repos)",
 	"dev_games_backspace_label": "Retour arrière (une mauvaise touche s'écrit, à effacer)",
+	"dev_games_plays_label": "Parties déjà finies de ce jeu (chaque partie change le décor)",
 	"dev_games_play": "Jouer",
 	"dev_games_loading": "Chargement du jeu…",
 	"dev_games_result_heading": "Bilan brut",

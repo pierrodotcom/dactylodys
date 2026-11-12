@@ -48,12 +48,16 @@
 		STEAM_SHAPES,
 		WAVING_ARM
 	} from './shapes';
+	import type { DecorOf } from '../shared/decor';
+	import { EVENING_WINDOW, GARLAND, LAMP, MUG, WINTER_WINDOW } from './decor';
 
 	interface Props {
 		view: GameView;
+		/** The moment of this play (`shared/decor.ts`): the light of the wall and the window. */
+		decor?: DecorOf<'recipe'>;
 	}
 
-	let { view }: Props = $props();
+	let { view, decor = 'day' }: Props = $props();
 
 	const uid = $props.id();
 
@@ -189,14 +193,63 @@
 	aria-hidden="true"
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
+	data-decor={decor}
 >
 	<path class="tile" d={KITCHEN.tilesPath} />
+
+	{#if decor === 'winter'}
+		<path class="open fine" d={GARLAND.string} />
+		{#each GARLAND.flakes as flake (flake.star)}
+			<path class="open fine" d={flake.thread} />
+			<path class="paper fine" d={flake.star} />
+			<path class="tile-hole" d={flake.hole} />
+		{/each}
+	{/if}
+
+	{#if decor === 'evening'}
+		<radialGradient id={ref('glow')}>
+			<stop class="glow-core" offset="0" />
+			<stop class="glow-edge" offset="1" stop-opacity="0" />
+		</radialGradient>
+		<path d={LAMP.glow} fill={url('glow')} data-effect />
+		<path class="open fine" d={LAMP.cord} />
+		<path class="bulb line" d={LAMP.bulb} />
+		{@render modelled('lamp', LAMP.shade, 'lamp', LAMP.shadeShade, [LAMP.shadeLight])}
+		<path class="open line" d={LAMP.shade} />
+		<path class="lamp line" d={LAMP.rim} />
+	{/if}
 
 	<g class="window">
 		<path class="frame line" d={KITCHEN.window.framePath} />
 		<path class="sky fine" d={KITCHEN.window.panePath} />
-		<path class="sun" d={KITCHEN.window.sun} />
-		<path class="cloud" d={KITCHEN.window.cloud} />
+		{#if decor === 'day'}
+			<path class="sun" d={KITCHEN.window.sun} />
+			<path class="cloud" d={KITCHEN.window.cloud} />
+		{:else}
+			<linearGradient id={ref('pane')} x1="0" y1="0" x2="0" y2="1">
+				<stop class="pane-high" offset="0" />
+				<stop class="pane-low" offset="1" />
+			</linearGradient>
+			<clipPath id={ref('outside')}><path d={KITCHEN.window.panePath} /></clipPath>
+			<g clip-path={url('outside')}>
+				<path d={KITCHEN.window.panePath} fill={url('pane')} />
+				{#if decor === 'evening'}
+					<path class="sun fine" d={EVENING_WINDOW.sun} />
+					<path class="light" d={EVENING_WINDOW.sunLight} />
+					{#each EVENING_WINDOW.clouds as cloud (cloud)}
+						<path class="cloud" d={cloud} />
+					{/each}
+					<path class="open fine" d={EVENING_WINDOW.birds} />
+					<path class="far-hill fine" d={EVENING_WINDOW.hills} />
+				{:else}
+					<path class="frost" d={WINTER_WINDOW.frost} />
+					<path class="flake" d={WINTER_WINDOW.flakes} />
+					<path class="flake-dot" d={WINTER_WINDOW.dots} />
+					<path class="drift fine" d={WINTER_WINDOW.drift} />
+				{/if}
+			</g>
+			<path class="open fine" d={KITCHEN.window.panePath} />
+		{/if}
 		<path class="light" d={KITCHEN.window.gleams} />
 		<path class="frame fine" d={KITCHEN.window.barsPath} />
 		<path class="wood-light line" d={KITCHEN.window.sillPath} />
@@ -215,6 +268,16 @@
 	<path class="wood-light" d={KITCHEN.shelfTopPath} />
 	<path class="crease" d={KITCHEN.shelfGrain} />
 	<path class="open fine" d={KITCHEN.shelfEdge} />
+
+	{#if decor === 'winter'}
+		<path class="steam-wisp" d={MUG.steam} />
+		<path class="open handle-edge" d={MUG.handle} />
+		<path class="open handle-core" d={MUG.handle} />
+		{@render modelled('mug', MUG.body, 'mug', MUG.bodyShade, [MUG.bodyLight])}
+		<path class="open line" d={MUG.body} />
+		<path class="cocoa fine" d={MUG.cocoa} />
+		<path class="heart" d={MUG.heart} />
+	{/if}
 
 	<path class="wood-light line" d={KITCHEN.counterTopPath} />
 	<path class="wood line" d={KITCHEN.counterFrontPath} />
@@ -500,6 +563,113 @@
 		overflow: hidden;
 		border-radius: var(--dd-radius-lg);
 		background-color: var(--dd-color-surface-sunken);
+	}
+
+	/* Decors (ADR-057): the light of the wall and what the window shows; the rest never changes. */
+	.kitchen[data-decor='evening'] {
+		--dd-decor-pane-high: var(--dd-color-decor-sunset-sky-high);
+		--dd-decor-pane-low: var(--dd-color-decor-sunset-sky-low);
+		--dd-color-recipe-sun: var(--dd-color-decor-sunset-sun);
+		--dd-color-recipe-cloud: var(--dd-color-decor-sunset-cloud);
+
+		background-color: var(--dd-color-decor-evening-wall);
+	}
+
+	.kitchen[data-decor='winter'] {
+		--dd-decor-pane-high: var(--dd-color-decor-winter-sky-high);
+		--dd-decor-pane-low: var(--dd-color-decor-winter-sky-low);
+
+		background-color: var(--dd-color-decor-winter-wall);
+	}
+
+	.pane-high {
+		stop-color: var(--dd-decor-pane-high);
+	}
+
+	.pane-low {
+		stop-color: var(--dd-decor-pane-low);
+	}
+
+	.far-hill {
+		fill: var(--dd-color-decor-sunset-hill);
+	}
+
+	.glow-core {
+		stop-color: var(--dd-color-decor-evening-glow);
+		stop-opacity: var(--dd-opacity-decor-glow);
+	}
+
+	.glow-edge {
+		stop-color: var(--dd-color-decor-evening-glow);
+	}
+
+	.paper {
+		fill: var(--dd-color-decor-winter-paper);
+	}
+
+	.tile-hole {
+		fill: var(--dd-color-decor-winter-wall);
+	}
+
+	.lamp {
+		fill: var(--dd-color-decor-evening-lamp);
+	}
+
+	.bulb {
+		fill: var(--dd-color-decor-evening-bulb);
+	}
+
+	.frost {
+		fill: var(--dd-color-decor-winter-frost);
+		fill-opacity: var(--dd-opacity-decor-frost);
+	}
+
+	.flake {
+		fill: transparent;
+		stroke: var(--dd-color-decor-winter-flake);
+		stroke-width: var(--dd-border-width-thin);
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.flake-dot,
+	.drift {
+		fill: var(--dd-color-decor-winter-snow);
+	}
+
+	.mug {
+		fill: var(--dd-color-decor-winter-mug);
+	}
+
+	.cocoa {
+		fill: var(--dd-color-decor-winter-cocoa);
+	}
+
+	.heart {
+		fill: var(--dd-color-recipe-light);
+	}
+
+	.handle-edge,
+	.handle-core,
+	.steam-wisp {
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.handle-edge {
+		stroke: var(--dd-color-recipe-line);
+		stroke-width: calc(var(--dd-border-width-thick) * 3);
+	}
+
+	.handle-core {
+		stroke: var(--dd-color-decor-winter-mug);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.steam-wisp {
+		fill: transparent;
+		stroke: var(--dd-color-decor-winter-steam);
+		stroke-width: var(--dd-border-width-thick);
 	}
 
 	.line,
