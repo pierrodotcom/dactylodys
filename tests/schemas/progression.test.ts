@@ -9,6 +9,7 @@ import {
 import { listProgressionFiles } from '../../src/lib/engine/progression/test-support';
 import { buildCharIndex, findUnproducible, parseLayout } from '../../src/lib/keyboard/layout';
 import { LAYOUT_IDS } from '../../src/lib/keyboard/layout-ids';
+import { ADULT_RULES } from '../../src/routes/adulte/adult-rules';
 import type {
 	LessonDefinition,
 	ProgressionDefinition
@@ -141,7 +142,9 @@ describe('azerty-decouverte', () => {
 			lengthSlack: 12,
 			handGuide: { everyKeyUntil: 2, newKeysUntil: 24, hesitationMs: 3000 },
 			starAlmostMargin: 3,
-			storyPhraseEvery: 2
+			storyPhraseEvery: 2,
+			// A key fades once acquired as the report of the adult space says it.
+			keyboardFade: ADULT_RULES.mastery
 		});
 	});
 

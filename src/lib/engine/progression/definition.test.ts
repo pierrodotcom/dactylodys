@@ -193,6 +193,62 @@ describe('parseProgression', () => {
 		).toThrow(message);
 	});
 
+	it('reads the optional thresholds of the keys that fade, absent by default', () => {
+		const fade = {
+			acquiredMinAttempts: 20,
+			acquiredMaxErrorRate: 0.1,
+			fragileMinAttempts: 5,
+			fragileMinErrorRate: 0.2
+		};
+		expect(parseProgression(BASE).rules.keyboardFade).toBeUndefined();
+		const parsed = parseProgression(variant((raw) => (raw.rules['keyboardFade'] = fade)));
+		expect(parsed.rules.keyboardFade).toEqual(fade);
+	});
+
+	it.each([
+		['not an object', 3, /rules\.keyboardFade/],
+		[
+			'missing a threshold',
+			{ acquiredMinAttempts: 20 },
+			/rules\.keyboardFade\.acquiredMaxErrorRate/
+		],
+		[
+			'holding an unknown threshold',
+			{
+				acquiredMinAttempts: 20,
+				acquiredMaxErrorRate: 0.1,
+				fragileMinAttempts: 5,
+				fragileMinErrorRate: 0.2,
+				speed: 3
+			},
+			/rules\.keyboardFade\.speed/
+		],
+		[
+			'asking no keystroke at all',
+			{
+				acquiredMinAttempts: 0,
+				acquiredMaxErrorRate: 0.1,
+				fragileMinAttempts: 5,
+				fragileMinErrorRate: 0.2
+			},
+			/rules\.keyboardFade\.acquiredMinAttempts.*at least 1/
+		],
+		[
+			'with an error rate above 1',
+			{
+				acquiredMinAttempts: 20,
+				acquiredMaxErrorRate: 10,
+				fragileMinAttempts: 5,
+				fragileMinErrorRate: 0.2
+			},
+			/rules\.keyboardFade\.acquiredMaxErrorRate.*between 0 and 1/
+		]
+	])('rejects thresholds of the keys that fade %s', (_name, value, message) => {
+		expect(() => parseProgression(variant((raw) => (raw.rules['keyboardFade'] = value)))).toThrow(
+			message
+		);
+	});
+
 	it('rejects story phrases when the warm-up can fill every group of a lesson', () => {
 		expect(() =>
 			parseProgression(

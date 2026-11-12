@@ -46,7 +46,8 @@ const DEFAULT_SETTINGS_COMMON = {
 	textSpacing: 'normal',
 	showKeyboard: true,
 	handGuide: 'auto',
-	errorPolicy: 'retry'
+	errorPolicy: 'retry',
+	keyboardFade: true
 } as const satisfies Omit<Settings, 'layoutId'>;
 
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
@@ -58,7 +59,7 @@ const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly Te
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 9;
+export const PROFILE_SCHEMA_VERSION = 10;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -119,7 +120,8 @@ const SETTINGS_KEYS = [
 	'textSpacing',
 	'showKeyboard',
 	'handGuide',
-	'errorPolicy'
+	'errorPolicy',
+	'keyboardFade'
 ] as const satisfies readonly (keyof Settings)[];
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
@@ -372,7 +374,8 @@ function parseSettings(data: unknown, path: string): Settings {
 		textSpacing: expectOneOf(record['textSpacing'], TEXT_SPACINGS, `${path}.textSpacing`),
 		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
 		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`),
-		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`)
+		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`),
+		keyboardFade: expectBoolean(record['keyboardFade'], `${path}.keyboardFade`)
 	};
 }
 

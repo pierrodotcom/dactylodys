@@ -18,7 +18,13 @@
 			"hesitationMs": 3000
 		},
 		"starAlmostMargin": 3,
-		"storyPhraseEvery": 2
+		"storyPhraseEvery": 2,
+		"keyboardFade": {
+			"acquiredMinAttempts": 20,
+			"acquiredMaxErrorRate": 0.1,
+			"fragileMinAttempts": 5,
+			"fragileMinErrorRate": 0.2
+		}
 	},
 	"worlds": [
 		{

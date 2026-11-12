@@ -151,6 +151,16 @@ function toVersion9(record: StoredRecord): StoredRecord {
 	};
 }
 
+/* Version 10 (ADR-057): the keys the child knows well fade, unless the adult turns it off. */
+function toVersion10(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { keyboardFade: true, ...settings } : settings,
+		schemaVersion: 10
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -160,7 +170,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[5, toVersion6],
 	[6, toVersion7],
 	[7, toVersion8],
-	[8, toVersion9]
+	[8, toVersion9],
+	[9, toVersion10]
 ]);
 
 function versionOf(record: StoredRecord): number {
