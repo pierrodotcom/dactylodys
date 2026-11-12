@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { createProfile, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '$lib/state/profile';
-import { checkPlayerName, platformFromUserAgent } from './player';
+import { ageBandOfAnswer, checkPlayerName, platformFromUserAgent, UNKNOWN_AGE } from './player';
 
 describe('checkPlayerName', () => {
 	it('accepts a nickname and trims it', () => {
@@ -74,5 +74,20 @@ describe('platformFromUserAgent', () => {
 	it('defaults to a PC', () => {
 		expect(platformFromUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe('pc');
 		expect(platformFromUserAgent('Mozilla/5.0 (X11; Linux x86_64)')).toBe('pc');
+	});
+});
+
+describe('ageBandOfAnswer', () => {
+	it('keeps the age group the child chose', () => {
+		expect(ageBandOfAnswer('8-9')).toBe('8-9');
+		expect(ageBandOfAnswer('10-12')).toBe('10-12');
+	});
+
+	it('gives no age group when the child does not know, so that the profile keeps its own', () => {
+		expect(ageBandOfAnswer(UNKNOWN_AGE)).toBeNull();
+		expect(ageBandOfAnswer('11')).toBeNull();
+		expect(createProfile({ id: 'p', name: 'Lou', now: 0, platform: 'pc' }).settings.ageBand).toBe(
+			'8-9'
+		);
 	});
 });

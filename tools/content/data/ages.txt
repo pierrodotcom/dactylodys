@@ -1,0 +1,47 @@
+# kind | entry | age groups (comma separated)
+# Age groups of the words, phrases and texts (ADR-057, proposition n° 15) : `mot`, `phrase` or `texte`
+# (its identifier), then the groups it is offered to, `8-9` or `10-12`. An entry not listed here is
+# offered to every group. Read by build-words.js, build-phrases.js, build-texts.js and apply-ages.js.
+
+# Too young for 10-12: baby talk, toys of the little ones.
+mot | joujou | 8-9
+mot | poupée | 8-9
+mot | toupie | 8-9
+mot | poussette | 8-9
+mot | balançoire | 8-9
+mot | toboggan | 8-9
+phrase | Le chien aboie "ouaf". | 8-9
+phrase | Le chat répond "miaou" et s'en va. | 8-9
+phrase | Un, deux, trois, je saute. | 8-9
+phrase | Tu as vu ce lapin bleu ? | 8-9
+phrase | le cheval fait de la balançoire | 8-9
+texte | fr.text.message-t-rex | 8-9
+
+# Too hard or too rare for 8-9: abstract or learned words, rare spellings.
+mot | atmosphère | 10-12
+mot | apesanteur | 10-12
+mot | astéroïde | 10-12
+mot | constellation | 10-12
+mot | cosmonaute | 10-12
+mot | nébuleuse | 10-12
+mot | paléontologue | 10-12
+mot | préhistorique | 10-12
+mot | gravité | 10-12
+mot | orbite | 10-12
+mot | lunaire | 10-12
+mot | cependant | 10-12
+mot | aussitôt | 10-12
+mot | autrefois | 10-12
+mot | gigantesque | 10-12
+mot | combinaison | 10-12
+mot | poésie | 10-12
+mot | escrime | 10-12
+mot | belote | 10-12
+mot | canicule | 10-12
+mot | carburant | 10-12
+mot | éruption | 10-12
+mot | clignotant | 10-12
+mot | orchidée | 10-12
+phrase | La mosaïque du garage a fondu. | 10-12
+phrase | Le crocodile naïf a avalé une ancre. | 10-12
+phrase | La vache a une voix aiguë. | 10-12

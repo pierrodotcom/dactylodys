@@ -10,6 +10,7 @@ import {
 	writeBankJson,
 	writeText
 } from './lib/common.js';
+import { loadAges, withAges } from './lib/ages.js';
 import { loadCategory, loadLexique } from './lib/sources.js';
 
 const args = parseArgs(process.argv.slice(2));
@@ -182,14 +183,19 @@ function run() {
 
 function buildBank(result) {
 	const validated = new Set(readLines(join(DATA_DIR, 'validated-words.txt')));
-	const words = [...result.kept.values()]
-		.map(({ entry, themes, level }) => ({
-			text: entry.text,
-			themes: THEME_IDS.filter((id) => themes.includes(id)),
-			level,
-			review: validated.has(entry.text) ? 'human' : 'agent'
-		}))
-		.sort((a, b) => a.text.localeCompare(b.text, 'fr'));
+	const words = withAges(
+		[...result.kept.values()]
+			.map(({ entry, themes, level }) => ({
+				text: entry.text,
+				themes: THEME_IDS.filter((id) => themes.includes(id)),
+				level,
+				review: validated.has(entry.text) ? 'human' : 'agent'
+			}))
+			.sort((a, b) => a.text.localeCompare(b.text, 'fr')),
+		loadAges().words,
+		(word) => word.text,
+		'word'
+	);
 	const used = new Set(words.flatMap((word) => word.themes));
 	return {
 		schemaVersion: 1,

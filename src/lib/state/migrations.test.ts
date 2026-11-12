@@ -25,11 +25,13 @@ import {
 	asVersion8,
 	asVersion9,
 	asVersion10,
+	asVersion11,
 	EMPTY_JOURNAL,
 	withKeyboardFade,
 	withRetryPolicy,
 	withSensoryDefaults,
-	withUnknownLatency
+	withUnknownLatency,
+	withYoungerAgeBand
 } from './test-support';
 import type { Profile } from './types';
 
@@ -242,13 +244,14 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 11,
+			schemaVersion: 12,
 			settings: {
 				...STORED_BY_VERSION_4.settings,
 				errorPolicy: 'retry',
 				keyboardFade: true,
 				effects: true,
-				ambience: 'none'
+				ambience: 'none',
+				ageBand: '8-9'
 			},
 			progress: {
 				...STORED_BY_VERSION_4.progress,
@@ -323,13 +326,14 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 11,
+			schemaVersion: 12,
 			settings: {
 				...STORED_BY_VERSION_4.settings,
 				errorPolicy: 'retry',
 				keyboardFade: true,
 				effects: true,
-				ambience: 'none'
+				ambience: 'none',
+				ageBand: '8-9'
 			},
 			progress: {
 				...STORED_BY_VERSION_4.progress,
@@ -367,7 +371,8 @@ describe('migrateProfile', () => {
 					errorPolicy: 'retry',
 					keyboardFade: true,
 					effects: true,
-					ambience: 'none'
+					ambience: 'none',
+					ageBand: '8-9'
 				});
 			})
 		);
@@ -385,7 +390,8 @@ describe('migrateProfile', () => {
 						errorPolicy: 'retry',
 						keyboardFade: true,
 						effects: true,
-						ambience: 'none'
+						ambience: 'none',
+						ageBand: '8-9'
 					},
 					progress: migratedProgress(profile.progress),
 					earnedRewardIds: [],
@@ -418,7 +424,8 @@ describe('migrateProfile', () => {
 						errorPolicy: 'retry',
 						keyboardFade: true,
 						effects: true,
-						ambience: 'none'
+						ambience: 'none',
+						ageBand: '8-9'
 					},
 					earnedRewardIds: [],
 					helpQuest: null,
@@ -534,11 +541,31 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion10(profile))));
 				expect(migrated).toEqual(withSensoryDefaults(profile));
-				expect(migrated.schemaVersion).toBe(11);
+				expect(migrated.schemaVersion).toBe(12);
 				expect(migrated.settings.effects).toBe(true);
 				expect(migrated.settings.ambience).toBe('none');
 			})
 		);
+	});
+
+	it('gives the words of the 8-9 year olds to any version 11 profile, and changes nothing else', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion11(profile))));
+				expect(migrated).toEqual(withYoungerAgeBand(profile));
+				expect(migrated.schemaVersion).toBe(12);
+				expect(migrated.settings.ageBand).toBe('8-9');
+			})
+		);
+	});
+
+	it('keeps the age group of a version 11 record that already holds it', () => {
+		const current = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+		const stored = asVersion11(current);
+		const settings = { ...(stored['settings'] as Json), ageBand: '10-12' };
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.schemaVersion).toBe(12);
+		expect(migrated.settings.ageBand).toBe('10-12');
 	});
 
 	it('keeps the sensory choices of a version 10 record that already holds them', () => {
@@ -546,7 +573,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion10(current);
 		const settings = { ...(stored['settings'] as Json), effects: false, ambience: 'soft-noise' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(11);
+		expect(migrated.schemaVersion).toBe(12);
 		expect(migrated.settings.effects).toBe(false);
 		expect(migrated.settings.ambience).toBe('soft-noise');
 	});
@@ -556,7 +583,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion9(current);
 		const settings = { ...(stored['settings'] as Json), keyboardFade: false };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(11);
+		expect(migrated.schemaVersion).toBe(12);
 		expect(migrated.settings.keyboardFade).toBe(false);
 	});
 
@@ -565,7 +592,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion8(current);
 		const settings = { ...(stored['settings'] as Json), errorPolicy: 'backspace' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(11);
+		expect(migrated.schemaVersion).toBe(12);
 		expect(migrated.settings.errorPolicy).toBe('backspace');
 	});
 
@@ -588,7 +615,7 @@ describe('migrateProfile', () => {
 			}
 		};
 		const migrated = parseProfile(migrateProfile(stored));
-		expect(migrated.schemaVersion).toBe(11);
+		expect(migrated.schemaVersion).toBe(12);
 		expect(migrated.progress.chars).toEqual({
 			f: {
 				attempts: 50,
@@ -639,7 +666,8 @@ describe('migrateProfile', () => {
 					asVersion7(profile),
 					asVersion8(profile),
 					asVersion9(profile),
-					asVersion10(profile)
+					asVersion10(profile),
+					asVersion11(profile)
 				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);

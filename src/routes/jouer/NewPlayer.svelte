@@ -1,13 +1,19 @@
 <script lang="ts">
+	import { AGE_BANDS } from '$lib/engine/progression/banks';
 	import { m } from '$lib/paraglide/messages.js';
 	import { MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '$lib/state/profile';
+	import type { AgeBand } from '$lib/state/types';
 	import Button from '$lib/ui/components/Button.svelte';
+	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
-	import { checkPlayerName } from './player';
+	import { ageBandOfAnswer, checkPlayerName, UNKNOWN_AGE, type AgeAnswer } from './player';
 
 	interface Props {
-		/** Creates the player. `false` when the profile could not be stored. */
-		oncreate: (name: string) => Promise<boolean>;
+		/**
+		 * Creates the player, with the age group the child chose, `null` when the child does not
+		 * know: the profile keeps its own. `false` when the profile could not be stored.
+		 */
+		oncreate: (name: string, ageBand: AgeBand | null) => Promise<boolean>;
 		onback: () => void;
 	}
 
@@ -17,7 +23,17 @@
 	const ERROR_ID = 'player-name-error';
 	const HINT_ID = 'player-name-hint';
 
+	const AGE_LABELS: Readonly<Record<AgeBand, () => string>> = {
+		'8-9': m.play_new_age_8_9,
+		'10-12': m.play_new_age_10_12
+	};
+	const AGE_OPTIONS = [
+		...AGE_BANDS.map((band) => ({ value: band, label: AGE_LABELS[band]() })),
+		{ value: UNKNOWN_AGE, label: m.play_new_age_unknown() }
+	];
+
 	let name = $state('');
+	let age = $state<AgeAnswer>(UNKNOWN_AGE);
 	let error = $state<'empty' | 'invalid' | 'save' | null>(null);
 	let busy = $state(false);
 
@@ -41,7 +57,7 @@
 		}
 		error = null;
 		busy = true;
-		const created = await oncreate(check.name);
+		const created = await oncreate(check.name, ageBandOfAnswer(age));
 		busy = false;
 		if (!created) error = 'save';
 	}
@@ -62,6 +78,15 @@
 			aria-describedby={error === null ? HINT_ID : `${HINT_ID} ${ERROR_ID}`}
 		/>
 		<p id={ERROR_ID} class="error" role="alert">{message}</p>
+		<div class="age" data-new-player-age>
+			<ChoiceGroup
+				legend={m.play_new_age_legend()}
+				name="new-player-age"
+				options={AGE_OPTIONS}
+				value={age}
+				onchange={(value) => (age = value as AgeAnswer)}
+			/>
+		</div>
 		<div class="actions">
 			<Button type="submit" disabled={busy}>{m.play_new_submit()}</Button>
 		</div>
@@ -110,6 +135,19 @@
 		min-block-size: calc(var(--dd-font-size-base) * 1.6);
 		color: var(--dd-color-error-text);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.age {
+		inline-size: 100%;
+	}
+
+	.age :global(fieldset) {
+		inline-size: 100%;
+		justify-items: center;
+	}
+
+	.age :global(.options) {
+		justify-content: center;
 	}
 
 	.actions {

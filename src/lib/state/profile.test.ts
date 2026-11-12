@@ -125,7 +125,7 @@ describe('defaultSettings', () => {
 		expect(defaultSettings('mac').layoutId).toBe('fr-fr-azerty-mac');
 	});
 
-	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons, Backspace off, the known keys fading, the light effects on and no background sound', () => {
+	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons, Backspace off, the known keys fading, the light effects on, no background sound and the words of the 8-9 year olds', () => {
 		expect(defaultSettings('pc')).toEqual({
 			layoutId: 'fr-fr-azerty-pc',
 			fingeringProfileId: 'ten-fingers-iso',
@@ -140,7 +140,8 @@ describe('defaultSettings', () => {
 			errorPolicy: 'retry',
 			keyboardFade: true,
 			effects: true,
-			ambience: 'none'
+			ambience: 'none',
+			ageBand: '8-9'
 		});
 	});
 });
@@ -148,7 +149,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 11,
+			schemaVersion: 12,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -452,8 +453,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 10, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 12, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 11, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 13, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -486,6 +487,9 @@ describe('parseProfile', () => {
 		['missing effects', ['settings', 'effects'], REMOVE, /settings\.effects/],
 		['an unknown background sound', ['settings', 'ambience'], 'rain', /settings\.ambience/],
 		['a missing background sound', ['settings', 'ambience'], REMOVE, /settings\.ambience/],
+		['an exact age', ['settings', 'ageBand'], 10, /settings\.ageBand/],
+		['an unknown age group', ['settings', 'ageBand'], '6-7', /settings\.ageBand/],
+		['a missing age group', ['settings', 'ageBand'], REMOVE, /settings\.ageBand/],
 		['an unknown setting', ['settings', 'volume'], 3, /settings\.volume/],
 		['a missing setting', ['settings', 'theme'], REMOVE, /settings\.theme/],
 		['missing progress', ['progress'], REMOVE, /profile\.progress/],

@@ -2,6 +2,7 @@ import { AMBIENCE_IDS } from '../audio/ambience';
 import { parseGhostRun } from '../engine/ghost/ghost';
 import type { GhostRun } from '../engine/ghost/types';
 import { toGraphemes } from '../engine/graphemes';
+import { AGE_BANDS } from '../engine/progression/banks';
 import { emptyProgress } from '../engine/progression/progress';
 import type {
 	CharProgress,
@@ -51,7 +52,8 @@ const DEFAULT_SETTINGS_COMMON = {
 	errorPolicy: 'retry',
 	keyboardFade: true,
 	effects: true,
-	ambience: 'none'
+	ambience: 'none',
+	ageBand: '8-9'
 } as const satisfies Omit<Settings, 'layoutId'>;
 
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
@@ -64,7 +66,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 11;
+export const PROFILE_SCHEMA_VERSION = 12;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -128,7 +130,8 @@ const SETTINGS_KEYS = [
 	'errorPolicy',
 	'keyboardFade',
 	'effects',
-	'ambience'
+	'ambience',
+	'ageBand'
 ] as const satisfies readonly (keyof Settings)[];
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
@@ -384,7 +387,8 @@ function parseSettings(data: unknown, path: string): Settings {
 		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`),
 		keyboardFade: expectBoolean(record['keyboardFade'], `${path}.keyboardFade`),
 		effects: expectBoolean(record['effects'], `${path}.effects`),
-		ambience: expectOneOf(record['ambience'], AMBIENCES, `${path}.ambience`)
+		ambience: expectOneOf(record['ambience'], AMBIENCES, `${path}.ambience`),
+		ageBand: expectOneOf(record['ageBand'], AGE_BANDS, `${path}.ageBand`)
 	};
 }
 

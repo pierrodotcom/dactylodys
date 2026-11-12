@@ -29,7 +29,7 @@
 	}
 
 	function greetingFor(view: GameView): string {
-		return pickCyclic(GREETINGS, view.rewardIndex)?.() ?? '';
+		return pickCyclic(GREETINGS, view.rewardIndex)?.(props.settings.ageBand) ?? '';
 	}
 
 	function announce(view: GameView): string {

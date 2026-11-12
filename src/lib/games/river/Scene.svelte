@@ -13,20 +13,23 @@
 	import { SCENE, objectOf, probeOf, riverObjects } from './river';
 	import { OBJECT_ARTS } from './shapes';
 	import Surprise from './Surprise.svelte';
+	import type { AgeBand } from '$lib/engine/progression/types';
 	import { QUIPS } from './texts';
 
 	interface Props {
 		view: GameView;
 		decor?: DecorOf<'river'>;
+		/** Age group of the child: a bubble may have a variant for the older children. */
+		ageBand?: AgeBand;
 	}
 
-	let { view, decor = 'day' }: Props = $props();
+	let { view, decor = 'day', ageBand }: Props = $props();
 
 	const rewarded = $derived(isRewarded(view));
 	const objects = $derived(riverObjects(view));
 	const typing = $derived(view.phase === 'typing');
 	const sceneId = $derived(rewarded && view.scene.kind === 'scene' ? view.scene.id : undefined);
-	const quip = $derived(pickCyclic(QUIPS, view.rewardIndex)?.() ?? '');
+	const quip = $derived(pickCyclic(QUIPS, view.rewardIndex)?.(ageBand) ?? '');
 	const label = $derived({ text: view.group, typed: view.position });
 </script>
 

@@ -9,6 +9,7 @@ import {
 	writeBankJson,
 	writeText
 } from './lib/common.js';
+import { loadAges, withAges } from './lib/ages.js';
 import { withStoryPhrases } from './lib/story-phrases.js';
 
 const THEME_TITLES = new Map(CONFIG.themes.map((theme) => [theme.id, theme.title]));
@@ -62,7 +63,12 @@ const previous = existsSync(phrasesFile)
 	? JSON.parse(readFileSync(phrasesFile, 'utf8'))
 	: undefined;
 const generated = loadPhrases();
-const phrases = withStoryPhrases(generated, previous);
+const phrases = withAges(
+	withStoryPhrases(generated, previous),
+	loadAges().phrases,
+	(phrase) => phrase.text,
+	'phrase'
+);
 const bank = {
 	schemaVersion: 1,
 	id: CONFIG.output.phraseBankId,

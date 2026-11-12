@@ -105,11 +105,14 @@ function isPrimitive(value) {
 	return value === null || typeof value !== 'object';
 }
 
-/** Serialises like Prettier 3 does for JSON with tabs, so that `prettier --check` passes. */
-export function toPrettierJson(value, depth = 0) {
+/**
+ * Serialises like Prettier 3 does for JSON with tabs, so that `prettier --check` passes.
+ * `prefix`: characters written before the value on its line (its key), counted in the width.
+ */
+export function toPrettierJson(value, depth = 0, prefix = 0) {
 	const pad = '\t'.repeat(depth);
 	const inner = '\t'.repeat(depth + 1);
-	const width = (text) => text.length + depth * TAB_WIDTH;
+	const width = (text) => text.length + depth * TAB_WIDTH + prefix;
 	if (isPrimitive(value)) return JSON.stringify(value);
 	if (Array.isArray(value)) {
 		if (value.length === 0) return '[]';
@@ -120,7 +123,10 @@ export function toPrettierJson(value, depth = 0) {
 	const entries = Object.entries(value);
 	if (entries.length === 0) return '{}';
 	return `{\n${entries
-		.map(([key, item]) => `${inner}${JSON.stringify(key)}: ${toPrettierJson(item, depth + 1)}`)
+		.map(([key, item]) => {
+			const name = `${JSON.stringify(key)}: `;
+			return `${inner}${name}${toPrettierJson(item, depth + 1, name.length)}`;
+		})
 		.join(',\n')}\n${pad}}`;
 }
 
