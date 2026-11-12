@@ -4,7 +4,7 @@
 	const COLORS = 4;
 </script>
 
-<svg class="confetti" viewBox="-100 -100 200 200" focusable="false" aria-hidden="true">
+<svg class="confetti" viewBox="-100 -100 200 200" focusable="false" aria-hidden="true" data-effect>
 	{#each ANGLES as angle, index (angle)}
 		<g transform="rotate({angle})">
 			<rect class="piece" x="-4" y="-2" width="8" height="4" rx="1" data-color={index % COLORS} />

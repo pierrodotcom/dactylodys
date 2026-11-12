@@ -20,3 +20,13 @@ export type {
 export { voiceTexts } from './voice-texts';
 export type { VoiceText } from './voice-texts';
 export type { VoiceClip, VoiceManifest, VoicePlayer } from './voice-types';
+export { AMBIENCE_IDS, AMBIENCES } from './ambience';
+export type { AmbienceDefinition, AmbienceId } from './ambience';
+export { createAmbiencePlayer } from './ambience-player';
+export type {
+	AmbienceContextLike,
+	AmbiencePlayer,
+	AmbiencePlayerOptions,
+	AmbienceState
+} from './ambience-player';
+export { withSpeakingSignal } from './speaking';

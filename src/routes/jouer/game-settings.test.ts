@@ -42,6 +42,14 @@ describe('toGameSettings', () => {
 		}
 	);
 
+	it('shows the surprise scenes with the light effects, and none without them', () => {
+		const scenes = ['comet', 'gift'];
+		expect(toGameSettings(base, false, NO_GUIDE, 0, scenes).scenes).toEqual(scenes);
+		const calm = { ...base, effects: false, motion: 'full' as const };
+		expect(toGameSettings(calm, false, NO_GUIDE, 0, scenes).scenes).toEqual([]);
+		expect(toGameSettings(calm, false, NO_GUIDE, 0, scenes).reducedMotion).toBe(false);
+	});
+
 	it('fades no key unless the route says which', () => {
 		expect(toGameSettings(base, false, NO_GUIDE).fadedKeys).toEqual([]);
 		expect(toGameSettings(base, false, NO_GUIDE, 0, [], ['KeyF']).fadedKeys).toEqual(['KeyF']);

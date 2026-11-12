@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { onMount, tick, type Component } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { createVoicePlayer, loadVoiceManifest, type VoicePlayer } from '$lib/audio';
+	import {
+		createAmbiencePlayer,
+		createVoicePlayer,
+		loadVoiceManifest,
+		withSpeakingSignal,
+		type VoicePlayer
+	} from '$lib/audio';
 	import { voiceLocale } from '$lib/audio/voice-texts';
 	import { almostNextStar, isLessonUnlocked } from '$lib/engine/progression/progress';
 	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
@@ -107,6 +113,7 @@
 	import { HELP_QUEST_RULES, rewardCatalogueFor } from './rewards';
 	import SettingsPanel from './SettingsPanel.svelte';
 	import { createProfileSounds } from './sounds';
+	import { isAmbienceScreen } from './ambience';
 	import { notYetTold, storyFor } from './story';
 	import StoryScreen from './StoryScreen.svelte';
 	import StorySoFar from './StorySoFar.svelte';
@@ -186,6 +193,13 @@
 	let companionSaveFailed = $state(false);
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
+	/** The soft background sound, when the profile asks for it (ADR-057). */
+	const ambience = createAmbiencePlayer();
+	/** The game on screen is paused by the child. */
+	let gamePaused = $state(false);
+	let pageVisible = $state(true);
+	/** A recorded instruction is being said: the background sound goes down under it. */
+	let voiceSpeaking = $state(false);
 	const progression = $derived(profile ? progressionFor(profile.settings.layoutId) : undefined);
 	const catalogue = $derived(progression ? rewardCatalogueFor(progression) : undefined);
 	const story = $derived(progression ? storyFor(progression) : undefined);
@@ -258,6 +272,18 @@
 	});
 
 	onMount(() => () => sounds.dispose());
+	onMount(() => {
+		pageVisible = document.visibilityState === 'visible';
+		return () => ambience.dispose();
+	});
+
+	$effect(() => {
+		ambience.update({
+			ambience: profile?.settings.ambience ?? 'none',
+			audible: pageVisible && isAmbienceScreen(screen, gamePaused),
+			voiceSpeaking
+		});
+	});
 
 	const SILENT_VOICE = createVoicePlayer({ manifest: null, baseUrl: '', isEnabled: () => false });
 	/** The recorded voice of the language of the lessons; silent until its files are found, or without them. */
@@ -277,12 +303,13 @@
 					baseUrl,
 					isEnabled: () => profile?.settings.voiceEnabled ?? false
 				});
-				voice = created;
+				voice = withSpeakingSignal(created, (speaking) => (voiceSpeaking = speaking));
 			});
 		return () => {
 			cancelled = true;
 			created?.dispose();
 			voice = SILENT_VOICE;
+			voiceSpeaking = false;
 		};
 	});
 
@@ -595,6 +622,7 @@
 			? raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor)
 			: null;
 		raceGreeting = ghostGreetingFor(profile, lessonId);
+		gamePaused = false;
 		playClock = startPlaying(playClock, now());
 		go(event);
 	}
@@ -677,6 +705,7 @@
 		}
 		helpRun = quest;
 		raceGhost = null;
+		gamePaused = false;
 		playClock = startPlaying(playClock, now());
 		go({ type: 'start-help' });
 	}
@@ -712,6 +741,7 @@
 		if ((await loadGame(definition, progression)) === null) return;
 		exercise = generateFreeExercise(words, FREE_PRACTICE_RULES, Math.random);
 		raceGhost = null;
+		gamePaused = false;
 		playClock = startPlaying(playClock, now());
 		go({ type: 'start' });
 	}
@@ -785,6 +815,7 @@
 			ghostGreeting={raceGreeting}
 			onComplete={oncomplete}
 			onSettings={openSettings}
+			onPauseChange={(paused) => (gamePaused = paused)}
 			{voice}
 			onQuit={quitGame}
 		/>
@@ -802,6 +833,10 @@
 		onlater={() => (nameLater = true)}
 	/>
 {/snippet}
+
+<svelte:document
+	onvisibilitychange={() => (pageVisible = document.visibilityState === 'visible')}
+/>
 
 <svelte:head>
 	<title>{m.play_page_title({ appName: m.app_name() })}</title>

@@ -180,7 +180,7 @@
 		<circle class="star" cx={star.x} cy={star.y} r={star.radius} />
 	{/each}
 	{#each TWINKLES as twinkle (twinkle)}
-		<path class="twinkle" d={twinkle} />
+		<path class="twinkle" d={twinkle} data-effect />
 	{/each}
 	<path class="route" d={ROUTE} />
 

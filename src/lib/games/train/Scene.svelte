@@ -68,7 +68,7 @@
 	</linearGradient>
 	<rect x="0" y="0" width={SCENE.width} height={SCENE.height} fill="url(#{uid}-sky)" />
 
-	<path class="halo" d={LANDSCAPE.sunHalo} />
+	<path class="halo" d={LANDSCAPE.sunHalo} data-effect />
 	<Form form={LANDSCAPE.sun} paint="sun" />
 	{#each LANDSCAPE.clouds as cloud (cloud[0]?.x)}
 		<Cloud puffs={cloud} tone="sky" />

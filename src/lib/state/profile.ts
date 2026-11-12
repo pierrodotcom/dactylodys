@@ -1,3 +1,4 @@
+import { AMBIENCE_IDS } from '../audio/ambience';
 import { parseGhostRun } from '../engine/ghost/ghost';
 import type { GhostRun } from '../engine/ghost/types';
 import { toGraphemes } from '../engine/graphemes';
@@ -18,6 +19,7 @@ import {
 } from '../keyboard/layout-ids';
 import type { LayoutPlatform } from '../keyboard/types';
 import type {
+	AmbiencePreference,
 	CompanionChoice,
 	ErrorPolicy,
 	HandwritingSample,
@@ -47,7 +49,9 @@ const DEFAULT_SETTINGS_COMMON = {
 	showKeyboard: true,
 	handGuide: 'auto',
 	errorPolicy: 'retry',
-	keyboardFade: true
+	keyboardFade: true,
+	effects: true,
+	ambience: 'none'
 } as const satisfies Omit<Settings, 'layoutId'>;
 
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
@@ -56,10 +60,11 @@ const HAND_GUIDES = ['auto', 'always', 'off'] as const satisfies readonly HandGu
 const ERROR_POLICIES = ['retry', 'backspace'] as const satisfies readonly ErrorPolicy[];
 const TEXT_SCALES = ['md', 'lg', 'xl'] as const satisfies readonly TextScale[];
 const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly TextSpacing[];
+const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly AmbiencePreference[];
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 10;
+export const PROFILE_SCHEMA_VERSION = 11;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -121,7 +126,9 @@ const SETTINGS_KEYS = [
 	'showKeyboard',
 	'handGuide',
 	'errorPolicy',
-	'keyboardFade'
+	'keyboardFade',
+	'effects',
+	'ambience'
 ] as const satisfies readonly (keyof Settings)[];
 const PROGRESS_KEYS = ['lessons', 'chars'] as const;
 const LESSON_PROGRESS_KEYS = ['bestAccuracy', 'stars', 'attempts', 'lastPlayedAt'] as const;
@@ -375,7 +382,9 @@ function parseSettings(data: unknown, path: string): Settings {
 		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
 		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`),
 		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`),
-		keyboardFade: expectBoolean(record['keyboardFade'], `${path}.keyboardFade`)
+		keyboardFade: expectBoolean(record['keyboardFade'], `${path}.keyboardFade`),
+		effects: expectBoolean(record['effects'], `${path}.effects`),
+		ambience: expectOneOf(record['ambience'], AMBIENCES, `${path}.ambience`)
 	};
 }
 

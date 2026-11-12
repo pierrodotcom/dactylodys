@@ -51,7 +51,7 @@
 		<clipPath id="{uid}-near"><path d={RING.near} /></clipPath>
 	</defs>
 	{#if lit && halo}
-		<g data-reward data-reward-variant="0">
+		<g data-reward data-reward-variant="0" data-effect>
 			<path fill={url('glow')} d={GLOW.d} />
 			{#each GLOW.sparkles as sparkle (sparkle)}
 				<path class="sparkle" d={sparkle} />
