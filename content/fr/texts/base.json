@@ -34,7 +34,8 @@
 				"Bisous de dino."
 			],
 			"level": 1,
-			"review": "agent"
+			"review": "agent",
+			"ages": ["8-9"]
 		},
 		{
 			"id": "fr.text.message-diplodocus",

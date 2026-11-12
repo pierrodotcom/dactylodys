@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { loadAges, withAges } from './lib/ages.js';
 import { CONFIG, DATA_DIR, REPO_ROOT, readLines, writeBankJson } from './lib/common.js';
 
 /*
@@ -35,7 +36,7 @@ function loadTexts() {
 	return texts;
 }
 
-const texts = loadTexts();
+const texts = withAges(loadTexts(), loadAges().texts, (entry) => entry.id, 'text');
 const bank = {
 	schemaVersion: 1,
 	id: CONFIG.output.textBankId,
