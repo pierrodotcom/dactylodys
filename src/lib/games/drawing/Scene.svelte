@@ -142,7 +142,7 @@
 
 			{#if entrance !== undefined}
 				<g transform="translate({tip.x} {tip.y})">
-					<g class="mark" data-tone={tone} data-reward data-reward-variant={entrance}>
+					<g class="mark" data-tone={tone} data-reward data-reward-variant={entrance} data-effect>
 						<path class="spark-body" d={SPARK_PATH} />
 						<path class="spark-heart" d={SPARK_HEART} />
 					</g>

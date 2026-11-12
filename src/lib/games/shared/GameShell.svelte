@@ -90,6 +90,7 @@
 		onComplete,
 		onQuit,
 		onSettings,
+		onPauseChange,
 		voice,
 		title,
 		pauseText,
@@ -277,6 +278,11 @@
 		const speaker = voice;
 		void speaker.speak(lookReminderText);
 		return () => speaker.stop();
+	});
+
+	// The route stops the background sound during the pause.
+	$effect(() => {
+		onPauseChange?.(paused);
 	});
 
 	$effect(() => {

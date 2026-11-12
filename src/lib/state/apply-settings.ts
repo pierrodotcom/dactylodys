@@ -11,6 +11,9 @@ const THEME_ATTRIBUTE = 'data-theme';
 const MOTION_ATTRIBUTE = 'data-motion';
 const TEXT_SCALE_ATTRIBUTE = 'data-text-scale';
 const TEXT_SPACING_ATTRIBUTE = 'data-text-spacing';
+/** `off` when the light effects are cut; absent when they are shown. */
+const EFFECTS_ATTRIBUTE = 'data-effects';
+const EFFECTS_OFF = 'off';
 
 function setAttributeOrRemove(root: SettingsRoot, name: string, value: string | null) {
 	if (value === null) root.removeAttribute(name);
@@ -26,4 +29,5 @@ export function applySettings(settings: Settings, root: SettingsRoot): void {
 	setAttributeOrRemove(root, MOTION_ATTRIBUTE, unlessSystem(settings.motion));
 	root.setAttribute(TEXT_SCALE_ATTRIBUTE, settings.textScale);
 	root.setAttribute(TEXT_SPACING_ATTRIBUTE, settings.textSpacing);
+	setAttributeOrRemove(root, EFFECTS_ATTRIBUTE, settings.effects ? null : EFFECTS_OFF);
 }

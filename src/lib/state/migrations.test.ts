@@ -24,9 +24,11 @@ import {
 	asVersion7,
 	asVersion8,
 	asVersion9,
+	asVersion10,
 	EMPTY_JOURNAL,
 	withKeyboardFade,
 	withRetryPolicy,
+	withSensoryDefaults,
 	withUnknownLatency
 } from './test-support';
 import type { Profile } from './types';
@@ -240,8 +242,14 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 10,
-			settings: { ...STORED_BY_VERSION_4.settings, errorPolicy: 'retry', keyboardFade: true },
+			schemaVersion: 11,
+			settings: {
+				...STORED_BY_VERSION_4.settings,
+				errorPolicy: 'retry',
+				keyboardFade: true,
+				effects: true,
+				ambience: 'none'
+			},
 			progress: {
 				...STORED_BY_VERSION_4.progress,
 				chars: {
@@ -315,8 +323,14 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 10,
-			settings: { ...STORED_BY_VERSION_4.settings, errorPolicy: 'retry', keyboardFade: true },
+			schemaVersion: 11,
+			settings: {
+				...STORED_BY_VERSION_4.settings,
+				errorPolicy: 'retry',
+				keyboardFade: true,
+				effects: true,
+				ambience: 'none'
+			},
 			progress: {
 				...STORED_BY_VERSION_4.progress,
 				chars: {
@@ -351,7 +365,9 @@ describe('migrateProfile', () => {
 					voiceEnabled: true,
 					handGuide: 'auto',
 					errorPolicy: 'retry',
-					keyboardFade: true
+					keyboardFade: true,
+					effects: true,
+					ambience: 'none'
 				});
 			})
 		);
@@ -367,7 +383,9 @@ describe('migrateProfile', () => {
 						...profile.settings,
 						handGuide: 'auto',
 						errorPolicy: 'retry',
-						keyboardFade: true
+						keyboardFade: true,
+						effects: true,
+						ambience: 'none'
 					},
 					progress: migratedProgress(profile.progress),
 					earnedRewardIds: [],
@@ -398,7 +416,9 @@ describe('migrateProfile', () => {
 						...profile.settings,
 						handGuide: 'auto',
 						errorPolicy: 'retry',
-						keyboardFade: true
+						keyboardFade: true,
+						effects: true,
+						ambience: 'none'
 					},
 					earnedRewardIds: [],
 					helpQuest: null,
@@ -509,12 +529,34 @@ describe('migrateProfile', () => {
 		);
 	});
 
+	it('keeps the effects and adds no background sound to any version 10 profile, and changes nothing else', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion10(profile))));
+				expect(migrated).toEqual(withSensoryDefaults(profile));
+				expect(migrated.schemaVersion).toBe(11);
+				expect(migrated.settings.effects).toBe(true);
+				expect(migrated.settings.ambience).toBe('none');
+			})
+		);
+	});
+
+	it('keeps the sensory choices of a version 10 record that already holds them', () => {
+		const current = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+		const stored = asVersion10(current);
+		const settings = { ...(stored['settings'] as Json), effects: false, ambience: 'soft-noise' };
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.schemaVersion).toBe(11);
+		expect(migrated.settings.effects).toBe(false);
+		expect(migrated.settings.ambience).toBe('soft-noise');
+	});
+
 	it('keeps the choice of the fading keys of a version 9 record that already holds it', () => {
 		const current = parseProfile(migrateProfile(STORED_BY_VERSION_4));
 		const stored = asVersion9(current);
 		const settings = { ...(stored['settings'] as Json), keyboardFade: false };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(10);
+		expect(migrated.schemaVersion).toBe(11);
 		expect(migrated.settings.keyboardFade).toBe(false);
 	});
 
@@ -523,7 +565,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion8(current);
 		const settings = { ...(stored['settings'] as Json), errorPolicy: 'backspace' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(10);
+		expect(migrated.schemaVersion).toBe(11);
 		expect(migrated.settings.errorPolicy).toBe('backspace');
 	});
 
@@ -546,7 +588,7 @@ describe('migrateProfile', () => {
 			}
 		};
 		const migrated = parseProfile(migrateProfile(stored));
-		expect(migrated.schemaVersion).toBe(10);
+		expect(migrated.schemaVersion).toBe(11);
 		expect(migrated.progress.chars).toEqual({
 			f: {
 				attempts: 50,
@@ -596,7 +638,8 @@ describe('migrateProfile', () => {
 					asVersion6(profile),
 					asVersion7(profile),
 					asVersion8(profile),
-					asVersion9(profile)
+					asVersion9(profile),
+					asVersion10(profile)
 				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);

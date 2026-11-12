@@ -1,3 +1,4 @@
+import type { AmbienceId } from '../audio/ambience';
 import type { GhostRun } from '../engine/ghost/types';
 import type { ErrorPolicy } from '../engine/types';
 import type { HandGuidePreference, ProgressState, StarCount } from '../engine/progression/types';
@@ -8,6 +9,8 @@ export type ThemePreference = 'system' | 'light' | 'dark';
 export type MotionPreference = 'system' | 'reduced' | 'full';
 export type TextScale = 'md' | 'lg' | 'xl';
 export type TextSpacing = 'normal' | 'wide' | 'wider';
+/** A soft background sound during the games (version 11), or none. */
+export type AmbiencePreference = 'none' | AmbienceId;
 
 export interface Settings {
 	readonly layoutId: LayoutId;
@@ -34,6 +37,13 @@ export interface Settings {
 	 * the keyboard drawn in the games, so that the eyes stay on the text. On by default.
 	 */
 	readonly keyboardFade: boolean;
+	/**
+	 * Light effects (version 11): sparkles, halos, confetti and surprise scenes. Apart from the
+	 * motion, which `motion` governs; what tells the child something is never cut. On by default.
+	 */
+	readonly effects: boolean;
+	/** A soft background sound during the games and between them (version 11); none by default. */
+	readonly ambience: AmbiencePreference;
 }
 
 export type { CompanionChoice, ErrorPolicy, HandGuidePreference, HelpQuestRecord };
@@ -73,7 +83,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 10;
+	readonly schemaVersion: 11;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

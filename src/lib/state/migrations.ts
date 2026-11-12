@@ -161,6 +161,16 @@ function toVersion10(record: StoredRecord): StoredRecord {
 	};
 }
 
+/* Version 11 (ADR-057): the light effects stay on and there is no background sound, as before. */
+function toVersion11(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { effects: true, ambience: 'none', ...settings } : settings,
+		schemaVersion: 11
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -171,7 +181,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[6, toVersion7],
 	[7, toVersion8],
 	[8, toVersion9],
-	[9, toVersion10]
+	[9, toVersion10],
+	[10, toVersion11]
 ]);
 
 function versionOf(record: StoredRecord): number {

@@ -152,9 +152,14 @@ export const EMPTY_JOURNAL = {
 	openedWorldIds: []
 } as const satisfies Partial<Profile>;
 
+/** What a profile becomes once migrated from version 10 or older: effects on, no background sound. */
+export function withSensoryDefaults(profile: Profile): Profile {
+	return { ...profile, settings: { ...profile.settings, effects: true, ambience: 'none' } };
+}
+
 /** What a profile becomes once migrated from version 9 or older: the known keys fade. */
 export function withKeyboardFade(profile: Profile): Profile {
-	return { ...profile, settings: { ...profile.settings, keyboardFade: true } };
+	return withSensoryDefaults({ ...profile, settings: { ...profile.settings, keyboardFade: true } });
 }
 
 /** What a profile becomes once migrated from version 8 or older: Backspace off, as before. */
@@ -162,11 +167,22 @@ export function withRetryPolicy(profile: Profile): Profile {
 	return withKeyboardFade({ ...profile, settings: { ...profile.settings, errorPolicy: 'retry' } });
 }
 
-/** The record version 9 of the app stored: the same profile without the choice of the fading keys. */
-export function asVersion9(profile: Profile): Record<string, unknown> {
+/** The record version 10 of the app stored: the same profile without the effects nor the background sound. */
+export function asVersion10(profile: Profile): Record<string, unknown> {
 	const settings: Record<string, unknown> = { ...profile.settings };
+	delete settings['effects'];
+	delete settings['ambience'];
+	return { ...profile, schemaVersion: 10, settings };
+}
+
+/** The record version 9 of the app stored: version 10 without the choice of the fading keys. */
+export function asVersion9(profile: Profile): Record<string, unknown> {
+	const version10 = asVersion10(profile);
+	const settings: Record<string, unknown> = {
+		...(version10['settings'] as Record<string, unknown>)
+	};
 	delete settings['keyboardFade'];
-	return { ...profile, schemaVersion: 9, settings };
+	return { ...version10, schemaVersion: 9, settings };
 }
 
 /** The record version 8 of the app stored: version 9 without the choice of Backspace. */
