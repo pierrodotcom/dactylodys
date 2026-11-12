@@ -1,14 +1,18 @@
 <script lang="ts">
 	import StoryDino from '../StoryDino.svelte';
+	import type { StoryPhase } from '../phase';
 
 	interface Props {
 		/** One of `STORY_ART_GROUPS.zoo`. */
 		art: string;
+		/** `before`: what the sentence starts from; `after`: what it tells (ADR-057). */
+		phase?: StoryPhase;
 	}
 
 	const uid = $props.id();
 
-	let { art }: Props = $props();
+	let { art, phase = 'after' }: Props = $props();
+	const after = $derived(phase === 'after');
 
 	/** [startX, startY, endX, endY, width, bow]: a curved band, see `bandPath` and `lensPath`. */
 	type Band = readonly [number, number, number, number, number, number];
@@ -370,6 +374,7 @@
 	const GRASS_TUFTS = (x: number, y: number) =>
 		`M${pointOf(x - 3, y)}Q${pointOf(x - 3, y - 3)} ${pointOf(x - 4.5, y - 5)}M${pointOf(x, y)}Q${pointOf(x, y - 4)} ${pointOf(x + 0.5, y - 6.5)}M${pointOf(x + 3, y)}Q${pointOf(x + 3, y - 3)} ${pointOf(x + 5, y - 4.5)}`;
 	const ZEBRA_TUFTS = [8, 26, 140, 152].map((x) => GRASS_TUFTS(x, 96)).join('');
+	const STRIPE_ON_ZEBRA = 'translate(46 63) rotate(84) scale(0.72) translate(-121 -86)';
 	const EXTRA_STRIPE =
 		'M103 86C110 81 117 87 124 84C129 82 135 82 140.5 83.5C135.5 86.5 130.5 88 126 89.5C118 92.5 110 88.5 103 86Z';
 </script>
@@ -743,34 +748,37 @@
 		<rect class="rock" x="0" y="0" width="160" height="66" />
 		<path class="soil" d="M0 50L160 50L160 66L0 66Z" />
 		<path class="shade" d="M0 40C40 46 120 46 160 40L160 66L0 66Z" />
-		<g transform="translate(30 31)">
-			{@render zebraFace('opening-zebra', 0.7, 0.7)}
-		</g>
-		<g transform="translate(128 30) scale(1.1)">
-			{@render cowFace('opening-cow', -0.8, 0.6)}
-		</g>
-		<path class="tone-p line" d="M88.5 -4C90.5 6 90.5 13 88.5 20L93 21C95 13 95.5 6 94 -4Z" />
-		{@render part(
-			'opening-neck',
-			'M92 -4C94 6 94 14 91 21L99.5 25.5C103 16 108 6 111 -4Z',
-			'fur-light',
-			patchesPath([
-				[98, 0, 3.6, 0],
-				[106, 2, 3.4, 30],
-				[97, 9, 3.4, 10],
-				[104, 11, 3.2, 40],
-				[97, 18, 3, 20]
-			]),
-			'spot',
-			'M106 -4C104 8 102 18 100 26L112 26L112 -4Z',
-			false
-		)}
-		<g transform="translate(90 26) rotate(-58) scale(1.05)">
-			{@render giraffeHead('opening-giraffe', -0.3, 0.95)}
-		</g>
-		<!-- The glass, its reflections, and where noses touched it. -->
-		<ellipse class="glass" cx="128" cy="40" rx="13" ry="7.5" />
-		<ellipse class="glass" cx="30" cy="46" rx="6.5" ry="3.2" />
+		<!-- Before: an empty hall; after: the animals have come to the glass to look. -->
+		{#if after}
+			<g transform="translate(30 31)">
+				{@render zebraFace('opening-zebra', 0.7, 0.7)}
+			</g>
+			<g transform="translate(128 30) scale(1.1)">
+				{@render cowFace('opening-cow', -0.8, 0.6)}
+			</g>
+			<path class="tone-p line" d="M88.5 -4C90.5 6 90.5 13 88.5 20L93 21C95 13 95.5 6 94 -4Z" />
+			{@render part(
+				'opening-neck',
+				'M92 -4C94 6 94 14 91 21L99.5 25.5C103 16 108 6 111 -4Z',
+				'fur-light',
+				patchesPath([
+					[98, 0, 3.6, 0],
+					[106, 2, 3.4, 30],
+					[97, 9, 3.4, 10],
+					[104, 11, 3.2, 40],
+					[97, 18, 3, 20]
+				]),
+				'spot',
+				'M106 -4C104 8 102 18 100 26L112 26L112 -4Z',
+				false
+			)}
+			<g transform="translate(90 26) rotate(-58) scale(1.05)">
+				{@render giraffeHead('opening-giraffe', -0.3, 0.95)}
+			</g>
+			<!-- The glass, its reflections, and where noses touched it. -->
+			<ellipse class="glass" cx="128" cy="40" rx="13" ry="7.5" />
+			<ellipse class="glass" cx="30" cy="46" rx="6.5" ry="3.2" />
+		{/if}
 		<path class="glass" d="M40 8L54 8L18 60L8 60L8 52Z" />
 		<path class="glass" d="M60 8L64 8L28 60L24 60Z" />
 		<path class="glass" d="M140 8L152 8L152 14L118 60L106 60Z" />
@@ -838,11 +846,17 @@
 		/>
 		<path class="page" d="M27 30L103 30L103 69L27 69Z" />
 		<path class="tone-i" d="M27 30L103 30L103 35L27 35Z" />
+		<!-- More is typed, and the giraffe comes down to read it. -->
 		<path
 			class="open ink-line"
-			d="M33 42L52 42M56 42L70 42M33 50L45 50M49 50L66 50M70 50L82 50M33 58L58 58"
+			d={after
+				? 'M33 42L52 42M56 42L70 42M33 50L45 50M49 50L66 50M70 50L82 50M33 58L58 58'
+				: 'M33 42L52 42M56 42L70 42'}
 		/>
-		<path class="tone-j" d="M61 54L62.6 54L62.6 61L61 61Z" />
+		<path
+			class="tone-j"
+			d={after ? 'M61 54L62.6 54L62.6 61L61 61Z' : 'M73 38L74.6 38L74.6 45L73 45Z'}
+		/>
 		<path class="shade" d="M84 30L103 30L103 52C96 46 90 38 84 30Z" />
 		<path
 			class="metal line"
@@ -860,28 +874,35 @@
 		{/each}
 		<path class="white line thin" d="M50 94.6L84 94.6L84.4 96L49.6 96Z" />
 		<!-- The giraffe: its neck comes down from far above. -->
-		<path class="tone-p line" d={LONG_MANE} />
-		{@render part(
-			'giraffe-neck',
-			LONG_NECK,
-			'fur-light',
-			LONG_NECK_PATCHES,
-			'spot',
-			'M118 40C134 26 152 10 172 -8L180 -8L180 40Z',
-			true
-		)}
-		<g transform="translate(106 33) rotate(-34) scale(1.35)">
-			{@render giraffeHead('giraffe', -0.9, 0.45)}
+		<g transform={after ? undefined : 'translate(22 -24)'}>
+			<path class="tone-p line" d={LONG_MANE} />
+			{@render part(
+				'giraffe-neck',
+				LONG_NECK,
+				'fur-light',
+				LONG_NECK_PATCHES,
+				'spot',
+				'M118 40C134 26 152 10 172 -8L180 -8L180 40Z',
+				true
+			)}
+			<g transform="translate(106 33) rotate(-34) scale(1.35)">
+				{@render giraffeHead('giraffe', -0.9, 0.45)}
+			</g>
 		</g>
 	</g>
 {:else if art === 'zoo-cow'}
 	<g data-story-art="zoo-cow">
 		<rect class="night" x="0" y="0" width="160" height="100" />
-		<path class="beam" d="M74 0L86 0L120 90L40 90Z" />
+		<!-- Before: everyone on the floor; after: the spotlight on the cow, the others step back. -->
+		{#if after}
+			<path class="beam" d="M74 0L86 0L120 90L40 90Z" />
+		{/if}
 		<path class="wood line" d="M-2 70L162 70L162 102L-2 102Z" />
 		<path class="open line thin" d={FLOOR_BOARDS.join('')} />
 		<path class="shade" d="M-2 70L162 70L162 76L-2 76Z" />
-		<ellipse class="star" cx="80" cy="90" rx="38" ry="7" />
+		{#if after}
+			<ellipse class="star" cx="80" cy="90" rx="38" ry="7" />
+		{/if}
 		<!-- Curtains. -->
 		<path class="tone-j line" d="M-2 -2L22 -2C18 20 16 40 18 72L-2 72Z" />
 		<path class="tone-j line" d="M162 -2L138 -2C142 20 144 40 142 72L162 72Z" />
@@ -911,23 +932,27 @@
 			<path class="light" d="M74 8L80 8L80 12L74 12Z" />
 			<path class="shade" d="M72 16Q80 22 88 16L88 22L72 22Z" />
 		</g>
-		<path class="star" d="M68 22L69 25L72 26L69 27L68 30L67 27L64 26L67 25Z" />
-		<path class="star" d="M93 20L93.8 22.2L96 23L93.8 23.8L93 26L92.2 23.8L90 23L92.2 22.2Z" />
+		{#if after}
+			<path class="star" d="M68 22L69 25L72 26L69 27L68 30L67 27L64 26L67 25Z" />
+			<path class="star" d="M93 20L93.8 22.2L96 23L93.8 23.8L93 26L92.2 23.8L90 23L92.2 22.2Z" />
+		{/if}
 		<!-- The audience, keeping its distance. -->
-		<g transform="translate(24 92) scale(0.5)">
+		<g transform="translate({after ? 24 : 34} 92) scale(0.5)">
 			{@render zebra('cow-zebra', false)}
 		</g>
-		<g transform="translate(134 92) scale(0.52)">
+		<g transform="translate({after ? 134 : 124} 92) scale(0.52)">
 			{@render giraffe('cow-giraffe')}
 		</g>
 		<!-- The dancer. -->
 		<ellipse class="shade" cx="80" cy="90" rx="26" ry="3.6" />
-		<g transform="translate(78 90) scale(0.82) rotate(-6 0 -10)">
+		<g transform="translate(78 90) scale(0.82){after ? ' rotate(-6 0 -10)' : ''}">
 			{@render cow('cow')}
 		</g>
-		<path class="open swish" d="M103 70Q108 74 106 80M107 67Q113 73 110 82" />
-		<path class="star" d={NOTE} transform="translate(104 31) rotate(10)" />
-		<path class="star" d={NOTE} transform="translate(50 30) rotate(-12) scale(0.8)" />
+		{#if after}
+			<path class="open swish" d="M103 70Q108 74 106 80M107 67Q113 73 110 82" />
+			<path class="star" d={NOTE} transform="translate(104 31) rotate(10)" />
+			<path class="star" d={NOTE} transform="translate(50 30) rotate(-12) scale(0.8)" />
+		{/if}
 	</g>
 {:else if art === 'zoo-yak'}
 	<g data-story-art="zoo-yak">
@@ -1003,28 +1028,31 @@
 		</g>
 		<!-- The dino and its magnifying glass: what the lens shows is twice as big. -->
 		<StoryDino x={27} y={40} size={54} mood="idle" flip />
-		<path
-			class="wood line"
-			d="M66.9 79.3L75.6 76.4L76.4 78.4L67.9 81.9C67 82 66.4 80.2 66.9 79.3Z"
-		/>
-		<clipPath id={clipOf('yak-lens')}><circle cx="85" cy="74" r="8.2" /></clipPath>
-		<g clip-path="url(#{clipOf('yak-lens')})">
-			<circle class="fur" cx="85" cy="74" r="8.2" />
-			<path class="open line thin" d="M78 68C80 72 79 76 81 80M90 66C89 70 91 74 90 78" />
-			<g transform="translate(85 72) rotate(70) scale(1.35)">
-				<path class="leaf line thin" d={CARROT_LEAVES} />
-				<path class="tone-g line thin" d={CARROT_TOP} />
-				<path class="open line thin" d="M1.5 -2L2.1 -0.5M4 2.2L4.6 0.8M6.4 -0.2L6.8 1" />
+		<!-- Before: the magnifying glass is not out yet. -->
+		{#if after}
+			<path
+				class="wood line"
+				d="M66.9 79.3L75.6 76.4L76.4 78.4L67.9 81.9C67 82 66.4 80.2 66.9 79.3Z"
+			/>
+			<clipPath id={clipOf('yak-lens')}><circle cx="85" cy="74" r="8.2" /></clipPath>
+			<g clip-path="url(#{clipOf('yak-lens')})">
+				<circle class="fur" cx="85" cy="74" r="8.2" />
+				<path class="open line thin" d="M78 68C80 72 79 76 81 80M90 66C89 70 91 74 90 78" />
+				<g transform="translate(85 72) rotate(70) scale(1.35)">
+					<path class="leaf line thin" d={CARROT_LEAVES} />
+					<path class="tone-g line thin" d={CARROT_TOP} />
+					<path class="open line thin" d="M1.5 -2L2.1 -0.5M4 2.2L4.6 0.8M6.4 -0.2L6.8 1" />
+				</g>
+				<path class="fur line thin" d="M86 82C88 79 92 78 95 79L95 86L84 86C84 84 85 83 86 82Z" />
+				<path class="glass" d="M77 74A8 8 0 0 1 85 66L85 68A6 6 0 0 0 79 74Z" />
 			</g>
-			<path class="fur line thin" d="M86 82C88 79 92 78 95 79L95 86L84 86C84 84 85 83 86 82Z" />
-			<path class="glass" d="M77 74A8 8 0 0 1 85 66L85 68A6 6 0 0 0 79 74Z" />
-		</g>
-		<path
-			class="metal line"
-			fill-rule="evenodd"
-			d="M74.5 74a10.5 10.5 0 1 0 21 0a10.5 10.5 0 1 0 -21 0ZM76.8 74a8.2 8.2 0 1 0 16.4 0a8.2 8.2 0 1 0 -16.4 0Z"
-		/>
-		<path class="light" d="M76 70A10 10 0 0 1 81 65L81.6 66.4A8.6 8.6 0 0 0 77.4 70.6Z" />
+			<path
+				class="metal line"
+				fill-rule="evenodd"
+				d="M74.5 74a10.5 10.5 0 1 0 21 0a10.5 10.5 0 1 0 -21 0ZM76.8 74a8.2 8.2 0 1 0 16.4 0a8.2 8.2 0 1 0 -16.4 0Z"
+			/>
+			<path class="light" d="M76 70A10 10 0 0 1 81 65L81.6 66.4A8.6 8.6 0 0 0 77.4 70.6Z" />
+		{/if}
 	</g>
 {:else if art === 'zoo-zebra'}
 	<g data-story-art="zoo-zebra">
@@ -1055,16 +1083,21 @@
 		<path class="grass line" d="M-2 70C40 67 120 67 162 70L162 102L-2 102Z" />
 		<path class="leaf" d="M-2 94C40 91 120 91 162 94L162 102L-2 102Z" />
 		<path class="open line" d={ZEBRA_TUFTS} />
-		<!-- The stripe too many, lying in the grass. -->
-		<ellipse class="shade" cx="122" cy="88" rx="16" ry="2.6" />
-		<path class="dark line" d={EXTRA_STRIPE} />
-		<path class="open line" d="M114 90Q113.5 87 112 85M131 88.6Q131.5 85.6 133 84" />
-		<path class="open line" d="M115 79L113.4 76.4M121.6 77.6L121.4 74.6M128 78.4L129.6 75.8" />
+		<!-- The stripe too many, lying in the grass; before, still coming off the zebra. -->
+		{#if after}
+			<ellipse class="shade" cx="122" cy="88" rx="16" ry="2.6" />
+			<path class="dark line" d={EXTRA_STRIPE} />
+			<path class="open line" d="M114 90Q113.5 87 112 85M131 88.6Q131.5 85.6 133 84" />
+			<path class="open line" d="M115 79L113.4 76.4M121.6 77.6L121.4 74.6M128 78.4L129.6 75.8" />
+		{/if}
 		<!-- The zebra. -->
 		<ellipse class="shade" cx="54" cy="91" rx="34" ry="3.6" />
 		<g transform="translate(60 90) scale(1.05)">
-			{@render zebra('zebra', true)}
+			{@render zebra('zebra', after)}
 		</g>
+		{#if !after}
+			<path class="dark line" d={EXTRA_STRIPE} transform={STRIPE_ON_ZEBRA} />
+		{/if}
 	</g>
 {:else if art === 'zoo-ending'}
 	<g data-story-art="zoo-ending">
@@ -1079,27 +1112,30 @@
 				<path class="open ruled" d="M28 {ruleY}L{ruleY > 76 ? 122 : 130} {ruleY}" />
 			{/each}
 			<path class="open margin" d="M34 9L34 91" />
-			{#each PRINTS as print (`${print.x}-${print.y}`)}
-				<path
-					class={print.paint}
-					d={PRINT_PATHS[print.kind]}
-					transform="translate({print.x} {print.y}) rotate({print.turn})"
-				/>
-				{#if print.kind === 'horse'}
+			<!-- Before: a blank page; after: every animal has signed it. -->
+			{#if after}
+				{#each PRINTS as print (`${print.x}-${print.y}`)}
 					<path
-						class="page"
-						d={HOOF_STRIPES}
+						class={print.paint}
+						d={PRINT_PATHS[print.kind]}
 						transform="translate({print.x} {print.y}) rotate({print.turn})"
 					/>
-				{/if}
-			{/each}
-			{#each SPECKS as [speckX, speckY, speckR] (`${speckX}-${speckY}`)}
-				<circle class="dark" cx={speckX} cy={speckY} r={speckR} />
-			{/each}
-			<path class="open pencil" d="M96 80C104 76 110 60 118 50C124 42 130 36 140 26" />
-			{#each STAR_TRAIL as [starX, starY, starR] (starX)}
-				<path class="star line thin" d={starPath(starX, starY, starR)} />
-			{/each}
+					{#if print.kind === 'horse'}
+						<path
+							class="page"
+							d={HOOF_STRIPES}
+							transform="translate({print.x} {print.y}) rotate({print.turn})"
+						/>
+					{/if}
+				{/each}
+				{#each SPECKS as [speckX, speckY, speckR] (`${speckX}-${speckY}`)}
+					<circle class="dark" cx={speckX} cy={speckY} r={speckR} />
+				{/each}
+				<path class="open pencil" d="M96 80C104 76 110 60 118 50C124 42 130 36 140 26" />
+				{#each STAR_TRAIL as [starX, starY, starR] (starX)}
+					<path class="star line thin" d={starPath(starX, starY, starR)} />
+				{/each}
+			{/if}
 			{#each RING_XS as ringX (ringX)}
 				<circle class="dark" cx={ringX} cy="12" r="1.4" />
 				<path

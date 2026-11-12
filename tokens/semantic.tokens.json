@@ -1985,6 +1985,12 @@
 		"key-fade": {
 			"$value": "{duration.2000}"
 		},
+		"story-change-delay": {
+			"$value": "{duration.1600}"
+		},
+		"story-change": {
+			"$value": "{duration.1600}"
+		},
 		"reminder": {
 			"$value": "{duration.4000}"
 		},

@@ -3,13 +3,17 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import StoryDino from '../StoryDino.svelte';
+	import type { StoryPhase } from '../phase';
 
 	interface Props {
 		/** One of `STORY_ART_GROUPS.circuit`. */
 		art: string;
+		/** `before`: what the sentence starts from; `after`: what it tells (ADR-057). */
+		phase?: StoryPhase;
 	}
 
-	let { art }: Props = $props();
+	let { art, phase = 'after' }: Props = $props();
+	const after = $derived(phase === 'after');
 	const uid = $props.id();
 
 	type Crew = 'none' | 'wheel' | 'horn' | 'helmet';
@@ -360,7 +364,9 @@
 			<path class="light" d="M2 -1.4C8 -1.8 12 -4 16 -10.4L17 -9C13 -3 8 -0.4 2 -0.2Z" />
 			<ellipse class="line star" cx="18.5" cy="0" rx="3.6" ry="13.5" />
 			<ellipse class="dark" cx="19" cy="0" rx="2.2" ry="10.6" />
-			<path class="line open" d={SOUND_WAVES} />
+			{#if after}
+				<path class="line open" d={SOUND_WAVES} />
+			{/if}
 		</g>
 		<path class="line red" d="M84 -34.4C84.6 -31.8 84.6 -30.2 84 -27.6L82 -28.6L82 -33.4Z" />
 		<ellipse class="line red" cx="79.4" cy="-31" rx="4.4" ry="4.8" />
@@ -420,15 +426,25 @@
 				d="M-7 -15.6C-9 -22 -7.8 -29 0 -29C7.8 -29 9 -22 7 -15.6C5.8 -17.6 5.6 -21 5 -23.6C2 -22.6 -2 -22.6 -5 -23.6C-5.6 -21 -5.8 -17.6 -7 -15.6Z"
 			/>
 		{/if}
-		<path
-			class="line thin open"
-			d="M-4.2 -21.6Q-2.8 -23.6 -1.4 -21.6M1.4 -21.6Q2.8 -23.6 4.2 -21.6"
-		/>
-		<path class="line thin ink" d="M-3.4 -19.2Q0 -12.6 3.4 -19.2Q0 -18.2 -3.4 -19.2Z" />
-		<path class="tone-a" d="M-1.8 -16.4Q0 -14.6 1.8 -16.4Q0 -17.6 -1.8 -16.4Z" />
-		<path class="line thin water" d="M-7.4 -22.6Q-9.6 -20.6 -8.6 -19.2Q-7.2 -18.6 -7.4 -22.6Z" />
-		<path class="line thin water" d="M7.4 -22.6Q9.6 -20.6 8.6 -19.2Q7.2 -18.6 7.4 -22.6Z" />
-		{#if pose === 'up'}
+		{#if after}
+			<path
+				class="line thin open"
+				d="M-4.2 -21.6Q-2.8 -23.6 -1.4 -21.6M1.4 -21.6Q2.8 -23.6 4.2 -21.6"
+			/>
+			<path class="line thin ink" d="M-3.4 -19.2Q0 -12.6 3.4 -19.2Q0 -18.2 -3.4 -19.2Z" />
+			<path class="tone-a" d="M-1.8 -16.4Q0 -14.6 1.8 -16.4Q0 -17.6 -1.8 -16.4Z" />
+			<path class="line thin water" d="M-7.4 -22.6Q-9.6 -20.6 -8.6 -19.2Q-7.2 -18.6 -7.4 -22.6Z" />
+			<path class="line thin water" d="M7.4 -22.6Q9.6 -20.6 8.6 -19.2Q7.2 -18.6 7.4 -22.6Z" />
+		{:else}
+			<!-- Before the horn: watching the race, calm. -->
+			<circle class="ink" cx="-2.8" cy="-21.4" r="1" />
+			<circle class="ink" cx="2.8" cy="-21.4" r="1" />
+			<path class="line thin open" d="M-2.4 -17.4Q0 -16.2 2.4 -17.4" />
+		{/if}
+		{#if !after}
+			<path class="line {shirt}" d={limb(5.8, -11.6, 10.2, -6, 3.6, -3.4, 2.2, 1.8)} />
+			<circle class="line {skin}" cx="3.2" cy="-3.4" r="2.2" />
+		{:else if pose === 'up'}
 			<path class="line {shirt}" d={limb(5.8, -11.6, 11.4, -14, 11.6, -22.4, 2.2, 1.8)} />
 			<circle class="line {skin}" cx="11.6" cy="-23.6" r="2.3" />
 		{:else if pose === 'point'}
@@ -439,7 +455,7 @@
 			<path class="line {shirt}" d={limb(5.8, -11.6, 10.2, -6, 3.6, -3.4, 2.2, 1.8)} />
 			<circle class="line {skin}" cx="3.2" cy="-3.4" r="2.2" />
 		{/if}
-		{#if pose === 'tear'}
+		{#if pose === 'tear' && after}
 			<path class="line {shirt}" d={limb(-5.8, -11.6, -11.8, -13, -7, -19, 2.2, 1.8)} />
 			<circle class="line {skin}" cx="-6.4" cy="-19.8" r="2.2" />
 		{:else}
@@ -686,16 +702,25 @@
 			{/each}
 		</g>
 		<path class="line thin open" d="M140 72H150L158 102H146Z" />
-		<!-- A small cough from the exhaust: the engine has stalled. -->
-		<path
-			class="line thin white"
-			d="M9 84.4Q6 86 3.6 84.6Q1 85.6 -0.4 83.4Q-2 80.6 0.6 79.4Q1.6 76.6 4.6 77.6Q7.6 76.4 9 79.4Q11 81 10.4 82.6Z"
-		/>
-		<path
-			class="line thin white"
-			d="M-1 74.6Q-3.6 74.6 -3.2 72.4Q-3 70.2 -0.6 70.6Q1 69 2.6 70.6Q4.6 71.6 3.4 73.6Q2 75.2 -1 74.6Z"
-		/>
-		<g transform="translate(16 93)">{@render raceCar('opening', 'tone-i', 'learner', 'wheel')}</g>
+		<!-- Before: the car waits, empty; after: the companion at the wheel, "A" plate on. -->
+		{#if after}
+			<!-- A small cough from the exhaust: the engine has stalled. -->
+			<path
+				class="line thin white"
+				d="M9 84.4Q6 86 3.6 84.6Q1 85.6 -0.4 83.4Q-2 80.6 0.6 79.4Q1.6 76.6 4.6 77.6Q7.6 76.4 9 79.4Q11 81 10.4 82.6Z"
+			/>
+			<path
+				class="line thin white"
+				d="M-1 74.6Q-3.6 74.6 -3.2 72.4Q-3 70.2 -0.6 70.6Q1 69 2.6 70.6Q4.6 71.6 3.4 73.6Q2 75.2 -1 74.6Z"
+			/>
+		{/if}
+		<g transform="translate(16 93)">
+			{#if after}
+				{@render raceCar('opening', 'tone-i', 'learner', 'wheel')}
+			{:else}
+				{@render raceCar('opening', 'tone-i', 'ring', 'none')}
+			{/if}
+		</g>
 	</g>
 {:else if art === 'circuit-horn'}
 	<g data-story-art="circuit-horn">
@@ -711,31 +736,33 @@
 		{@render fan(128, 34, 0.78, -14, 'tone-a', 'sand', 'long', 'up')}
 		{@render fan(152, 34, 0.78, 8, 'tone-n', 'fur', 'curly', 'tear')}
 		<path class="line wood" d="M-2 33.4H162V36H-2Z" />
-		<!-- This one fell off the bench, backwards. -->
-		<path class="line tone-i" d={limb(98, 48, 96, 40, 90, 34, 2.4, 2)} />
-		<path class="line tone-i" d={limb(103, 48, 106, 40, 110, 34.6, 2.4, 2)} />
-		<path
-			class="line dark"
-			d="M86.4 33.6Q86 30.4 89 30.6L92 31.4Q93.4 32.4 92 34.2L89 35.6Q86.8 35.8 86.4 33.6Z"
-		/>
-		<path
-			class="line dark"
-			d="M108.4 34.2Q107.6 32 110 31.2L113 30.6Q115.6 30.8 114.6 33.4L112 35.4Q109.6 36 108.4 34.2Z"
-		/>
-		<!-- Their popcorn, still in the air. -->
-		<g transform="rotate(-24 104 22)">
-			<path class="line white" d="M99.6 18H108.4L107 27.4H101Z" />
-			<path class="line thin open" d="M102.4 18.4L102.8 27M105.6 18.4L105.2 27" />
-			<path class="red" d="M101 18.4h1.4l0.4 8.6h-1.6zM104 18.4h1.4l-0.2 8.6h-1.4z" />
-			<path class="line thin open" d="M99.6 18H108.4L107 27.4H101Z" />
-		</g>
-		{#each [{ x: 103, y: 13 }, { x: 108, y: 14.6 }, { x: 99, y: 11 }, { x: 112, y: 10 }, { x: 105, y: 8.6 }] as corn (corn.x)}
+		<!-- This one fell off the bench, backwards; before, nothing has flown yet. -->
+		{#if after}
+			<path class="line tone-i" d={limb(98, 48, 96, 40, 90, 34, 2.4, 2)} />
+			<path class="line tone-i" d={limb(103, 48, 106, 40, 110, 34.6, 2.4, 2)} />
 			<path
-				class="line thin fur-light"
-				d="M{corn.x -
-					1.4} {corn.y}a1.2 1.2 0 0 1 1.4 -1.2a1.2 1.2 0 0 1 1.4 1.2a1.2 1.2 0 0 1 -1.4 1.2a1.2 1.2 0 0 1 -1.4 -1.2z"
+				class="line dark"
+				d="M86.4 33.6Q86 30.4 89 30.6L92 31.4Q93.4 32.4 92 34.2L89 35.6Q86.8 35.8 86.4 33.6Z"
 			/>
-		{/each}
+			<path
+				class="line dark"
+				d="M108.4 34.2Q107.6 32 110 31.2L113 30.6Q115.6 30.8 114.6 33.4L112 35.4Q109.6 36 108.4 34.2Z"
+			/>
+			<!-- Their popcorn, still in the air. -->
+			<g transform="rotate(-24 104 22)">
+				<path class="line white" d="M99.6 18H108.4L107 27.4H101Z" />
+				<path class="line thin open" d="M102.4 18.4L102.8 27M105.6 18.4L105.2 27" />
+				<path class="red" d="M101 18.4h1.4l0.4 8.6h-1.6zM104 18.4h1.4l-0.2 8.6h-1.4z" />
+				<path class="line thin open" d="M99.6 18H108.4L107 27.4H101Z" />
+			</g>
+			{#each [{ x: 103, y: 13 }, { x: 108, y: 14.6 }, { x: 99, y: 11 }, { x: 112, y: 10 }, { x: 105, y: 8.6 }] as corn (corn.x)}
+				<path
+					class="line thin fur-light"
+					d="M{corn.x -
+						1.4} {corn.y}a1.2 1.2 0 0 1 1.4 -1.2a1.2 1.2 0 0 1 1.4 1.2a1.2 1.2 0 0 1 -1.4 1.2a1.2 1.2 0 0 1 -1.4 -1.2z"
+				/>
+			{/each}
+		{/if}
 		{@render fan(20, 50, 0.95, 16, 'tone-j', 'spot', 'bun', 'point')}
 		{@render fan(50, 50, 0.95, -12, 'tone-b', 'sand', 'cap', 'belly')}
 		{@render fan(76, 50, 0.95, 18, 'tone-l', 'fur', 'long', 'tear')}
@@ -762,7 +789,9 @@
 		<g transform="translate(144 95) scale(-0.74 0.74)"
 			>{@render raceCar('horn', 'tone-k', 'ring', 'horn')}</g
 		>
-		<g transform="translate(9 44) scale(0.7)"><path class="line thin star" d={SPARKLE} /></g>
+		{#if after}
+			<g transform="translate(9 44) scale(0.7)"><path class="line thin star" d={SPARKLE} /></g>
+		{/if}
 	</g>
 {:else if art === 'circuit-train'}
 	<g data-story-art="circuit-train">
@@ -793,23 +822,25 @@
 			<path class="line bold open" d={railPath(rail)} />
 			<path class="line open metal-line" d={railPath(rail)} />
 		{/each}
-		<!-- The last wagon, far behind, running to catch up. -->
-		<g transform="translate(14.4 57.6) rotate(-6) scale(0.8)">
-			<path class="line thin open" d="M-6 -4L-9 -6M-6 0L-10 0M5.6 -5L8 -8" />
-			<circle class="line thin dark" cx="-2" cy="3.6" r="1.4" />
-			<circle class="line thin dark" cx="2" cy="3.6" r="1.4" />
+		<!-- The last wagon, far behind, running to catch up; before, not even in sight. -->
+		{#if after}
+			<g transform="translate(14.4 57.6) rotate(-6) scale(0.8)">
+				<path class="line thin open" d="M-6 -4L-9 -6M-6 0L-10 0M5.6 -5L8 -8" />
+				<circle class="line thin dark" cx="-2" cy="3.6" r="1.4" />
+				<circle class="line thin dark" cx="2" cy="3.6" r="1.4" />
+				<path
+					class="line thin tone-f"
+					d="M-3.4 -3.8H3.4Q4 -3.8 4 -3.2V2.8H-4V-3.2Q-4 -3.8 -3.4 -3.8Z"
+				/>
+				<path class="line thin dark" d="M-4.4 -3.6Q0 -6 4.4 -3.6Z" />
+				<path class="line thin open" d="M-1.6 -2.4V2M1.6 -2.4V2" />
+				<path class="line thin water" d="M5 -2Q6.4 -0.4 5.8 0.4Q4.8 0.4 5 -2Z" />
+			</g>
 			<path
-				class="line thin tone-f"
-				d="M-3.4 -3.8H3.4Q4 -3.8 4 -3.2V2.8H-4V-3.2Q-4 -3.8 -3.4 -3.8Z"
+				class="line thin white"
+				d="M19.4 62.6Q17 63 16.8 61.6Q16.8 60 18.4 60.2Q19.6 59.4 20.4 60.6Q21.2 62 19.4 62.6Z"
 			/>
-			<path class="line thin dark" d="M-4.4 -3.6Q0 -6 4.4 -3.6Z" />
-			<path class="line thin open" d="M-1.6 -2.4V2M1.6 -2.4V2" />
-			<path class="line thin water" d="M5 -2Q6.4 -0.4 5.8 0.4Q4.8 0.4 5 -2Z" />
-		</g>
-		<path
-			class="line thin white"
-			d="M19.4 62.6Q17 63 16.8 61.6Q16.8 60 18.4 60.2Q19.6 59.4 20.4 60.6Q21.2 62 19.4 62.6Z"
-		/>
+		{/if}
 		<!-- The station clock, an hour late. -->
 		<path class="line metal" d={limb(62, 76, 62, 50, 62, 28, 1.3, 1.3)} />
 		<path class="line thin dark" d="M58.6 30.6Q62 27 65.4 30.6Z" />
@@ -819,7 +850,7 @@
 			{#each CLOCK_MARKS as mark (mark.id)}
 				<path class="line thin open" d={mark.d} />
 			{/each}
-			<path class="line open bold" d="M0 0L4.4 2.6" />
+			<path class="line open bold" d={after ? 'M0 0L4.4 2.6' : 'M0 0L5 0'} />
 			<path class="line open" d="M0 0L0 -7.4" />
 			<circle class="red line thin" r="1.2" />
 		</g>
@@ -936,30 +967,32 @@
 				<circle class="ink" cx="-0.9" cy="-59.8" r="0.4" />
 				<circle class="ink" cx="0.9" cy="-59.8" r="0.4" />
 				<path class="line thin open" d="M-2.6 -57Q-1 -56 0.4 -57Q1.8 -57.8 3 -56.8" />
-				<!-- The hat and its feather. -->
-				<path
-					class="line tone-m"
-					d="M-18.6 -68C-14 -73.4 13 -74.4 19.6 -69.4C20.6 -68 19 -66.6 16 -66.6C6 -67 -6 -67 -16 -66C-18.6 -65.8 -19.8 -66.6 -18.6 -68Z"
-				/>
-				<path
-					class="line tone-f"
-					d="M7.6 -73C14 -80 12 -92 -2 -96C-10 -98 -18 -94 -20 -88C-16 -91 -10 -91 -6 -89C-12 -88 -15 -84 -15 -80C-10 -84 -4 -85 0 -83C-5 -81 -7 -77 -6 -73C-1 -78 4 -77 4 -74Z"
-				/>
-				<path class="line thin open" d="M6 -74C8 -82 4 -90 -6 -92" />
-				<path class="line thin open" d="M2 -84Q-2 -86 -5 -85M4 -79Q0 -80.6 -3 -79" />
-				{@render form(
-					'hat-crown',
-					'M-10.4 -69.6C-11 -78 -6 -81.6 0 -81.6C6 -81.6 11 -78 10.4 -69.6Q0 -71.4 -10.4 -69.6Z',
-					'tone-m',
-					'M4 -82C8 -78 8 -74 7 -70H12V-82Z',
-					'M-7 -77C-5.4 -79.4 -2.4 -80.4 0 -80.4C-3 -79 -5 -77 -6 -74.6Z',
-					''
-				)}
-				<path
-					class="line thin tone-l"
-					d="M-10.6 -73Q0 -75 10.6 -73L10.4 -69.6Q0 -71.4 -10.4 -69.6Z"
-				/>
-				<circle class="line thin tone-l" cx="7.6" cy="-71.6" r="1.6" />
+				<!-- The hat and its feather: before, still missing. -->
+				{#if after}
+					<path
+						class="line tone-m"
+						d="M-18.6 -68C-14 -73.4 13 -74.4 19.6 -69.4C20.6 -68 19 -66.6 16 -66.6C6 -67 -6 -67 -16 -66C-18.6 -65.8 -19.8 -66.6 -18.6 -68Z"
+					/>
+					<path
+						class="line tone-f"
+						d="M7.6 -73C14 -80 12 -92 -2 -96C-10 -98 -18 -94 -20 -88C-16 -91 -10 -91 -6 -89C-12 -88 -15 -84 -15 -80C-10 -84 -4 -85 0 -83C-5 -81 -7 -77 -6 -73C-1 -78 4 -77 4 -74Z"
+					/>
+					<path class="line thin open" d="M6 -74C8 -82 4 -90 -6 -92" />
+					<path class="line thin open" d="M2 -84Q-2 -86 -5 -85M4 -79Q0 -80.6 -3 -79" />
+					{@render form(
+						'hat-crown',
+						'M-10.4 -69.6C-11 -78 -6 -81.6 0 -81.6C6 -81.6 11 -78 10.4 -69.6Q0 -71.4 -10.4 -69.6Z',
+						'tone-m',
+						'M4 -82C8 -78 8 -74 7 -70H12V-82Z',
+						'M-7 -77C-5.4 -79.4 -2.4 -80.4 0 -80.4C-3 -79 -5 -77 -6 -74.6Z',
+						''
+					)}
+					<path
+						class="line thin tone-l"
+						d="M-10.6 -73Q0 -75 10.6 -73L10.4 -69.6Q0 -71.4 -10.4 -69.6Z"
+					/>
+					<circle class="line thin tone-l" cx="7.6" cy="-71.6" r="1.6" />
+				{/if}
 			</g>
 		</g>
 	</g>
@@ -1016,6 +1049,10 @@
 			{/each}
 			<ellipse class="line white" cx="0" cy="-24" rx="12" ry="3.4" />
 			<ellipse class="line thin dark" cx="0" cy="-24" rx="6" ry="1.6" />
+			{#if !after}
+				<!-- Before: the helmet waits on the tyres, and the copilot can still see. -->
+				<g transform="translate(-3 27) rotate(4 2 -66)">{@render bigHelmet()}</g>
+			{/if}
 		</g>
 		<!-- The copilot: pace notes upside down, helmet down to the chin. -->
 		<g transform="translate(96 96)">
@@ -1059,49 +1096,62 @@
 			/>
 			<!-- Head, and the helmet that swallowed it. -->
 			<path class="line sand" d={limb(1, -48, 1.6, -50, 2, -52, 2.6, 2.6)} />
-			<path class="line sand" d="M-6 -52Q-5 -45.6 3 -45.4Q10 -45.6 11 -52Z" />
-			<path
-				class="line thin ink"
-				d="M1 -49.4Q3 -48 5 -49.6Q6.6 -50.6 7.6 -49.4Q6 -47.4 3.4 -47.6Q1.6 -47.8 1 -49.4Z"
-			/>
-			<path class="line thin water" d="M11.4 -52.4Q13 -50.4 12.4 -49.4Q11.2 -49.2 11.4 -52.4Z" />
-			<path
-				class="line thin dark"
-				d="M-8 -52.6Q-11 -46 -8.6 -42.4Q-6.4 -43 -6.6 -45.4Q-7.6 -48 -6 -52Z"
-			/>
-			<g transform="rotate(-7 2 -66)">
-				{@render form(
-					'big-helmet',
-					'M-16.4 -53C-19.6 -68 -11 -84 3.4 -84C18 -84 23.6 -71 21.6 -57C21 -53.4 19 -51.6 15.6 -51.4L-12 -50.4Q-15.4 -50.4 -16.4 -53Z',
-					'white',
-					'M-24 -60C-10 -52 10 -52 26 -62V-46H-24Z',
-					'M-11 -72C-8 -78 -2 -81.6 4 -81.6C-1.6 -79.4 -6.4 -75.4 -9 -70Z',
-					'bold'
-				)}
-				<path
-					class="line thin tone-j"
-					d="M-1.4 -83.8C-6.6 -76 -8.4 -63 -6 -50.8L-1.8 -50.9C-3.6 -63 -2.4 -75 2.6 -84Z"
-				/>
-				<path
-					class="line thin tone-i"
-					d="M3.4 -84C-0.6 -76 -1.6 -63 0.2 -51L3 -51.1C1.6 -63 2.6 -75 6.4 -83.8Z"
-				/>
+			{#if !after}
+				<circle class="line sand" cx="-6.4" cy="-55" r="2" />
+				<circle class="line sand" cx="2.4" cy="-55.6" r="8.6" />
 				<path
 					class="line dark"
-					d="M9.4 -72.6C14.6 -74 20 -71 22.6 -66L22.4 -60C17.6 -60.6 12.6 -62.6 9 -66.4Q7.8 -69.6 9.4 -72.6Z"
+					d="M-6.2 -56.4C-7.4 -61.6 -4 -65.4 2.4 -65.4C8.6 -65.4 11.8 -61.6 11 -57.4C9 -60 6 -61.2 2.6 -61C-0.6 -60.8 -3.6 -59.6 -6.2 -56.4Z"
 				/>
+				<circle class="ink" cx="4.4" cy="-56.2" r="1" />
+				<circle class="ink" cx="9" cy="-56.2" r="1" />
+				<path class="line thin open" d="M4 -51.6Q6.8 -49.8 9.6 -51.8" />
+			{:else}
+				<path class="line sand" d="M-6 -52Q-5 -45.6 3 -45.4Q10 -45.6 11 -52Z" />
 				<path
-					class="light"
-					d="M12 -70.4C15.4 -71.4 18.6 -69.6 20.6 -66.6L19.4 -66C17.4 -68.4 14.6 -69.8 12 -70.4Z"
+					class="line thin ink"
+					d="M1 -49.4Q3 -48 5 -49.6Q6.6 -50.6 7.6 -49.4Q6 -47.4 3.4 -47.6Q1.6 -47.8 1 -49.4Z"
 				/>
-				<circle class="line thin metal" cx="-11.6" cy="-58" r="1.4" />
-			</g>
-			<path
-				class="line open"
-				d="M-22 -76Q-25 -70 -22 -64M24 -86Q28 -82 27.6 -76M-16 -88Q-12 -92 -6 -92"
-			/>
+				<path class="line thin water" d="M11.4 -52.4Q13 -50.4 12.4 -49.4Q11.2 -49.2 11.4 -52.4Z" />
+				<path
+					class="line thin dark"
+					d="M-8 -52.6Q-11 -46 -8.6 -42.4Q-6.4 -43 -6.6 -45.4Q-7.6 -48 -6 -52Z"
+				/>
+				<g transform="rotate(-7 2 -66)">{@render bigHelmet()}</g>
+				<path
+					class="line open"
+					d="M-22 -76Q-25 -70 -22 -64M24 -86Q28 -82 27.6 -76M-16 -88Q-12 -92 -6 -92"
+				/>
+			{/if}
 		</g>
 	</g>
+	{#snippet bigHelmet()}
+		{@render form(
+			'big-helmet',
+			'M-16.4 -53C-19.6 -68 -11 -84 3.4 -84C18 -84 23.6 -71 21.6 -57C21 -53.4 19 -51.6 15.6 -51.4L-12 -50.4Q-15.4 -50.4 -16.4 -53Z',
+			'white',
+			'M-24 -60C-10 -52 10 -52 26 -62V-46H-24Z',
+			'M-11 -72C-8 -78 -2 -81.6 4 -81.6C-1.6 -79.4 -6.4 -75.4 -9 -70Z',
+			'bold'
+		)}
+		<path
+			class="line thin tone-j"
+			d="M-1.4 -83.8C-6.6 -76 -8.4 -63 -6 -50.8L-1.8 -50.9C-3.6 -63 -2.4 -75 2.6 -84Z"
+		/>
+		<path
+			class="line thin tone-i"
+			d="M3.4 -84C-0.6 -76 -1.6 -63 0.2 -51L3 -51.1C1.6 -63 2.6 -75 6.4 -83.8Z"
+		/>
+		<path
+			class="line dark"
+			d="M9.4 -72.6C14.6 -74 20 -71 22.6 -66L22.4 -60C17.6 -60.6 12.6 -62.6 9 -66.4Q7.8 -69.6 9.4 -72.6Z"
+		/>
+		<path
+			class="light"
+			d="M12 -70.4C15.4 -71.4 18.6 -69.6 20.6 -66.6L19.4 -66C17.4 -68.4 14.6 -69.8 12 -70.4Z"
+		/>
+		<circle class="line thin metal" cx="-11.6" cy="-58" r="1.4" />
+	{/snippet}
 {:else if art === 'circuit-truck'}
 	<g data-story-art="circuit-truck">
 		{@render sky(60, 'stop-night', 'stop-dusk')}
@@ -1123,9 +1173,11 @@
 		<path class="line thin metal" d="M72 56L88 56L170 102L-10 102Z" />
 		<path class="shade" d="M72 56L88 56L170 102L-10 102Z" />
 		<path class="white" d="M79.4 58L80.6 58L81 61L79 61Z" />
-		<!-- The light of both headlights on the road. -->
-		<path class="light" d="M32 90L14 102H66L54 90Z" />
-		<path class="light" d="M100 90L94 102H142L122 90Z" />
+		<!-- The light of both headlights on the road; before, they are still off. -->
+		{#if after}
+			<path class="light" d="M32 90L14 102H66L54 90Z" />
+			<path class="light" d="M100 90L94 102H142L122 90Z" />
+		{/if}
 		<ellipse class="shade" cx="77" cy="91" rx="50" ry="3" />
 		<!-- Trailer behind the cab. -->
 		{@render form(
@@ -1200,7 +1252,9 @@
 		<!-- Brows: one up, one down for the wink. -->
 		<path
 			class="line thin dark"
-			d="M38.6 44Q47 38.6 55.4 43Q55.6 44.4 54.4 44.4Q47 41.4 39.6 45.4Q38.4 45.4 38.6 44Z"
+			d={after
+				? 'M38.6 44Q47 38.6 55.4 43Q55.6 44.4 54.4 44.4Q47 41.4 39.6 45.4Q38.4 45.4 38.6 44Z'
+				: 'M38.6 45.2Q47 43.6 55 45.4Q55.4 46.6 54 46.8Q47 45.2 39.6 46.6Q38.4 46.4 38.6 45.2Z'}
 		/>
 		<path
 			class="line thin dark"
@@ -1212,16 +1266,34 @@
 		<path class="line thin star" d="M77 44.6L80 47L77 49.4L74 47Z" />
 		<!-- Headlights: the left one shines, the right one winks. -->
 		<rect class="line metal" x="38.6" y="46.4" width="16.8" height="13.2" rx="5" />
-		<rect class="line thin star" x="40.6" y="48.2" width="12.8" height="9.6" rx="3.6" />
+		<rect
+			class="line thin {after ? 'star' : 'water-deep'}"
+			x="40.6"
+			y="48.2"
+			width="12.8"
+			height="9.6"
+			rx="3.6"
+		/>
 		<circle class="light" cx="44" cy="51" r="2" />
 		<rect class="line metal" x="98.6" y="46.4" width="16.8" height="13.2" rx="5" />
-		<rect class="line thin star" x="100.6" y="48.2" width="12.8" height="9.6" rx="3.6" />
-		<path
-			class="line thin tone-j"
-			d="M100.2 48.6Q100.2 47.8 102 47.8H112Q113.8 47.8 113.8 48.6V54Q107 59.4 100.2 54Z"
+		<rect
+			class="line thin {after ? 'star' : 'water-deep'}"
+			x="100.6"
+			y="48.2"
+			width="12.8"
+			height="9.6"
+			rx="3.6"
 		/>
-		<path class="line bold open" d="M100.2 54Q107 59.4 113.8 54" />
-		<path class="line thin open" d="M114.6 51.6L118.4 50M114.8 54.6L118.6 55.4" />
+		{#if !after}
+			<circle class="light" cx="104" cy="51" r="2" />
+		{:else}
+			<path
+				class="line thin tone-j"
+				d="M100.2 48.6Q100.2 47.8 102 47.8H112Q113.8 47.8 113.8 48.6V54Q107 59.4 100.2 54Z"
+			/>
+			<path class="line bold open" d="M100.2 54Q107 59.4 113.8 54" />
+			<path class="line thin open" d="M114.6 51.6L118.4 50M114.8 54.6L118.6 55.4" />
+		{/if}
 		<!-- Bumper, number plate, wheels. -->
 		{#each [36, 102] as tx (tx)}
 			<path
@@ -1258,13 +1330,16 @@
 		{#each BUNTING as pennant (pennant.id)}
 			<path class="line thin {pennant.tone}" d={pennant.d} />
 		{/each}
-		{#each CONFETTI as bit (bit.x)}
-			<path
-				class="line thin {bit.tone}"
-				d="M{bit.x - 3} {bit.y}q1.5 -2 3 0t3 0"
-				transform="rotate({bit.r} {bit.x} {bit.y})"
-			/>
-		{/each}
+		<!-- Before: the last things not yet in the notebook, no confetti; after: full, celebrated. -->
+		{#if after}
+			{#each CONFETTI as bit (bit.x)}
+				<path
+					class="line thin {bit.tone}"
+					d="M{bit.x - 3} {bit.y}q1.5 -2 3 0t3 0"
+					transform="rotate({bit.r} {bit.x} {bit.y})"
+				/>
+			{/each}
+		{/if}
 		<!-- A chequered flag, waving. -->
 		<path class="line thin metal" d={limb(20, 92, 20, 50, 20, 8, 1.2, 1.2)} />
 		<circle class="line thin tone-l" cx="20" cy="7" r="1.8" />
@@ -1320,17 +1395,19 @@
 		<path class="line star" d="M32.6 67H43.4Q44.4 67 44.4 68V69.4H31.6V68Q31.6 67 32.6 67Z" />
 		<!-- The notebook: closed, and full to bursting. -->
 		<g transform="rotate(-4 80 48)">
-			<path class="line leaf" d="M64.6 40Q61.6 32 66.6 27Q69.4 33.6 67 40Z" />
-			<path class="line thin open" d="M66 39Q65.6 33 66.6 28" />
-			<path class="line white" d="M70 40L72 27L83 28.6L81.4 41Z" />
-			<path class="water" d="M73.2 37.6L74.4 29.6L81.4 30.6L80.4 38.4Z" />
-			<path class="grass" d="M73.2 37.6L73.6 35.4Q77 33.6 80.8 35.6L80.4 38.4Z" />
-			<circle class="star" cx="78.6" cy="31.8" r="1.2" />
-			<path class="line thin open" d="M73.2 37.6L74.4 29.6L81.4 30.6L80.4 38.4Z" />
-			<path class="line tone-c" d="M86 41L95.4 30.6L99.6 34.2L90 43.4Z" />
-			<path class="line thin open" d="M88.4 38.6L96.6 31.6" />
-			<path class="line tone-o" d="M101 45L111 41.6L112.4 46.6L102 49Z" />
-			<path class="line thin open" d="M104 45.4L109.4 43.6" />
+			{#if after}
+				<path class="line leaf" d="M64.6 40Q61.6 32 66.6 27Q69.4 33.6 67 40Z" />
+				<path class="line thin open" d="M66 39Q65.6 33 66.6 28" />
+				<path class="line white" d="M70 40L72 27L83 28.6L81.4 41Z" />
+				<path class="water" d="M73.2 37.6L74.4 29.6L81.4 30.6L80.4 38.4Z" />
+				<path class="grass" d="M73.2 37.6L73.6 35.4Q77 33.6 80.8 35.6L80.4 38.4Z" />
+				<circle class="star" cx="78.6" cy="31.8" r="1.2" />
+				<path class="line thin open" d="M73.2 37.6L74.4 29.6L81.4 30.6L80.4 38.4Z" />
+				<path class="line tone-c" d="M86 41L95.4 30.6L99.6 34.2L90 43.4Z" />
+				<path class="line thin open" d="M88.4 38.6L96.6 31.6" />
+				<path class="line tone-o" d="M101 45L111 41.6L112.4 46.6L102 49Z" />
+				<path class="line thin open" d="M104 45.4L109.4 43.6" />
+			{/if}
 			{@render form(
 				'notebook-side',
 				'M98 45.4L103.4 38.8L103.4 51L98 57.4Z',
@@ -1363,7 +1440,11 @@
 			<path class="shade" d="M59.4 45.6Q79 41 98.6 45.6V47.4Q79 42.8 59.4 47.4Z" />
 			<path class="line tone-j" d="M80.4 43.4L83.4 43.6L88.8 36.6L85.8 36.4Z" />
 			<path class="line tone-j" d="M80.4 43.4H83.4V45.6Q81.8 45.4 80.4 45.6Z" />
-			<g transform="translate(73 41.6) scale(0.6)"><path class="line thin tone-l" d={SPARKLE} /></g>
+			{#if after}
+				<g transform="translate(73 41.6) scale(0.6)"
+					><path class="line thin tone-l" d={SPARKLE} /></g
+				>
+			{/if}
 		</g>
 		<StoryDino x={104} y={39} size={36} />
 		<!-- The pencil, held out for the next page. -->

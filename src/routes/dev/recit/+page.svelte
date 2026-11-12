@@ -55,6 +55,14 @@
 		{#each moments as moment (moment.art)}
 			<li data-art={moment.art}>
 				<StoryPicture art={moment.art} />
+				<!-- Both states side by side, before then after, for a quick look at what changes. -->
+				<div class="states" data-states>
+					<StoryPicture art={moment.art} phase="before" />
+					<svg class="arrow" viewBox="0 0 10 10" aria-hidden="true">
+						<path d="M1 5H8M5 2L8 5L5 8" />
+					</svg>
+					<StoryPicture art={moment.art} phase="after" />
+				</div>
 				<p class="kind">{KIND_LABELS[moment.kind]()}</p>
 				<p class="text">{moment.text}</p>
 			</li>
@@ -100,6 +108,22 @@
 		display: grid;
 		gap: var(--dd-space-xs);
 		align-content: start;
+	}
+
+	.states {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		gap: var(--dd-space-xs);
+		align-items: center;
+	}
+
+	.arrow {
+		inline-size: var(--dd-size-icon);
+		fill: none;
+		stroke: var(--dd-color-text-secondary);
+		stroke-width: var(--dd-border-width-thick);
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 
 	.kind {
