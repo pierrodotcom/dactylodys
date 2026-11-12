@@ -83,4 +83,23 @@
 	h1:focus {
 		outline: none;
 	}
+
+	/* On paper the screen is a page: no height of a window, no way out to press. */
+	@media print {
+		.frame,
+		.frame[data-wide] {
+			gap: var(--dd-space-sm);
+			min-block-size: 0;
+			max-inline-size: none;
+			padding: 0;
+		}
+
+		.back {
+			display: none;
+		}
+
+		h1 {
+			font-size: var(--dd-font-size-print-title);
+		}
+	}
 </style>

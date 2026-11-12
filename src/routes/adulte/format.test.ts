@@ -21,4 +21,9 @@ describe('createFormatters', () => {
 	it('joins a list as the language does', () => {
 		expect(format.list(['A', 'B', 'C'])).toBe('A, B et C');
 	});
+
+	it('writes a number of minutes with its unit, singular or plural', () => {
+		expect(format.minutes(12)).toBe('12 minutes');
+		expect(format.minutes(1)).toBe('1 minute');
+	});
 });
