@@ -54,7 +54,11 @@ const learnedArb = fc.subarray([...LEARNED, 'F', 'é', 'ê', 'a', 'z']);
 
 describe('charsByKey', () => {
 	it('puts a capital on the key of its letter, never on Shift', () => {
-		expect(charsByKey(AZERTY, ['f', 'F'])).toEqual(new Map([['KeyF', ['f', 'F']]]));
+		expect(charsByKey(AZERTY, ['F'])).toEqual(new Map([['KeyF', ['F']]]));
+	});
+
+	it('leaves a capital out of a key whose letter is learned', () => {
+		expect(charsByKey(AZERTY, ['f', 'F'])).toEqual(new Map([['KeyF', ['f']]]));
 	});
 
 	it('puts a character typed with a dead key on both keys it needs', () => {
@@ -75,10 +79,16 @@ describe('fadedKeys', () => {
 	});
 
 	it('keeps a key written while one of its learned characters is not acquired', () => {
+		const progress = progressOf({ e: [KNOWN] });
+		expect(fadedKeys(progress, ['e', 'ê'], AZERTY, RULES)).toEqual([]);
+		const known = progressOf({ e: [KNOWN], ê: [KNOWN] });
+		expect(fadedKeys(known, ['e', 'ê'], AZERTY, RULES)).toContain('KeyE');
+	});
+
+	it('fades a well-known letter even when its capital is not acquired yet', () => {
 		const progress = progressOf({ f: [KNOWN] });
-		expect(fadedKeys(progress, ['f', 'F'], AZERTY, RULES)).toEqual([]);
-		const known = progressOf({ f: [KNOWN], F: [KNOWN] });
-		expect(fadedKeys(known, ['f', 'F'], AZERTY, RULES)).toEqual(['KeyF']);
+		expect(fadedKeys(progress, ['f', 'F'], AZERTY, RULES)).toEqual(['KeyF']);
+		expect(fadedKeys(progressOf({}), ['F'], AZERTY, RULES)).toEqual([]);
 	});
 
 	it('writes a key again once it is often wrong lately', () => {

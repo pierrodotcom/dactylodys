@@ -8,20 +8,28 @@ const BLANK_PATTERN = /^\s+$/u;
 /**
  * The characters the progression has brought so far on each physical key: those of the presses of
  * the first way the layout produces them, as the keyboard drawn in the games shows it (`Shift` and
- * `AltGr` are levels of a press, never keys of their own).
+ * `AltGr` are levels of a press, never keys of their own). A character typed with a modifier counts
+ * only on a key that has no learned character of its own without one: the capitals, rarer, do not
+ * keep a well-known letter written (ADR-061); a miss on one still writes its key again in the game.
  */
 export function charsByKey(
 	charIndex: CharIndex,
 	learned: readonly string[]
 ): ReadonlyMap<KeyCode, readonly string[]> {
-	const byKey = new Map<KeyCode, string[]>();
+	const plain = new Map<KeyCode, string[]>();
+	const modified = new Map<KeyCode, string[]>();
 	for (const char of learned) {
 		if (BLANK_PATTERN.test(char)) continue;
 		for (const press of charIndex.get(char)?.[0] ?? []) {
+			const byKey = press.level === 'base' ? plain : modified;
 			const chars = byKey.get(press.code);
 			if (chars === undefined) byKey.set(press.code, [char]);
 			else if (!chars.includes(char)) chars.push(char);
 		}
+	}
+	const byKey = new Map<KeyCode, readonly string[]>(plain);
+	for (const [code, chars] of modified) {
+		if (!byKey.has(code)) byKey.set(code, chars);
 	}
 	return byKey;
 }
