@@ -31,6 +31,8 @@
 		onsavewords: (words: readonly string[]) => Promise<boolean>;
 		/** Opens the settings of the child, the same as in the game. */
 		onsettings: () => void;
+		/** Opens the session sheet of the child, to print. */
+		onsheet: () => void;
 		onmeasures: () => void;
 		onbackup: () => void;
 		onback: () => void;
@@ -49,6 +51,7 @@
 		onopenworld,
 		onsavewords,
 		onsettings,
+		onsheet,
 		onmeasures,
 		onbackup,
 		onback
@@ -88,6 +91,13 @@
 			<ChildWorlds {profile} {progression} {format} {onopenworld} />
 		{/if}
 		<ChildWords {profile} rules={freeRules} {format} onsave={onsavewords} />
+		<section class="files" aria-labelledby="child-sheet-title">
+			<h2 id="child-sheet-title">{m.adult_sheet_section_title()}</h2>
+			<p>{m.adult_sheet_section_note({ name: profile.name })}</p>
+			<Button variant="secondary" onclick={onsheet} data-child-sheet>
+				{m.adult_sheet_open()}
+			</Button>
+		</section>
 		<section class="files" aria-labelledby="child-settings-title">
 			<h2 id="child-settings-title">{m.settings_title()}</h2>
 			<p>{m.adult_settings_note({ name: profile.name })}</p>

@@ -275,6 +275,14 @@
 				"$value": "#cfeaf7"
 			}
 		},
+		"mono": {
+			"white": {
+				"$value": "#ffffff"
+			},
+			"black": {
+				"$value": "#000000"
+			}
+		},
 		"shadow": {
 			"light": {
 				"$value": "#2a211826"

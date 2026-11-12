@@ -114,6 +114,14 @@
 				"$value": "{color.amber.700}"
 			}
 		},
+		"print": {
+			"paper": {
+				"$value": "{color.mono.white}"
+			},
+			"ink": {
+				"$value": "{color.mono.black}"
+			}
+		},
 		"mastery": {
 			"acquired-surface": {
 				"$value": "{color.green.100}"
@@ -1507,6 +1515,18 @@
 			},
 			"key-small": {
 				"$value": "0.875rem"
+			},
+			"print-small": {
+				"$value": "9pt"
+			},
+			"print-base": {
+				"$value": "10.5pt"
+			},
+			"print-heading": {
+				"$value": "12.5pt"
+			},
+			"print-title": {
+				"$value": "17pt"
 			}
 		},
 		"weight": {
@@ -1532,6 +1552,9 @@
 		},
 		"relaxed": {
 			"$value": 1.8
+		},
+		"print": {
+			"$value": 1.35
 		}
 	},
 	"letter-spacing": {
@@ -1714,6 +1737,9 @@
 		},
 		"drawing-step": {
 			"$value": "2.25rem"
+		},
+		"print-page-margin": {
+			"$value": "14mm"
 		}
 	},
 	"radius": {

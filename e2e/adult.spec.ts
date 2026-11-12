@@ -85,6 +85,29 @@ function hesitantChild(name: string): Profile {
 	return { ...base, progress: { ...base.progress, chars: { ...steady, l: sample(30, 0, 900) } } };
 }
 
+const [SECOND, THIRD] = (world?.lessons.slice(1, 3) ?? []) as { id: string; title: string }[];
+const playRules = readJson<{ breakAfterMinutes: number; breakAfterExercises: number }>(
+	'content/common/play-rules.json'
+);
+
+/** Two lessons passed; M still being learned, Q fragile, L right but long to find. */
+function sheetChild(name: string): Profile {
+	const base = hesitantChild(name);
+	return {
+		...base,
+		progress: {
+			lessons: advancedProfile({ name, passed: { [FIRST.id]: 2, [SECOND?.id ?? '']: 3 } }).progress
+				.lessons,
+			chars: { ...base.progress.chars, q: sample(30, 15), m: sample(8, 1) }
+		}
+	};
+}
+
+/** The pages of a PDF file: one `/Type /Page` object each (`/Pages` is their parent). */
+function pdfPageCount(pdf: Buffer): number {
+	return pdf.toString('latin1').match(/\/Type\s*\/Page(?!s)/g)?.length ?? 0;
+}
+
 const lou = preparedChild('Lou');
 const ali = advancedProfile({ name: 'Ali', passed: {} });
 
@@ -288,6 +311,88 @@ test.describe('adult space', () => {
 			'data-mastery',
 			'acquired'
 		);
+	});
+
+	test('opens the session sheet of a child by the keyboard, prints it on one A4 page, then goes back', async ({
+		page,
+		browserName
+	}) => {
+		const kim = sheetChild('Kim');
+		await reachPlayers(page, [kim]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, kim);
+
+		await page.locator('[data-child-sheet]').focus();
+		await page.keyboard.press('Enter');
+		await expect(heading(page, message('adult_sheet_title', { name: kim.name }))).toBeVisible();
+		await expect(page.locator('[data-sheet-header]')).toContainText(APP_NAME);
+		await expect(page.locator('[data-sheet-lesson]')).toHaveText(
+			message('adult_sheet_now_lesson', {
+				lesson: THIRD?.title ?? '',
+				number: 3,
+				world: world?.title ?? ''
+			})
+		);
+		await expect(page.locator('[data-sheet-keys="learning"]')).toHaveText(
+			message('adult_sheet_keys_learning', { keys: 'M' })
+		);
+		await expect(page.locator('[data-sheet-keys="fragile"]')).toHaveText(
+			message('adult_sheet_keys_fragile', { keys: 'Q' })
+		);
+		await expect(page.locator('[data-sheet-keys="hesitant"]')).toHaveText(
+			message('adult_sheet_keys_hesitant', { keys: 'L' })
+		);
+		await expect(page.locator('[data-sheet-length]')).toHaveText(
+			plural('adult_sheet_during_length_games', playRules.breakAfterExercises, {
+				duration: `${playRules.breakAfterMinutes} minutes`
+			})
+		);
+
+		await page.evaluate(() => {
+			const counted = window as unknown as { printed: number };
+			counted.printed = 0;
+			window.print = () => {
+				counted.printed += 1;
+			};
+		});
+		await page.locator('[data-sheet-print]').focus();
+		await page.keyboard.press('Enter');
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { printed: number }).printed))
+			.toBe(1);
+
+		await page.emulateMedia({ media: 'print' });
+		await expect(page.locator('[data-sheet-print]')).toBeHidden();
+		await expect(page.locator('[data-screen-back]')).toBeHidden();
+		await expect(page.locator('[data-sheet-footer]')).toBeVisible();
+		// A PDF follows the emulated media: it is made while the page is still emulated as printed.
+		if (browserName === 'chromium') {
+			expect(pdfPageCount(await page.pdf({ format: 'A4' }))).toBe(1);
+		}
+		await page.emulateMedia({ media: null });
+
+		await page
+			.getByRole('button', { name: message('adult_sheet_back', { name: kim.name }) })
+			.focus();
+		await page.keyboard.press('Enter');
+		await expect(heading(page, message('adult_child_title', { name: kim.name }))).toBeVisible();
+	});
+
+	test('says there is nothing to point out on the sheet of a child whose keys are all right', async ({
+		page
+	}) => {
+		const base = advancedProfile({ name: 'Noa', passed: { [FIRST.id]: 2 } });
+		const noa = { ...base, progress: { ...base.progress, chars: { f: sample(30, 0) } } };
+		await reachPlayers(page, [noa]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, noa);
+		await page.locator('[data-child-sheet]').click();
+		await expect(page.locator('[data-sheet-keys="quiet"]')).toHaveText(
+			message('adult_sheet_keys_quiet', { name: noa.name })
+		);
+		await expect(page.locator('[data-sheet-keys="hesitant"]')).toHaveCount(0);
 	});
 
 	test('downloads the measures for a spreadsheet and a backup', async ({ page }) => {
@@ -559,6 +664,17 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expect(
 				heading(page, message('adult_settings_title', { name: lou.name }))
 			).toBeVisible();
+			await expectNoAxeViolation(page);
+		});
+
+		test('has no axe violation on the session sheet', async ({ page }) => {
+			const kim = sheetChild('Kim');
+			await reachPlayers(page, [kim]);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, kim);
+			await page.locator('[data-child-sheet]').click();
+			await expect(page.locator('[data-sheet-keys="hesitant"]')).toBeVisible();
 			await expectNoAxeViolation(page);
 		});
 	});

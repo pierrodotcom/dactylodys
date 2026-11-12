@@ -16,6 +16,7 @@
 	import { progressionFor } from '../jouer/content';
 	import { FREE_PRACTICE_RULES } from '../jouer/free-practice';
 	import { forgetLastPlayerId } from '../jouer/last-player';
+	import { PLAY_RULES } from '../jouer/play-rules';
 	import SettingsPanel from '../jouer/SettingsPanel.svelte';
 	import AdultGate from './AdultGate.svelte';
 	import AdultHome from './AdultHome.svelte';
@@ -31,6 +32,7 @@
 	import { CSV_FILE_EXTENSION, measuresCsv, type CsvFormat } from './csv';
 	import { createFormatters } from './format';
 	import { sortChildren } from './report';
+	import SessionSheet from './SessionSheet.svelte';
 	import { withHandwritingSample } from './target';
 
 	type View =
@@ -39,7 +41,9 @@
 		| { readonly name: 'home' }
 		| { readonly name: 'child'; readonly id: string }
 		/** The settings of one child, the same screen as in the game. */
-		| { readonly name: 'settings'; readonly id: string };
+		| { readonly name: 'settings'; readonly id: string }
+		/** The session sheet of one child, to print. */
+		| { readonly name: 'sheet'; readonly id: string };
 
 	const JSON_TYPE = 'application/json';
 	const CSV_TYPE = 'text/csv;charset=utf-8';
@@ -62,7 +66,7 @@
 	const children = $derived(sortChildren(profiles, collator.compare));
 	const shown = $derived.by(() => {
 		const current = view;
-		if (current.name !== 'child' && current.name !== 'settings') return null;
+		if (!('id' in current)) return null;
 		return profiles.find((profile) => profile.id === current.id) ?? null;
 	});
 
@@ -237,9 +241,21 @@
 			onopenworld={(worldId) => openWorld(child, worldId)}
 			onsavewords={(words) => saveWords(child, words)}
 			onsettings={() => show({ name: 'settings', id: child.id })}
+			onsheet={() => show({ name: 'sheet', id: child.id })}
 			onmeasures={() => downloadMeasures(child)}
 			onbackup={() => downloadBackup(child)}
 			onback={() => show({ name: 'home' })}
+		/>
+	{:else if view.name === 'sheet' && shown}
+		{@const child = shown}
+		<SessionSheet
+			profile={child}
+			progression={progressionFor(child.settings.layoutId)}
+			rules={ADULT_RULES}
+			playRules={PLAY_RULES}
+			{format}
+			{today}
+			onback={() => show({ name: 'child', id: child.id })}
 		/>
 	{:else if view.name === 'settings' && shown}
 		{@const child = shown}
