@@ -4,10 +4,15 @@ import { toGraphemes } from '../../src/lib/engine/graphemes';
 import {
 	usablePhrases,
 	usableWords,
+	lessonTexts,
 	parsePhraseBank,
+	parseTextBank,
 	parseWordBank,
 	storyPhrases,
-	validateStoryPhrases
+	textGroups,
+	textOf,
+	validateStoryPhrases,
+	validateTexts
 } from '../../src/lib/engine/progression/banks';
 import { learnedChars, parseProgression } from '../../src/lib/engine/progression/definition';
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
@@ -26,6 +31,10 @@ import { PLAY_RULES } from '../../src/routes/jouer/play-rules';
 const PROGRESSION_FILE = 'content/fr/progression/azerty-decouverte.json';
 const WORDS_FILE = 'content/fr/words/base.json';
 const PHRASES_FILE = 'content/fr/phrases/base.json';
+const TEXTS_FILE = 'content/fr/texts/base.json';
+const LINE_BREAK = String.fromCharCode(10);
+const TEXT_LINES = { min: 2, max: 5 };
+const MIN_TEXTS_PER_LESSON = 2;
 const REWARDS_FILE = 'content/fr/rewards/azerty-decouverte.json';
 const HELP_QUEST_FILE = 'content/common/help-quest.json';
 const CONDITION_KINDS = [
@@ -50,6 +59,7 @@ function readJson(path: string): unknown {
 const progression = parseProgression(readJson(PROGRESSION_FILE));
 const words = parseWordBank(readJson(WORDS_FILE));
 const phrases = parsePhraseBank(readJson(PHRASES_FILE));
+const texts = parseTextBank(readJson(TEXTS_FILE));
 const options = { maxLevel: PLAY_RULES.maxWordLevel };
 const entries = progression.worlds.flatMap((world) =>
 	world.lessons.map((lesson) => ({ world, lesson }))
@@ -95,8 +105,9 @@ describe('progression and banks together', () => {
 		.filter(({ lesson }) => lesson.mix.phrases > 0)
 		.flatMap(({ lesson }) => {
 			const inWords = new Set([...usableWordTexts(lesson.id)].flatMap((text) => toGraphemes(text)));
+			// Enter is in no phrase: the texts of its world ask for it (tested below).
 			return lesson.newChars
-				.filter((char) => !inWords.has(char))
+				.filter((char) => !inWords.has(char) && char !== LINE_BREAK)
 				.map((char) => [lesson.id, char] as const);
 		});
 
@@ -294,8 +305,11 @@ describe('reward catalogue and progression together', () => {
 
 describe('help quest exercises over the shipped content', () => {
 	const rules = parseHelpQuestRules(readJson(HELP_QUEST_FILE));
+	// No quest is ever asked for Enter (`helpQuestFor`): its world's texts practise it.
 	const keys = entries.flatMap(({ world, lesson }) =>
-		lesson.newChars.map((char) => [lesson.id, char, world.themeId] as const)
+		lesson.newChars
+			.filter((char) => char !== LINE_BREAK)
+			.map((char) => [lesson.id, char, world.themeId] as const)
 	);
 
 	it.each(keys)(
@@ -321,6 +335,83 @@ describe('help quest exercises over the shipped content', () => {
 					asked.filter((grapheme) => !allowed.has(grapheme)),
 					label
 				).toEqual([]);
+			}
+		}
+	);
+});
+
+describe('useful texts and progression together', () => {
+	const ids = entries.map(({ lesson }) => lesson.id);
+	const enterLesson = ids.findIndex((id) =>
+		entries.some(({ lesson }) => lesson.id === id && lesson.newChars.includes(LINE_BREAK))
+	);
+	const textLessons = entries.filter(({ lesson }) => lessonTexts(texts, lesson.id).length > 0);
+	const maxLine = progression.rules.textGroupLength ?? 0;
+
+	it('writes every text for an existing lesson, with the keys learned there, Enter included', () => {
+		expect(texts.id).toBe('fr.texts.base');
+		expect(validateTexts(texts, progression)).toEqual([]);
+	});
+
+	it('gives texts to every lesson of the last world, and to no lesson before Enter', () => {
+		const lastWorld = progression.worlds.at(-1);
+		expect(enterLesson).toBeGreaterThan(0);
+		expect(textLessons.map(({ lesson }) => lesson.id)).toEqual(
+			lastWorld?.lessons.map((lesson) => lesson.id)
+		);
+		for (const { lesson } of textLessons) {
+			expect(ids.indexOf(lesson.id)).toBeGreaterThanOrEqual(enterLesson);
+			expect(lessonTexts(texts, lesson.id).length).toBeGreaterThanOrEqual(MIN_TEXTS_PER_LESSON);
+		}
+	});
+
+	it.each(texts.texts.map((entry) => [entry.id, entry] as const))(
+		'keeps %s short: 2 to 5 lines, none longer than a group of text',
+		(_id, entry) => {
+			expect(entry.lines.length).toBeGreaterThanOrEqual(TEXT_LINES.min);
+			expect(entry.lines.length).toBeLessThanOrEqual(TEXT_LINES.max);
+			for (const line of entry.lines) {
+				expect(toGraphemes(line).length, line).toBeLessThanOrEqual(maxLine);
+			}
+			expect(entry.level).toBeLessThanOrEqual(PLAY_RULES.maxWordLevel);
+		}
+	);
+
+	it.each(textLessons.map(({ lesson }) => [lesson.id, lesson] as const))(
+		'fits the warm-up and every text of %s within its groups',
+		(lessonId, lesson) => {
+			const warmUp = lesson.newChars.length === 0 ? 0 : progression.rules.newCharMinCount;
+			for (const entry of lessonTexts(texts, lessonId)) {
+				const groups = textGroups(entry, progression.rules.textGroupLength);
+				expect(warmUp + groups.length, entry.id).toBeLessThanOrEqual(lesson.groupCount);
+			}
+		}
+	);
+
+	it.each(textLessons.map(({ world, lesson }) => [lesson.id, world.themeId] as const))(
+		`ends every exercise of %s with its texts in turn, over ${SEED_COUNT} seeds`,
+		(lessonId, themeId) => {
+			const own = lessonTexts(texts, lessonId);
+			const known = new Set(learnedChars(progression, lessonId));
+			for (let plays = 0; plays < own.length * 2; plays++) {
+				const expected = own[plays % own.length];
+				for (let seed = 1; seed <= SEED_COUNT; seed++) {
+					const exercise = generateExercise(progression, lessonId, seededRng(seed), {
+						words,
+						phrases,
+						texts,
+						progress: playedTimes(lessonId, plays),
+						themeId,
+						maxLevel: PLAY_RULES.maxWordLevel
+					});
+					const typed = exercise.groups.join('');
+					expect(typed.endsWith(textOf(expected ?? own[0]!)), `${lessonId} ${plays}`).toBe(true);
+					expect(toGraphemes(typed).filter((char) => !known.has(char))).toEqual([]);
+					for (const group of exercise.groups) {
+						expect(group.slice(0, -1)).not.toContain(LINE_BREAK + LINE_BREAK);
+						expect(group.startsWith(LINE_BREAK)).toBe(false);
+					}
+				}
 			}
 		}
 	);

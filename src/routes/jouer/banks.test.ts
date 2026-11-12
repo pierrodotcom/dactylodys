@@ -26,6 +26,27 @@ describe('loadBanks', () => {
 		expect(report).not.toHaveBeenCalled();
 	});
 
+	it('loads and validates the useful texts when the language has some', async () => {
+		const report = vi.fn();
+		const texts = () => Promise.resolve(readJson('content/fr/texts/base.json'));
+
+		const banks = await loadBanks(FRENCH, { fr: { ...shipped(), texts } }, report);
+
+		expect(banks.texts?.id).toBe('fr.texts.base');
+		expect(report).not.toHaveBeenCalled();
+	});
+
+	it('goes on without texts, and reports it, when they are invalid', async () => {
+		const report = vi.fn();
+		const texts = () => Promise.resolve({ nonsense: true });
+
+		const banks = await loadBanks(FRENCH, { fr: { ...shipped(), texts } }, report);
+
+		expect(banks.texts).toBeUndefined();
+		expect(banks.words?.id).toBe('fr.words.base');
+		expect(report).toHaveBeenCalledTimes(1);
+	});
+
 	it('goes on with the phrases and reports it when the words cannot be loaded', async () => {
 		const report = vi.fn();
 		const sources = { fr: { ...shipped(), words: () => Promise.reject(new Error('offline')) } };

@@ -122,6 +122,13 @@
 	const FLAG =
 		'M49.4 66.4C54 63.8 58.8 68.6 63.6 66.2C67.4 64.2 70.6 64.6 73.8 66.2L73.8 84.4C70.6 82.8 67.4 82.4 63.6 84.4C58.8 86.8 54 82 49.4 84.6Z';
 	const FLAG_CHECKS = checkerPath(49.4, 62, 6, 6, 4.4);
+	const ENVELOPE =
+		'M46.4 72.6L73.6 72.6C75.4 72.6 76.6 73.8 76.6 75.6L76.6 91.4C76.6 93.2 75.4 94.4 73.6 94.4L46.4 94.4C44.6 94.4 43.4 93.2 43.4 91.4L43.4 75.6C43.4 73.8 44.6 72.6 46.4 72.6Z';
+	const ENVELOPE_FOLDS =
+		'M44.4 74.4L60 85.6L75.6 74.4L75.6 77.2L60 88.4L44.4 77.2ZM44.2 92.2L55 83.4L56.2 84.4L45.6 93.4ZM75.8 92.2L65 83.4L63.8 84.4L74.4 93.4Z';
+	const ENVELOPE_HEART =
+		'M60 70.4C58.6 67.6 54.4 68 54.4 71C54.4 73.4 57.6 75.4 60 77.2C62.4 75.4 65.6 73.4 65.6 71C65.6 68 61.4 67.6 60 70.4Z';
+	const ENVELOPE_GLOSS = 'M46.6 76.2L51.6 79.8L50.8 80.8L45.8 77.2Z';
 
 	/* ---------- Keys ---------- */
 
@@ -324,6 +331,11 @@
 				<path class="symbol" d={STAR} />
 				<path class="symbol" d={STAR_SPARK} />
 				<path class="symbol-gloss" d={STAR_GLOSS} />
+			{:else if art.world === 'post'}
+				<path class="symbol" d={ENVELOPE} />
+				<path class="symbol-detail" d={ENVELOPE_FOLDS} />
+				<path class="symbol-detail" d={ENVELOPE_HEART} />
+				<path class="symbol-gloss" d={ENVELOPE_GLOSS} />
 			{:else}
 				<path class="symbol" d={FLAG_POLE} />
 				<path class="symbol" d={FLAG_KNOB} />
@@ -480,6 +492,10 @@
 
 	.ribbon-racing {
 		fill: var(--dd-color-trophy-ribbon-racing);
+	}
+
+	.ribbon-post {
+		fill: var(--dd-color-trophy-ribbon-post);
 	}
 
 	:global([data-silhouette]) .trophy :not(.open) {

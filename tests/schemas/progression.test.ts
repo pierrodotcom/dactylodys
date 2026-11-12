@@ -140,15 +140,16 @@ describe('azerty-decouverte', () => {
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 2, newKeysUntil: 24, hesitationMs: 3000 },
+			handGuide: { everyKeyUntil: 2, newKeysUntil: 25, hesitationMs: 3000 },
 			starAlmostMargin: 3,
 			storyPhraseEvery: 2,
+			textGroupLength: 24,
 			// A key fades once acquired as the report of the adult space says it.
 			keyboardFade: ADULT_RULES.mastery
 		});
 	});
 
-	it('has five worlds with their theme and their games', () => {
+	it('has six worlds with their theme and their games', () => {
 		expect(
 			progression.worlds.map((world) => [world.id, world.themeId, world.gameIds] as const)
 		).toEqual([
@@ -156,7 +157,8 @@ describe('azerty-decouverte', () => {
 			['fr.world.cuisine', 'cuisine', ['recipe', 'tower', 'river']],
 			['fr.world.animaux', 'animaux', ['drawing', 'tower', 'dialogue']],
 			['fr.world.espace', 'espace', ['rocket', 'tower', 'river']],
-			['fr.world.vehicules', 'vehicules', ['train', 'rocket', 'dialogue']]
+			['fr.world.vehicules', 'vehicules', ['train', 'rocket', 'dialogue']],
+			['fr.world.poste', 'general', ['dialogue', 'drawing', 'train']]
 		]);
 	});
 
@@ -185,7 +187,9 @@ describe('azerty-decouverte', () => {
 				['ê', 'â'],
 				['î', 'ô', 'û'],
 				['ë', 'ï']
-			]
+			],
+			// Useful texts (ADR-057): Enter first, then the texts of everyday life.
+			[[String.fromCharCode(10)], [], [], [], [], []]
 		]);
 	});
 

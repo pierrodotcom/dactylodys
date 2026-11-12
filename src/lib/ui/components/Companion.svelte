@@ -1000,6 +1000,15 @@
 		animation-name: cartwheel;
 	}
 
+	/* Hello: both arms up, the body sways from one side to the other. */
+	.companion[data-trick='wave'] .pose {
+		animation-name: wiggle;
+		animation-duration: var(--dd-duration-trick-shake);
+		animation-iteration-count: 6;
+		animation-direction: normal;
+		animation-fill-mode: none;
+	}
+
 	@keyframes hop {
 		0%,
 		100% {

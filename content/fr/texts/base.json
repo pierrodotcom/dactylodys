@@ -1,0 +1,191 @@
+{
+	"schemaVersion": 1,
+	"id": "fr.texts.base",
+	"locale": "fr-FR",
+	"texts": [
+		{
+			"id": "fr.text.liste-pique-nique",
+			"lessonId": "fr.lesson.liste-pique-nique",
+			"lines": ["Pour le pique-nique :", "du pain", "des pommes", "une nappe"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.liste-sac-de-sport",
+			"lessonId": "fr.lesson.liste-pique-nique",
+			"lines": ["Sac de sport :", "un short", "des baskets", "une gourde"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.liste-courses",
+			"lessonId": "fr.lesson.liste-pique-nique",
+			"lines": ["Liste des courses :", "du lait", "des pâtes", "du chocolat"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.message-t-rex",
+			"lessonId": "fr.lesson.message-t-rex",
+			"lines": [
+				"Salut le T-rex !",
+				"Ta casquette est ici.",
+				"Je te la rends demain ?",
+				"Bisous de dino."
+			],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.message-diplodocus",
+			"lessonId": "fr.lesson.message-t-rex",
+			"lines": [
+				"Coucou le diplodocus !",
+				"Ta queue est restée",
+				"dans la rivière.",
+				"Tu viens la chercher ?"
+			],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.message-raptor",
+			"lessonId": "fr.lesson.message-t-rex",
+			"lines": ["Bonjour le raptor,", "j'ai lu ton mot : miam.", "Moi aussi, j'ai faim !"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.recette-quiche",
+			"lessonId": "fr.lesson.recette-quiche",
+			"lines": [
+				"Quiche qui rigole :",
+				"- de la farine",
+				"- du lait",
+				"- une blague",
+				"Cuire jusqu'au fou rire."
+			],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.recette-tartine",
+			"lessonId": "fr.lesson.recette-quiche",
+			"lines": [
+				"Tartine toquée :",
+				"du pain grillé,",
+				"de la confiture,",
+				"une toque de chef.",
+				"Servir avec le sourire."
+			],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.recette-soupe",
+			"lessonId": "fr.lesson.recette-quiche",
+			"lines": [
+				"Soupe des étoiles :",
+				"- de l'eau chaude",
+				"- des pâtes en étoile",
+				"Tourner trois fois.",
+				"Souffler, puis boire !"
+			],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.legende-girafe",
+			"lessonId": "fr.lesson.legende-dessin",
+			"lines": ["La girafe et mon dino,", "un jour de pluie au zoo.", "La girafe reste au sec."],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.legende-zebre",
+			"lessonId": "fr.lesson.legende-dessin",
+			"lines": ["Le zèbre qui compte", "ses rayures.", "Il en manque une ?"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.legende-vache",
+			"lessonId": "fr.lesson.legende-dessin",
+			"lines": ["Le bal de la vache.", "Tout le monde danse,", "sauf le photographe."],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.carte-lune",
+			"lessonId": "fr.lesson.carte-lune",
+			"lines": [
+				"Bonjour de la Lune !",
+				"Ici, le café flotte.",
+				"Il fait froid mais beau.",
+				"Bisous de l'espace !"
+			],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.carte-comete",
+			"lessonId": "fr.lesson.carte-lune",
+			"lines": [
+				"Coucou de la comète !",
+				"Elle va trop vite,",
+				"je tiens ma casquette.",
+				"Je t'envoie une étoile."
+			],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.carte-virgule",
+			"lessonId": "fr.lesson.carte-lune",
+			"lines": [
+				"Vacances sur Virgule.",
+				"Ici, on fait une pause,",
+				"puis une autre pause.",
+				"Tout le monde se repose."
+			],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.invitation-fete",
+			"lessonId": "fr.lesson.invitation-fete",
+			"lines": [
+				"Grande fête au circuit !",
+				"Samedi, après le goûter.",
+				"Apporte ton klaxon.",
+				"Réponds vite, d'accord ?"
+			],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.invitation-pique-nique",
+			"lessonId": "fr.lesson.invitation-fete",
+			"lines": [
+				"Pique-nique de la bande",
+				"dimanche, sous le chêne.",
+				"Apporte un dessert.",
+				"Ou deux, si tu veux."
+			],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.invitation-concert",
+			"lessonId": "fr.lesson.invitation-fete",
+			"lines": [
+				"La casserole chante !",
+				"Ce soir, en cuisine.",
+				"Prends tes bouchons",
+				"d'oreilles, au cas où."
+			],
+			"level": 2,
+			"review": "agent"
+		}
+	]
+}

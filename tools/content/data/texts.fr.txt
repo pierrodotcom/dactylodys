@@ -1,0 +1,106 @@
+# Petits textes utiles du monde 6 (ADR-057, proposition n° 10), tapés ligne par ligne avec Entrée.
+# Un texte : un en-tête « @ identifiant | leçon | niveau », puis ses lignes, une par ligne du fichier.
+# Chaque texte n'utilise que les touches apprises à sa leçon ; une ligne fait au plus 24 caractères.
+# Pas de chiffre, de « œ », ni de majuscule accentuée : ils ne sont pas encore appris.
+# Relecture humaine : les identifiants validés vont dans validated-texts.txt.
+
+# La liste du pique-nique : la touche Entrée arrive, listes courtes.
+@ liste-pique-nique | fr.lesson.liste-pique-nique | 1
+Pour le pique-nique :
+du pain
+des pommes
+une nappe
+@ liste-sac-de-sport | fr.lesson.liste-pique-nique | 1
+Sac de sport :
+un short
+des baskets
+une gourde
+@ liste-courses | fr.lesson.liste-pique-nique | 1
+Liste des courses :
+du lait
+des pâtes
+du chocolat
+
+# Un mot pour le T-rex : des messages aux amis des dinosaures.
+@ message-t-rex | fr.lesson.message-t-rex | 1
+Salut le T-rex !
+Ta casquette est ici.
+Je te la rends demain ?
+Bisous de dino.
+@ message-diplodocus | fr.lesson.message-t-rex | 1
+Coucou le diplodocus !
+Ta queue est restée
+dans la rivière.
+Tu viens la chercher ?
+@ message-raptor | fr.lesson.message-t-rex | 2
+Bonjour le raptor,
+j'ai lu ton mot : miam.
+Moi aussi, j'ai faim !
+
+# La recette de la quiche : des recettes courtes, une étape par ligne.
+@ recette-quiche | fr.lesson.recette-quiche | 2
+Quiche qui rigole :
+- de la farine
+- du lait
+- une blague
+Cuire jusqu'au fou rire.
+@ recette-tartine | fr.lesson.recette-quiche | 1
+Tartine toquée :
+du pain grillé,
+de la confiture,
+une toque de chef.
+Servir avec le sourire.
+@ recette-soupe | fr.lesson.recette-quiche | 2
+Soupe des étoiles :
+- de l'eau chaude
+- des pâtes en étoile
+Tourner trois fois.
+Souffler, puis boire !
+
+# La légende du dessin : deux ou trois lignes sous un dessin ou une photo.
+@ legende-girafe | fr.lesson.legende-dessin | 1
+La girafe et mon dino,
+un jour de pluie au zoo.
+La girafe reste au sec.
+@ legende-zebre | fr.lesson.legende-dessin | 1
+Le zèbre qui compte
+ses rayures.
+Il en manque une ?
+@ legende-vache | fr.lesson.legende-dessin | 1
+Le bal de la vache.
+Tout le monde danse,
+sauf le photographe.
+
+# Une carte de la Lune : des cartes postales venues de l'espace.
+@ carte-lune | fr.lesson.carte-lune | 1
+Bonjour de la Lune !
+Ici, le café flotte.
+Il fait froid mais beau.
+Bisous de l'espace !
+@ carte-comete | fr.lesson.carte-lune | 2
+Coucou de la comète !
+Elle va trop vite,
+je tiens ma casquette.
+Je t'envoie une étoile.
+@ carte-virgule | fr.lesson.carte-lune | 2
+Vacances sur Virgule.
+Ici, on fait une pause,
+puis une autre pause.
+Tout le monde se repose.
+
+# L'invitation à la fête : qui, quand, où, une idée par ligne.
+@ invitation-fete | fr.lesson.invitation-fete | 2
+Grande fête au circuit !
+Samedi, après le goûter.
+Apporte ton klaxon.
+Réponds vite, d'accord ?
+@ invitation-pique-nique | fr.lesson.invitation-fete | 1
+Pique-nique de la bande
+dimanche, sous le chêne.
+Apporte un dessert.
+Ou deux, si tu veux.
+@ invitation-concert | fr.lesson.invitation-fete | 2
+La casserole chante !
+Ce soir, en cuisine.
+Prends tes bouchons
+d'oreilles, au cas où.
