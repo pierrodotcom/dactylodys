@@ -8,7 +8,8 @@ export const GAMES: readonly GameDefinition[] = [
 	{ id: 'drawing', load: () => import('./drawing/Drawing.svelte') },
 	{ id: 'train', load: () => import('./train/Train.svelte') },
 	{ id: 'tower', load: () => import('./tower/Tower.svelte') },
-	{ id: 'dialogue', load: () => import('./dialogue/Dialogue.svelte') }
+	{ id: 'dialogue', load: () => import('./dialogue/Dialogue.svelte') },
+	{ id: 'river', load: () => import('./river/River.svelte') }
 ];
 
 export function findGame(id: string): GameDefinition | undefined {

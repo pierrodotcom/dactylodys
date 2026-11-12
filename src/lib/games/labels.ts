@@ -43,6 +43,11 @@ const GAME_TEXTS: Readonly<Record<string, GameTexts>> = {
 		title: m.game_dialogue_title,
 		play: m.game_dialogue_play,
 		description: m.game_dialogue_description
+	},
+	river: {
+		title: m.game_river_title,
+		play: m.game_river_play,
+		description: m.game_river_description
 	}
 };
 

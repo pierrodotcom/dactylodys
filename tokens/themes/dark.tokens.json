@@ -116,6 +116,50 @@
 				"$value": "{color.slate.300}"
 			}
 		},
+		"river": {
+			"sky": {
+				"$value": "{color.navy.800}"
+			},
+			"cloud": {
+				"$value": "{color.slate.600}"
+			},
+			"sun": {
+				"$value": "{color.cream.200}"
+			},
+			"far-bank": {
+				"$value": "{color.teal.700}"
+			},
+			"tree": {
+				"$value": "{color.teal.600}"
+			},
+			"water": {
+				"$value": "{color.teal.600}"
+			},
+			"ripple": {
+				"$value": "{color.slate.300}"
+			},
+			"near-bank": {
+				"$value": "{color.green.900}"
+			},
+			"reed": {
+				"$value": "{color.sage.400}"
+			},
+			"crate": {
+				"$value": "{color.brown.600}"
+			},
+			"crate-plank": {
+				"$value": "{color.brown.900}"
+			},
+			"sunset-far-bank": {
+				"$value": "{color.teal.700}"
+			},
+			"sunset-near-bank": {
+				"$value": "{color.green.900}"
+			},
+			"sunset-water": {
+				"$value": "{color.plum.500}"
+			}
+		},
 		"success": {
 			"text": {
 				"$value": "{color.green.300}"

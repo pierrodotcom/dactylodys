@@ -182,6 +182,47 @@ test('keeps the race choice in view with the games, and the race above the game'
 	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
 });
 
+// The kitchen and space offer three games since the river came (ADR-057): the same room is needed.
+for (const worldIndex of [1, 3]) {
+	test(`keeps the three games and the race choice in view in world ${worldIndex + 1}`, async ({
+		page
+	}) => {
+		const lessons = progressionWorlds.flatMap((world) => world.lessons);
+		const lesson = progressionWorlds[worldIndex]?.lessons[0] as Lesson;
+		const before = lessons.slice(
+			0,
+			lessons.findIndex((item) => item.id === lesson.id)
+		);
+		const racer = withGhost(
+			advancedProfile({
+				name: 'Lou',
+				passed: Object.fromEntries(
+					[...before, lesson].map((item) => [item.id, PASSED_STARS] as const)
+				)
+			}),
+			lesson.id,
+			{
+				recordedAt: 1,
+				charCount: 20,
+				activeMs: 600_000,
+				points: [{ correctChars: 20, activeMs: 600_000 }]
+			}
+		);
+		await openPage(page, '/jouer');
+		await installProfile(page, racer);
+		await reloadPage(page);
+		await page.getByRole('button', { name: racer.name }).click();
+		await page.getByRole('button', { name: lesson.title }).click();
+		await throughStory(page, heading(page, lesson.title));
+
+		const games = page.locator('button[data-game]');
+		await expect(games).toHaveCount(3);
+		for (const game of await games.all()) await expect(game).toBeInViewport();
+		await expect(page.locator('button[data-game="river"]')).toBeInViewport({ ratio: 1 });
+		await expect(page.locator('[data-race-choice]')).toBeInViewport({ ratio: 1 });
+	});
+}
+
 // The second lesson of the kitchen proposes the tower, whose text zone is the narrowest.
 test('does not move the keyboard when the reminder to look at the screen shows', async ({
 	page

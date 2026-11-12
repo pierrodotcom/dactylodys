@@ -4,6 +4,7 @@
 	import DialoguePicture from './dialogue/Picture.svelte';
 	import DrawingPicture from './drawing/Picture.svelte';
 	import RecipePicture from './recipe/Picture.svelte';
+	import RiverPicture from './river/Picture.svelte';
 	import RocketPicture from './rocket/Picture.svelte';
 	import TowerPicture from './tower/Picture.svelte';
 	import TrainPicture from './train/Picture.svelte';
@@ -20,7 +21,8 @@
 		drawing: DrawingPicture,
 		train: TrainPicture,
 		tower: TowerPicture,
-		dialogue: DialoguePicture
+		dialogue: DialoguePicture,
+		river: RiverPicture
 	};
 
 	let { gameId }: Props = $props();

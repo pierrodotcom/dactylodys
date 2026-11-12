@@ -187,7 +187,7 @@
 			"id": "fr.world.cuisine",
 			"title": "La cuisine des gourmands",
 			"themeId": "cuisine",
-			"gameIds": ["recipe", "tower"],
+			"gameIds": ["recipe", "tower", "river"],
 			"lessons": [
 				{
 					"id": "fr.lesson.tartine-t-n",
@@ -347,7 +347,7 @@
 			"id": "fr.world.espace",
 			"title": "Cap sur les étoiles",
 			"themeId": "espace",
-			"gameIds": ["rocket", "tower"],
+			"gameIds": ["rocket", "tower", "river"],
 			"lessons": [
 				{
 					"id": "fr.lesson.lune-accents-graves",
