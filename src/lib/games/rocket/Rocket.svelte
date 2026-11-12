@@ -4,6 +4,7 @@
 	import type { GameProps } from '../types';
 	import Bubble from '../shared/Bubble.svelte';
 	import GameShell from '../shared/GameShell.svelte';
+	import { decorFor } from '../shared/decor';
 	import { isRewarded, pickCyclic, type GameView } from '../shared/game-view';
 	import AstreRow from './AstreRow.svelte';
 	import { greetingPlace, isLastLeg } from './flight';
@@ -11,6 +12,8 @@
 	import { GREETINGS } from './texts';
 
 	const props: GameProps = $props();
+
+	const decor = $derived(decorFor('rocket', props.playCount));
 
 	let frameWidth = $state(0);
 	let frameHeight = $state(0);
@@ -74,7 +77,7 @@
 				<Bubble still={view.reducedMotion} compact>{greetingFor(view)}</Bubble>
 			{/if}
 		</div>
-		<RocketScene {view} />
+		<RocketScene {view} {decor} />
 	</div>
 {/snippet}
 

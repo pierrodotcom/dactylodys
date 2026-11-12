@@ -235,6 +235,190 @@
 			"sun": {
 				"$value": "{color.cream.200}"
 			}
+		},
+		"decor": {
+			"sunset": {
+				"sky-high": {
+					"$value": "{color.navy.800}"
+				},
+				"sky-low": {
+					"$value": "{color.plum.500}"
+				},
+				"sun": {
+					"$value": "{color.orange.500}"
+				},
+				"halo": {
+					"$value": "{color.amber.300}"
+				},
+				"cloud": {
+					"$value": "{color.plum.300}"
+				},
+				"hill": {
+					"$value": "{color.navy.800}"
+				}
+			},
+			"autumn": {
+				"hill-far": {
+					"$value": "{color.amber.700}"
+				},
+				"hill-near": {
+					"$value": "{color.brown.600}"
+				},
+				"grass": {
+					"$value": "{color.brown.500}"
+				},
+				"leaf": {
+					"$value": "{color.orange.500}"
+				},
+				"leaf-red": {
+					"$value": "{color.tomato.600}"
+				},
+				"leaf-gold": {
+					"$value": "{color.lemon.500}"
+				}
+			},
+			"winter": {
+				"sky-high": {
+					"$value": "{color.navy.800}"
+				},
+				"sky-low": {
+					"$value": "{color.slate.600}"
+				},
+				"sun": {
+					"$value": "{color.cream.200}"
+				},
+				"snow": {
+					"$value": "{color.slate.300}"
+				},
+				"snow-far": {
+					"$value": "{color.slate.400}"
+				},
+				"evergreen": {
+					"$value": "{color.teal.700}"
+				},
+				"flake": {
+					"$value": "{color.cream.50}"
+				},
+				"carrot": {
+					"$value": "{color.orange.500}"
+				},
+				"scarf": {
+					"$value": "{color.tomato.500}"
+				},
+				"coal": {
+					"$value": "{color.charcoal.900}"
+				},
+				"wall": {
+					"$value": "{color.navy.800}"
+				},
+				"frost": {
+					"$value": "{color.cream.50}"
+				},
+				"mug": {
+					"$value": "{color.tomato.500}"
+				},
+				"cocoa": {
+					"$value": "{color.leather.400}"
+				},
+				"steam": {
+					"$value": "{color.slate.300}"
+				},
+				"paper": {
+					"$value": "{color.cream.200}"
+				}
+			},
+			"evening": {
+				"wall": {
+					"$value": "{color.brown.800}"
+				},
+				"lamp": {
+					"$value": "{color.lagoon.500}"
+				},
+				"bulb": {
+					"$value": "{color.lemon.50}"
+				},
+				"glow": {
+					"$value": "{color.amber.300}"
+				}
+			},
+			"meadow": {
+				"grass": {
+					"$value": "{color.green.900}"
+				},
+				"blade": {
+					"$value": "{color.green.700}"
+				},
+				"petal": {
+					"$value": "{color.cream.200}"
+				},
+				"heart": {
+					"$value": "{color.lemon.500}"
+				},
+				"ladybird": {
+					"$value": "{color.tomato.500}"
+				}
+			},
+			"beach": {
+				"sand": {
+					"$value": "{color.brown.600}"
+				},
+				"ripple": {
+					"$value": "{color.brown.400}"
+				},
+				"sea": {
+					"$value": "{color.teal.600}"
+				},
+				"wet": {
+					"$value": "{color.brown.500}"
+				},
+				"foam": {
+					"$value": "{color.cream.200}"
+				},
+				"pebble": {
+					"$value": "{color.brown.100}"
+				},
+				"shell": {
+					"$value": "{color.pink.300}"
+				},
+				"starfish": {
+					"$value": "{color.orange.500}"
+				},
+				"sky": {
+					"$value": "{color.navy.800}"
+				}
+			},
+			"day": {
+				"sun": {
+					"$value": "{color.cream.200}"
+				},
+				"cloud": {
+					"$value": "{color.slate.300}"
+				}
+			},
+			"spring": {
+				"sky": {
+					"$value": "{color.navy.800}"
+				},
+				"hill": {
+					"$value": "{color.sage.400}"
+				}
+			},
+			"night": {
+				"sky": {
+					"$value": "{color.navy.800}"
+				},
+				"moon": {
+					"$value": "{color.cream.200}"
+				}
+			},
+			"nest": {
+				"straw": {
+					"$value": "{color.amber.700}"
+				},
+				"twig": {
+					"$value": "{color.leather.400}"
+				}
+			}
 		}
 	},
 	"opacity": {
@@ -250,6 +434,15 @@
 		},
 		"recipe-shadow": {
 			"$value": 0.4
+		},
+		"decor-halo": {
+			"$value": 0.35
+		},
+		"decor-glow": {
+			"$value": 0.22
+		},
+		"decor-frost": {
+			"$value": 0.5
 		}
 	},
 	"shadow": {

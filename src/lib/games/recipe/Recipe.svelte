@@ -3,6 +3,7 @@
 	import type { GameProps } from '../types';
 	import Bubble from '../shared/Bubble.svelte';
 	import GameShell from '../shared/GameShell.svelte';
+	import { decorFor } from '../shared/decor';
 	import { isRewarded, pickCyclic, type GameView } from '../shared/game-view';
 	import { dishName } from './dish';
 	import IngredientRow from './IngredientRow.svelte';
@@ -12,6 +13,7 @@
 	const props: GameProps = $props();
 
 	const dish = $derived(dishName(props.exercise.groups, DISH_TEMPLATES));
+	const decor = $derived(decorFor('recipe', props.playCount));
 
 	function quipFor(view: GameView): string {
 		return pickCyclic(QUIPS, view.rewardIndex)?.() ?? '';
@@ -53,7 +55,7 @@
 				<Bubble still={view.reducedMotion} compact>{quipFor(view)}</Bubble>
 			{/if}
 		</div>
-		<RecipeScene {view} />
+		<RecipeScene {view} {decor} />
 	</div>
 {/snippet}
 

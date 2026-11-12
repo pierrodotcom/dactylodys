@@ -42,9 +42,13 @@
 		TWINKLES,
 		type Modelled
 	} from './shapes';
+	import type { DecorOf } from '../shared/decor';
+	import { GALAXY, MILKY_WAY, ROSE_STARS, STAR_DUST } from './decor';
 
 	interface Props {
 		view: GameView;
+		/** The part of space of this play (`shared/decor.ts`): the colour of the sky and far lights. */
+		decor?: DecorOf<'rocket'>;
 	}
 
 	const REWARD_VARIANTS = 4;
@@ -71,7 +75,7 @@
 	const DINO_TRANSFORM = `scale(${DINO.scale}) translate(${-DINO.seat.x} ${-DINO.seat.y})`;
 	const DEGREES_TO_RADIANS = Math.PI / 180;
 
-	let { view }: Props = $props();
+	let { view, decor = 'blue-night' }: Props = $props();
 
 	const uid = $props.id();
 
@@ -156,6 +160,7 @@
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 	data-landed={pose.landed || undefined}
+	data-decor={decor}
 >
 	<defs>
 		{#each ['a', 'b'] as tone (tone)}
@@ -164,8 +169,32 @@
 				<stop class="nebula-{tone}-edge" offset="1" stop-opacity="0" />
 			</radialGradient>
 		{/each}
+		<radialGradient id={ref('galaxy')}>
+			<stop class="galaxy-heart" offset="0" />
+			<stop class="galaxy-edge" offset="1" stop-opacity="0" />
+		</radialGradient>
 		<clipPath id={ref('astre')}><path d={INHABITANT_ASTRE} /></clipPath>
 	</defs>
+
+	{#if decor === 'milky-way'}
+		<linearGradient id={ref('band')} x1="0" y1="0" x2="0" y2="1">
+			<stop class="band-edge" offset="0" stop-opacity="0" />
+			<stop class="band-middle" offset="0.5" />
+			<stop class="band-edge" offset="1" stop-opacity="0" />
+		</linearGradient>
+		<g transform={MILKY_WAY.transform}>
+			{#each MILKY_WAY.strips as strip (strip.height)}
+				<rect
+					x={strip.x}
+					y={strip.y}
+					width={strip.width}
+					height={strip.height}
+					fill={url('band')}
+				/>
+			{/each}
+		</g>
+		<path class="dust" d={STAR_DUST} />
+	{/if}
 
 	{#each NEBULAS as nebula (nebula.cx)}
 		<ellipse
@@ -176,6 +205,12 @@
 			fill={url(`nebula-${nebula.tone}`)}
 		/>
 	{/each}
+	{#if decor === 'rose-nebula'}
+		<path d={GALAXY.glow} fill={url('galaxy')} />
+		<path class="galaxy-arm" d={GALAXY.arms} />
+		<path class="galaxy-core" d={GALAXY.core} />
+		<path class="rose-star" d={ROSE_STARS} />
+	{/if}
 	{#each STARS as star (star.x)}
 		<circle class="star" cx={star.x} cy={star.y} r={star.radius} />
 	{/each}
@@ -578,6 +613,59 @@
 	.star,
 	.twinkle {
 		fill: var(--dd-color-sky-star);
+	}
+
+	/* Decors (ADR-057): another part of space, the voyage itself unchanged. */
+	.sky[data-decor='rose-nebula'] {
+		--dd-color-sky-base: var(--dd-color-decor-space-rose-sky);
+		--dd-color-rocket-nebula-a: var(--dd-color-decor-space-rose-nebula-a);
+		--dd-color-rocket-nebula-b: var(--dd-color-decor-space-rose-nebula-b);
+	}
+
+	.sky[data-decor='milky-way'] {
+		--dd-color-sky-base: var(--dd-color-decor-space-milky-sky);
+		--dd-color-rocket-nebula-a: var(--dd-color-decor-space-milky-nebula-a);
+		--dd-color-rocket-nebula-b: var(--dd-color-decor-space-milky-nebula-b);
+	}
+
+	.galaxy-heart {
+		stop-color: var(--dd-color-decor-space-galaxy);
+		stop-opacity: var(--dd-opacity-decor-galaxy);
+	}
+
+	.galaxy-edge {
+		stop-color: var(--dd-color-decor-space-galaxy);
+	}
+
+	.galaxy-arm {
+		fill: transparent;
+		stroke: var(--dd-color-decor-space-galaxy);
+		stroke-opacity: var(--dd-opacity-decor-galaxy);
+		stroke-width: var(--dd-border-width-target);
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.galaxy-core {
+		fill: var(--dd-color-decor-space-galaxy-core);
+	}
+
+	.rose-star {
+		fill: var(--dd-color-decor-space-galaxy);
+	}
+
+	.band-edge {
+		stop-color: var(--dd-color-decor-space-milky-way);
+	}
+
+	.band-middle {
+		stop-color: var(--dd-color-decor-space-milky-way);
+		stop-opacity: var(--dd-opacity-decor-band);
+	}
+
+	.dust {
+		fill: var(--dd-color-sky-star);
+		fill-opacity: var(--dd-opacity-decor-dust);
 	}
 
 	.route {

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import StoryDino from '$lib/ui/story/StoryDino.svelte';
+	import type { DecorOf } from '../shared/decor';
 	import { isRewarded, type GameView } from '../shared/game-view';
 	import { stageFor } from '../shared/stage';
 	import BlockShape from './BlockShape.svelte';
@@ -84,12 +85,25 @@
 		tuftPath,
 		twinkle
 	} from './shapes';
+	import {
+		CROWN_SNOW,
+		FALLING_LEAVES,
+		SNOWFLAKES,
+		SNOWMAN,
+		SNOW_DOTS,
+		SUNSET_BIRDS,
+		SUNSET_SUN
+	} from './decor';
 
 	interface Props {
 		view: GameView;
+		/** The place and the moment of this play (`shared/decor.ts`): sky, hills, ground and props. */
+		decor?: DecorOf<'tower'>;
 	}
 
-	let { view }: Props = $props();
+	let { view, decor = 'summer' }: Props = $props();
+
+	const uid = $props.id();
 
 	const size = $derived(blockSize(view.total));
 	const depth = $derived(blockDepth(size));
@@ -134,15 +148,35 @@
 	data-probe={stage}
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
+	data-decor={decor}
 >
 	<!-- Sky: the sun by day, the moon and stars in the dark theme. -->
 	<rect class="sky" x="0" y="0" width={SCENE.width} height={SCENE.height} />
+	{#if decor !== 'summer'}
+		<linearGradient id="{uid}-sky" x1="0" y1="0" x2="0" y2="1">
+			<stop class="sky-high" offset="0" />
+			<stop class="sky-low" offset="0.75" />
+		</linearGradient>
+		<rect x="0" y="0" width={SCENE.width} height={SCENE.height} fill="url(#{uid}-sky)" />
+	{/if}
 	<path class="night-star" d={NIGHT_STARS} />
-	<path class="ray" d={SUN_RAYS} />
-	<path class="sun" d={SUN_DISC} />
-	<path class="shade" d={SUN_SHADE} />
-	<path class="shine" d={SUN_LIGHT} />
-	<path class="line" d={SUN_DISC} />
+	{#if decor === 'sunset'}
+		<path class="halo" d={SUNSET_SUN.halo} data-effect />
+		<path class="sun" d={SUNSET_SUN.disc} />
+		<path class="shine" d={SUNSET_SUN.light} />
+		<path class="line" d={SUNSET_SUN.disc} />
+		<path class="bird" d={SUNSET_BIRDS} />
+	{:else}
+		<path class="ray" d={SUN_RAYS} />
+		<path class="sun" d={SUN_DISC} />
+		<path class="shade" d={SUN_SHADE} />
+		<path class="shine" d={SUN_LIGHT} />
+		<path class="line" d={SUN_DISC} />
+	{/if}
+	{#if decor === 'winter'}
+		<path class="flake" d={SNOWFLAKES} />
+		<path class="snow-dot" d={SNOW_DOTS} />
+	{/if}
 	{#each CLOUDS as cloud (cloud.x)}
 		<g transform={placed(cloud.x, cloud.y, cloud.scale)}>
 			<path class="cloud" d={CLOUD} />
@@ -164,6 +198,9 @@
 			<path class="leaf" d={CROWN} />
 			<path class="shade" d={CROWN_SHADE} />
 			<path class="shine" d={CROWN_LIGHT} />
+			{#if decor === 'winter'}
+				<path class="snow outlined" d={CROWN_SNOW} />
+			{/if}
 			<path class="line" d={CROWN} />
 		</g>
 	{/each}
@@ -176,12 +213,34 @@
 		<g transform={placed(bush.x, bush.y, bush.scale)}>
 			<path class="leaf" d={CROWN} />
 			<path class="shade" d={CROWN_SHADE} />
+			{#if decor === 'winter'}
+				<path class="snow outlined" d={CROWN_SNOW} />
+			{/if}
 			<path class="line" d={CROWN} />
 		</g>
 	{/each}
 	{#each TUFTS as x (x)}
 		<path class="tuft" d={tuftPath(x)} />
 	{/each}
+	{#if decor === 'sunset'}
+		{#each FALLING_LEAVES as leaf (leaf.shape)}
+			<path class="fallen outlined" data-tone={leaf.tone} d={leaf.shape} />
+			<path class="fine" d={leaf.vein} />
+		{/each}
+	{/if}
+	{#if decor === 'winter'}
+		<path class="fine" d={SNOWMAN.twigs} />
+		<path class="snow" d={SNOWMAN.body} />
+		<path class="soft-shade" d={SNOWMAN.bodyShade} />
+		<path class="line" d={SNOWMAN.body} />
+		<path class="snow" d={SNOWMAN.head} />
+		<path class="soft-shade" d={SNOWMAN.headShade} />
+		<path class="shine" d={SNOWMAN.light} />
+		<path class="line" d={SNOWMAN.head} />
+		<path class="scarf outlined" d={SNOWMAN.scarf} />
+		<path class="carrot outlined" d={SNOWMAN.carrot} />
+		<path class="coal" d={SNOWMAN.coal} />
+	{/if}
 	<g transform={placed(CONE.x, CONE.y)}>
 		<path class="cone" d={CONE.body} />
 		<path class="band" d={CONE.band} />
@@ -414,6 +473,94 @@
 
 	.sky {
 		fill: var(--dd-color-tower-sky);
+	}
+
+	/*
+	 * Decors (ADR-057): each one gives the sky, the hills and the ground their own colours; the
+	 * crane, the blocks and what they tell are never touched.
+	 */
+	.scene[data-decor='sunset'] {
+		--dd-decor-sky-high: var(--dd-color-decor-sunset-sky-high);
+		--dd-decor-sky-low: var(--dd-color-decor-sunset-sky-low);
+		--dd-color-tower-sun: var(--dd-color-decor-sunset-sun);
+		--dd-color-tower-cloud: var(--dd-color-decor-sunset-cloud);
+		--dd-color-tower-hill-far: var(--dd-color-decor-autumn-hill-far);
+		--dd-color-tower-hill-near: var(--dd-color-decor-autumn-hill-near);
+		--dd-color-tower-grass: var(--dd-color-decor-autumn-grass);
+		--dd-color-tower-leaf: var(--dd-color-decor-autumn-leaf);
+	}
+
+	.scene[data-decor='winter'] {
+		--dd-decor-sky-high: var(--dd-color-decor-winter-sky-high);
+		--dd-decor-sky-low: var(--dd-color-decor-winter-sky-low);
+		--dd-color-tower-sun: var(--dd-color-decor-winter-sun);
+		--dd-color-tower-hill-far: var(--dd-color-decor-winter-snow-far);
+		--dd-color-tower-hill-near: var(--dd-color-decor-winter-snow);
+		--dd-color-tower-grass: var(--dd-color-decor-winter-snow);
+		--dd-color-tower-leaf: var(--dd-color-decor-winter-evergreen);
+	}
+
+	.sky-high {
+		stop-color: var(--dd-decor-sky-high);
+	}
+
+	.sky-low {
+		stop-color: var(--dd-decor-sky-low);
+	}
+
+	.halo {
+		fill: var(--dd-color-decor-sunset-halo);
+		fill-opacity: var(--dd-opacity-decor-halo);
+	}
+
+	.bird {
+		fill: transparent;
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.fallen {
+		fill: var(--dd-color-decor-autumn-leaf);
+	}
+
+	.fallen[data-tone='red'] {
+		fill: var(--dd-color-decor-autumn-leaf-red);
+	}
+
+	.fallen[data-tone='gold'] {
+		fill: var(--dd-color-decor-autumn-leaf-gold);
+	}
+
+	.flake {
+		fill: transparent;
+		stroke: var(--dd-color-decor-winter-flake);
+		stroke-width: var(--dd-border-width-thick);
+	}
+
+	.snow {
+		fill: var(--dd-color-decor-winter-snow);
+	}
+
+	.snow-dot {
+		fill: var(--dd-color-decor-winter-flake);
+	}
+
+	.scarf {
+		fill: var(--dd-color-decor-winter-scarf);
+	}
+
+	.carrot {
+		fill: var(--dd-color-decor-winter-carrot);
+	}
+
+	.coal {
+		fill: var(--dd-color-decor-winter-coal);
+	}
+
+	/* A filled prop with a fine outline of its own. */
+	.outlined {
+		stroke: var(--dd-color-tower-line);
+		stroke-width: var(--dd-border-width-thin);
 	}
 
 	.night-star {

@@ -6,7 +6,9 @@
 	import GameShell from '../shared/GameShell.svelte';
 	import { isRewarded, pickCyclic, type GameView } from '../shared/game-view';
 	import { stageFor } from '../shared/stage';
+	import { decorFor } from '../shared/decor';
 	import EggRow from './EggRow.svelte';
+	import HatchDecor from './HatchDecor.svelte';
 	import HatchEgg from './HatchEgg.svelte';
 	import { CRACK_COUNT } from './shapes';
 
@@ -24,6 +26,8 @@
 	];
 
 	const props: GameProps = $props();
+
+	const decor = $derived(decorFor('hatching', props.playCount));
 
 	function cryFor(view: GameView): string {
 		return pickCyclic(CRIES, view.rewardIndex)?.() ?? '';
@@ -62,21 +66,29 @@
 {/snippet}
 
 {#snippet scene(view: GameView)}
-	<div class="egg-zone">
+	<div class="egg-zone" data-decor={decor}>
 		<div class="bubble-row">
 			{#if isRewarded(view)}
 				<Bubble still={view.reducedMotion}>{cryFor(view)}</Bubble>
 			{/if}
 		</div>
 		<div class="egg">
-			<HatchEgg
-				stage={crackStage(view)}
-				hatched={isRewarded(view)}
-				variant={view.rewardIndex}
-				still={view.reducedMotion}
-				scene={view.scene}
-				big
-			/>
+			{#if decor !== 'bare'}
+				<div class="layer"><HatchDecor {decor} /></div>
+			{/if}
+			<div class="hatch">
+				<HatchEgg
+					stage={crackStage(view)}
+					hatched={isRewarded(view)}
+					variant={view.rewardIndex}
+					still={view.reducedMotion}
+					scene={view.scene}
+					big
+				/>
+			</div>
+			{#if decor === 'nest'}
+				<div class="layer"><HatchDecor {decor} layer="front" /></div>
+			{/if}
 		</div>
 	</div>
 {/snippet}
@@ -92,8 +104,19 @@
 		gap: var(--dd-space-sm);
 	}
 
+	/* The decor is drawn in the frame of the egg, behind it; the rim of the nest, in front of it. */
 	.egg {
+		position: relative;
 		inline-size: var(--dd-size-egg);
+	}
+
+	.layer {
+		position: absolute;
+		inset: 0;
+	}
+
+	.hatch {
+		position: relative;
 	}
 
 	.bubble-row {
