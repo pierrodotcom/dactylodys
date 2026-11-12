@@ -120,6 +120,17 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 		foreground: 'color.dialogue.answer-border',
 		background: 'color.dialogue.answer-surface',
 		min: NON_TEXT_MIN
+	},
+	// The group carried by the object of the river, the keys typed and those still to type.
+	...['color.river.label-text', 'color.river.label-pending'].map((foreground) => ({
+		foreground,
+		background: 'color.river.label-surface',
+		min: TEXT_MIN
+	})),
+	{
+		foreground: 'color.river.label-border',
+		background: 'color.river.label-surface',
+		min: NON_TEXT_MIN
 	}
 ];
 

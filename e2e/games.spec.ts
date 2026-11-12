@@ -65,7 +65,7 @@ const EXPECTATIONS_BY_ID: Record<string, GameExpectations> = {
 const probeOf = async (page: Page) =>
 	String(await page.locator('[data-probe]').first().getAttribute('data-probe'));
 
-for (const id of ['drawing', 'train', 'tower', 'dialogue']) {
+for (const id of ['drawing', 'train', 'tower', 'dialogue', 'river']) {
 	EXPECTATIONS_BY_ID[id] = {
 		progressKey: `game_${id}_progress`,
 		progressParam: 'done',

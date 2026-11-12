@@ -1533,6 +1533,203 @@
 				"$value": "{color.brown.450}"
 			}
 		},
+		"river": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"sun": {
+				"$value": "{color.sunflower.300}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"far-bank": {
+				"$value": "{color.mint.200}"
+			},
+			"tree": {
+				"$value": "{color.sage.400}"
+			},
+			"trunk": {
+				"$value": "{color.leather.400}"
+			},
+			"water": {
+				"$value": "{color.lagoon.300}"
+			},
+			"ripple": {
+				"$value": "{color.cream.50}"
+			},
+			"near-bank": {
+				"$value": "{color.green.300}"
+			},
+			"reed": {
+				"$value": "{color.green.700}"
+			},
+			"cattail": {
+				"$value": "{color.leather.400}"
+			},
+			"crate": {
+				"$value": "{color.clay.400}"
+			},
+			"crate-plank": {
+				"$value": "{color.brown.600}"
+			},
+			"label-surface": {
+				"$value": "{color.cream.50}"
+			},
+			"label-text": {
+				"$value": "{color.brown.900}"
+			},
+			"label-pending": {
+				"$value": "{color.brown.550}"
+			},
+			"label-border": {
+				"$value": "{color.brown.900}"
+			},
+			"leaf": {
+				"$value": "{color.green.300}"
+			},
+			"paper": {
+				"$value": "{color.cream.50}"
+			},
+			"paper-fold": {
+				"$value": "{color.cream.300}"
+			},
+			"duck": {
+				"$value": "{color.sunflower.300}"
+			},
+			"beak": {
+				"$value": "{color.orange.500}"
+			},
+			"glass": {
+				"$value": "{color.turquoise.300}"
+			},
+			"cork": {
+				"$value": "{color.leather.400}"
+			},
+			"apple": {
+				"$value": "{color.tomato.500}"
+			},
+			"cup": {
+				"$value": "{color.cream.100}"
+			},
+			"tea": {
+				"$value": "{color.leather.400}"
+			},
+			"cup-dot": {
+				"$value": "{color.pink.300}"
+			},
+			"ball-a": {
+				"$value": "{color.tomato.300}"
+			},
+			"ball-b": {
+				"$value": "{color.azure.500}"
+			},
+			"ball-base": {
+				"$value": "{color.cream.50}"
+			},
+			"star": {
+				"$value": "{color.lemon.300}"
+			},
+			"ring": {
+				"$value": "{color.cream.50}"
+			},
+			"ring-band": {
+				"$value": "{color.tomato.500}"
+			},
+			"hat": {
+				"$value": "{color.lemon.500}"
+			},
+			"hat-band": {
+				"$value": "{color.lagoon.500}"
+			},
+			"lily-pad": {
+				"$value": "{color.sage.400}"
+			},
+			"lily-petal": {
+				"$value": "{color.pink.200}"
+			},
+			"lily-heart": {
+				"$value": "{color.lemon.300}"
+			},
+			"rocket": {
+				"$value": "{color.lavender.300}"
+			},
+			"rocket-fin": {
+				"$value": "{color.tomato.300}"
+			},
+			"rocket-window": {
+				"$value": "{color.azure.50}"
+			},
+			"fish": {
+				"$value": "{color.orange.300}"
+			},
+			"frog": {
+				"$value": "{color.green.300}"
+			},
+			"frog-belly": {
+				"$value": "{color.lemon.50}"
+			},
+			"rainbow-a": {
+				"$value": "{color.tomato.300}"
+			},
+			"rainbow-b": {
+				"$value": "{color.lemon.300}"
+			},
+			"rainbow-c": {
+				"$value": "{color.mint.200}"
+			},
+			"rainbow-d": {
+				"$value": "{color.azure.300}"
+			},
+			"foam": {
+				"$value": "{color.cream.50}"
+			},
+			"dragonfly": {
+				"$value": "{color.lagoon.500}"
+			},
+			"wing": {
+				"$value": "{color.cream.50}"
+			},
+			"sunset-water": {
+				"$value": "{color.plum.300}"
+			},
+			"sunset-far-bank": {
+				"$value": "{color.teal.400}"
+			},
+			"sunset-near-bank": {
+				"$value": "{color.sage.400}"
+			},
+			"night-water": {
+				"$value": "{color.indigo.600}"
+			},
+			"night-far-bank": {
+				"$value": "{color.teal.900}"
+			},
+			"night-near-bank": {
+				"$value": "{color.green.900}"
+			},
+			"night-reed": {
+				"$value": "{color.sage.400}"
+			},
+			"night-star": {
+				"$value": "{color.cream.50}"
+			},
+			"firefly": {
+				"$value": "{color.lemon.300}"
+			},
+			"reflection": {
+				"$value": "{color.cream.200}"
+			}
+		},
 		"decor": {
 			"sunset": {
 				"sky-high": {
@@ -1976,6 +2173,14 @@
 			"$description": "Floup's bubble stops short of the right edge, where the sky shows.",
 			"$value": "88%"
 		},
+		"river-companion": {
+			"$description": "The companion on the bank of the river, a share of the width of the scene.",
+			"$value": "19%"
+		},
+		"river-companion-fill": {
+			"$description": "The companion fills its place on the bank.",
+			"$value": "100%"
+		},
 		"scene-stacked-min": {
 			"$value": "10rem"
 		},
@@ -2283,6 +2488,15 @@
 		"dialogue-light": {
 			"$value": 0.55
 		},
+		"river-shade": {
+			"$value": 0.18
+		},
+		"river-light": {
+			"$value": 0.55
+		},
+		"river-ripple": {
+			"$value": 0.7
+		},
 		"decor-halo": {
 			"$value": 0.6
 		},
@@ -2369,6 +2583,10 @@
 		},
 		"dialogue-laugh": {
 			"$value": "{duration.250}"
+		},
+		"river-drift": {
+			"$description": "An object of the river floats one place further: slow and even.",
+			"$value": "{duration.2800}"
 		},
 		"trick-orbit": {
 			"$value": "{duration.1000}"

@@ -83,6 +83,7 @@
 			"slide-in",
 			"magnet-snap"
 		],
-		"dialogue": ["bounce", "spin", "flower", "antenna-whirl", "hearts", "flip"]
+		"dialogue": ["bounce", "spin", "flower", "antenna-whirl", "hearts", "flip"],
+		"river": ["splash", "fish-leap", "bubbles", "frog-hop", "rainbow", "dragonfly"]
 	}
 }
