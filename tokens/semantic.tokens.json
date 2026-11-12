@@ -120,6 +120,15 @@
 			},
 			"ink": {
 				"$value": "{color.mono.black}"
+			},
+			"text": {
+				"$value": "{color.brown.900}"
+			},
+			"surface": {
+				"$value": "{color.cream.50}"
+			},
+			"border": {
+				"$value": "{color.brown.500}"
 			}
 		},
 		"mastery": {
