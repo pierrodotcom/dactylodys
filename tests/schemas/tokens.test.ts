@@ -112,7 +112,18 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN },
 	// A printed page keeps dark ink on light paper, whatever the theme of the screen.
 	{ foreground: 'color.print.text', background: 'color.print.surface', min: BODY_TEXT_MIN },
-	{ foreground: 'color.print.border', background: 'color.print.surface', min: NON_TEXT_MIN }
+	{ foreground: 'color.print.border', background: 'color.print.surface', min: NON_TEXT_MIN },
+	// The answer of the companion in the dialogue game, typed so far.
+	{
+		foreground: 'color.dialogue.answer-text',
+		background: 'color.dialogue.answer-surface',
+		min: TEXT_MIN
+	},
+	{
+		foreground: 'color.dialogue.answer-border',
+		background: 'color.dialogue.answer-surface',
+		min: NON_TEXT_MIN
+	}
 ];
 
 /** Every colour the companion can take, in every reward catalogue: each needs its own tokens. */

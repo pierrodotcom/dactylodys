@@ -1429,6 +1429,119 @@
 				"$value": "{color.orange.500}"
 			}
 		},
+		"dialogue": {
+			"line": {
+				"$value": "{color.brown.900}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"shadow": {
+				"$value": "{color.shadow.light}"
+			},
+			"host-body": {
+				"$value": "{color.plum.300}"
+			},
+			"host-belly": {
+				"$value": "{color.plum.50}"
+			},
+			"host-limb": {
+				"$value": "{color.plum.500}"
+			},
+			"host-tuft": {
+				"$value": "{color.sunflower.300}"
+			},
+			"host-cheek": {
+				"$value": "{color.pink.300}"
+			},
+			"host-eye": {
+				"$value": "{color.cream.50}"
+			},
+			"host-mouth": {
+				"$value": "{color.brown.800}"
+			},
+			"host-tongue": {
+				"$value": "{color.pink.200}"
+			},
+			"host-tear": {
+				"$value": "{color.azure.300}"
+			},
+			"host-sparkle": {
+				"$value": "{color.sunflower.300}"
+			},
+			"host-question": {
+				"$value": "{color.lagoon.500}"
+			},
+			"host-heart": {
+				"$value": "{color.pink.500}"
+			},
+			"host-petal": {
+				"$value": "{color.cream.50}"
+			},
+			"host-flower": {
+				"$value": "{color.lemon.300}"
+			},
+			"sky": {
+				"$value": "{color.azure.50}"
+			},
+			"hill": {
+				"$value": "{color.mint.200}"
+			},
+			"ground": {
+				"$value": "{color.green.300}"
+			},
+			"evening-hill": {
+				"$value": "{color.teal.400}"
+			},
+			"evening-ground": {
+				"$value": "{color.sage.400}"
+			},
+			"sun": {
+				"$value": "{color.sunflower.300}"
+			},
+			"cloud": {
+				"$value": "{color.cream.50}"
+			},
+			"flower-petal": {
+				"$value": "{color.cream.50}"
+			},
+			"flower-heart": {
+				"$value": "{color.lemon.300}"
+			},
+			"flower-pink": {
+				"$value": "{color.pink.300}"
+			},
+			"lantern-a": {
+				"$value": "{color.tomato.300}"
+			},
+			"lantern-b": {
+				"$value": "{color.lemon.300}"
+			},
+			"lantern-c": {
+				"$value": "{color.lagoon.300}"
+			},
+			"lantern-string": {
+				"$value": "{color.brown.900}"
+			},
+			"star": {
+				"$value": "{color.cream.50}"
+			},
+			"answer-surface": {
+				"$value": "{color.lagoon.50}"
+			},
+			"answer-text": {
+				"$value": "{color.brown.900}"
+			},
+			"answer-border": {
+				"$value": "{color.brown.900}"
+			},
+			"answer-dot": {
+				"$value": "{color.brown.450}"
+			}
+		},
 		"decor": {
 			"sunset": {
 				"sky-high": {
@@ -1865,6 +1978,13 @@
 		"scene-max": {
 			"$value": "26rem"
 		},
+		"dialogue-character": {
+			"$value": "6.5rem"
+		},
+		"dialogue-question-max": {
+			"$description": "Floup's bubble stops short of the right edge, where the sky shows.",
+			"$value": "88%"
+		},
 		"scene-stacked-min": {
 			"$value": "10rem"
 		},
@@ -1915,6 +2035,10 @@
 		},
 		"game-picture-small": {
 			"$value": "4.5rem"
+		},
+		"game-title-small-max": {
+			"$description": "Width of the title of a game not proposed, when a world offers three games or more.",
+			"$value": "11rem"
 		},
 		"key-unit-compact": {
 			"$value": "2.5rem"
@@ -2162,6 +2286,12 @@
 		"tower-hole": {
 			"$value": 0.55
 		},
+		"dialogue-shade": {
+			"$value": 0.18
+		},
+		"dialogue-light": {
+			"$value": 0.55
+		},
 		"decor-halo": {
 			"$value": 0.6
 		},
@@ -2244,6 +2374,9 @@
 			"$value": "{duration.1000}"
 		},
 		"trick-shake": {
+			"$value": "{duration.250}"
+		},
+		"dialogue-laugh": {
 			"$value": "{duration.250}"
 		},
 		"trick-orbit": {

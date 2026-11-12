@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
 	import HatchingPicture from './hatching/Picture.svelte';
+	import DialoguePicture from './dialogue/Picture.svelte';
 	import DrawingPicture from './drawing/Picture.svelte';
 	import RecipePicture from './recipe/Picture.svelte';
 	import RocketPicture from './rocket/Picture.svelte';
@@ -18,7 +19,8 @@
 		recipe: RecipePicture,
 		drawing: DrawingPicture,
 		train: TrainPicture,
-		tower: TowerPicture
+		tower: TowerPicture,
+		dialogue: DialoguePicture
 	};
 
 	let { gameId }: Props = $props();

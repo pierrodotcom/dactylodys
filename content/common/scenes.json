@@ -82,6 +82,7 @@
 			"rocket-crane",
 			"slide-in",
 			"magnet-snap"
-		]
+		],
+		"dialogue": ["bounce", "spin", "flower", "antenna-whirl", "hearts", "flip"]
 	}
 }

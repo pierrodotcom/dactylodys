@@ -21,7 +21,12 @@
 </script>
 
 <!-- The focused picture alone could leave the others cut at the bottom of a laptop screen. -->
-<ul class="games" aria-label={m.play_game_choice_legend()} {@attach centerInView}>
+<ul
+	class="games"
+	aria-label={m.play_game_choice_legend()}
+	data-many={games.length > 2 || undefined}
+	{@attach centerInView}
+>
 	{#each ordered as game (game.value)}
 		{@const isProposed = game.value === proposed}
 		<li>
@@ -122,6 +127,13 @@
 
 	.game[data-proposed] .title {
 		font-size: var(--dd-font-size-xl);
+	}
+
+	/* Three games or more: the other titles go on two lines, so that all the games stay on one row. */
+	.games[data-many] .game:not([data-proposed]) .title {
+		max-inline-size: var(--dd-size-game-title-small-max);
+		line-height: var(--dd-line-height-tight);
+		text-wrap: balance;
 	}
 
 	@keyframes bob {
