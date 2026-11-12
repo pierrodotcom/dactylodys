@@ -1,16 +1,24 @@
-import { parsePhraseBank, parseWordBank } from '$lib/engine/progression/banks';
-import type { PhraseBank, ProgressionDefinition, WordBank } from '$lib/engine/progression/types';
+import { parsePhraseBank, parseTextBank, parseWordBank } from '$lib/engine/progression/banks';
+import type {
+	PhraseBank,
+	ProgressionDefinition,
+	TextBank,
+	WordBank
+} from '$lib/engine/progression/types';
 
 /** Where the raw banks of a language come from; each one is fetched when it is needed. */
 export interface BankSources {
 	readonly words: () => Promise<unknown>;
 	readonly phrases: () => Promise<unknown>;
+	/** The useful texts of the last world, for a language that has some. */
+	readonly texts?: () => Promise<unknown>;
 }
 
 /** The banks that could be loaded; a missing one means the exercise goes on without it. */
 export interface LoadedBanks {
 	readonly words?: WordBank;
 	readonly phrases?: PhraseBank;
+	readonly texts?: TextBank;
 }
 
 export type BankReporter = (message: string, error: unknown) => void;
@@ -19,7 +27,8 @@ export type BankReporter = (message: string, error: unknown) => void;
 export const BANK_SOURCES: Readonly<Record<string, BankSources>> = {
 	fr: {
 		words: () => import('../../../content/fr/words/base.json').then((module) => module.default),
-		phrases: () => import('../../../content/fr/phrases/base.json').then((module) => module.default)
+		phrases: () => import('../../../content/fr/phrases/base.json').then((module) => module.default),
+		texts: () => import('../../../content/fr/texts/base.json').then((module) => module.default)
 	}
 };
 
@@ -41,7 +50,7 @@ async function loadOne<T>(
 	}
 }
 
-/** Loads and validates both banks of the progression's language. A failure never throws. */
+/** Loads and validates the banks of the progression's language. A failure never throws. */
 export async function loadBanks(
 	progression: Pick<ProgressionDefinition, 'locale'>,
 	sources: Readonly<Record<string, BankSources>> = BANK_SOURCES,
@@ -50,13 +59,17 @@ export async function loadBanks(
 	const language = new Intl.Locale(progression.locale).language;
 	const source = Object.hasOwn(sources, language) ? sources[language] : undefined;
 	if (source === undefined) return {};
-	const [words, phrases] = await Promise.all([
+	const [words, phrases, texts] = await Promise.all([
 		loadOne('word', source.words, parseWordBank, report),
-		loadOne('phrase', source.phrases, parsePhraseBank, report)
+		loadOne('phrase', source.phrases, parsePhraseBank, report),
+		source.texts === undefined
+			? Promise.resolve(undefined)
+			: loadOne('text', source.texts, parseTextBank, report)
 	]);
 	return {
 		...(words === undefined ? {} : { words }),
-		...(phrases === undefined ? {} : { phrases })
+		...(phrases === undefined ? {} : { phrases }),
+		...(texts === undefined ? {} : { texts })
 	};
 }
 

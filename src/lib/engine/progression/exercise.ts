@@ -1,6 +1,6 @@
 import { toGraphemes } from '../graphemes';
-import { storyPhrases, usablePhrases, usableWords } from './banks';
-import { findLesson, freshChars, learnedChars } from './definition';
+import { lessonTexts, storyPhrases, textGroups, textOf, usablePhrases, usableWords } from './banks';
+import { LINE_BREAK, findLesson, freshChars, learnedChars } from './definition';
 import { recentErrorRate } from './progress';
 import type {
 	Exercise,
@@ -60,6 +60,8 @@ function pickWeighted<T>(items: readonly T[], weights: readonly number[], rng: R
 
 function isAllowed(sequence: readonly string[], char: string, length: number): boolean {
 	const index = sequence.length;
+	// Enter ends a line: only at the end of a group, never right after a space.
+	if (char === LINE_BREAK) return index === length - 1 && sequence[index - 1] !== SPACE;
 	if (char === SPACE) {
 		return index > 0 && index < length - 1 && sequence[index - 1] !== SPACE;
 	}
@@ -97,6 +99,9 @@ function pickChar(
 
 function isValidSequence(sequence: readonly string[]): boolean {
 	return sequence.every((char, index) => {
+		if (char === LINE_BREAK) {
+			return index === sequence.length - 1 && sequence[index - 1] !== SPACE;
+		}
 		if (char === SPACE) {
 			return index > 0 && index < sequence.length - 1 && sequence[index - 1] !== SPACE;
 		}
@@ -120,13 +125,16 @@ export function placeForced(
 		if (index >= 0) reserved.add(index);
 	}
 	const absent = forced.filter((char) => !sequence.includes(char));
-	absent.sort((a, b) => Number(b === SPACE) - Number(a === SPACE));
+	const rank = (char: string) => (char === LINE_BREAK ? 2 : char === SPACE ? 1 : 0);
+	absent.sort((a, b) => rank(b) - rank(a));
+	const last = sequence.length - 1;
 	for (const char of absent) {
 		const slots = sequence
 			.map((_, index) => index)
 			.filter(
 				(index) =>
-					!reserved.has(index) && (char !== SPACE || (index > 0 && index < sequence.length - 1))
+					!reserved.has(index) &&
+					(char === LINE_BREAK ? index === last : char !== SPACE || (index > 0 && index < last))
 			);
 		if (slots.length === 0) return undefined;
 		const slot = slots[between(0, slots.length - 1, rng)] as number;
@@ -215,6 +223,29 @@ function dueStoryPhrase(
 	const plays = context.progress?.lessons[lessonId]?.attempts ?? 0;
 	if (phrases.length === 0 || plays % every !== 0) return undefined;
 	return phrases[Math.floor(plays / every) % phrases.length]?.text;
+}
+
+/**
+ * The text this exercise ends with, cut into its groups, if the lesson has texts of the level
+ * allowed written with the characters learned there; they take turns, one per play of the lesson.
+ */
+function dueText(
+	progression: ProgressionDefinition,
+	lessonId: string,
+	learned: readonly string[],
+	context: ExerciseContext
+): string[] | undefined {
+	if (context.texts === undefined) return undefined;
+	const known = new Set(learned);
+	const maxLevel = context.maxLevel ?? 3;
+	const texts = lessonTexts(context.texts, lessonId).filter(
+		(entry) =>
+			entry.level <= maxLevel && toGraphemes(textOf(entry)).every((char) => known.has(char))
+	);
+	if (texts.length === 0) return undefined;
+	const plays = context.progress?.lessons[lessonId]?.attempts ?? 0;
+	const text = texts[plays % texts.length];
+	return text === undefined ? undefined : textGroups(text, progression.rules.textGroupLength);
 }
 
 export function generateExercise(
@@ -333,10 +364,44 @@ export function generateExercise(
 		return undefined;
 	};
 
-	const story = dueStoryPhrase(progression, lessonId, learned, context);
-	// Without a slack, the story phrase and what comes before it keep to the target length.
-	const storyRoom =
-		story === undefined ? 0 : lesson.targetLength + (lengthSlack ?? 0) - toGraphemes(story).length;
+	/**
+	 * A warm-up group for Enter is a line of a list: a word, else a suite, then Enter. It holds the
+	 * other new characters still lacking, if it can.
+	 */
+	const buildLine = (lacking: readonly string[], relaxed: boolean): Candidate => {
+		const others = lacking.filter((char) => char !== LINE_BREAK);
+		// The word and its Enter keep to the length of a suite of the lesson.
+		const [min, max] = lesson.groupLength;
+		const pool = words.items.filter(
+			(item) =>
+				item.graphemes.length >= min - 1 &&
+				item.graphemes.length <= max - 1 &&
+				others.every((char) => item.graphemes.includes(char))
+		);
+		if (pool.length > 0 && !relaxed) {
+			const unused = pool.filter((item) => !words.used.has(item.text));
+			const choice = unused.length > 0 ? unused : pool;
+			const item = pickWeighted(
+				choice,
+				choice.map((candidate) => candidate.weight),
+				rng
+			);
+			words.used.add(item.text);
+			return { text: `${item.text}${LINE_BREAK}` };
+		}
+		return buildDrill(lacking, settings, relaxed);
+	};
+
+	// The end of the exercise: the lesson's text, else its story phrase when one is due.
+	const text = dueText(progression, lessonId, learned, context);
+	const story =
+		text === undefined ? dueStoryPhrase(progression, lessonId, learned, context) : undefined;
+	const ending = text ?? (story === undefined ? undefined : [story]);
+	// Without a slack, the ending and what comes before it keep to the target length.
+	const endingLength =
+		ending === undefined ? 0 : ending.reduce((sum, group) => sum + toGraphemes(group).length, 0);
+	const endingRoom =
+		ending === undefined ? 0 : lesson.targetLength + (lengthSlack ?? 0) - endingLength;
 	const groups: string[] = [];
 	const asked = new Map<string, number>();
 	let total = 0;
@@ -347,14 +412,14 @@ export function generateExercise(
 		const previous = groups[groups.length - 1];
 		let accepted: Candidate | undefined;
 
-		if (lacking.length === 0 && story !== undefined) {
-			// After the warm-up, mixed groups fill the room left before the story phrase, which ends
-			// the exercise whatever its length.
-			if (groups.length + 1 < lesson.groupCount) {
-				accepted = buildFiller(storyRoom - total, previous);
+		if (lacking.length === 0 && ending !== undefined) {
+			// After the warm-up, mixed groups fill the room left before the text or the story phrase,
+			// which ends the exercise whatever its length.
+			if (groups.length + ending.length < lesson.groupCount) {
+				accepted = buildFiller(endingRoom - total, previous);
 			}
 			if (accepted === undefined) {
-				groups.push(story);
+				groups.push(...ending);
 				break;
 			}
 		} else {
@@ -363,9 +428,11 @@ export function generateExercise(
 			for (let attempt = 0; attempt < MAX_ATTEMPTS && accepted === undefined; attempt++) {
 				const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
 				const candidate =
-					lacking.length > 0
-						? buildDrill(lacking, settings, relaxed)
-						: buildMixed(missing, groups.length, total, relaxed);
+					lacking.length === 0
+						? buildMixed(missing, groups.length, total, relaxed)
+						: lacking.includes(LINE_BREAK)
+							? buildLine(lacking, relaxed)
+							: buildDrill(lacking, settings, relaxed);
 				if (candidate.text !== previous) accepted = candidate;
 			}
 			if (accepted === undefined) {

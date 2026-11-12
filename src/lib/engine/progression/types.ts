@@ -50,6 +50,12 @@ export interface ProgressionRules {
 	 * progression has brought on it so far is acquired (`charMastery`). Absent: no key fades.
 	 */
 	readonly keyboardFade?: MasteryRules;
+	/**
+	 * Most graphemes in one group of a text (`TextEntry`), its line breaks counted: the lines of a
+	 * text are put together in a group as long as they fit, a longer line is a group on its own.
+	 * Absent: one line per group.
+	 */
+	readonly textGroupLength?: number;
 }
 
 /** Thresholds of `charMastery`: data, never constants in the code. */
@@ -193,10 +199,35 @@ export interface PhraseBank {
 	readonly phrases: readonly PhraseEntry[];
 }
 
+/**
+ * A short text of everyday life, typed line after line with Enter between two lines (a message, a
+ * list, a recipe): it ends every exercise of its lesson, whole.
+ */
+export interface TextEntry {
+	/** `<language>.text.<slug>`. */
+	readonly id: string;
+	/** The lesson whose exercises end with this text. */
+	readonly lessonId: string;
+	/** At least two lines, NFC, each without a line break; Enter is typed between two of them. */
+	readonly lines: readonly string[];
+	readonly level: WordLevel;
+	readonly review: ReviewStatus;
+}
+
+export interface TextBank {
+	readonly schemaVersion: 1;
+	/** `<language>.texts.<slug>`. */
+	readonly id: string;
+	readonly locale: string;
+	readonly texts: readonly TextEntry[];
+}
+
 /** Everything optional that shapes an exercise for one child at one moment. */
 export interface ExerciseContext {
 	readonly words?: WordBank;
 	readonly phrases?: PhraseBank;
+	/** Texts of the lessons that have some: such a lesson ends each exercise with one of them. */
+	readonly texts?: TextBank;
 	/** Enables practising weak characters more often. */
 	readonly progress?: ProgressState;
 	/** Highest word and phrase level allowed; defaults to 3. */

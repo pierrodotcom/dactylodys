@@ -2,12 +2,17 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { toGraphemes } from '../graphemes';
 import {
+	lessonTexts,
 	parsePhraseBank,
+	parseTextBank,
 	parseWordBank,
 	storyPhrases,
+	textGroups,
+	textOf,
 	usablePhrases,
 	usableWords,
-	validateStoryPhrases
+	validateStoryPhrases,
+	validateTexts
 } from './banks';
 import { parseProgression } from './definition';
 import { clone, deepFreeze } from './test-support';
@@ -384,5 +389,200 @@ describe('story phrases', () => {
 		expect(validateStoryPhrases(bank, progression)).toEqual([
 			'"si je lis": not learned at fr.lesson.el: i'
 		]);
+	});
+});
+
+describe('text bank', () => {
+	const NL = String.fromCharCode(10);
+	const RAW = {
+		schemaVersion: 1,
+		id: 'fr.texts.test',
+		locale: 'fr-FR',
+		texts: [
+			{
+				id: 'fr.text.liste',
+				lessonId: 'fr.lesson.enter',
+				lines: ['liste :', 'du sel', 'des fils'],
+				level: 1,
+				review: 'agent'
+			},
+			{
+				id: 'fr.text.mot',
+				lessonId: 'fr.lesson.after',
+				lines: ['Salut !', 'Je lis.'],
+				level: 2,
+				review: 'human'
+			}
+		]
+	};
+	type RawTexts = typeof RAW;
+	const textsWith = (change: (raw: RawTexts) => void) => {
+		const raw = clone(RAW);
+		change(raw);
+		return raw;
+	};
+	const textAt = (raw: RawTexts, index: number) => raw.texts[index] as RawTexts['texts'][number];
+	const progression = parseProgression({
+		schemaVersion: 1,
+		id: 'fr.progression.texts',
+		locale: 'fr-FR',
+		layoutIds: ['fr-fr-azerty-pc'],
+		rules: {
+			unlockAccuracy: 80,
+			starThresholds: [80, 90, 97],
+			newCharWeight: 0.6,
+			weakCharBoost: 2,
+			themeBoost: 2,
+			newCharMinCount: 0,
+			recentCharWindow: 30
+		},
+		worlds: [
+			{
+				id: 'fr.world.texts',
+				title: 'Texts',
+				themeId: 'general',
+				gameIds: ['dialogue'],
+				lessons: [
+					{ slug: 'letters', newChars: [...'abcdefghijlmnorstu'] },
+					{ slug: 'space', newChars: [' ', ':', '.', '!'] },
+					{ slug: 'enter', newChars: [NL] },
+					{ slug: 'after', newChars: [] }
+				].map(({ slug, newChars }) => ({
+					id: `fr.lesson.${slug}`,
+					title: slug,
+					intro: 'Intro.',
+					newChars,
+					words: [],
+					mix: { drills: 1, words: 0, phrases: 0 },
+					unlocks: slug === 'after' ? ['uppercase'] : [],
+					groupCount: 20,
+					targetLength: 20,
+					groupLength: [3, 20]
+				}))
+			}
+		]
+	});
+
+	it('reads a valid bank', () => {
+		const bank = parseTextBank(RAW);
+		expect(bank.id).toBe('fr.texts.test');
+		expect(bank.texts.map((entry) => entry.lines)).toEqual([
+			['liste :', 'du sel', 'des fils'],
+			['Salut !', 'Je lis.']
+		]);
+		expect(bank.texts[1]?.review).toBe('human');
+	});
+
+	it.each([
+		['a text of one line', (raw: RawTexts) => (textAt(raw, 0).lines = ['liste :']), /lines/],
+		[
+			'a line with Enter in it',
+			(raw: RawTexts) => (textAt(raw, 0).lines[1] = `du${NL}sel`),
+			/lines\[1\]/
+		],
+		['an empty line', (raw: RawTexts) => (textAt(raw, 0).lines[1] = ''), /lines\[1\]/],
+		[
+			'a line ending with a space',
+			(raw: RawTexts) => (textAt(raw, 0).lines[1] = 'du sel '),
+			/lines\[1\]/
+		],
+		['a duplicate id', (raw: RawTexts) => (textAt(raw, 1).id = 'fr.text.liste'), /duplicate/],
+		['an id of another type', (raw: RawTexts) => (textAt(raw, 0).id = 'fr.phrase.liste'), /\.id/],
+		[
+			'a lesson of another language',
+			(raw: RawTexts) => (textAt(raw, 0).lessonId = 'en.lesson.enter'),
+			/lessonId/
+		],
+		['a bank id of another type', (raw: RawTexts) => (raw.id = 'fr.phrases.test'), /texts\.id/],
+		[
+			'an unknown property',
+			(raw: RawTexts) => Object.assign(textAt(raw, 0), { title: 'x' }),
+			/title/
+		]
+	])('rejects %s', (_name, change, message) => {
+		expect(() => parseTextBank(textsWith(change))).toThrow(message);
+	});
+
+	it('types a text as its lines with Enter between them, never after the last one', () => {
+		const [liste] = parseTextBank(RAW).texts;
+		expect(liste && textOf(liste)).toBe(`liste :${NL}du sel${NL}des fils`);
+	});
+
+	it('lists the texts of a lesson in the order of the bank', () => {
+		const bank = parseTextBank(RAW);
+		expect(lessonTexts(bank, 'fr.lesson.after').map((entry) => entry.id)).toEqual(['fr.text.mot']);
+		expect(lessonTexts(bank, 'fr.lesson.letters')).toEqual([]);
+	});
+
+	it('finds nothing wrong with texts written with the keys of their lesson', () => {
+		expect(validateTexts(parseTextBank(RAW), progression)).toEqual([]);
+	});
+
+	it('refuses a text before Enter, with keys learned after its lesson, or for no lesson', () => {
+		const bank = parseTextBank(
+			textsWith((raw) => {
+				textAt(raw, 0).lessonId = 'fr.lesson.space';
+				textAt(raw, 1).lessonId = 'fr.lesson.enter';
+				raw.texts.push({ ...textAt(raw, 1), id: 'fr.text.ghost', lessonId: 'fr.lesson.zzz' });
+			})
+		);
+		expect(validateTexts(bank, progression)).toEqual([
+			`fr.text.liste: not learned at fr.lesson.space: ${JSON.stringify(NL)}`,
+			'fr.text.mot: not learned at fr.lesson.enter: "S" "J"',
+			'fr.text.ghost: unknown lesson fr.lesson.zzz'
+		]);
+	});
+
+	describe('textGroups', () => {
+		const entry = (lines: string[]) => ({
+			id: 'fr.text.x',
+			lessonId: 'fr.lesson.after',
+			lines,
+			level: 1 as const,
+			review: 'agent' as const
+		});
+
+		it('gives one line per group without a length, Enter ending all but the last', () => {
+			expect(textGroups(entry(['liste :', 'du sel', 'des fils']))).toEqual([
+				`liste :${NL}`,
+				`du sel${NL}`,
+				'des fils'
+			]);
+		});
+
+		it('puts whole lines together as long as they fit, a long line alone', () => {
+			expect(textGroups(entry(['liste :', 'du sel', 'des fils', 'un ballon rouge']), 16)).toEqual([
+				`liste :${NL}du sel${NL}`,
+				`des fils${NL}`,
+				'un ballon rouge'
+			]);
+			expect(textGroups(entry(['une ligne bien trop longue', 'fin']), 8)).toEqual([
+				`une ligne bien trop longue${NL}`,
+				'fin'
+			]);
+		});
+
+		it('keeps every character in order, and a group of several lines within its length', () => {
+			fc.assert(
+				fc.property(
+					fc.array(fc.stringMatching(/^[a-z]([a-z ]{0,10}[a-z])?$/), {
+						minLength: 2,
+						maxLength: 5
+					}),
+					fc.integer({ min: 0, max: 30 }),
+					(lines, maxLength) => {
+						const groups = textGroups(entry(lines), maxLength);
+						expect(groups.join('')).toBe(lines.join(NL));
+						for (const group of groups) {
+							expect(group.startsWith(NL)).toBe(false);
+							const linesInside = group.split(NL).filter((line) => line !== '').length;
+							if (linesInside > 1) {
+								expect(toGraphemes(group).length).toBeLessThanOrEqual(maxLength);
+							}
+						}
+					}
+				)
+			);
+		});
 	});
 });

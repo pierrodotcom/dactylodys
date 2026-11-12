@@ -1,7 +1,15 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { toGraphemes } from '../graphemes';
-import { parsePhraseBank, parseWordBank, usablePhrases, usableWords } from './banks';
+import {
+	parsePhraseBank,
+	parseTextBank,
+	parseWordBank,
+	textGroups,
+	textOf,
+	usablePhrases,
+	usableWords
+} from './banks';
 import { findLesson, learnedChars, lessonIds, parseProgression } from './definition';
 import { generateExercise } from './exercise';
 import { clone, deepFreeze, loadShippedProgressions, seededRng } from './test-support';
@@ -1509,6 +1517,190 @@ describe('story phrases', () => {
 					expect(generate(STORY, lessonId, seed, context)).toEqual(exercise);
 				}
 			)
+		);
+	});
+});
+
+describe('useful texts', () => {
+	const NL = String.fromCharCode(10);
+	const TEXTS_PROGRESSION = progressionOf(
+		[
+			lesson('fj', ['f', 'j'], { groupLength: [2, 4] }),
+			lesson('space', [SPACE], { groupLength: [3, 4] }),
+			lesson('letters', [...'dkeilsut'], { groupLength: [4, 8], groupCount: 12 }),
+			lesson('enter', [NL], {
+				groupLength: [4, 6],
+				groupCount: 8,
+				targetLength: 20,
+				mix: EVERYTHING
+			}),
+			lesson('texts', [], { groupLength: [4, 6], groupCount: 8, targetLength: 20, mix: EVERYTHING })
+		],
+		{ newCharMinCount: 4, lengthSlack: 5, textGroupLength: 12, storyPhraseEvery: 1 }
+	);
+	const TEXT_BANK = parseTextBank({
+		schemaVersion: 1,
+		id: 'fr.texts.synthetic',
+		locale: 'fr-FR',
+		texts: [
+			{
+				id: 'fr.text.sel',
+				lessonId: 'fr.lesson.enter',
+				lines: ['du sel', 'des fils'],
+				level: 1,
+				review: 'agent'
+			},
+			{
+				id: 'fr.text.lis',
+				lessonId: 'fr.lesson.texts',
+				lines: ['je lis', 'elle lit les fils', 'si si'],
+				level: 1,
+				review: 'agent'
+			},
+			{
+				id: 'fr.text.skis',
+				lessonId: 'fr.lesson.texts',
+				lines: ['des skis', 'des fils'],
+				level: 2,
+				review: 'agent'
+			},
+			{
+				id: 'fr.text.hard',
+				lessonId: 'fr.lesson.texts',
+				lines: ['elle lisse', 'ses skis'],
+				level: 3,
+				review: 'agent'
+			}
+		]
+	});
+	const STORY_BANK = parsePhraseBank({
+		...PHRASE_BANK,
+		phrases: [
+			...PHRASE_BANK.phrases,
+			{
+				text: 'elle lisse ses skis',
+				themes: [],
+				level: 1,
+				review: 'human',
+				lessonId: 'fr.lesson.texts'
+			}
+		]
+	});
+
+	function contextAfter(lessonId: string, plays: number, change: ExerciseContext = {}) {
+		const progress: ProgressState = {
+			lessons:
+				plays === 0
+					? {}
+					: { [lessonId]: { bestAccuracy: 90, stars: 2, attempts: plays, lastPlayedAt: 0 } },
+			chars: {}
+		};
+		return { ...FULL_CONTEXT, phrases: STORY_BANK, texts: TEXT_BANK, progress, ...change };
+	}
+
+	const ofLesson = (lessonId: string) =>
+		TEXT_BANK.texts.filter((entry) => entry.lessonId === lessonId);
+
+	it('warms Enter up with lines of a list, then ends with the text of the lesson', () => {
+		for (let seed = 0; seed < 20; seed++) {
+			const { groups } = generate(
+				TEXTS_PROGRESSION,
+				'fr.lesson.enter',
+				seed,
+				contextAfter('fr.lesson.enter', 0)
+			);
+			const text = textGroups(ofLesson('fr.lesson.enter')[0]!, 12);
+			expect(groups.slice(-text.length)).toEqual(text);
+			const warmUp = groups.slice(0, -text.length);
+			expect(warmUp).toHaveLength(TEXTS_PROGRESSION.rules.newCharMinCount);
+			for (const group of warmUp) {
+				expect(group.endsWith(NL)).toBe(true);
+				expect(group.indexOf(NL)).toBe(group.length - 1);
+				expect(lengthOf(group)).toBeGreaterThanOrEqual(4);
+				expect(lengthOf(group)).toBeLessThanOrEqual(6);
+				expect(group.slice(0, -1)).not.toContain(SPACE);
+			}
+		}
+	});
+
+	it('warms Enter up with words of the bank when there are some', () => {
+		const usable = new Set(
+			usableWords(WORD_BANK, learnedChars(TEXTS_PROGRESSION, 'fr.lesson.enter')).map((w) => w.text)
+		);
+		const { groups } = generate(
+			TEXTS_PROGRESSION,
+			'fr.lesson.enter',
+			4,
+			contextAfter('fr.lesson.enter', 0)
+		);
+		const warmUp = groups.slice(0, TEXTS_PROGRESSION.rules.newCharMinCount);
+		expect(warmUp.every((group) => usable.has(group.slice(0, -1)))).toBe(true);
+	});
+
+	it('takes turns between the texts of the lesson, one per play, never a story phrase', () => {
+		const own = ofLesson('fr.lesson.texts').filter((entry) => entry.level <= 2);
+		for (let plays = 0; plays < 6; plays++) {
+			const exercise = generate(
+				TEXTS_PROGRESSION,
+				'fr.lesson.texts',
+				plays,
+				contextAfter('fr.lesson.texts', plays, { maxLevel: 2 })
+			);
+			const expected = own[plays % own.length]!;
+			expect(exercise.groups.join('').endsWith(textOf(expected))).toBe(true);
+			expect(exercise.groups).not.toContain('elle lisse ses skis');
+		}
+	});
+
+	it('leaves out the texts above the level allowed', () => {
+		for (let plays = 0; plays < 6; plays++) {
+			const exercise = generate(
+				TEXTS_PROGRESSION,
+				'fr.lesson.texts',
+				plays,
+				contextAfter('fr.lesson.texts', plays, { maxLevel: 1 })
+			);
+			expect(exercise.groups.join('').endsWith(`je lis${NL}elle lit les fils${NL}si si`)).toBe(
+				true
+			);
+		}
+	});
+
+	it('cuts a text into its groups, lines put together while they fit', () => {
+		const exercise = generate(
+			TEXTS_PROGRESSION,
+			'fr.lesson.texts',
+			1,
+			contextAfter('fr.lesson.texts', 0, { maxLevel: 1 })
+		);
+		expect(exercise.groups.slice(-3)).toEqual([`je lis${NL}`, `elle lit les fils${NL}`, 'si si']);
+	});
+
+	it('asks Enter only at the end of a group, with or without texts, for any seed', () => {
+		fc.assert(
+			fc.property(SEEDS, fc.integer({ min: 0, max: 9 }), fc.boolean(), (seed, plays, withTexts) => {
+				for (const lessonId of ['fr.lesson.enter', 'fr.lesson.texts']) {
+					const context = contextAfter(lessonId, plays, withTexts ? {} : { texts: undefined });
+					const exercise = generate(TEXTS_PROGRESSION, lessonId, seed, context);
+					const learned = new Set(learnedChars(TEXTS_PROGRESSION, lessonId));
+					for (const group of exercise.groups) {
+						for (const char of toGraphemes(group)) expect(learned.has(char)).toBe(true);
+						const breaks = toGraphemes(group).flatMap((char, i) => (char === NL ? [i] : []));
+						const lines = group.split(NL);
+						expect(lines.every((line, i) => line !== '' || i === lines.length - 1)).toBe(true);
+						expect(group.startsWith(NL)).toBe(false);
+						if (!withTexts) expect(breaks.every((i) => i === lengthOf(group) - 1)).toBe(true);
+						expect(group).not.toContain(`${SPACE}${NL}`);
+					}
+					if (lessonId === 'fr.lesson.enter') {
+						expect(countOf(exercise.groups, NL)).toBeGreaterThanOrEqual(
+							TEXTS_PROGRESSION.rules.newCharMinCount
+						);
+					}
+					expect(generate(TEXTS_PROGRESSION, lessonId, seed, context)).toEqual(exercise);
+				}
+			}),
+			{ numRuns: 60 }
 		);
 	});
 });
