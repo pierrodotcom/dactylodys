@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
+	import { onMount, type Component } from 'svelte';
 	import { STORY_ART_HEIGHT, STORY_ART_WIDTH, storyArtGroup, type StoryArtGroup } from './art-ids';
+	import { isMotionReduced, storyPhases, type StoryPhase, type StoryPictureSize } from './phase';
 	import CircuitArt from './art/CircuitArt.svelte';
 	import DinosaursArt from './art/DinosaursArt.svelte';
 	import KitchenArt from './art/KitchenArt.svelte';
@@ -11,10 +12,12 @@
 		/** `StoryMoment.art`. */
 		art: string;
 		/** `small`: a page of the notebook among others ("the story so far"). */
-		size?: 'large' | 'small';
+		size?: StoryPictureSize;
+		/** One state only, still: the trial page shows both side by side. */
+		phase?: StoryPhase;
 	}
 
-	const DRAWINGS: Readonly<Record<StoryArtGroup, Component<{ art: string }>>> = {
+	const DRAWINGS: Readonly<Record<StoryArtGroup, Component<{ art: string; phase: StoryPhase }>>> = {
 		dinosaurs: DinosaursArt,
 		kitchen: KitchenArt,
 		zoo: ZooArt,
@@ -23,12 +26,23 @@
 	};
 	const CORNER = 6;
 
-	let { art, size = 'large' }: Props = $props();
+	let { art, size = 'large', phase }: Props = $props();
+
+	// Read once mounted, as prerendered pages know nothing of it. In calm motion the style sheet
+	// already shows `after` at once (app.css); this only spares drawing `before` under it.
+	let still = $state(false);
+	onMount(() => {
+		still = isMotionReduced(
+			document.documentElement,
+			matchMedia('(prefers-reduced-motion: reduce)').matches
+		);
+	});
 
 	const uid = $props.id();
 	const clipId = `story-page-${uid}`;
 	const group = $derived(storyArtGroup(art));
 	const Drawing = $derived(group === undefined ? undefined : DRAWINGS[group]);
+	const phases = $derived(phase === undefined ? storyPhases(size, still) : [phase]);
 </script>
 
 <!-- Decorative: the text of the story is always written next to its picture. -->
@@ -45,10 +59,20 @@
 		</clipPath>
 	</defs>
 	<g clip-path="url(#{clipId})">
-		<rect class="paper" width={STORY_ART_WIDTH} height={STORY_ART_HEIGHT} />
-		{#if Drawing}
-			<Drawing {art} />
-		{/if}
+		<!-- Keyed by the picture too: another picture in the same place fades again. `after` covers
+			`before` with its own paper as it fades in, so what stays is never dimmed. -->
+		{#each phases as shown (`${art}-${shown}`)}
+			<g
+				class="state"
+				data-story-phase={shown}
+				data-story-change={(shown === 'after' && phases.length > 1) || undefined}
+			>
+				<rect class="paper" width={STORY_ART_WIDTH} height={STORY_ART_HEIGHT} />
+				{#if Drawing}
+					<Drawing {art} phase={shown} />
+				{/if}
+			</g>
+		{/each}
 	</g>
 	<rect class="edge" width={STORY_ART_WIDTH} height={STORY_ART_HEIGHT} rx={CORNER} />
 </svg>
@@ -64,6 +88,25 @@
 
 	.story-picture[data-size='small'] {
 		max-inline-size: var(--dd-size-story-picture-small);
+	}
+
+	/* Not a light effect (no data-effect): the change of picture tells the story. */
+	.state[data-story-change] {
+		animation-name: story-change;
+		animation-duration: var(--dd-duration-story-change);
+		animation-delay: var(--dd-duration-story-change-delay);
+		animation-timing-function: var(--dd-easing-standard);
+		animation-fill-mode: both;
+	}
+
+	@keyframes story-change {
+		0% {
+			opacity: 0;
+		}
+
+		100% {
+			opacity: 100%;
+		}
 	}
 
 	.paper {
