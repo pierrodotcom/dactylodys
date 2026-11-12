@@ -40,6 +40,17 @@ export const STORY_ART_GROUPS = {
 		'circuit-helmet',
 		'circuit-truck',
 		'circuit-ending'
+	],
+	/** The last world reuses the pictures of the others, each with the paper it brings (ADR-057). */
+	post: [
+		'post-opening',
+		'post-list',
+		'post-trex',
+		'post-recipe',
+		'post-caption',
+		'post-card',
+		'post-invite',
+		'post-ending'
 	]
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 

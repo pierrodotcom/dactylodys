@@ -11,6 +11,8 @@ import type {
 } from './types';
 
 const SPACE = ' ';
+/** Enter: the only control character a lesson can bring, typed at the end of a line. */
+export const LINE_BREAK = '\n';
 const SLUG = '[a-z0-9]+(?:-[a-z0-9]+)*';
 const SLUG_PATTERN = new RegExp(`^${SLUG}$`);
 const LAYOUT_ID_PATTERN = /^[a-z]{2,3}-[a-z]{2}-[a-z0-9]+-[a-z]+$/;
@@ -101,7 +103,9 @@ function expectGrapheme(value: unknown, path: string): string {
 	if (typeof value !== 'string' || value === '') fail(path, 'expected a non-empty string');
 	const text = value.normalize('NFC');
 	if (toGraphemes(text).length !== 1) fail(path, 'expected exactly one character');
-	if (CONTROL_PATTERN.test(text)) fail(path, 'expected a printable character');
+	if (text !== LINE_BREAK && CONTROL_PATTERN.test(text)) {
+		fail(path, 'expected a printable character or a line break');
+	}
 	return text;
 }
 
@@ -135,7 +139,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'handGuide',
 			'starAlmostMargin',
 			'storyPhraseEvery',
-			'keyboardFade'
+			'keyboardFade',
+			'textGroupLength'
 		],
 		path
 	);
@@ -185,6 +190,10 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		record['keyboardFade'] === undefined
 			? undefined
 			: parseMasteryRules(record['keyboardFade'], `${path}.keyboardFade`);
+	const textGroupLength =
+		record['textGroupLength'] === undefined
+			? undefined
+			: expectAtLeastOne(record['textGroupLength'], `${path}.textGroupLength`);
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -197,7 +206,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		...(handGuide === undefined ? {} : { handGuide }),
 		...(starAlmostMargin === undefined ? {} : { starAlmostMargin }),
 		...(storyPhraseEvery === undefined ? {} : { storyPhraseEvery }),
-		...(keyboardFade === undefined ? {} : { keyboardFade })
+		...(keyboardFade === undefined ? {} : { keyboardFade }),
+		...(textGroupLength === undefined ? {} : { textGroupLength })
 	};
 }
 
@@ -332,7 +342,7 @@ function checkGeneratable(
 	path: string
 ): void {
 	const [min, max] = lesson.groupLength;
-	const typable = [...learned].filter((char) => char !== SPACE).length;
+	const typable = [...learned].filter((char) => char !== SPACE && char !== LINE_BREAK).length;
 	if (typable === 0) fail(`${path}.newChars`, 'no typable character is known at this stage');
 	if (typable < 2 && max > MAX_IDENTICAL_IN_A_ROW) {
 		fail(`${path}.groupLength`, 'a single known character cannot fill groups longer than 2');

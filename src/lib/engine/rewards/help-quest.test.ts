@@ -1,6 +1,7 @@
 import fc from 'fast-check';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { parseProgression } from '../progression/definition';
 import { emptyProgress, isLessonPassed } from '../progression/progress';
 import type { ProgressState } from '../progression/types';
 import type { CharStats } from '../types';
@@ -119,6 +120,20 @@ const quest = (progress: ProgressState, last = null as Parameters<typeof helpQue
 describe('helpQuestFor', () => {
 	it('asks nothing of a new child', () => {
 		expect(quest(emptyProgress())).toBeNull();
+	});
+
+	it('never asks for Enter: the texts of its world practise it, line after line', () => {
+		const shipped = parseProgression(
+			JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
+		);
+		const enterLesson = shipped.worlds
+			.flatMap((world) => world.lessons)
+			.find((lesson) => lesson.newChars.includes('\n'));
+		expect(enterLesson).toBeDefined();
+		const progress = playLesson(emptyProgress(), enterLesson?.id ?? '', 90, {
+			'\n': stats(20, 15)
+		});
+		expect(helpQuestFor(shipped, progress, HELP_RULES, null)).toBeNull();
 	});
 
 	it('asks for a hard key of a passed lesson, with the lesson that teaches it', () => {

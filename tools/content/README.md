@@ -16,6 +16,7 @@ Les sources téléchargées vivent dans `tools/content/.cache/` (ignoré par git
 node tools/content/fetch-sources.js [--lexique-zip <chemin>] [--refresh]
 node tools/content/build-words.js [--report <dossier>] [--no-write]
 node tools/content/build-phrases.js
+node tools/content/build-texts.js
 node tools/content/check.js
 ```
 
@@ -27,7 +28,8 @@ node tools/content/check.js
    4. _Exclusion automatique_ : un mot présent dans une catégorie « dure » du Wiktionnaire (vulgaire, insulte, sexualité, drogue, armes, mort, maladie, religion, politique, justice, violence, péjoratif) est écarté, sauf s'il figure dans `data/keep.txt`. Les catégories « douces » (argot, prénoms, médecine) sont seulement signalées.
    5. _Décisions de relecture_ : `data/additions.txt` (ajouts), `data/theme-corrections.txt` (thèmes), `data/exclusions.txt` (retraits, appliqués en dernier et toujours gagnants).
 3. **build-phrases** : transforme `data/phrases.fr.txt` (une phrase par ligne : `niveau | thèmes | texte`) en `content/fr/phrases/base.json`.
-4. **check** : contrôle les deux fichiers (doublons, caractères de l'ordre d'apprentissage, nombre de mots et de phrases par palier de lettres) et affiche les chiffres réels.
+4. **build-texts** : transforme `data/texts.fr.txt` (un en-tête `@ identifiant | leçon | niveau`, puis les lignes du texte) en `content/fr/texts/base.json`, la banque des petits textes utiles du dernier monde, tapés ligne par ligne avec Entrée ; un identifiant listé dans `data/validated-texts.txt` passe à `review: "human"`.
+5. **check** : contrôle les deux fichiers (doublons, caractères de l'ordre d'apprentissage, nombre de mots et de phrases par palier de lettres) et affiche les chiffres réels.
 
 ## Rapports (hors dépôt)
 

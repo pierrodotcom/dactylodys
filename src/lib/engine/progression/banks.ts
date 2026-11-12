@@ -1,11 +1,13 @@
 import { toGraphemes } from '../graphemes';
-import { findLesson, learnedChars } from './definition';
+import { LINE_BREAK, findLesson, learnedChars } from './definition';
 import type {
 	BankSource,
 	PhraseBank,
 	PhraseEntry,
 	ProgressionDefinition,
 	ReviewStatus,
+	TextBank,
+	TextEntry,
 	ThemeDefinition,
 	WordBank,
 	WordEntry,
@@ -60,7 +62,7 @@ function expectSlug(value: unknown, path: string): string {
 
 function parseHeader(
 	root: Record<string, unknown>,
-	type: 'words' | 'phrases',
+	type: 'words' | 'phrases' | 'texts',
 	path: string
 ): { id: string; locale: string } {
 	if (root['schemaVersion'] !== 1) fail(`${path}.schemaVersion`, 'expected 1');
@@ -277,4 +279,98 @@ export function usablePhrases(
 		learned,
 		options
 	);
+}
+
+const MIN_TEXT_LINES = 2;
+
+function parseTextId(value: unknown, language: string, path: string): string {
+	const id = expectString(value, path);
+	if (!new RegExp(`^${language}\\.text\\.${SLUG}$`).test(id)) {
+		fail(path, `expected ${language}.text.<slug>`);
+	}
+	return id;
+}
+
+export function parseTextBank(data: unknown): TextBank {
+	const root = expectRecord(data, 'texts');
+	rejectUnknown(root, ['schemaVersion', 'id', 'locale', 'texts'], 'texts');
+	const { id, locale } = parseHeader(root, 'texts', 'texts');
+	const language = new Intl.Locale(locale).language;
+
+	const seen = new Set<string>();
+	const texts = expectArray(root['texts'], 'texts.texts').map((raw, i): TextEntry => {
+		const path = `texts.texts[${i}]`;
+		const record = expectRecord(raw, path);
+		rejectUnknown(record, ['id', 'lessonId', 'lines', 'level', 'review'], path);
+		const textId = parseTextId(record['id'], language, `${path}.id`);
+		if (seen.has(textId)) fail(`${path}.id`, `duplicate text "${textId}"`);
+		seen.add(textId);
+		const lines = expectArray(record['lines'], `${path}.lines`).map((line, j) =>
+			parsePhraseText(line, `${path}.lines[${j}]`)
+		);
+		if (lines.length < MIN_TEXT_LINES) {
+			fail(`${path}.lines`, `expected at least ${MIN_TEXT_LINES} lines`);
+		}
+		return {
+			id: textId,
+			lessonId: parseLessonId(record['lessonId'], language, `${path}.lessonId`),
+			lines,
+			level: parseLevel(record['level'], `${path}.level`),
+			review: parseReview(record['review'], `${path}.review`)
+		};
+	});
+	return { schemaVersion: 1, id, locale, texts };
+}
+
+/** The whole text as it is typed: its lines with a line break between two of them. */
+export function textOf(entry: TextEntry): string {
+	return entry.lines.join(LINE_BREAK);
+}
+
+/**
+ * What is wrong with the texts of the bank for this progression: a lesson it does not have, or a
+ * character (Enter included) not yet learned at that lesson. Empty when they are all right.
+ */
+export function validateTexts(bank: TextBank, progression: ProgressionDefinition): string[] {
+	const issues: string[] = [];
+	for (const entry of bank.texts) {
+		if (findLesson(progression, entry.lessonId) === undefined) {
+			issues.push(`${entry.id}: unknown lesson ${entry.lessonId}`);
+			continue;
+		}
+		const known = new Set(learnedChars(progression, entry.lessonId));
+		const unknown = [...new Set(toGraphemes(textOf(entry)).filter((char) => !known.has(char)))];
+		if (unknown.length > 0) {
+			const shown = unknown.map((char) => JSON.stringify(char)).join(' ');
+			issues.push(`${entry.id}: not learned at ${entry.lessonId}: ${shown}`);
+		}
+	}
+	return issues;
+}
+
+/** The texts of a lesson, in the order of the bank. */
+export function lessonTexts(bank: TextBank, lessonId: string): TextEntry[] {
+	return bank.texts.filter((entry) => entry.lessonId === lessonId);
+}
+
+/**
+ * The groups a text is typed in: whole lines, each but the last of the text ending with Enter, put
+ * together as long as a group holds at most `maxLength` graphemes; a longer line stays alone.
+ * Without `maxLength`, one line per group.
+ */
+export function textGroups(entry: TextEntry, maxLength = 0): string[] {
+	const groups: string[] = [];
+	let current = '';
+	entry.lines.forEach((line, index) => {
+		const piece = index < entry.lines.length - 1 ? `${line}${LINE_BREAK}` : line;
+		const joined = current + piece;
+		if (current !== '' && toGraphemes(joined).length > maxLength) {
+			groups.push(current);
+			current = piece;
+		} else {
+			current = joined;
+		}
+	});
+	if (current !== '') groups.push(current);
+	return groups;
 }

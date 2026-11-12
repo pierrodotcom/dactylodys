@@ -80,6 +80,7 @@
 		m.play_result_note_3
 	];
 	const SPACE = ' ';
+	const LINE_BREAK = '\n';
 	const photoDate = $derived(
 		new Intl.DateTimeFormat(getLocale(), { dateStyle: 'long' }).format(date)
 	);
@@ -97,6 +98,7 @@
 	});
 
 	function keyText(char: string): string {
+		if (char === LINE_BREAK) return keyName('Enter') ?? char;
 		return char === SPACE ? (keyName('Space') ?? char) : char.toLocaleUpperCase();
 	}
 

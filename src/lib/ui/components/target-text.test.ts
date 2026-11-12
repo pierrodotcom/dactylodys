@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { toTargetUnits } from './target-text';
+import { endsLine, toTargetUnits } from './target-text';
 
 const textsOf = (text: string): string[][] =>
 	toTargetUnits([...text]).map((unit) =>
@@ -35,11 +35,27 @@ describe('toTargetUnits', () => {
 		]);
 	});
 
-	it('leaves a sign glued to its word, an opening sign and a line break as they are', () => {
+	it('leaves a sign glued to its word and an opening sign as they are', () => {
 		expect(textsOf('Oh, non.')).toEqual([['Oh,'], [' '], ['non.']]);
 		expect(textsOf('dit « oui »')).toEqual([['dit'], [' '], ['«'], [' '], ['oui', ' ', '»']]);
-		expect(textsOf('a\n?')).toEqual([['a'], ['\n'], ['?']]);
 		expect(textsOf(' ?')).toEqual([[' '], ['?']]);
+	});
+
+	it('ends a line with its line break, after the last word of the line', () => {
+		expect(textsOf('Coucou !\nTu viens ?\n')).toEqual([
+			['Coucou', ' ', '!', '\n'],
+			['Tu'],
+			[' '],
+			['viens', ' ', '?', '\n']
+		]);
+		expect(textsOf('a \nb')).toEqual([['a'], [' ', '\n'], ['b']]);
+		expect(textsOf('\n\na')).toEqual([['\n'], ['\n'], ['a']]);
+	});
+
+	it('says which units close their line', () => {
+		const units = toTargetUnits([...'du pain\ndu lait']);
+		expect(units.map(endsLine)).toEqual([false, false, true, false, false, false]);
+		expect(units[2]?.map((group) => group.kind)).toEqual(['word', 'enter']);
 	});
 
 	it('marks spaces and words', () => {

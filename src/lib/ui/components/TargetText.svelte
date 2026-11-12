@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { spokenGrapheme } from './spoken';
-	import { toTargetUnits } from './target-text';
+	import { endsLine, toTargetUnits } from './target-text';
 
 	interface Props {
 		graphemes: readonly string[];
@@ -69,6 +69,10 @@
 					</span>
 				{/each}
 			</span>
+			{#if endsLine(unit)}
+				<!-- Enter: what follows is typed on the next line. -->
+				<span class="line-end" data-line-end></span>
+			{/if}
 		{/each}
 	</div>
 </div>
@@ -104,6 +108,21 @@
 	.space {
 		display: inline-flex;
 		margin-inline: var(--dd-typing-word-spacing-current);
+	}
+
+	/* A small symbol at the end of its line, quieter than the letters until it is the key to type. */
+	.enter {
+		display: inline-flex;
+		margin-inline-start: var(--dd-typing-word-spacing-current);
+	}
+
+	.enter > .cell[data-state='next'] {
+		color: var(--dd-color-text-secondary);
+	}
+
+	.line-end {
+		flex-basis: 100%;
+		block-size: 0;
 	}
 
 	.cell {

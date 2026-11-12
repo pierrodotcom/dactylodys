@@ -1,3 +1,4 @@
+import { LINE_BREAK } from '../progression/definition';
 import { isLessonPassed, recentCharStats } from '../progression/progress';
 import type { ProgressionDefinition, ProgressState } from '../progression/types';
 import type { HelpQuest, HelpQuestRecord, HelpQuestRules } from './types';
@@ -77,6 +78,8 @@ export function helpQuestFor(
 		for (const lesson of world.lessons) {
 			if (!isLessonPassed(progression.rules, progress, lesson.id)) continue;
 			for (const char of lesson.newChars) {
+				// Enter ends a line: the texts of its world practise it, a quest of suites could not.
+				if (char === LINE_BREAK) continue;
 				const { attempts, errors } = recentCharStats(progress, char);
 				if (attempts <= 0 || attempts < rules.minRecentAttempts) continue;
 				const rate = errors / attempts;

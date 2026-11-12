@@ -56,7 +56,13 @@ export const ITEM_ARTS: Readonly<Record<string, ItemArt>> = {
 	'train-cap': { slot: 'head', frame: [28, 1, 64, 36] },
 	'aviator-goggles': { slot: 'face', frame: [29, 32, 62, 28] },
 	'pilot-scarf': { slot: 'neck', frame: [34, 65, 82, 46] },
-	'roller-skates': { slot: 'feet', frame: [26, 90, 68, 34] }
+	'roller-skates': { slot: 'feet', frame: [26, 90, 68, 34] },
+	'picnic-basket': { slot: 'hand', frame: [-16, -4, 32, 31] },
+	'mail-bag': { slot: 'body', frame: [36, 57, 64, 54] },
+	'napkin-bib': { slot: 'neck', frame: [41, 63, 43, 37] },
+	'artist-beret': { slot: 'head', frame: [27, 0, 71, 33] },
+	'reading-glasses': { slot: 'face', frame: [28, 44, 64, 15] },
+	'party-balloons': { slot: 'back', frame: [83, -8, 37, 75], pictureLayers: ['back'] }
 };
 
 /** The worn items by slot, in drawing order: the first one of a slot wins, unknown drawings are left out. */
@@ -114,14 +120,18 @@ export const ARM_POSES: Readonly<Record<ArmPose, { arms: readonly Ellipse[]; gri
 export const TRICK_ARMS: Readonly<Record<string, ArmPose>> = {
 	juggle: 'up',
 	handstand: 'ground',
-	cartwheel: 'up'
+	cartwheel: 'up',
+	wave: 'up'
 };
 
 /** Every trick the companion can play (`skill` `artId`). */
-export const TRICKS = ['roar', 'juggle', 'handstand', 'float', 'cartwheel'] as const;
+export const TRICKS = ['roar', 'juggle', 'handstand', 'float', 'cartwheel', 'wave'] as const;
 
 export type TrophyArt =
-	| { readonly kind: 'medal'; readonly world: 'dinosaurs' | 'kitchen' | 'zoo' | 'stars' | 'racing' }
+	| {
+			readonly kind: 'medal';
+			readonly world: 'dinosaurs' | 'kitchen' | 'zoo' | 'stars' | 'racing' | 'post';
+	  }
 	| {
 			readonly kind: 'key';
 			readonly sign: 'top-row' | 'home-row' | 'bottom-row' | 'accents' | 'punctuation';
@@ -134,6 +144,7 @@ export const TROPHY_ARTS: Readonly<Record<string, TrophyArt>> = {
 	'medal-zoo': { kind: 'medal', world: 'zoo' },
 	'medal-stars': { kind: 'medal', world: 'stars' },
 	'medal-racing': { kind: 'medal', world: 'racing' },
+	'medal-post': { kind: 'medal', world: 'post' },
 	'keys-home-row': { kind: 'key', sign: 'home-row' },
 	'keys-top-row': { kind: 'key', sign: 'top-row' },
 	'keys-bottom-row': { kind: 'key', sign: 'bottom-row' },
