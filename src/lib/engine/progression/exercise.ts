@@ -405,6 +405,16 @@ export function generateExercise(
 	const groups: string[] = [];
 	const asked = new Map<string, number>();
 	let total = 0;
+	const record = (group: string) => {
+		groups.push(group);
+		const graphemes = toGraphemes(group);
+		total += graphemes.length;
+		for (const grapheme of graphemes) asked.set(grapheme, (asked.get(grapheme) ?? 0) + 1);
+	};
+
+	// A warm-up written by hand opens the exercise as it is: it already asks every new character
+	// enough (checked by the parser), so no suite is generated for them.
+	for (const group of lesson.warmUp ?? []) record(group);
 
 	while (groups.length < lesson.groupCount) {
 		// Warm-up: suites that hold the new characters open the exercise until each was asked enough.
@@ -442,10 +452,7 @@ export function generateExercise(
 
 		accepted.reserve?.used.add(accepted.text);
 		if (accepted.reserve === words) owesWord = false;
-		groups.push(accepted.text);
-		const graphemes = toGraphemes(accepted.text);
-		total += graphemes.length;
-		for (const grapheme of graphemes) asked.set(grapheme, (asked.get(grapheme) ?? 0) + 1);
+		record(accepted.text);
 	}
 	return { lessonId, groups };
 }

@@ -365,6 +365,47 @@ function checkGeneratable(
 	checkMinimumFits(lesson, typable, newCharMinCount, path);
 }
 
+/**
+ * A warm-up written by hand: groups typed as they are, each one like a word of the lesson and no
+ * longer than its groups, two in a row never the same, asking each new character at least
+ * `newCharMinCount` times in all.
+ */
+function parseWarmUp(
+	value: unknown,
+	newChars: readonly string[],
+	known: ReadonlySet<string>,
+	[minLength, maxLength]: readonly [number, number],
+	newCharMinCount: number,
+	path: string
+): string[] {
+	if (newChars.length === 0) fail(path, 'only a lesson with new characters has a warm-up');
+	const raw = expectArray(value, path);
+	if (raw.length === 0) fail(path, 'expected at least one group');
+	const groups: string[] = [];
+	raw.forEach((item, i) => {
+		const group = parseWord(item, known, `${path}[${i}]`);
+		const length = toGraphemes(group).length;
+		if (length < minLength || length > maxLength) {
+			fail(
+				`${path}[${i}]`,
+				`expected ${minLength} to ${maxLength} characters, like a group of the lesson`
+			);
+		}
+		if (group === groups.at(-1)) fail(`${path}[${i}]`, 'the same group twice in a row');
+		groups.push(group);
+	});
+	const counts = new Map<string, number>();
+	for (const group of groups) {
+		for (const char of toGraphemes(group)) counts.set(char, (counts.get(char) ?? 0) + 1);
+	}
+	for (const char of newChars) {
+		if ((counts.get(char) ?? 0) < newCharMinCount) {
+			fail(path, `expected "${char}" at least ${newCharMinCount} times (rules.newCharMinCount)`);
+		}
+	}
+	return groups;
+}
+
 function parseLesson(
 	value: unknown,
 	introduced: Introduced,
@@ -386,7 +427,8 @@ function parseLesson(
 			'unlocks',
 			'groupCount',
 			'targetLength',
-			'groupLength'
+			'groupLength',
+			'warmUp'
 		],
 		path
 	);
@@ -428,6 +470,18 @@ function parseLesson(
 		words.push(word);
 	});
 
+	const warmUp =
+		record['warmUp'] === undefined
+			? undefined
+			: parseWarmUp(
+					record['warmUp'],
+					newChars,
+					known,
+					[min, max],
+					rules.newCharMinCount,
+					`${path}.warmUp`
+				);
+
 	const lesson: LessonDefinition = {
 		id,
 		title,
@@ -438,14 +492,18 @@ function parseLesson(
 		unlocks,
 		groupCount,
 		targetLength,
-		groupLength: [min, max]
+		groupLength: [min, max],
+		...(warmUp === undefined ? {} : { warmUp })
 	};
 	checkGeneratable(lesson, known, rules.newCharMinCount, path);
-	const warmUp = newChars.length === 0 ? 0 : rules.newCharMinCount;
-	if (rules.storyPhraseEvery !== undefined && warmUp >= groupCount) {
+	if (warmUp !== undefined && warmUp.length > groupCount) {
+		fail(`${path}.warmUp`, `expected at most ${groupCount} groups (groupCount)`);
+	}
+	const warmUpGroups = newChars.length === 0 ? 0 : (warmUp?.length ?? rules.newCharMinCount);
+	if (rules.storyPhraseEvery !== undefined && warmUpGroups >= groupCount) {
 		fail(
 			`${path}.groupCount`,
-			`expected more than ${warmUp} groups to leave room for a story phrase after the warm-up (rules.storyPhraseEvery)`
+			`expected more than ${warmUpGroups} groups to leave room for a story phrase after the warm-up (rules.storyPhraseEvery)`
 		);
 	}
 	return lesson;
