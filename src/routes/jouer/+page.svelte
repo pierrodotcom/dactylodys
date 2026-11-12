@@ -34,6 +34,7 @@
 	} from '$lib/engine/progression/types';
 	import type { GameDefinition, GameGuide, GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
+	import type { KeyCode } from '$lib/keyboard/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { applySettings } from '$lib/state/apply-settings';
@@ -88,7 +89,7 @@
 	} from './free-practice';
 	import { gameForLesson, gameOptions, selectedGame } from './game-choice';
 	import HelpThanks from './HelpThanks.svelte';
-	import { isMotionReduced, toGameSettings } from './game-settings';
+	import { fadedKeysFor, isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
 	import { findGame } from '$lib/games/registry';
 	import KeyboardCheck from './KeyboardCheck.svelte';
@@ -515,6 +516,25 @@
 		return { ...guideFor(current, focus ?? ''), freshChars: [] };
 	}
 
+	/** The keys whose letter fades in a game of this lesson, for this child (ADR-057). */
+	function fadedFor(current: Profile, lessonId: string): readonly KeyCode[] {
+		if (!progression || !assets) return [];
+		return fadedKeysFor(
+			current.settings,
+			progression,
+			current.progress,
+			lessonId,
+			assets.charIndex
+		);
+	}
+
+	/** The keys that fade in the free practice: those of the lesson the map proposes. */
+	function freeFadedFor(current: Profile): readonly KeyCode[] {
+		if (!progression) return [];
+		const focus = focusLessonId(progression, current.progress, current.openedWorldIds);
+		return focus === null ? [] : fadedFor(current, focus);
+	}
+
 	/** What the hand on the keyboard shows in this lesson, for this child. */
 	function guideFor(current: Profile, lessonId: string): GameGuide {
 		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
@@ -734,7 +754,8 @@
 	current: Profile,
 	guide: GameGuide,
 	oncomplete: (outcome: GameOutcome) => void,
-	suspended: boolean
+	suspended: boolean,
+	faded: readonly KeyCode[]
 )}
 	{#if exercise && ActiveGame && assets && progression}
 		<ActiveGame
@@ -753,7 +774,8 @@
 					SCENE_SCHEDULE,
 					activeGameId,
 					passedLessonCount(progression, current.progress)
-				)
+				),
+				faded
 			)}
 			{sounds}
 			playCount={Object.hasOwn(current.gamePlays, activeGameId)
@@ -965,16 +987,29 @@
 					profile,
 					guideFor(profile, lessonId),
 					(outcome) => finishGame(lessonId, outcome),
-					settingsOver
+					settingsOver,
+					fadedFor(profile, lessonId)
 				)}
 			</div>
 		{:else if shown.name === 'help-game' && helpRun}
 			<div hidden={settingsOver}>
-				{@render playing(profile, guideFor(profile, helpRun.lessonId), finishHelp, settingsOver)}
+				{@render playing(
+					profile,
+					guideFor(profile, helpRun.lessonId),
+					finishHelp,
+					settingsOver,
+					fadedFor(profile, helpRun.lessonId)
+				)}
 			</div>
 		{:else if shown.name === 'free-game'}
 			<div hidden={settingsOver}>
-				{@render playing(profile, freeGuideFor(profile), finishFree, settingsOver)}
+				{@render playing(
+					profile,
+					freeGuideFor(profile),
+					finishFree,
+					settingsOver,
+					freeFadedFor(profile)
+				)}
 			</div>
 		{/if}
 	{/if}

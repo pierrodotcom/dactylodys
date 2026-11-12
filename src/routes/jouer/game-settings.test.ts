@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { ProgressState } from '$lib/engine/progression/types';
+import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
 import { defaultSettings, updateSettings, createProfile } from '$lib/state/profile';
 import type { GameGuide } from '$lib/games/types';
-import { isMotionReduced, toGameSettings } from './game-settings';
+import azertyPc from '../../../layouts/fr-fr-azerty-pc.json';
+import { progressionFor } from './content';
+import { fadedKeysFor, isMotionReduced, toGameSettings } from './game-settings';
 
 const base = defaultSettings('pc');
 const NO_GUIDE: GameGuide = { mode: 'none', freshChars: [], hesitationMs: 0 };
@@ -38,6 +42,11 @@ describe('toGameSettings', () => {
 		}
 	);
 
+	it('fades no key unless the route says which', () => {
+		expect(toGameSettings(base, false, NO_GUIDE).fadedKeys).toEqual([]);
+		expect(toGameSettings(base, false, NO_GUIDE, 0, [], ['KeyF']).fadedKeys).toEqual(['KeyF']);
+	});
+
 	it('passes the guide of the lesson through', () => {
 		const guide: GameGuide = { mode: 'new-keys', freshChars: ['f', 'j'], hesitationMs: 3000 };
 		expect(toGameSettings(base, false, guide).guide).toBe(guide);
@@ -61,5 +70,48 @@ describe('toGameSettings', () => {
 		);
 
 		expect(toGameSettings(profile.settings, false, NO_GUIDE).reducedMotion).toBe(true);
+	});
+});
+
+describe('fadedKeysFor', () => {
+	const progression = progressionFor('fr-fr-azerty-pc');
+	if (progression === undefined) throw new Error('no progression for AZERTY PC');
+	const charIndex = buildCharIndex(parseLayout(azertyPc));
+	const [first, , third] = progression.worlds[0]?.lessons ?? [];
+	const known = { attempts: 30, errors: 0, latencyMs: null };
+	const progress: ProgressState = {
+		lessons: {},
+		chars: Object.fromEntries(
+			['f', 'j', ' ', 'd'].map((char) => [char, { attempts: 30, errors: 0, recent: [known] }])
+		)
+	};
+
+	it('fades the keys whose characters learned so far are acquired', () => {
+		expect(fadedKeysFor(base, progression, progress, first?.id ?? '', charIndex)).toEqual([
+			'KeyF',
+			'KeyJ'
+		]);
+		// `k` comes with `d` and is not acquired yet: its key stays written.
+		expect(fadedKeysFor(base, progression, progress, third?.id ?? '', charIndex)).toEqual([
+			'KeyF',
+			'KeyJ',
+			'KeyD'
+		]);
+	});
+
+	it('fades nothing once the adult turned it off', () => {
+		const settings = { ...base, keyboardFade: false };
+		expect(fadedKeysFor(settings, progression, progress, first?.id ?? '', charIndex)).toEqual([]);
+	});
+
+	it('fades nothing for a lesson the progression does not hold', () => {
+		expect(fadedKeysFor(base, progression, progress, 'fr.lesson.nowhere', charIndex)).toEqual([]);
+	});
+
+	it('fades nothing when the progression has no rule for it', () => {
+		const rules = { ...progression.rules };
+		delete (rules as { keyboardFade?: unknown }).keyboardFade;
+		const without = { ...progression, rules };
+		expect(fadedKeysFor(base, without, progress, first?.id ?? '', charIndex)).toEqual([]);
 	});
 });

@@ -30,12 +30,19 @@
 	let showHand = $state(true);
 	let showScenes = $state(false);
 	let backspace = $state(false);
+	let fadeHomeRow = $state(false);
 	let step = $state<Step>('choose');
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let outcome = $state.raw<GameOutcome | null>(null);
 	/** Plays finished on this page, by game: like the play route, a replayed game goes on. */
 	let plays = $state<Record<string, number>>({});
 
+	// The keys under the fingers at rest, as if the child knew them well; the thumbs rest on Space.
+	const homeRow = $derived(
+		Object.entries(data.assets.fingering.homeKeys).flatMap(([finger, code]) =>
+			finger.endsWith('thumb') || code === undefined ? [] : [code]
+		)
+	);
 	const sounds = createSoundPlayer({ isEnabled: () => false });
 	const settings = $derived({
 		reducedMotion,
@@ -47,7 +54,8 @@
 			hesitationMs: 0
 		},
 		lookReminderEvery: LOOK_REMINDER_EVERY,
-		scenes: showScenes ? (SCENE_SCHEDULE.games[gameId] ?? []) : []
+		scenes: showScenes ? (SCENE_SCHEDULE.games[gameId] ?? []) : [],
+		fadedKeys: fadeHomeRow ? homeRow : []
 	});
 
 	onMount(() => {
@@ -135,6 +143,10 @@
 				<label>
 					<input type="checkbox" bind:checked={backspace} />
 					<span>{m.dev_games_backspace_label()}</span>
+				</label>
+				<label>
+					<input type="checkbox" bind:checked={fadeHomeRow} />
+					<span>{m.dev_games_faded_label()}</span>
 				</label>
 			</div>
 

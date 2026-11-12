@@ -37,6 +37,12 @@
 		 * solid or dashed, so that the colour is never the only sign.
 		 */
 		mastery?: ReadonlyMap<KeyCode, 'acquired' | 'fragile' | 'learning'>;
+		/**
+		 * Keys the child knows well: their letter fades out, softly, when they first show; the key,
+		 * its home mark, its colour and its lighting stay (ADR-057). A key taken out of the list
+		 * shows its letter again at once.
+		 */
+		faded?: readonly KeyCode[];
 	}
 
 	let {
@@ -50,7 +56,8 @@
 		hands = null,
 		still = false,
 		noteCode = null,
-		mastery
+		mastery,
+		faded = []
 	}: Props = $props();
 
 	const NOTE_PATHS = ['M9 3V15', 'M9 3L17 5V9L9 7'] as const;
@@ -81,6 +88,7 @@
 	};
 
 	const markedKeys = $derived(new Set(marked));
+	const fadedKeys = $derived(new Set(faded));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
 	const modifiers = $derived(new Set(target === null ? [] : modifierCodes(target, fingering)));
 	const rows = $derived(
@@ -117,6 +125,7 @@
 						data-modifier={modifiers.has(key.code) || undefined}
 						data-wrong={wrongCode === key.code || undefined}
 						data-mastery={mastery?.get(key.code)}
+						data-faded={fadedKeys.has(key.code) || undefined}
 					>
 						<span class="label" data-long={key.isLong || undefined}>{key.label}</span>
 						{#if homeKeys.has(key.code)}
@@ -278,6 +287,26 @@
 			opacity: 0;
 			translate: 0 calc(var(--dd-size-key-unit) * -1);
 			rotate: 15deg;
+		}
+	}
+
+	/* The letter of a key the child knows well fades once, then stays out of sight. */
+	.key[data-faded] .label {
+		animation-name: label-fades;
+		animation-duration: var(--dd-duration-key-fade);
+		animation-delay: var(--dd-duration-key-fade-delay);
+		animation-timing-function: var(--dd-easing-standard);
+		animation-fill-mode: both;
+	}
+
+	@keyframes label-fades {
+		0% {
+			opacity: 100%;
+		}
+
+		100% {
+			opacity: 0;
+			visibility: hidden;
 		}
 	}
 

@@ -4,6 +4,7 @@ import type {
 	HandGuideRules,
 	LessonDefinition,
 	LessonUnlock,
+	MasteryRules,
 	ProgressionDefinition,
 	ProgressionRules,
 	WorldDefinition
@@ -133,7 +134,8 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'lengthSlack',
 			'handGuide',
 			'starAlmostMargin',
-			'storyPhraseEvery'
+			'storyPhraseEvery',
+			'keyboardFade'
 		],
 		path
 	);
@@ -179,6 +181,10 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	if (storyPhraseEvery !== undefined && storyPhraseEvery < 1) {
 		fail(`${path}.storyPhraseEvery`, 'expected an integer of at least 1');
 	}
+	const keyboardFade =
+		record['keyboardFade'] === undefined
+			? undefined
+			: parseMasteryRules(record['keyboardFade'], `${path}.keyboardFade`);
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -190,7 +196,44 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		...(lengthSlack === undefined ? {} : { lengthSlack }),
 		...(handGuide === undefined ? {} : { handGuide }),
 		...(starAlmostMargin === undefined ? {} : { starAlmostMargin }),
-		...(storyPhraseEvery === undefined ? {} : { storyPhraseEvery })
+		...(storyPhraseEvery === undefined ? {} : { storyPhraseEvery }),
+		...(keyboardFade === undefined ? {} : { keyboardFade })
+	};
+}
+
+function expectRate(value: unknown, path: string): number {
+	const rate = expectNumber(value, path);
+	if (rate < 0 || rate > 1) fail(path, 'expected a number between 0 and 1');
+	return rate;
+}
+
+function expectAtLeastOne(value: unknown, path: string): number {
+	const count = expectInteger(value, path);
+	if (count < 1) fail(path, 'expected an integer of at least 1');
+	return count;
+}
+
+function parseMasteryRules(value: unknown, path: string): MasteryRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(
+		record,
+		['acquiredMinAttempts', 'acquiredMaxErrorRate', 'fragileMinAttempts', 'fragileMinErrorRate'],
+		path
+	);
+	return {
+		acquiredMinAttempts: expectAtLeastOne(
+			record['acquiredMinAttempts'],
+			`${path}.acquiredMinAttempts`
+		),
+		acquiredMaxErrorRate: expectRate(
+			record['acquiredMaxErrorRate'],
+			`${path}.acquiredMaxErrorRate`
+		),
+		fragileMinAttempts: expectAtLeastOne(
+			record['fragileMinAttempts'],
+			`${path}.fragileMinAttempts`
+		),
+		fragileMinErrorRate: expectRate(record['fragileMinErrorRate'], `${path}.fragileMinErrorRate`)
 	};
 }
 

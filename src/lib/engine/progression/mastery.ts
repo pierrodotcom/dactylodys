@@ -1,5 +1,7 @@
 import { recentCharStats } from './progress';
-import type { ProgressState } from './types';
+import type { MasteryRules, ProgressState } from './types';
+
+export type { MasteryRules };
 
 /**
  * Where a character stands for an adult reading the progress. `acquired`: typed often enough
@@ -7,18 +9,6 @@ import type { ProgressState } from './types';
  * `new`: never typed.
  */
 export type CharMastery = 'acquired' | 'fragile' | 'learning' | 'new';
-
-/** Thresholds of `charMastery`: data, never constants in the code. */
-export interface MasteryRules {
-	/** Recent keystrokes of the character, at least, before it can count as acquired. */
-	readonly acquiredMinAttempts: number;
-	/** Highest recent error rate (0 to 1) of an acquired character. */
-	readonly acquiredMaxErrorRate: number;
-	/** Recent keystrokes of the character, at least, before it can count as fragile. */
-	readonly fragileMinAttempts: number;
-	/** Recent error rate (0 to 1) above which a character is fragile. */
-	readonly fragileMinErrorRate: number;
-}
 
 /**
  * Read, like the rewards that tame a key (`chars-mastered`), on the recent results of the

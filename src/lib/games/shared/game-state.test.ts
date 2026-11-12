@@ -141,6 +141,26 @@ describe('a wrong key', () => {
 	});
 });
 
+describe('the characters missed', () => {
+	it('starts with none', () => {
+		expect(createGame(['fj'], 'retry').missedChars).toEqual([]);
+	});
+
+	it('keeps the character asked at each mistake, once, until the end of the game', () => {
+		let state = createGame(['fj', 'jf'], 'retry');
+		state = play(state, [char('d'), char('k'), char('f'), char('d'), char('j')]);
+		expect(state.missedChars).toEqual(['f', 'j']);
+		state = play(state, [{ type: 'advance' }, char('k')]);
+		expect(state.groupIndex).toBe(1);
+		expect(state.missedChars).toEqual(['f', 'j']);
+	});
+
+	it('keeps the character asked, not the one typed, with the backspace policy too', () => {
+		const state = play(createGame(['fj'], 'backspace'), [char('f'), char('d'), char('k')]);
+		expect(state.missedChars).toEqual(['j']);
+	});
+});
+
 describe('keys that are not characters', () => {
 	it('ignores Enter, a habit at the end of a word, instead of calling it a mistake', () => {
 		const state = createGame(['fj'], 'retry');

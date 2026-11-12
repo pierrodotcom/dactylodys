@@ -24,6 +24,7 @@
 	import { isGuided } from '$lib/engine/progression/guide';
 	import { isLookReminderDue, needsCapsLockHelp } from './help';
 	import { targetKeyPress } from './target';
+	import { fadedKeysShown } from './keyboard-fade';
 	import { ghostShare, raceWinner } from '$lib/engine/ghost/race';
 	import GhostTrack from './GhostTrack.svelte';
 	import {
@@ -145,6 +146,10 @@
 		if (done === undefined || done.errorCount > 0) return null;
 		return targetKeyPress(charIndex, view.group[view.group.length - 1])?.code ?? null;
 	});
+	// A key the child knows well loses its letter; a mistake on it writes it again until the end.
+	// Decided once for the game: the results saved at its end change nothing on screen.
+	const fadedAtStart = untrack(() => settings.fadedKeys ?? []);
+	const faded = $derived(fadedKeysShown(fadedAtStart, charIndex, game.missedChars));
 	const lookReminder = $derived(
 		phase === 'celebrating' &&
 			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
@@ -393,6 +398,7 @@
 				{hands}
 				still={settings.reducedMotion}
 				{noteCode}
+				{faded}
 			/>
 		</div>
 	{/if}

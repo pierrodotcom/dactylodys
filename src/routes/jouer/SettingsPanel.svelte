@@ -73,6 +73,10 @@
 		{ value: 'backspace', label: m.settings_backspace_on() },
 		{ value: 'retry', label: m.settings_backspace_off() }
 	];
+	const FADE_OPTIONS = [
+		{ value: YES, label: m.settings_keyboard_fade_on() },
+		{ value: NO, label: m.settings_keyboard_fade_off() }
+	];
 	const LAYOUT_OPTIONS = LAYOUT_IDS.map((id) => ({ value: id, label: LAYOUT_LABELS[id]() }));
 	const sample = toGraphemes(m.settings_sample_text());
 
@@ -166,6 +170,16 @@
 					onchange={(value) => onchange({ errorPolicy: value as ErrorPolicy })}
 				/>
 				<p class="hint">{m.settings_backspace_hint()}</p>
+			</div>
+			<div class="adult-only" data-adult-setting="keyboard-fade">
+				<ChoiceGroup
+					legend={m.settings_keyboard_fade_label()}
+					name="setting-keyboard-fade"
+					options={FADE_OPTIONS}
+					value={flag(settings.keyboardFade)}
+					onchange={(value) => onchange({ keyboardFade: value === YES })}
+				/>
+				<p class="hint">{m.settings_keyboard_fade_hint()}</p>
 			</div>
 		{/if}
 	</div>

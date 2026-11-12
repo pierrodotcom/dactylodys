@@ -8,6 +8,7 @@ import type {
 	CharIndex,
 	FingeringProfile,
 	KeyboardGeometryDefinition,
+	KeyCode,
 	LayoutDefinition
 } from '../keyboard/types';
 
@@ -30,6 +31,11 @@ export interface GameSettings {
 	readonly lookReminderEvery: number;
 	/** The surprise scenes of this game the child has unlocked, in order (ADR-032). */
 	readonly scenes: readonly string[];
+	/**
+	 * The keys the child knows well, decided by the route (ADR-057): their letter fades on the
+	 * keyboard drawn, and comes back for the rest of the game after a mistake on them. Absent: none.
+	 */
+	readonly fadedKeys?: readonly KeyCode[];
 }
 
 export interface GameOutcome {

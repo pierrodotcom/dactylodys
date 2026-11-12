@@ -45,6 +45,23 @@ export interface ProgressionRules {
 	 * multiple of it, so the first exercise always does. Absent: story phrases are never asked.
 	 */
 	readonly storyPhraseEvery?: number;
+	/**
+	 * When a key of the keyboard drawn in the games loses its letter: once every character the
+	 * progression has brought on it so far is acquired (`charMastery`). Absent: no key fades.
+	 */
+	readonly keyboardFade?: MasteryRules;
+}
+
+/** Thresholds of `charMastery`: data, never constants in the code. */
+export interface MasteryRules {
+	/** Recent keystrokes of the character, at least, before it can count as acquired. */
+	readonly acquiredMinAttempts: number;
+	/** Highest recent error rate (0 to 1) of an acquired character. */
+	readonly acquiredMaxErrorRate: number;
+	/** Recent keystrokes of the character, at least, before it can count as fragile. */
+	readonly fragileMinAttempts: number;
+	/** Recent error rate (0 to 1) above which a character is fragile. */
+	readonly fragileMinErrorRate: number;
 }
 
 /**

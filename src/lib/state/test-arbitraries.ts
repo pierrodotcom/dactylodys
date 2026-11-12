@@ -96,7 +96,8 @@ export const settingsPatchArb: fc.Arbitrary<Partial<Settings>> = fc.record(
 		textSpacing: fc.constantFrom('normal', 'wide', 'wider'),
 		showKeyboard: fc.boolean(),
 		handGuide: fc.constantFrom('auto', 'always', 'off'),
-		errorPolicy: fc.constantFrom('retry', 'backspace')
+		errorPolicy: fc.constantFrom('retry', 'backspace'),
+		keyboardFade: fc.boolean()
 	},
 	{ requiredKeys: [] }
 );

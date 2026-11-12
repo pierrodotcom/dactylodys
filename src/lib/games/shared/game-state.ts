@@ -42,6 +42,11 @@ export interface GameState {
 	/** Physical key of the last mistake, shown on the keyboard until the next good key. */
 	readonly wrongCode: KeyCode | null;
 	readonly mood: GameMood;
+	/**
+	 * The characters the child was asked when a mistake was made, each once, in order, since the
+	 * start of the game: their keys are written again on the keyboard until the end (ADR-057).
+	 */
+	readonly missedChars: readonly string[];
 }
 
 export type GameAction =
@@ -86,7 +91,8 @@ export function createGame(
 		paused: false,
 		errorIndex: null,
 		wrongCode: null,
-		mood: 'idle'
+		mood: 'idle',
+		missedChars: []
 	};
 }
 
@@ -139,7 +145,10 @@ function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
 				...next,
 				errorIndex: step.state.position,
 				wrongCode: keystroke.code,
-				mood: 'oops'
+				mood: 'oops',
+				missedChars: next.missedChars.includes(event.expected)
+					? next.missedChars
+					: [...next.missedChars, event.expected]
 			};
 			sounds.push('error');
 		} else if (event.type === 'correct') {
