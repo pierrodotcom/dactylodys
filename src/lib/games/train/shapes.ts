@@ -618,12 +618,20 @@ function tree(x: number, y: number, size: number): { trunk: string; crown: Form 
 	};
 }
 
+/** Where the trees of the far hills stand, and how tall they are. */
+export const TREE_SPOTS = [
+	{ x: 150, y: 137, size: 18 },
+	{ x: 298, y: 113, size: 21 },
+	{ x: 316, y: 110, size: 15 },
+	{ x: 470, y: 145, size: 17 }
+] as const;
+
 /** The landscape behind the rails, in scene units. */
 export const LANDSCAPE = {
 	farHills: form(FAR_HILLS, shadeOf(FAR_HILLS, 10, 5), []),
 	nearHills: form(NEAR_HILLS, shadeOf(NEAR_HILLS, 12, 5), []),
 	/** Trees on the far hills, above the top of the train. */
-	trees: [tree(150, 137, 18), tree(298, 113, 21), tree(316, 110, 15), tree(470, 145, 17)],
+	trees: TREE_SPOTS.map((spot) => tree(spot.x, spot.y, spot.size)),
 	sun: form(SUN, shadeOf(SUN, 3), [ovalPath(479, 35, 3, 2)]),
 	sunHalo: ovalPath(484, 40, 21, 21),
 	clouds: [

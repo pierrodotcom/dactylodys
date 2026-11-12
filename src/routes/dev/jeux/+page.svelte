@@ -82,6 +82,12 @@
 	function backToChoice() {
 		step = 'choose';
 	}
+
+	/** Each play shows the next decor of the game: set the count to see one without replaying. */
+	function setPlays(event: Event & { currentTarget: HTMLInputElement }) {
+		const value = event.currentTarget.valueAsNumber;
+		plays[gameId] = Number.isSafeInteger(value) && value > 0 ? value : 0;
+	}
 </script>
 
 <svelte:head>
@@ -154,6 +160,18 @@
 					<input type="checkbox" bind:checked={fadeHomeRow} />
 					<span>{m.dev_games_faded_label()}</span>
 				</label>
+				<label>
+					<span>{m.dev_games_plays_label()}</span>
+					<input
+						class="count"
+						type="number"
+						min="0"
+						step="1"
+						value={plays[gameId] ?? 0}
+						oninput={setPlays}
+						data-dev-plays
+					/>
+				</label>
 			</div>
 
 			<div class="actions">
@@ -224,6 +242,19 @@
 	.controls input {
 		inline-size: var(--dd-font-size-lg);
 		block-size: var(--dd-font-size-lg);
+	}
+
+	.controls .count {
+		inline-size: calc(var(--dd-font-size-lg) * 4);
+		block-size: var(--dd-size-touch-target-min);
+		padding-inline: var(--dd-space-sm);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-border-strong);
+		border-radius: var(--dd-radius-md);
+		background-color: var(--dd-color-surface-raised);
+		color: var(--dd-color-text-primary);
+		font-size: var(--dd-font-size-lg);
 	}
 
 	.actions {

@@ -1419,6 +1419,219 @@
 			"cone": {
 				"$value": "{color.orange.500}"
 			}
+		},
+		"decor": {
+			"sunset": {
+				"sky-high": {
+					"$value": "{color.plum.50}"
+				},
+				"sky-low": {
+					"$value": "{color.tomato.200}"
+				},
+				"sun": {
+					"$value": "{color.orange.300}"
+				},
+				"halo": {
+					"$value": "{color.lemon.50}"
+				},
+				"cloud": {
+					"$value": "{color.pink.300}"
+				},
+				"hill": {
+					"$value": "{color.plum.300}"
+				}
+			},
+			"autumn": {
+				"hill-far": {
+					"$value": "{color.sunflower.300}"
+				},
+				"hill-near": {
+					"$value": "{color.lemon.500}"
+				},
+				"grass": {
+					"$value": "{color.gold.500}"
+				},
+				"leaf": {
+					"$value": "{color.orange.500}"
+				},
+				"leaf-red": {
+					"$value": "{color.tomato.300}"
+				},
+				"leaf-gold": {
+					"$value": "{color.lemon.300}"
+				}
+			},
+			"winter": {
+				"sky-high": {
+					"$value": "{color.azure.300}"
+				},
+				"sky-low": {
+					"$value": "{color.ice.100}"
+				},
+				"sun": {
+					"$value": "{color.lemon.50}"
+				},
+				"snow": {
+					"$value": "{color.cream.50}"
+				},
+				"snow-far": {
+					"$value": "{color.azure.50}"
+				},
+				"evergreen": {
+					"$value": "{color.sage.400}"
+				},
+				"flake": {
+					"$value": "{color.cream.50}"
+				},
+				"carrot": {
+					"$value": "{color.orange.500}"
+				},
+				"scarf": {
+					"$value": "{color.tomato.500}"
+				},
+				"coal": {
+					"$value": "{color.brown.900}"
+				},
+				"wall": {
+					"$value": "{color.azure.50}"
+				},
+				"frost": {
+					"$value": "{color.cream.50}"
+				},
+				"mug": {
+					"$value": "{color.tomato.500}"
+				},
+				"cocoa": {
+					"$value": "{color.leather.400}"
+				},
+				"steam": {
+					"$value": "{color.slate.300}"
+				},
+				"paper": {
+					"$value": "{color.cream.50}"
+				}
+			},
+			"evening": {
+				"wall": {
+					"$value": "{color.orange.50}"
+				},
+				"lamp": {
+					"$value": "{color.lagoon.500}"
+				},
+				"bulb": {
+					"$value": "{color.lemon.50}"
+				},
+				"glow": {
+					"$value": "{color.lemon.300}"
+				}
+			},
+			"meadow": {
+				"grass": {
+					"$value": "{color.green.300}"
+				},
+				"blade": {
+					"$value": "{color.sage.400}"
+				},
+				"petal": {
+					"$value": "{color.cream.50}"
+				},
+				"heart": {
+					"$value": "{color.lemon.300}"
+				},
+				"ladybird": {
+					"$value": "{color.tomato.500}"
+				}
+			},
+			"beach": {
+				"sand": {
+					"$value": "{color.sunflower.300}"
+				},
+				"ripple": {
+					"$value": "{color.lemon.500}"
+				},
+				"sea": {
+					"$value": "{color.lagoon.300}"
+				},
+				"wet": {
+					"$value": "{color.amber.300}"
+				},
+				"foam": {
+					"$value": "{color.cream.50}"
+				},
+				"pebble": {
+					"$value": "{color.cream.300}"
+				},
+				"shell": {
+					"$value": "{color.pink.200}"
+				},
+				"starfish": {
+					"$value": "{color.orange.300}"
+				},
+				"sky": {
+					"$value": "{color.azure.300}"
+				}
+			},
+			"space": {
+				"rose-sky": {
+					"$value": "{color.plum.900}"
+				},
+				"rose-nebula-a": {
+					"$value": "{color.pink.500}"
+				},
+				"rose-nebula-b": {
+					"$value": "{color.orange.600}"
+				},
+				"galaxy": {
+					"$value": "{color.pink.200}"
+				},
+				"galaxy-core": {
+					"$value": "{color.lemon.50}"
+				},
+				"milky-sky": {
+					"$value": "{color.teal.900}"
+				},
+				"milky-nebula-a": {
+					"$value": "{color.lagoon.500}"
+				},
+				"milky-nebula-b": {
+					"$value": "{color.plum.500}"
+				},
+				"milky-way": {
+					"$value": "{color.ice.100}"
+				}
+			},
+			"day": {
+				"sun": {
+					"$value": "{color.sunflower.300}"
+				},
+				"cloud": {
+					"$value": "{color.cream.50}"
+				}
+			},
+			"spring": {
+				"sky": {
+					"$value": "{color.azure.50}"
+				},
+				"hill": {
+					"$value": "{color.mint.200}"
+				}
+			},
+			"night": {
+				"sky": {
+					"$value": "{color.navy.800}"
+				},
+				"moon": {
+					"$value": "{color.cream.200}"
+				}
+			},
+			"nest": {
+				"straw": {
+					"$value": "{color.sunflower.300}"
+				},
+				"twig": {
+					"$value": "{color.leather.400}"
+				}
+			}
 		}
 	},
 	"typing": {
@@ -1939,6 +2152,24 @@
 		},
 		"tower-hole": {
 			"$value": 0.55
+		},
+		"decor-halo": {
+			"$value": 0.6
+		},
+		"decor-glow": {
+			"$value": 0.4
+		},
+		"decor-frost": {
+			"$value": 0.75
+		},
+		"decor-galaxy": {
+			"$value": 0.55
+		},
+		"decor-band": {
+			"$value": 0.24
+		},
+		"decor-dust": {
+			"$value": 0.75
 		}
 	},
 	"duration": {

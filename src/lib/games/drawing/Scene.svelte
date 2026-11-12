@@ -34,10 +34,23 @@
 		TAPES
 	} from './scenery';
 	import type { DrawingPicture } from './shapes';
+	import type { DecorOf } from '../shared/decor';
+	import {
+		DAISIES,
+		GRASS_TUFTS,
+		LADYBIRD,
+		PEBBLES,
+		SAND_RIPPLES,
+		SEA,
+		SHELLS,
+		STARFISH
+	} from './decor';
 
 	interface Props {
 		view: GameView;
 		picture: DrawingPicture;
+		/** Where the sheet is laid for this play (`shared/decor.ts`). */
+		decor?: DecorOf<'drawing'>;
 	}
 
 	const SCENE_TOKEN = '--dd-duration-scene';
@@ -48,7 +61,7 @@
 	/** How far the shadow of the sheet falls, toward the bottom right. */
 	const SHADOW_OFFSET = 4;
 
-	let { view, picture }: Props = $props();
+	let { view, picture, decor = 'desk' }: Props = $props();
 
 	let art: ReturnType<typeof DrawingArt> | undefined = $state();
 
@@ -83,12 +96,46 @@
 	aria-hidden="true"
 	data-probe={stage}
 	data-picture={picture.id}
+	data-decor={decor}
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
 >
 	<rect class="desk" x="0" y="0" width={SCENE.width} height={SCENE.height} />
-	<path class="seam" d={DESK_SEAMS} />
-	<path class="grain" d={DESK_GRAIN} />
+	{#if decor === 'desk'}
+		<path class="seam" d={DESK_SEAMS} />
+		<path class="grain" d={DESK_GRAIN} />
+	{:else if decor === 'meadow'}
+		<path class="blade" d={GRASS_TUFTS} />
+		{#each DAISIES as daisy (daisy.heart)}
+			{#each daisy.petals as petal (petal)}
+				<path class="petal-edge" d={petal} />
+			{/each}
+			{#each daisy.petals as petal (petal)}
+				<path class="petal" d={petal} />
+			{/each}
+			<path class="heart outline" d={daisy.heart} />
+			<path class="glint" d={daisy.light} />
+		{/each}
+		<path class="bug-head outline" d={LADYBIRD.head} />
+		<path class="bug outline" d={LADYBIRD.body} />
+		<path class="outline open" d={LADYBIRD.split} />
+		<path class="bug-spot" d={LADYBIRD.spots} />
+		<path class="glint" d={LADYBIRD.light} />
+	{:else}
+		<path class="wet" d={SEA.wet} />
+		<path class="sea" d={SEA.water} />
+		<path class="foam-line" d={SEA.foam} />
+		<path class="ripple" d={SEA.ripples} />
+		<path class="sand-ripple" d={SAND_RIPPLES} />
+		<path class="pebble outline" d={PEBBLES} />
+		{#each SHELLS as shell (shell.fan)}
+			<path class="shell outline" d={shell.fan} />
+			<path class="outline open" d={shell.ribs} />
+			<path class="shell outline" d={shell.hinge} />
+		{/each}
+		<path class="starfish outline" d={STARFISH.body} />
+		<path class="starfish-dot" d={STARFISH.dots} />
+	{/if}
 
 	<Figure figure={PENCIL_POT} />
 	<g transform={LOOSE_PENCIL_PLACE}><Figure figure={LOOSE_PENCIL} /></g>
@@ -212,6 +259,110 @@
 
 	.desk {
 		fill: var(--dd-color-drawing-desk);
+	}
+
+	/* Decors (ADR-057): the sheet is laid on grass or on sand; the sheet and the pencils stay. */
+	.scene[data-decor='meadow'] {
+		--dd-color-drawing-desk: var(--dd-color-decor-meadow-grass);
+	}
+
+	.scene[data-decor='beach'] {
+		--dd-color-drawing-desk: var(--dd-color-decor-beach-sand);
+	}
+
+	.outline,
+	.petal-edge,
+	.blade,
+	.foam-line,
+	.ripple,
+	.sand-ripple {
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+
+	.outline {
+		stroke: var(--dd-color-drawing-pencil);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.4);
+	}
+
+	.open,
+	.blade,
+	.foam-line,
+	.ripple,
+	.sand-ripple {
+		fill: transparent;
+	}
+
+	.blade {
+		stroke: var(--dd-color-decor-meadow-blade);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.5);
+	}
+
+	.petal-edge {
+		fill: var(--dd-color-drawing-pencil);
+		stroke: var(--dd-color-drawing-pencil);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.8);
+	}
+
+	.petal {
+		fill: var(--dd-color-decor-meadow-petal);
+	}
+
+	.heart {
+		fill: var(--dd-color-decor-meadow-heart);
+	}
+
+	.glint {
+		fill: var(--dd-color-drawing-light);
+		fill-opacity: var(--dd-opacity-drawing-light);
+	}
+
+	.bug {
+		fill: var(--dd-color-decor-meadow-ladybird);
+	}
+
+	.bug-head,
+	.bug-spot {
+		fill: var(--dd-color-drawing-pencil);
+	}
+
+	.sea {
+		fill: var(--dd-color-decor-beach-sea);
+	}
+
+	.wet {
+		fill: var(--dd-color-decor-beach-wet);
+	}
+
+	.foam-line {
+		stroke: var(--dd-color-decor-beach-foam);
+		stroke-width: var(--dd-border-width-drawing-bold);
+	}
+
+	.ripple {
+		stroke: var(--dd-color-decor-beach-foam);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.4);
+	}
+
+	.sand-ripple {
+		stroke: var(--dd-color-decor-beach-ripple);
+		stroke-width: calc(var(--dd-border-width-drawing-bold) * 0.4);
+	}
+
+	.pebble {
+		fill: var(--dd-color-decor-beach-pebble);
+	}
+
+	.shell {
+		fill: var(--dd-color-decor-beach-shell);
+	}
+
+	.starfish {
+		fill: var(--dd-color-decor-beach-starfish);
+	}
+
+	.starfish-dot {
+		fill: var(--dd-color-drawing-light);
 	}
 
 	.seam,

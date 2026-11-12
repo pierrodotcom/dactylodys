@@ -1,8 +1,19 @@
 <script lang="ts">
+	import type { DecorOf } from '../shared/decor';
 	import { isRewarded, type GameView } from '../shared/game-view';
 	import { stageFor } from '../shared/stage';
 	import Car from './Car.svelte';
 	import Cloud from './Cloud.svelte';
+	import {
+		AUTUMN_BIRDS,
+		AUTUMN_LEAVES,
+		LOW_SUN_ART,
+		PLATFORM_SNOW,
+		ROOF_SNOW,
+		SNOWFLAKES,
+		SNOW_DOTS,
+		TREE_SNOW
+	} from './decor';
 	import Form from './Form.svelte';
 	import LocoShape from './LocoShape.svelte';
 	import { EXCLAMATION, LANDSCAPE, SMOKE_PUFFS, TRACK } from './shapes';
@@ -20,6 +31,8 @@
 
 	interface Props {
 		view: GameView;
+		/** The season of this play (`shared/decor.ts`): sky, hills, trees and ground. */
+		decor?: DecorOf<'train'>;
 	}
 
 	/** Space between two clouds of the departure, along the way the smoke drifts. */
@@ -27,7 +40,7 @@
 	/** The exclamation mark of the whistle floats this far above the chimney. */
 	const WHISTLE_LIFT = 8;
 
-	let { view }: Props = $props();
+	let { view, decor = 'summer' }: Props = $props();
 
 	const uid = $props.id();
 
@@ -61,6 +74,7 @@
 	data-probe={stage}
 	data-still={view.reducedMotion || undefined}
 	data-scene={sceneId}
+	data-decor={decor}
 >
 	<linearGradient id="{uid}-sky" x1="0" y1="0" x2="0" y2="1">
 		<stop class="sky-high" offset="0" />
@@ -68,16 +82,30 @@
 	</linearGradient>
 	<rect x="0" y="0" width={SCENE.width} height={SCENE.height} fill="url(#{uid}-sky)" />
 
-	<path class="halo" d={LANDSCAPE.sunHalo} data-effect />
-	<Form form={LANDSCAPE.sun} paint="sun" />
+	{#if decor === 'autumn'}
+		<path class="halo" d={LOW_SUN_ART.halo} data-effect />
+		<path class="part low-sun" d={LOW_SUN_ART.disc} />
+		<path class="sun-light" d={LOW_SUN_ART.light} />
+		<path class="fine" d={AUTUMN_BIRDS} />
+	{:else}
+		<path class="halo" d={LANDSCAPE.sunHalo} data-effect />
+		<Form form={LANDSCAPE.sun} paint="sun" />
+	{/if}
+	{#if decor === 'winter'}
+		<path class="flake" d={SNOWFLAKES} />
+		<path class="snow-dot" d={SNOW_DOTS} />
+	{/if}
 	{#each LANDSCAPE.clouds as cloud (cloud[0]?.x)}
 		<Cloud puffs={cloud} tone="sky" />
 	{/each}
 
 	<Form form={LANDSCAPE.farHills} paint="hill-far" />
-	{#each LANDSCAPE.trees as tree (tree.trunk)}
+	{#each LANDSCAPE.trees as tree, index (tree.trunk)}
 		<path class="part trunk" d={tree.trunk} />
 		<Form form={tree.crown} paint="tree" />
+		{#if decor === 'winter'}
+			<path class="part snow thin" d={TREE_SNOW[index]} />
+		{/if}
 	{/each}
 	<Form form={LANDSCAPE.nearHills} paint="hill-near" />
 
@@ -92,6 +120,9 @@
 
 	<Form form={station.roof} paint="roof" />
 	<path class="fine" d={station.roofTiles} />
+	{#if decor === 'winter'}
+		<path class="part snow thin" d={ROOF_SNOW} />
+	{/if}
 	<path class="part dial" d={station.clock} />
 	<path class="fine" d={station.clockHands} />
 	<Form form={station.wall} paint="wall" />
@@ -101,6 +132,9 @@
 	{/each}
 	<path class="fine" d={station.windowBars} />
 	<Form form={station.platform} paint="stone" />
+	{#if decor === 'winter'}
+		<path class="part snow thin" d={PLATFORM_SNOW} />
+	{/if}
 
 	<rect
 		class="part ground"
@@ -110,6 +144,12 @@
 		height={TRACK.groundHeight + 4}
 	/>
 	<path class="fine" d={LANDSCAPE.grassTufts} />
+	{#if decor === 'autumn'}
+		{#each AUTUMN_LEAVES as leaf (leaf.shape)}
+			<path class="part fallen thin" data-tone={leaf.tone} d={leaf.shape} />
+			<path class="fine" d={leaf.vein} />
+		{/each}
+	{/if}
 	<rect
 		class="part ballast"
 		x="-2"
@@ -203,6 +243,72 @@
 	.halo {
 		fill: var(--dd-color-train-light);
 		fill-opacity: var(--dd-opacity-train-halo);
+	}
+
+	/*
+	 * Seasons (ADR-057): each one gives the sky, the hills, the trees and the ground their own
+	 * colours, also read by the forms and the clouds; the train and the rails never change.
+	 */
+	.scene[data-decor='autumn'] {
+		--dd-color-train-sky-high: var(--dd-color-decor-sunset-sky-high);
+		--dd-color-train-sky-low: var(--dd-color-decor-sunset-sky-low);
+		--dd-color-train-cloud: var(--dd-color-decor-sunset-cloud);
+		--dd-color-train-hill-far: var(--dd-color-decor-autumn-hill-far);
+		--dd-color-train-hill-near: var(--dd-color-decor-autumn-hill-near);
+		--dd-color-train-tree: var(--dd-color-decor-autumn-leaf);
+		--dd-color-train-grass: var(--dd-color-decor-autumn-grass);
+	}
+
+	.scene[data-decor='winter'] {
+		--dd-color-train-sky-high: var(--dd-color-decor-winter-sky-high);
+		--dd-color-train-sky-low: var(--dd-color-decor-winter-sky-low);
+		--dd-color-train-sun: var(--dd-color-decor-winter-sun);
+		--dd-color-train-hill-far: var(--dd-color-decor-winter-snow-far);
+		--dd-color-train-hill-near: var(--dd-color-decor-winter-snow);
+		--dd-color-train-tree: var(--dd-color-decor-winter-evergreen);
+		--dd-color-train-grass: var(--dd-color-decor-winter-snow);
+	}
+
+	.scene[data-decor='autumn'] .halo {
+		fill: var(--dd-color-decor-sunset-halo);
+		fill-opacity: var(--dd-opacity-decor-halo);
+	}
+
+	.low-sun {
+		fill: var(--dd-color-decor-sunset-sun);
+	}
+
+	.sun-light {
+		fill: var(--dd-color-train-light);
+		fill-opacity: var(--dd-opacity-train-light);
+	}
+
+	.fallen {
+		fill: var(--dd-color-decor-autumn-leaf);
+	}
+
+	.fallen[data-tone='red'] {
+		fill: var(--dd-color-decor-autumn-leaf-red);
+	}
+
+	.fallen[data-tone='gold'] {
+		fill: var(--dd-color-decor-autumn-leaf-gold);
+	}
+
+	.snow {
+		fill: var(--dd-color-decor-winter-snow);
+	}
+
+	.flake {
+		fill: transparent;
+		stroke: var(--dd-color-decor-winter-flake);
+		stroke-width: var(--dd-border-width-thick);
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.snow-dot {
+		fill: var(--dd-color-decor-winter-flake);
 	}
 
 	.part,
