@@ -2,9 +2,11 @@
 	"output": {
 		"wordBankId": "fr.words.base",
 		"phraseBankId": "fr.phrases.base",
+		"textBankId": "fr.texts.base",
 		"locale": "fr-FR",
 		"wordsFile": "content/fr/words/base.json",
 		"phrasesFile": "content/fr/phrases/base.json",
+		"textsFile": "content/fr/texts/base.json",
 		"wordReviewDoc": "docs/relecture/mots-fr.md",
 		"phraseReviewDoc": "docs/relecture/phrases-fr.md"
 	},

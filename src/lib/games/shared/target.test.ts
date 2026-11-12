@@ -15,6 +15,11 @@ describe('targetKeyPress', () => {
 		expect(targetKeyPress(charIndex, ' ')).toEqual({ code: 'Space', level: 'base' });
 	});
 
+	it('gives the Enter key for a line break, though the layout lists no character for it', () => {
+		expect(charIndex.has('\n')).toBe(false);
+		expect(targetKeyPress(charIndex, '\n')).toEqual({ code: 'Enter', level: 'base' });
+	});
+
 	it('gives the Shift level of a capital letter', () => {
 		expect(targetKeyPress(charIndex, 'A')).toEqual({ code: 'KeyQ', level: 'shift' });
 	});

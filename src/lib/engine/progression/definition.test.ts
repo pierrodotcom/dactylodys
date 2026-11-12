@@ -193,6 +193,42 @@ describe('parseProgression', () => {
 		).toThrow(message);
 	});
 
+	it('reads the optional length of a group of text, absent by default', () => {
+		expect(parseProgression(BASE).rules.textGroupLength).toBeUndefined();
+		const length = parseProgression(variant((raw) => (raw.rules['textGroupLength'] = 24)));
+		expect(length.rules.textGroupLength).toBe(24);
+	});
+
+	it.each([
+		['zero', 0],
+		['a fraction', 2.5],
+		['a string', '24']
+	])('rejects a length of a group of text that is %s', (_name, value) => {
+		expect(() =>
+			parseProgression(variant((raw) => (raw.rules['textGroupLength'] = value)))
+		).toThrow(/rules\.textGroupLength/);
+	});
+
+	it('accepts Enter as the new character of a lesson, then counts it as learned', () => {
+		const progression = parseProgression(
+			variant((raw) => (lessonOf(raw, 1, 0)['newChars'] = ['\n']))
+		);
+		expect(findLesson(progression, 'fr.lesson.c')?.newChars).toEqual(['\n']);
+		expect(learnedChars(progression, 'fr.lesson.c')).toContain('\n');
+		expect(learnedChars(progression, 'fr.lesson.b')).not.toContain('\n');
+	});
+
+	it('does not count Enter as a key that can fill a suite', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					lessonOf(raw, 0, 0)['newChars'] = ['f', '\n'];
+					lessonOf(raw, 0, 0)['groupLength'] = [3, 4];
+				})
+			)
+		).toThrow(/lessons\[0\]\.groupLength.*single known character/);
+	});
+
 	it('reads the optional thresholds of the keys that fade, absent by default', () => {
 		const fade = {
 			acquiredMinAttempts: 20,
@@ -490,9 +526,9 @@ describe('parseProgression', () => {
 			/lessons\[0\]\.newChars\[0\]/
 		],
 		[
-			'line break as new character',
-			(raw) => (lessonOf(raw, 0, 0)['newChars'] = ['\n', 'd']),
-			/lessons\[0\]\.newChars\[0\]/
+			'tab as new character',
+			(raw) => (lessonOf(raw, 0, 0)['newChars'] = ['\t', 'd']),
+			/lessons\[0\]\.newChars\[0\].*printable/
 		],
 		[
 			'new character that is not a string',

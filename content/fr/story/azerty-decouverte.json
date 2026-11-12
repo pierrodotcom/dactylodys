@@ -168,6 +168,45 @@
 					"art": "circuit-truck"
 				}
 			]
+		},
+		{
+			"worldId": "fr.world.poste",
+			"opening": "Le carnet est plein. Ton dino ouvre une poste pour écrire à ses amis.",
+			"openingArt": "post-opening",
+			"ending": "Toutes les lettres sont parties. Les réponses, c'est toi qui les écris.",
+			"endingArt": "post-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.liste-pique-nique",
+					"line": "Avant d'écrire, ton dino fait une liste. Surtout des choses à manger.",
+					"art": "post-list"
+				},
+				{
+					"lessonId": "fr.lesson.message-t-rex",
+					"line": "Le T-rex répond tout de suite : il veut sa casquette.",
+					"art": "post-trex"
+				},
+				{
+					"lessonId": "fr.lesson.recette-quiche",
+					"line": "La quiche lit sa recette et rigole encore plus fort.",
+					"art": "post-recipe"
+				},
+				{
+					"lessonId": "fr.lesson.legende-dessin",
+					"line": "La girafe accroche le dessin. Tout en haut, évidemment.",
+					"art": "post-caption"
+				},
+				{
+					"lessonId": "fr.lesson.carte-lune",
+					"line": "La carte postale arrive de la Lune. Elle flotte encore un peu.",
+					"art": "post-card"
+				},
+				{
+					"lessonId": "fr.lesson.invitation-fete",
+					"line": "Tout le monde dit oui pour la fête. Même le klaxon : pouet.",
+					"art": "post-invite"
+				}
+			]
 		}
 	]
 }

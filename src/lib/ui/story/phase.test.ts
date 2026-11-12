@@ -8,7 +8,8 @@ const DRAWING_FILES: Readonly<Record<StoryArtGroup, string>> = {
 	kitchen: 'KitchenArt.svelte',
 	zoo: 'ZooArt.svelte',
 	space: 'SpaceArt.svelte',
-	circuit: 'CircuitArt.svelte'
+	circuit: 'CircuitArt.svelte',
+	post: 'PostArt.svelte'
 };
 
 function rootWith(motion: string | null) {
@@ -60,6 +61,12 @@ describe('the two states of every story picture', () => {
 		for (const art of arts) {
 			// The drawn result is compared in e2e/story.spec.ts; here, each picture has its own change.
 			it(`draws something that changes between before and after in ${art}`, () => {
+				if (group === 'post') {
+					// The last world adds its paper, in the after only, to a picture of an earlier world.
+					expect(source).toContain(`'${art}': {`);
+					expect(source).toContain('{#if after}');
+					return;
+				}
 				expect(branchOf(source, art)).toMatch(/\bafter\b/);
 			});
 		}

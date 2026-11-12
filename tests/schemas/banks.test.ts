@@ -43,7 +43,14 @@ const STEPS: readonly (readonly string[])[] = [
 	['-', ':'],
 	['ê', 'â'],
 	['î', 'ô', 'û'],
-	['ë', 'ï']
+	['ë', 'ï'],
+	// The last world brings Enter, in its texts only, then no other key.
+	[String.fromCharCode(10)],
+	[],
+	[],
+	[],
+	[],
+	[]
 ];
 const STEP = {
 	restRowVowels: 5,

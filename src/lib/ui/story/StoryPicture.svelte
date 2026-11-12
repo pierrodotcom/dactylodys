@@ -5,6 +5,7 @@
 	import CircuitArt from './art/CircuitArt.svelte';
 	import DinosaursArt from './art/DinosaursArt.svelte';
 	import KitchenArt from './art/KitchenArt.svelte';
+	import PostArt from './art/PostArt.svelte';
 	import SpaceArt from './art/SpaceArt.svelte';
 	import ZooArt from './art/ZooArt.svelte';
 
@@ -22,7 +23,8 @@
 		kitchen: KitchenArt,
 		zoo: ZooArt,
 		space: SpaceArt,
-		circuit: CircuitArt
+		circuit: CircuitArt,
+		post: PostArt
 	};
 	const CORNER = 6;
 

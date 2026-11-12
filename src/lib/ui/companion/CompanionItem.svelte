@@ -955,6 +955,111 @@
 	const HORN_LIP = ovalPath(0, -33, 11.6, 3.4);
 	const HORN_THROAT = ovalPath(0, -33, 9, 2.2);
 	const HORN_BANDS = 'M-2.2 -12C-0.8 -12.6 0.8 -12.6 2.2 -12L2.2 -9.6C0.8 -9 -0.8 -9 -2.2 -9.6Z';
+
+	/* ---------- Artist's beret ---------- */
+
+	const BERET =
+		'M35.6 24.6C28.4 22.6 27.6 16.4 34 12.2C42 7 56 5 70 6C84 7 95.6 11.6 96 17.8C96.4 22.4 92 25 84.6 25.4C70 27.6 50 27.4 35.6 24.6Z';
+	const BERET_SHADES = 'M29 19.4C40 24.6 70 26 97 18L98 28L29 28Z';
+	const BERET_LIGHTS =
+		'M38 13.6C44 9.6 53 7.6 62 7.4C53 9.2 45 11.8 40.4 15.2C39.4 16 37.2 14.4 38 13.6Z';
+	const BERET_GLOSS = 'M44.6 11.2C47 10 50 9.2 53 8.8L52.8 9.6C50 10 47.4 10.8 45 12Z';
+	const BERET_BAND =
+		'M36.4 22.4C46 25.4 74 25.4 83.6 22.4C84.4 24.4 84.6 26.4 84.2 28.4C74 31.6 46 31.6 35.8 28.4C35.4 26.4 35.6 24.4 36.4 22.4Z';
+	const BERET_BAND_SEAM = 'M37.4 25.6C48 28.4 72 28.4 82.6 25.6';
+	const BERET_STALK =
+		'M61.4 6.8C61.2 4.6 61.8 2.6 63.4 1.2C64.2 0.6 65.2 1.6 64.6 2.4C63.6 3.6 63.2 5 63.4 6.6Z';
+	const BERET_CAST = 'M38 29.6C46 33 74 33 82 29.6C78 34.6 70 36 60 36C50 36 42 34.6 38 29.6Z';
+
+	/* ---------- Reading glasses ---------- */
+
+	/** Half-moon lenses, low on the nose: the eyes look over them. */
+	const HALF_MOONS = EYES_X.map((x) => {
+		const outer = `M${x - 10} 47.4L${x + 10} 47.4C${x + 10} 53.4 ${x + 5.6} 57 ${x} 57C${x - 5.6} 57 ${x - 10} 53.4 ${x - 10} 47.4Z`;
+		const lens = `M${x - 8.2} 48.8L${x + 8.2} 48.8C${x + 8.2} 53 ${x + 4.6} 55.4 ${x} 55.4C${x - 4.6} 55.4 ${x - 8.2} 53 ${x - 8.2} 48.8Z`;
+		return {
+			x,
+			frame: outer + lens,
+			lens,
+			gloss: ovalPath(x - 4, 50.8, 1.8, 0.8) + ovalPath(x + 4.4, 53, 0.6, 0.5)
+		};
+	});
+	const GLASSES_BRIDGE = 'M57.6 48.4C59 47.2 61 47.2 62.4 48.4L62.4 50C61 48.8 59 48.8 57.6 50Z';
+	const GLASSES_TEMPLES = 'M38 48.4L30.2 46L29.8 47.6L38 50.2ZM82 48.4L89.8 46L90.2 47.6L82 50.2Z';
+
+	/* ---------- Napkin tied around the neck ---------- */
+
+	const NAPKIN =
+		'M45 70.4C52 73.4 68 73.4 75 70.4C76.4 79.6 70.4 90.6 60 97.4C49.6 90.6 43.6 79.6 45 70.4Z';
+	const NAPKIN_CHECKS = (() => {
+		const squares: string[] = [];
+		for (let row = 0; row < 5; row++) {
+			for (let col = 0; col < 6; col++) {
+				if ((row + col) % 2 !== 0) continue;
+				const x = 44 + col * 6;
+				const y = 72 + row * 6;
+				squares.push(`M${x} ${y}L${x + 3} ${y}L${x + 3} ${y + 3}L${x} ${y + 3}Z`);
+			}
+		}
+		return squares.join('');
+	})();
+	const NAPKIN_FOLDS = 'M52 74C53 82 55.4 89 58.4 94M68 74C67 82 64.6 89 61.6 94';
+	const NAPKIN_SHADES = 'M60 97.4C66 92 71.4 84 73 76L77 76L77 99Z';
+	const NAPKIN_EAR_UP = 'M73.4 70.8C76.6 66.6 82 65.8 83 68.6C83.8 71 80 73.2 75.2 73Z';
+	const NAPKIN_EAR_DOWN = 'M74.6 72.4C79.4 73 83.4 76 82.2 78.6C81 80.8 76.6 78.8 73.6 74.6Z';
+
+	/* ---------- Mail bag ---------- */
+
+	const BAG_STRAP = 'M37.6 60.8L42 58.6L88.2 95.2L84 97.8Z';
+	const BAG_STRAP_SEAMS = 'M39.4 60.6L85.4 96.4';
+	const BAG =
+		'M76.8 88.6L95.2 88.6C97.2 88.6 98.6 90 98.6 92L98.6 105.4C98.6 107.4 97.2 108.8 95.2 108.8L76.8 108.8C74.8 108.8 73.4 107.4 73.4 105.4L73.4 92C73.4 90 74.8 88.6 76.8 88.6Z';
+	const BAG_SEAMS = 'M75.8 105.4L96.2 105.4';
+	const BAG_LETTER = 'M77.4 89.4L79.4 81.6L93 83.4L91.6 90.4Z';
+	const BAG_LETTER_LINES = 'M80.6 84.6L89.6 85.8M80.2 86.6L86.4 87.4';
+	const BAG_FLAP =
+		'M73 90.2C73 88 74.6 86.6 76.8 86.6L95.2 86.6C97.4 86.6 99 88 99 90.2L99 96.4C92 99.6 80 99.6 73 96.4Z';
+	const BAG_FLAP_LIGHT = 'M75 89.2C75.4 88.4 76 88 76.8 88L94 88C88 88.6 80 88.8 75 89.2Z';
+	const BAG_BUCKLE = 'M83.4 95.4L88.6 95.4L88.6 101L83.4 101Z';
+
+	/* ---------- Picnic basket ---------- */
+
+	const BASKET_HANDLE = 'M-10.4 5C-11 -6.4 11 -6.4 10.4 5';
+	const BASKET =
+		'M-13.4 5.6L13.4 5.6L10.8 21.2C10.6 22.6 9.6 23.4 8.2 23.4L-8.2 23.4C-9.6 23.4 -10.6 22.6 -10.8 21.2Z';
+	const BASKET_WEAVE = 'M-12.6 11H12.6M-11.8 16H11.8M-6.2 6L-5.4 23M0 6L0 23M6.2 6L5.4 23';
+	const BASKET_BREAD = capsulePath(-2.6, 4, 4.6, -9.6, 2.6);
+	const BASKET_BREAD_CUTS = 'M0.6 -4.2L2.8 -3.4M2.2 -7.2L4.4 -6.4M-1 -1.2L1.2 -0.4';
+	const BASKET_CLOTH = 'M-12.4 6C-10 1.6 -4.6 0.6 -1.6 4.2C1 0.4 7.6 0.8 12.4 6Z';
+	const BASKET_RIM =
+		'M-14.4 4.4L14.4 4.4C15.2 4.4 15.6 5 15.4 5.8L15 7.6C14.8 8.2 14.4 8.6 13.8 8.6L-13.8 8.6C-14.4 8.6 -14.8 8.2 -15 7.6L-15.4 5.8C-15.6 5 -15.2 4.4 -14.4 4.4Z';
+	/** The basket hangs from the hand by the top of its handle. */
+	const BASKET_HANG = 3.4;
+
+	/* ---------- Party balloons ---------- */
+
+	/** Tied behind the right shoulder, they float above it. */
+	const BALLOON_TIE = [84, 66] as const;
+	const BALLOONS = [
+		{ id: 'red', cx: 109, cy: 14, rx: 9, ry: 11, fill: 'red' },
+		{ id: 'blue', cx: 103, cy: 35, rx: 8, ry: 10, fill: 'blue' },
+		{ id: 'gold', cx: 94, cy: 2, rx: 7.4, ry: 9.2, fill: 'gold' }
+	].map((balloon) => {
+		const { cx, cy, rx, ry } = balloon;
+		const bottom = cy + ry;
+		return {
+			...balloon,
+			body: ovalPath(cx, cy, rx, ry),
+			knot: `M${cx - 1.6} ${bottom + 2.2}L${cx} ${bottom - 0.4}L${cx + 1.6} ${bottom + 2.2}Z`,
+			string: `M${cx} ${bottom + 2}Q${round((cx + BALLOON_TIE[0]) / 2 + 4)} ${round((bottom + BALLOON_TIE[1]) / 2)} ${BALLOON_TIE[0]} ${BALLOON_TIE[1]}`,
+			gloss: ovalPath(
+				round(cx - rx * 0.42),
+				round(cy - ry * 0.4),
+				round(rx * 0.2),
+				round(ry * 0.26)
+			)
+		};
+	});
 </script>
 
 <!--
@@ -1248,6 +1353,24 @@
 				},
 				backBands
 			)}
+		{:else if artId === 'party-balloons'}
+			{#each BALLOONS as balloon (balloon.id)}
+				<path class="open cord-outline" d={balloon.string} />
+				<path class="open cord cord-cream" d={balloon.string} />
+			{/each}
+			{#each BALLOONS as balloon (balloon.id)}
+				{@render piece(`balloon-${balloon.id}`, balloon.body, balloon.fill, {
+					shade: 1.6,
+					deep: 0.7,
+					rim: 0.6,
+					gloss: balloon.gloss
+				})}
+				{@render piece(`balloon-knot-${balloon.id}`, balloon.knot, balloon.fill, {
+					shade: 0.4,
+					deep: 0,
+					rim: 0
+				})}
+			{/each}
 		{/if}
 	{:else if artId === 'nest-backpack'}
 		{#each SIDES as side (side)}
@@ -1874,6 +1997,68 @@
 				deep: 0.9,
 				gloss: HORN_BULB_GLOSS
 			})}
+		</g>
+	{:else if artId === 'artist-beret'}
+		{#if !alone}<path class="cast" d={BERET_CAST} />{/if}
+		{#snippet beretSeam()}<path class="open seam" d={BERET_BAND_SEAM} />{/snippet}
+		{@render piece('beret-band', BERET_BAND, 'red', { shade: 1, rim: 0.5 }, beretSeam)}
+		{@render piece('beret', BERET, 'red', {
+			shade: 2.2,
+			deep: 0.9,
+			shades: BERET_SHADES,
+			lights: BERET_LIGHTS,
+			gloss: BERET_GLOSS
+		})}
+		{@render piece('beret-stalk', BERET_STALK, 'red', { shade: 0.5, deep: 0, rim: 0.3 })}
+	{:else if artId === 'reading-glasses'}
+		{@render piece('temples', GLASSES_TEMPLES, 'blue', { shade: 0.4, deep: 0, rim: 0.3 })}
+		{@render piece('bridge', GLASSES_BRIDGE, 'blue', { shade: 0.4, deep: 0, rim: 0.3 })}
+		{#each HALF_MOONS as moon (moon.x)}
+			{@render piece(`lens-${moon.x}`, moon.lens, 'glass', {
+				shade: 0,
+				deep: 0,
+				rim: 0,
+				gloss: moon.gloss
+			})}
+			{@render piece(`half-moon-${moon.x}`, moon.frame, 'blue', {
+				shade: 0.9,
+				deep: 0.4,
+				rim: 0.5
+			})}
+		{/each}
+	{:else if artId === 'napkin-bib'}
+		{@render piece('napkin-ear-down', NAPKIN_EAR_DOWN, 'cream', { shade: 0.8 })}
+		{@render piece('napkin-ear-up', NAPKIN_EAR_UP, 'cream', { shade: 0.8 })}
+		{#snippet napkinChecks()}
+			<path class="check" d={NAPKIN_CHECKS} />
+			<path class="open fine" d={NAPKIN_FOLDS} />
+		{/snippet}
+		{@render piece(
+			'napkin',
+			NAPKIN,
+			'cream',
+			{ shade: 1.8, deep: 0.8, shades: NAPKIN_SHADES },
+			napkinChecks
+		)}
+		{@render ball('napkin-knot', 74.4, 72, 2.2, 'cream')}
+	{:else if artId === 'mail-bag'}
+		{#snippet strapSeams()}<path class="open seam" d={BAG_STRAP_SEAMS} />{/snippet}
+		{@render piece('bag-strap', BAG_STRAP, 'leather', { shade: 0.9 }, strapSeams)}
+		{#snippet letterLines()}<path class="open fine" d={BAG_LETTER_LINES} />{/snippet}
+		{@render piece('bag-letter', BAG_LETTER, 'cream', { shade: 0.8 }, letterLines)}
+		{#snippet bagSeams()}<path class="open seam" d={BAG_SEAMS} />{/snippet}
+		{@render piece('bag', BAG, 'leather', { shade: 2, deep: 0.8 }, bagSeams)}
+		{@render piece('bag-flap', BAG_FLAP, 'red', { shade: 1.4, lights: BAG_FLAP_LIGHT })}
+		{@render piece('bag-buckle', BAG_BUCKLE, 'gold', { shade: 0.6, deep: 0, rim: 0.4 })}
+	{:else if artId === 'picnic-basket'}
+		<g transform="translate({grip.x} {grip.y + BASKET_HANG})">
+			{@render cord(BASKET_HANDLE, 'cord-twig')}
+			{#snippet breadCuts()}<path class="open fine" d={BASKET_BREAD_CUTS} />{/snippet}
+			{@render piece('bread', BASKET_BREAD, 'leather', { shade: 0.9 }, breadCuts)}
+			{@render piece('cloth', BASKET_CLOTH, 'red', { shade: 0.8 })}
+			{#snippet weave()}<path class="open weave" d={BASKET_WEAVE} />{/snippet}
+			{@render piece('basket', BASKET, 'twig', { shade: 1.8, deep: 0.8 }, weave)}
+			{@render piece('basket-rim', BASKET_RIM, 'twig', { shade: 0.7, rim: 0.4 })}
 		</g>
 	{/if}
 </g>

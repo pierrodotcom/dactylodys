@@ -337,6 +337,78 @@
 			}
 		},
 		{
+			"id": "fr.reward.picnic-basket",
+			"kind": "item",
+			"title": "Le panier de pique-nique",
+			"description": "Réussis la leçon « La liste du pique-nique ».",
+			"artId": "picnic-basket",
+			"slot": "hand",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.liste-pique-nique"
+			}
+		},
+		{
+			"id": "fr.reward.mail-bag",
+			"kind": "item",
+			"title": "La sacoche du courrier",
+			"description": "Réussis la leçon « Un mot pour le T-rex ».",
+			"artId": "mail-bag",
+			"slot": "body",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.message-t-rex"
+			}
+		},
+		{
+			"id": "fr.reward.napkin-bib",
+			"kind": "item",
+			"title": "La serviette nouée au cou",
+			"description": "Réussis la leçon « La recette de la quiche ».",
+			"artId": "napkin-bib",
+			"slot": "neck",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.recette-quiche"
+			}
+		},
+		{
+			"id": "fr.reward.artist-beret",
+			"kind": "item",
+			"title": "Le béret d'artiste",
+			"description": "Réussis la leçon « La légende du dessin ».",
+			"artId": "artist-beret",
+			"slot": "head",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.legende-dessin"
+			}
+		},
+		{
+			"id": "fr.reward.reading-glasses",
+			"kind": "item",
+			"title": "Les lunettes de lecture",
+			"description": "Réussis la leçon « Une carte de la Lune ».",
+			"artId": "reading-glasses",
+			"slot": "face",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.carte-lune"
+			}
+		},
+		{
+			"id": "fr.reward.party-balloons",
+			"kind": "item",
+			"title": "Les ballons de la fête",
+			"description": "Réussis la leçon « L'invitation à la fête ».",
+			"artId": "party-balloons",
+			"slot": "back",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.invitation-fete"
+			}
+		},
+		{
 			"id": "fr.reward.roar",
 			"kind": "skill",
 			"title": "Rugir",
@@ -389,6 +461,17 @@
 			"condition": {
 				"kind": "world-passed",
 				"worldId": "fr.world.vehicules"
+			}
+		},
+		{
+			"id": "fr.reward.wave",
+			"kind": "skill",
+			"title": "Faire coucou",
+			"description": "Réussis toutes les leçons de la poste.",
+			"artId": "wave",
+			"condition": {
+				"kind": "world-passed",
+				"worldId": "fr.world.poste"
 			}
 		},
 		{
@@ -448,6 +531,18 @@
 			"condition": {
 				"kind": "world-stars",
 				"worldId": "fr.world.vehicules",
+				"stars": 2
+			}
+		},
+		{
+			"id": "fr.reward.medal-post",
+			"kind": "trophy",
+			"title": "La médaille de la poste",
+			"description": "Gagne au moins 2 étoiles à chaque leçon de la poste.",
+			"artId": "medal-post",
+			"condition": {
+				"kind": "world-stars",
+				"worldId": "fr.world.poste",
 				"stars": 2
 			}
 		},

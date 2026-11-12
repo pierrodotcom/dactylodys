@@ -160,6 +160,11 @@ describe('keyLabel', () => {
 		expect(keyLabel(' ', 'Espace', 'fr')).toBe('Espace');
 		expect(keyLabel(',', 'Espace', 'fr')).toBe(',');
 	});
+
+	it('names the line break by the name of Enter when it is given', () => {
+		expect(keyLabel('\n', 'Espace', 'fr', 'Entrée')).toBe('Entrée');
+		expect(keyLabel('q', 'Espace', 'fr', 'Entrée')).toBe('Q');
+	});
 });
 
 describe('groupBySlot', () => {

@@ -880,7 +880,9 @@
 		<WorldMap
 			{profile}
 			{progression}
-			helpKey={helpQuest ? keyLabel(helpQuest.char, m.ui_key_space(), getLocale()) : null}
+			helpKey={helpQuest
+				? keyLabel(helpQuest.char, m.ui_key_space(), getLocale(), m.ui_key_enter())
+				: null}
 			onopen={openLesson}
 			onhelp={startHelp}
 			onstory={story ? () => go({ type: 'open-story-so-far' }) : undefined}

@@ -397,6 +397,9 @@
 			},
 			"ribbon-racing": {
 				"$value": "{color.azure.300}"
+			},
+			"ribbon-post": {
+				"$value": "{color.pink.300}"
 			}
 		},
 		"silhouette": {

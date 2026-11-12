@@ -16,6 +16,7 @@ import { withEarnedRewards, withHelpQuest, withProgress } from '$lib/state/profi
 import type { Profile } from '$lib/state/types';
 
 const SPACE = ' ';
+const LINE_BREAK = '\n';
 
 /** The profile once the rewards its progress unlocks are kept, and those that are new to it. */
 export interface EarnedRewards {
@@ -70,8 +71,17 @@ export function recordHelpOutcome(
 	return earnRewards(helped, catalogue, progression);
 }
 
-/** How a key is named to the child: a letter as a capital, like on the keycap; the space by its name. */
-export function keyLabel(char: string, spaceName: string, locale: string): string {
+/**
+ * How a key is named to the child: a letter as a capital, like on the keycap; the space and, when
+ * its name is given, the line break (Enter) by their names.
+ */
+export function keyLabel(
+	char: string,
+	spaceName: string,
+	locale: string,
+	enterName?: string
+): string {
+	if (char === LINE_BREAK && enterName !== undefined) return enterName;
 	return char === SPACE ? spaceName : char.toLocaleUpperCase(locale);
 }
 

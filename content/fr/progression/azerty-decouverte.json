@@ -14,11 +14,12 @@
 		"lengthSlack": 12,
 		"handGuide": {
 			"everyKeyUntil": 2,
-			"newKeysUntil": 24,
+			"newKeysUntil": 25,
 			"hesitationMs": 3000
 		},
 		"starAlmostMargin": 3,
 		"storyPhraseEvery": 2,
+		"textGroupLength": 24,
 		"keyboardFade": {
 			"acquiredMinAttempts": 20,
 			"acquiredMaxErrorRate": 0.1,
@@ -490,6 +491,110 @@
 					"title": "Le camion aux deux yeux",
 					"intro": "Tiens Maj, tape la touche morte à droite de P, puis la voyelle : elle apparaît avec deux points.",
 					"newChars": ["ë", "ï"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				}
+			]
+		},
+		{
+			"id": "fr.world.poste",
+			"title": "La poste des petits mots",
+			"themeId": "general",
+			"gameIds": ["dialogue", "drawing", "train"],
+			"lessons": [
+				{
+					"id": "fr.lesson.liste-pique-nique",
+					"title": "La liste du pique-nique",
+					"intro": "Ton auriculaire droit appuie sur Entrée, la grande touche à droite : le texte passe à la ligne.",
+					"newChars": ["\n"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.message-t-rex",
+					"title": "Un mot pour le T-rex",
+					"intro": "Après chaque Entrée, ramène ton auriculaire droit sur sa touche de repos.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.recette-quiche",
+					"title": "La recette de la quiche",
+					"intro": "Une ligne, puis Entrée : ton petit doigt droit y va sans que tu regardes.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.legende-dessin",
+					"title": "La légende du dessin",
+					"intro": "Sous un dessin, on écrit une légende : tape-la ligne par ligne, avec Entrée.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.carte-lune",
+					"title": "Une carte de la Lune",
+					"intro": "Pour la majuscule d'une ligne, tiens Maj avec l'auriculaire de l'autre main.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.invitation-fete",
+					"title": "L'invitation à la fête",
+					"intro": "Une idée par ligne : quand la ligne est finie, Entrée, et on continue.",
+					"newChars": [],
 					"words": [],
 					"mix": {
 						"drills": 1,
