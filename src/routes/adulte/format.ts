@@ -13,6 +13,8 @@ export interface Formatters {
 	/** A moment, in the time zone of this device. */
 	readonly dateTime: (at: number) => string;
 	readonly list: (items: readonly string[]) => string;
+	/** A length of time in whole minutes, its unit written out (« 12 minutes »). */
+	readonly minutes: (value: number) => string;
 }
 
 export function createFormatters(locale: string): Formatters {
@@ -21,6 +23,11 @@ export function createFormatters(locale: string): Formatters {
 	const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'long' });
 	const dateTimeFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' });
 	const listFormat = new Intl.ListFormat(locale, { type: 'conjunction' });
+	const minutesFormat = new Intl.NumberFormat(locale, {
+		style: 'unit',
+		unit: 'minute',
+		unitDisplay: 'long'
+	});
 	return {
 		number(value, fractionDigits) {
 			let format = numbers.get(fractionDigits);
@@ -38,6 +45,7 @@ export function createFormatters(locale: string): Formatters {
 		day: (day) => dayFormat.format(new Date(`${day}T00:00:00Z`)),
 		date: (at) => dateFormat.format(new Date(at)),
 		dateTime: (at) => dateTimeFormat.format(new Date(at)),
-		list: (items) => listFormat.format(items)
+		list: (items) => listFormat.format(items),
+		minutes: (value) => minutesFormat.format(value)
 	};
 }
