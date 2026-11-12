@@ -110,6 +110,10 @@ const FIRST_GAME = world.gameIds[0] ?? '';
 const NEXT_WORLD = worlds[1] ?? world;
 const [NEXT_FIRST, NEXT_SECOND, NEXT_THIRD] = NEXT_WORLD.lessons as [Lesson, Lesson, Lesson];
 const [DEFAULT_GAME = '', OTHER_GAME = ''] = NEXT_WORLD.gameIds;
+/** The game after the other one in the world, proposed when its lesson is played again (ADR-038). */
+const GAME_AFTER_OTHER =
+	NEXT_WORLD.gameIds[(NEXT_WORLD.gameIds.indexOf(OTHER_GAME) + 1) % NEXT_WORLD.gameIds.length] ??
+	'';
 const RECIPE = 'recipe';
 const DRAWING = 'drawing';
 const WHOLE_IN_VIEW = 0.999;
@@ -1151,10 +1155,10 @@ test.describe('play route', () => {
 
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 		await openIntro(page, NEXT_FIRST);
-		await expect(proposedGame(page)).toHaveAttribute('data-game', DEFAULT_GAME);
+		await expect(proposedGame(page)).toHaveAttribute('data-game', GAME_AFTER_OTHER);
 		await proposedGame(page).click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(progressPicture(page, DEFAULT_GAME, 0)).toBeVisible();
+		await expect(progressPicture(page, GAME_AFTER_OTHER, 0)).toBeVisible();
 	});
 
 	test('draws another subject each time the magic drawing is played (ADR-049)', async ({
