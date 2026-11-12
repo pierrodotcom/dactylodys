@@ -109,7 +109,18 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	})),
 	{ foreground: 'color.bubble.text', background: 'color.bubble.surface', min: TEXT_MIN },
 	// The bubble keeps its light surface in the dark theme: its outline is drawn on that surface.
-	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN }
+	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN },
+	// The answer of the companion in the dialogue game, typed so far.
+	{
+		foreground: 'color.dialogue.answer-text',
+		background: 'color.dialogue.answer-surface',
+		min: TEXT_MIN
+	},
+	{
+		foreground: 'color.dialogue.answer-border',
+		background: 'color.dialogue.answer-surface',
+		min: NON_TEXT_MIN
+	}
 ];
 
 /** Every colour the companion can take, in every reward catalogue: each needs its own tokens. */

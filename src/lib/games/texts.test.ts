@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { QUESTIONS, REACTIONS } from './dialogue/texts';
 import { DISH_TEMPLATES, QUIPS } from './recipe/texts';
 import { GREETINGS } from './rocket/texts';
 
@@ -12,7 +13,9 @@ function numbered(prefix: string): string[] {
 describe.each([
 	['game_rocket_greeting_', GREETINGS.length],
 	['game_recipe_quip_', QUIPS.length],
-	['game_recipe_dish_', DISH_TEMPLATES.length]
+	['game_recipe_dish_', DISH_TEMPLATES.length],
+	['game_dialogue_question_', QUESTIONS.length],
+	['game_dialogue_quip_', REACTIONS.length]
 ])('the messages %s…', (prefix, listed) => {
 	it('are all in the list the game goes through, in order', () => {
 		const keys = numbered(prefix);
@@ -26,12 +29,27 @@ describe.each([
 
 describe('the lists of lines', () => {
 	it('say something each', () => {
-		for (const line of [...GREETINGS, ...QUIPS]) expect(line().trim()).not.toBe('');
+		const dialogue = [...QUESTIONS, ...REACTIONS.map((reaction) => reaction.line)];
+		for (const line of [...GREETINGS, ...QUIPS, ...dialogue]) expect(line().trim()).not.toBe('');
 	});
 
 	it('give a different line to each step', () => {
 		expect(new Set(GREETINGS.map((line) => line())).size).toBe(GREETINGS.length);
 		expect(new Set(QUIPS.map((line) => line())).size).toBe(QUIPS.length);
+		expect(new Set(QUESTIONS.map((line) => line())).size).toBe(QUESTIONS.length);
+		expect(new Set(REACTIONS.map((reaction) => reaction.line())).size).toBe(REACTIONS.length);
+	});
+
+	it('gives Floup about thirty questions and fifteen reactions, each face in turn', () => {
+		expect(QUESTIONS.length).toBeGreaterThanOrEqual(30);
+		expect(REACTIONS.length).toBeGreaterThanOrEqual(15);
+		expect(new Set(REACTIONS.map((reaction) => reaction.face))).toEqual(
+			new Set(['delighted', 'puzzled', 'laughing'])
+		);
+	});
+
+	it('asks questions, and keeps a question mark on the line of the question', () => {
+		for (const question of QUESTIONS) expect(question()).toMatch(/\u00a0\?$/u);
 	});
 
 	it('name a dish from the first and the last group in every template', () => {
