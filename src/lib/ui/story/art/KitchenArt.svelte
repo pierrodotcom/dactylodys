@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { starPath } from '$lib/ui/companion/geometry';
 	import StoryDino from '../StoryDino.svelte';
+	import type { StoryPhase } from '../phase';
 
 	const uid = $props.id();
 
 	interface Props {
 		/** One of `STORY_ART_GROUPS.kitchen`. */
 		art: string;
+		/** `before`: what the sentence starts from; `after`: what it tells (ADR-057). */
+		phase?: StoryPhase;
 	}
 
 	type Point = readonly [number, number];
@@ -178,11 +181,23 @@
 		{ x: 155, y: 58, tone: 'm' }
 	];
 	const STAR_INNER = 0.45;
+	/** kitchen-spices, before: the specks of the pinch, from the shaker up to the nose. */
+	const SPICE_PINCH: readonly { x: number; y: number; r: number; tone: Tone }[] = [
+		{ x: 53.6, y: 69, r: 1.2, tone: 'j' },
+		{ x: 51, y: 65.6, r: 0.9, tone: 'f' },
+		{ x: 53, y: 62, r: 1.1, tone: 'e' },
+		{ x: 49.6, y: 59.4, r: 1.2, tone: 'j' },
+		{ x: 51.4, y: 55.6, r: 0.9, tone: 'f' },
+		{ x: 48, y: 53.4, r: 1.1, tone: 'j' },
+		{ x: 49.4, y: 50, r: 0.8, tone: 'e' },
+		{ x: 46.4, y: 48.4, r: 1, tone: 'f' }
+	];
 
 	const PLATE_STACK = [0, 1, 2, 3, 4];
 	const PLATE_STEP = 3.2;
 
-	let { art }: Props = $props();
+	let { art, phase = 'after' }: Props = $props();
+	const after = $derived(phase === 'after');
 
 	function r(value: number): number {
 		return Math.round(value * 100) / 100;
@@ -518,7 +533,7 @@
 {/snippet}
 
 <!-- The toast, the middle of its bottom edge at (0, 0). -->
-{#snippet toast(id: string, mood: ToastMood)}
+{#snippet toast(id: string, mood: ToastMood, hat: boolean = true)}
 	<path class="line f-crust" d={limb([-7, -3], [-7.5, 2], [-8, 6], 1.6, 1.4)} />
 	<path class="line f-crust" d={limb([7, -3], [7.5, 2], [8, 6], 1.6, 1.4)} />
 	{@render shoe(-8, 7, -1)}
@@ -556,7 +571,9 @@
 		<path class="line bold open" d="M-11 -32.5Q-7 -37.5 -2.5 -33.5M3 -31.5L11 -30.8" />
 		<path class="line bold open" d="M-3.5 -16.5Q0.5 -15.5 4.5 -18" />
 	{/if}
-	<g transform="translate(1.5 -46) rotate(8)">{@render toque(`${id}-toque`)}</g>
+	{#if hat}
+		<g transform="translate(1.5 -46) rotate(8)">{@render toque(`${id}-toque`)}</g>
+	{/if}
 	{#if mood === 'stern'}
 		<path
 			class="line f-wood"
@@ -625,23 +642,26 @@
 		{@render jar(127, 22, 8, 10, 'b')}
 		{@render jar(138, 22, 6, 7, 'g')}
 		{@render jar(148, 22, 7, 9, 'h')}
-		<StoryDino {...OPENING_DINO} />
-		<g transform={dinoFrame(OPENING_DINO)}>
-			{@render modeled(
-				'napkin',
-				NAPKIN,
-				'f-white',
-				'M66 72Q74 88 62 106H100V60H66Z',
-				'M44 78C45 88 50 95 55 99C50 92 47 86 46.5 78Z',
-				false
-			)}
-			<path class="line thin open" d="M50 80Q52 90 58 99M70 80Q68 90 62 99" />
-		</g>
-		<path
-			class="f-water line thin"
-			d="M86 41C85.5 43 85 44.5 86 45.4C87 46.2 88.2 45 87.3 43.4C86.9 42.6 86.4 41.8 86 41Z"
-		/>
-		{@render fork(dinoGrip(OPENING_DINO)[0], dinoGrip(OPENING_DINO)[1], -4)}
+		<!-- Before: the table is laid, nobody yet; after: the companion has sat down, fork up. -->
+		{#if after}
+			<StoryDino {...OPENING_DINO} />
+			<g transform={dinoFrame(OPENING_DINO)}>
+				{@render modeled(
+					'napkin',
+					NAPKIN,
+					'f-white',
+					'M66 72Q74 88 62 106H100V60H66Z',
+					'M44 78C45 88 50 95 55 99C50 92 47 86 46.5 78Z',
+					false
+				)}
+				<path class="line thin open" d="M50 80Q52 90 58 99M70 80Q68 90 62 99" />
+			</g>
+			<path
+				class="f-water line thin"
+				d="M86 41C85.5 43 85 44.5 86 45.4C87 46.2 88.2 45 87.3 43.4C86.9 42.6 86.4 41.8 86 41Z"
+			/>
+			{@render fork(dinoGrip(OPENING_DINO)[0], dinoGrip(OPENING_DINO)[1], -4)}
+		{/if}
 		{@render table(64, 14)}
 		<path
 			class="line f-wood"
@@ -704,7 +724,14 @@
 			false
 		)}
 		<ellipse class="line f-wall" cx="108.6" cy="81.6" rx="1.6" ry="0.7" />
-		<g transform="translate(78 71) scale(0.86)">{@render toast('toast', 'stern')}</g>
+		<!-- A plain toast, then the same one in a toque, spoon raised. -->
+		<g transform="translate(78 71) scale(0.86)">
+			{#if after}
+				{@render toast('toast', 'stern')}
+			{:else}
+				{@render toast('toast', 'puzzled', false)}
+			{/if}
+		</g>
 	</g>
 {:else if art === 'kitchen-cake'}
 	<g data-story-art="kitchen-cake">
@@ -727,7 +754,8 @@
 		<ellipse class="shade" cx="70" cy="87.6" rx="31" ry="2.2" />
 		<path class="line f-white" d="M38 85.2A30 2.6 0 0 0 98 85.2V86.2A30 2.6 0 0 1 38 86.2Z" />
 		<ellipse class="line f-white" cx="68" cy="85.2" rx="30" ry="2.6" />
-		{#each TIER_SHAPES as tier, i (tier.bottom)}
+		<!-- Before: a cake of two tiers; after: it has risen to the ceiling. -->
+		{#each after ? TIER_SHAPES : TIER_SHAPES.slice(0, 2) as tier, i (tier.bottom)}
 			{@render modeled(`tier-${i}`, tier.path, tier.sponge, tier.shade, '', false)}
 			<path class="line f-white" d={tier.cream} />
 			<path
@@ -739,20 +767,32 @@
 				)} {tier.top - 0.4} {r(spineX(tier.top) - tier.w * 0.8)} {tier.top + 0.6}Z"
 			/>
 		{/each}
-		{@render modeled(
-			'squash',
-			SQUASHED_TIER,
-			'f-pink',
-			`M${r(squashX + 8)} 4C${r(squashX + 20)} 12 ${r(squashX + 18)} 20 ${r(squashX + 6)} 28H${r(squashX + 40)}V4Z`,
-			'',
-			false
-		)}
-		<path class="line f-white" d={SPLAT} />
-		<rect class="line f-rock" x="-2" y="-2" width={WIDTH + 4} height={CEILING + 2} />
-		<rect class="shade" x="-2" y={CEILING - 2} width={WIDTH + 4} height="2" />
-		<path class="line thin open" d={CRACKS} />
-		{@render eye(61.5, 77.5, 2.8, -0.3, -1.2)}
-		{@render eye(74.5, 77.5, 2.8, -0.3, -1.2)}
+		{#if after}
+			{@render modeled(
+				'squash',
+				SQUASHED_TIER,
+				'f-pink',
+				`M${r(squashX + 8)} 4C${r(squashX + 20)} 12 ${r(squashX + 18)} 20 ${r(squashX + 6)} 28H${r(squashX + 40)}V4Z`,
+				'',
+				false
+			)}
+			<path class="line f-white" d={SPLAT} />
+			<rect class="line f-rock" x="-2" y="-2" width={WIDTH + 4} height={CEILING + 2} />
+			<rect class="shade" x="-2" y={CEILING - 2} width={WIDTH + 4} height="2" />
+			<path class="line thin open" d={CRACKS} />
+		{:else}
+			<rect class="line f-rock" x="-2" y="-2" width={WIDTH + 4} height={CEILING + 2} />
+			<rect class="shade" x="-2" y={CEILING - 2} width={WIDTH + 4} height="2" />
+			<path
+				class="line f-cherry"
+				d="M{r(spineX(57) - 2.6)} 55.4A2.8 2.8 0 1 1 {r(spineX(57) + 2.6)} 55.4Q{spineX(57)} 57 {r(
+					spineX(57) - 2.6
+				)} 55.4Z"
+			/>
+			<path class="line open" d="M{spineX(57)} 52.6Q{spineX(57) + 1} 50 {spineX(57) + 3} 49.4" />
+		{/if}
+		{@render eye(61.5, 77.5, 2.8, -0.3, after ? -1.2 : 0.4)}
+		{@render eye(74.5, 77.5, 2.8, -0.3, after ? -1.2 : 0.4)}
 		<path class="line bold open" d="M57.5 73.8Q60.5 72.4 64 73.4M71.5 73.4Q75 72.4 78 73.8" />
 		<path
 			class="line f-ink"
@@ -783,9 +823,14 @@
 		<ellipse class="shade" cx="26" cy="87.2" rx="12" ry="1.3" />
 		<g transform="translate(25 81.2) scale(0.56)">{@render toast('toast', 'puzzled')}</g>
 		{@render plate(80, 86, 34, 3.6)}
-		<g transform="translate(80 69) rotate(-11 -26 15)">
+		<!-- Before: a quiet quiche; after: it bursts out laughing, rocking on its plate. -->
+		<g transform={after ? 'translate(80 69) rotate(-11 -26 15)' : 'translate(80 72)'}>
 			<path class="line f-crust" d={limb([-24, 5], [-35, 4], [-37, 11], 2, 1.7)} />
-			<path class="line f-crust" d={limb([24, 3], [35, 2], [37.5, -7], 2, 1.7)} />
+			{#if after}
+				<path class="line f-crust" d={limb([24, 3], [35, 2], [37.5, -7], 2, 1.7)} />
+			{:else}
+				<path class="line f-crust" d={limb([24, 5], [35, 4], [37, 11], 2, 1.7)} />
+			{/if}
 			{@render modeled(
 				'quiche-side',
 				QUICHE_SIDE,
@@ -809,24 +854,34 @@
 			<circle class="line thin f-spot" cx="-17" cy="3.5" r="1.3" />
 			<circle class="line thin f-spot" cx="17" cy="3.2" r="1.3" />
 			<circle class="line thin f-spot" cx="0.5" cy="-6.5" r="1.1" />
-			<path class="line bold open" d="M-12 -2Q-8.5 -6.5 -5 -2M5 -2Q8.5 -6.5 12 -2" />
-			<clipPath id="{uid}-mouth"><path d={QUICHE_MOUTH} /></clipPath>
-			<path class="f-ink" d={QUICHE_MOUTH} />
-			<g clip-path="url(#{uid}-mouth)">
-				<ellipse class="tone-f" cx="1" cy="7.6" rx="4" ry="2.6" />
-				<path class="f-white" d="M-7 0H7L6.6 2.2Q0 3.4 -6.6 2.2Z" />
-			</g>
-			<path class="line open" d={QUICHE_MOUTH} />
-			<path
-				class="line f-water"
-				d="M-12.6 -1.6C-15.4 -1 -17 1.4 -16 3.2C-15 4.8 -12.6 4.2 -12.4 2.2C-12.3 0.8 -12.5 -0.4 -12.6 -1.6Z"
-			/>
-			<path
-				class="line f-water"
-				d="M12.6 -1.6C15.4 -1 17 1.4 16 3.2C15 4.8 12.6 4.2 12.4 2.2C12.3 0.8 12.5 -0.4 12.6 -1.6Z"
-			/>
+			{#if after}
+				<path class="line bold open" d="M-12 -2Q-8.5 -6.5 -5 -2M5 -2Q8.5 -6.5 12 -2" />
+				<clipPath id="{uid}-mouth"><path d={QUICHE_MOUTH} /></clipPath>
+				<path class="f-ink" d={QUICHE_MOUTH} />
+				<g clip-path="url(#{uid}-mouth)">
+					<ellipse class="tone-f" cx="1" cy="7.6" rx="4" ry="2.6" />
+					<path class="f-white" d="M-7 0H7L6.6 2.2Q0 3.4 -6.6 2.2Z" />
+				</g>
+				<path class="line open" d={QUICHE_MOUTH} />
+				<path
+					class="line f-water"
+					d="M-12.6 -1.6C-15.4 -1 -17 1.4 -16 3.2C-15 4.8 -12.6 4.2 -12.4 2.2C-12.3 0.8 -12.5 -0.4 -12.6 -1.6Z"
+				/>
+				<path
+					class="line f-water"
+					d="M12.6 -1.6C15.4 -1 17 1.4 16 3.2C15 4.8 12.6 4.2 12.4 2.2C12.3 0.8 12.5 -0.4 12.6 -1.6Z"
+				/>
+			{:else}
+				{@render eye(-8.5, -2.4, 2.6, 0.3, 0.4)}
+				{@render eye(8.5, -2.4, 2.6, 0.3, 0.4)}
+				<path class="line bold open" d="M-4.5 4.2Q0 5.6 4.5 4.2" />
+			{/if}
 			{@render hand(-37, 11, 8, 'f-crust', -1)}
-			{@render hand(37.5, -7, 170, 'f-crust', 1)}
+			{#if after}
+				{@render hand(37.5, -7, 170, 'f-crust', 1)}
+			{:else}
+				{@render hand(37, 11, -8, 'f-crust', 1)}
+			{/if}
 		</g>
 		<ellipse class="shade" cx="137" cy="87.2" rx="16" ry="1.4" />
 		{@render plate(136, 85.6, 17, 2.6)}
@@ -840,8 +895,14 @@
 		{@render jar(25, 22, 8, 11, 'j')}
 		{@render jar(37, 22, 7, 8, 'c')}
 		<g transform="translate({CHEF_X} 0)">
-			<path class="line f-white" d={limb([-14, 67], [-31, 59], [-13.5, 43], 4, 3.2)} />
-			<path class="line f-white" d={limb([14, 67], [31, 59], [13.5, 43], 4, 3.2)} />
+			<!-- Before: the chef listens, arms down; after: hands over the ears. -->
+			{#if after}
+				<path class="line f-white" d={limb([-14, 67], [-31, 59], [-13.5, 43], 4, 3.2)} />
+				<path class="line f-white" d={limb([14, 67], [31, 59], [13.5, 43], 4, 3.2)} />
+			{:else}
+				<path class="line f-white" d={limb([-14, 66], [-21, 74], [-20, 86], 4, 3.4)} />
+				<path class="line f-white" d={limb([14, 66], [21, 74], [20, 86], 4, 3.4)} />
+			{/if}
 			{@render modeled('chef', CHEF_TORSO, 'f-white', 'M8 56C18 66 18 84 14 104H30V56Z', '', true)}
 			<path class="line tone-b" d="M-9 70.5Q0 71.5 9 70.5L10 100H-10Z" />
 			<path class="line thin open" d="M-8.5 70.6L-12 61.5M8.5 70.6L12 61.5" />
@@ -859,16 +920,23 @@
 			)}
 			<path class="line tone-a" d="M-8 57.5Q0 62 8 57.5L5.5 63.5Q0 66.5 -5.5 63.5Z" />
 			<g transform="translate(0 31)">{@render toque('chef-toque')}</g>
-			<path class="line bold open" d="M-6 37.8L-2.8 40L-6 42.2M6 37.8L2.8 40L6 42.2" />
-			<path class="line bold open" d="M-9 34.5Q-6.5 32.6 -3 33.2M3 33.2Q6.5 32.6 9 34.5" />
-			<path class="line f-white" d="M-5.5 46.5Q0 44.5 5.5 46.5Q6 50 0 50.2Q-6 50 -5.5 46.5Z" />
-			<path
-				class="line thin open"
-				d="M-5.4 48.2Q0 47.2 5.6 48.2M-2.5 45.6V49.8M0 45.3V50.1M2.5 45.6V49.8"
-			/>
-			<path class="line thin f-water" d="M8 33C6.2 35.4 6.3 37.3 7.8 37.7C9.3 38 10 36.4 8 33Z" />
-			{@render hand(-13.5, 43, 192, 'f-skin', 1, 1.25)}
-			{@render hand(13.5, 43, 168, 'f-skin', -1, 1.25)}
+			{#if after}
+				<path class="line bold open" d="M-6 37.8L-2.8 40L-6 42.2M6 37.8L2.8 40L6 42.2" />
+				<path class="line bold open" d="M-9 34.5Q-6.5 32.6 -3 33.2M3 33.2Q6.5 32.6 9 34.5" />
+				<path class="line f-white" d="M-5.5 46.5Q0 44.5 5.5 46.5Q6 50 0 50.2Q-6 50 -5.5 46.5Z" />
+				<path
+					class="line thin open"
+					d="M-5.4 48.2Q0 47.2 5.6 48.2M-2.5 45.6V49.8M0 45.3V50.1M2.5 45.6V49.8"
+				/>
+				<path class="line thin f-water" d="M8 33C6.2 35.4 6.3 37.3 7.8 37.7C9.3 38 10 36.4 8 33Z" />
+				{@render hand(-13.5, 43, 192, 'f-skin', 1, 1.25)}
+				{@render hand(13.5, 43, 168, 'f-skin', -1, 1.25)}
+			{:else}
+				<circle class="f-ink" cx="-4.6" cy="40" r="1.3" />
+				<circle class="f-ink" cx="4.6" cy="40" r="1.3" />
+				<path class="line bold open" d="M-8 35.4Q-5 33.8 -2.4 35M2.4 35Q5 33.8 8 35.4" />
+				<path class="line bold open" d="M-4.2 46Q0 49 4.2 46" />
+			{/if}
 		</g>
 		{@render counter(80)}
 		<ellipse class="line f-dark" cx="46" cy="82" rx="22" ry="1.8" />
@@ -890,9 +958,12 @@
 		<path class="line f-metal" d="M19.6 54.5Q19.4 57.5 21 59.5L24.5 59.2Q23.6 56.8 23.8 54.2Z" />
 		<ellipse class="line f-metal" cx="46" cy="48" rx="26.5" ry="4.6" />
 		<ellipse class="line f-pot-inside" cx="46" cy="48.4" rx="23" ry="3.2" />
-		<path class="steam" d="M60 46C58 41 63 39 61 34M67 46.5C66 42 70 40 68.5 36" />
-		<g transform="rotate(-15 20 48)">
-			<g transform="translate(20 48)">
+		<!-- Before: the lid sits on the pan, which hums with its mouth shut; after: it sings. -->
+		{#if after}
+			<path class="steam" d="M60 46C58 41 63 39 61 34M67 46.5C66 42 70 40 68.5 36" />
+		{/if}
+		<g transform={after ? 'rotate(-15 20 48)' : undefined}>
+			<g transform={after ? 'translate(20 48)' : 'translate(19.5 47.6)'}>
 				<path class="line f-dark" d="M23.8 -7.6Q24 -10 23 -11.5H30Q29 -10 29.2 -7.6Z" />
 				<ellipse class="line f-dark" cx="26.5" cy="-12.2" rx="4.2" ry="1.8" />
 				{@render modeled(
@@ -909,22 +980,27 @@
 		<path class="line bold open" d="M32 60.5Q36 57 40 60.5M52 60.5Q56 57 60 60.5" />
 		<ellipse class="glassy tone-f" cx="30" cy="66" rx="3.4" ry="2" />
 		<ellipse class="glassy tone-f" cx="62" cy="66" rx="3.4" ry="2" />
-		<path class="line thin glassy tone-d" d={SONG} />
-		<clipPath id="{uid}-singing"><path d={PAN_MOUTH} /></clipPath>
-		<path class="f-ink" d={PAN_MOUTH} />
-		<g clip-path="url(#{uid}-singing)">
-			<ellipse class="tone-f" cx="47" cy="75" rx="4.4" ry="2.8" />
-		</g>
-		<path class="line open" d={PAN_MOUTH} />
-		{@render note(77, 65, 'a', 'M80 64C80.5 60 78.8 57.5 81.2 53.5C83.5 54 85.5 55.5 85 58.5')}
-		{@render note(88, 54, 'i', 'M91 53C91.4 49 90 47 91.5 43.5M91.5 43.5L95 41L97 44L100.5 39.5')}
-		{@render note(97.5, 45, 'c', 'M100.5 44C101 42 100.2 41 100.5 39.5')}
-		{@render note(109, 33.5, 'e', 'M112 32.5C112.5 28.5 115 25.5 118 27')}
+		{#if after}
+			<path class="line thin glassy tone-d" d={SONG} />
+			<clipPath id="{uid}-singing"><path d={PAN_MOUTH} /></clipPath>
+			<path class="f-ink" d={PAN_MOUTH} />
+			<g clip-path="url(#{uid}-singing)">
+				<ellipse class="tone-f" cx="47" cy="75" rx="4.4" ry="2.8" />
+			</g>
+			<path class="line open" d={PAN_MOUTH} />
+			{@render note(77, 65, 'a', 'M80 64C80.5 60 78.8 57.5 81.2 53.5C83.5 54 85.5 55.5 85 58.5')}
+			{@render note(88, 54, 'i', 'M91 53C91.4 49 90 47 91.5 43.5M91.5 43.5L95 41L97 44L100.5 39.5')}
+			{@render note(97.5, 45, 'c', 'M100.5 44C101 42 100.2 41 100.5 39.5')}
+			{@render note(109, 33.5, 'e', 'M112 32.5C112.5 28.5 115 25.5 118 27')}
+		{:else}
+			<path class="line bold open" d="M41 68.6Q46 71.6 51 68.6" />
+		{/if}
 	</g>
 {:else if art === 'kitchen-spices'}
 	<g data-story-art="kitchen-spices">
 		{@render wall(34, 74)}
-		<StoryDino {...SPICES_DINO} mood="cheer" />
+		<!-- Before: a pinch of spices rises to the nose; after: the sneeze of sparkles. -->
+		<StoryDino {...SPICES_DINO} mood={after ? 'cheer' : 'oops'} />
 		{@render counter(74)}
 		<ellipse class="shade" cx="66" cy="77.8" rx="12" ry="1.2" />
 		{@render modeled(
@@ -947,25 +1023,31 @@
 			class="line thin tone-g"
 			d="M45.5 77.8Q47.5 74.8 50.5 75.4Q52.5 74.6 54 76.2Q55 77.6 53.5 78Z"
 		/>
-		{@render modeled(
-			'sneeze',
-			'M46.5 49C52 42 58 38 64 37C66 30 74 26 81 28C85 20 96 17 103 21C109 13 122 12 128 18C135 11 150 12 154 20C162 20 166 30 162 38L170 40V72C160 76 150 70 146 68C140 74 128 74 124 68C118 74 106 72 104 66C98 70 88 68 86 63C80 66 70 63 70 58C64 60 56 58 53 55.5C51 54.5 49 53.5 46.5 52.5Z',
-			'f-cloud',
-			'M40 60C70 58 100 66 130 62C145 60 160 60 170 58V80H40Z',
-			'M66 39C68 33 74 30 79 31C75 33 71 36 69 40ZM105 23C110 17 118 16 124 19C118 19 113 21 109 25Z',
-			false
-		)}
-		{#each SNEEZE_SPARKS as spark (`${spark.x} ${spark.y}`)}
-			<path
-				class="line tone-{spark.tone}"
-				d={spark.star
-					? starPath(spark.x, spark.y, spark.r, spark.r * STAR_INNER, 5)
-					: twinkle(spark.x, spark.y, spark.r)}
-			/>
-		{/each}
-		{#each SNEEZE_DOTS as dot (`${dot.x} ${dot.y}`)}
-			<circle class="line thin tone-{dot.tone}" cx={dot.x} cy={dot.y} r="1.5" />
-		{/each}
+		{#if !after}
+			{#each SPICE_PINCH as speck (`${speck.x} ${speck.y}`)}
+				<circle class="line thin tone-{speck.tone}" cx={speck.x} cy={speck.y} r={speck.r} />
+			{/each}
+		{:else}
+			{@render modeled(
+				'sneeze',
+				'M46.5 49C52 42 58 38 64 37C66 30 74 26 81 28C85 20 96 17 103 21C109 13 122 12 128 18C135 11 150 12 154 20C162 20 166 30 162 38L170 40V72C160 76 150 70 146 68C140 74 128 74 124 68C118 74 106 72 104 66C98 70 88 68 86 63C80 66 70 63 70 58C64 60 56 58 53 55.5C51 54.5 49 53.5 46.5 52.5Z',
+				'f-cloud',
+				'M40 60C70 58 100 66 130 62C145 60 160 60 170 58V80H40Z',
+				'M66 39C68 33 74 30 79 31C75 33 71 36 69 40ZM105 23C110 17 118 16 124 19C118 19 113 21 109 25Z',
+				false
+			)}
+			{#each SNEEZE_SPARKS as spark (`${spark.x} ${spark.y}`)}
+				<path
+					class="line tone-{spark.tone}"
+					d={spark.star
+						? starPath(spark.x, spark.y, spark.r, spark.r * STAR_INNER, 5)
+						: twinkle(spark.x, spark.y, spark.r)}
+				/>
+			{/each}
+			{#each SNEEZE_DOTS as dot (`${dot.x} ${dot.y}`)}
+				<circle class="line thin tone-{dot.tone}" cx={dot.x} cy={dot.y} r="1.5" />
+			{/each}
+		{/if}
 	</g>
 {:else if art === 'kitchen-ending'}
 	<g data-story-art="kitchen-ending">
@@ -976,7 +1058,10 @@
 		{@render jar(146, 30, 7, 8, 'e')}
 		<circle class="line f-white" cx="132" cy="12.5" r="7.5" />
 		<circle class="line thin open" cx="132" cy="12.5" r="5.6" />
-		<path class="line open" d="M132 12.5V8.4M132 12.5L135.2 14.2" />
+		<path
+			class="line open"
+			d={after ? 'M132 12.5V8.4M132 12.5L135.2 14.2' : 'M132 12.5V8.4M132 12.5L129 10.8'}
+		/>
 		<circle class="f-ink" cx="132" cy="12.5" r="0.8" />
 		<StoryDino {...ENDING_DINO} />
 		<g transform={dinoFrame(ENDING_DINO)}>
@@ -989,32 +1074,47 @@
 				true
 			)}
 			<path class="line thin open" d="M48 84Q46 94 49 104M72 84Q74 94 71 104" />
-			<path
-				class="line f-sauce"
-				d="M62 88C64 85 68 86 69 88C71.5 89 71 92 69 93C68.5 96 65 96 64 94.5C61 95 59.5 92 61 90.5C60.5 89.5 61 88.5 62 88Z"
-			/>
+			{#if after}
+				<path
+					class="line f-sauce"
+					d="M62 88C64 85 68 86 69 88C71.5 89 71 92 69 93C68.5 96 65 96 64 94.5C61 95 59.5 92 61 90.5C60.5 89.5 61 88.5 62 88Z"
+				/>
+			{/if}
 		</g>
 		{@render fork(dinoGrip(ENDING_DINO)[0], dinoGrip(ENDING_DINO)[1], -8)}
 		{@render table(69, 10)}
-		<circle class="line thin f-crumb" cx="60" cy="75" r="0.8" />
-		<g transform="translate(0 5)">
-			<ellipse class="shade" cx="79" cy="72.8" rx="12" ry="2.6" />
-			{#each PLATE_STACK as level (level)}
-				{@const top = 71 - level * PLATE_STEP}
-				<path
-					class="line f-white"
-					d="M67 {top}A11 2.6 0 0 0 89 {top}V{top + 1.4}A11 2.6 0 0 1 67 {top + 1.4}Z"
-				/>
-				<ellipse class="line f-white" cx="78" cy={top} rx="11" ry="2.6" />
-				<path
-					class="shade"
-					d="M80 {top + 2.5}A11 2.6 0 0 0 88.4 {top + 1.6}V{top + 2.4}A11 2.6 0 0 1 80 {top + 3.9}Z"
-				/>
-			{/each}
-			<ellipse class="line thin open" cx="78" cy={71.2 - 4 * PLATE_STEP} rx="7" ry="1.5" />
-			<circle class="line thin f-crumb" cx="75" cy="58.6" r="0.8" />
-			<circle class="line thin f-crumb" cx="80.5" cy="58" r="0.7" />
-		</g>
+		<!-- Before: a whole pie and a blank page; after: a pile of empty plates, the page written. -->
+		{#if after}
+			<circle class="line thin f-crumb" cx="60" cy="75" r="0.8" />
+			<g transform="translate(0 5)">
+				<ellipse class="shade" cx="79" cy="72.8" rx="12" ry="2.6" />
+				{#each PLATE_STACK as level (level)}
+					{@const top = 71 - level * PLATE_STEP}
+					<path
+						class="line f-white"
+						d="M67 {top}A11 2.6 0 0 0 89 {top}V{top + 1.4}A11 2.6 0 0 1 67 {top + 1.4}Z"
+					/>
+					<ellipse class="line f-white" cx="78" cy={top} rx="11" ry="2.6" />
+					<path
+						class="shade"
+						d="M80 {top + 2.5}A11 2.6 0 0 0 88.4 {top + 1.6}V{top + 2.4}A11 2.6 0 0 1 80 {top +
+							3.9}Z"
+					/>
+				{/each}
+				<ellipse class="line thin open" cx="78" cy={71.2 - 4 * PLATE_STEP} rx="7" ry="1.5" />
+				<circle class="line thin f-crumb" cx="75" cy="58.6" r="0.8" />
+				<circle class="line thin f-crumb" cx="80.5" cy="58" r="0.7" />
+			</g>
+		{:else}
+			{@render plate(78, 77.4, 15, 3.4)}
+			<path class="line f-crust" d="M66.4 72.4V75Q78 79.4 89.6 75V72.4Z" />
+			<ellipse class="line f-crust" cx="78" cy="72.4" rx="11.6" ry="2.8" />
+			<ellipse class="f-filling" cx="78" cy="72.4" rx="9.4" ry="2" />
+			<ellipse class="line thin open" cx="78" cy="72.4" rx="9.4" ry="2" />
+			<path class="line thin f-leaf" d="M73 71.6Q75 70.2 77 71.2Q75 72.6 73 71.6Z" />
+			<circle class="line thin f-spot" cx="82" cy="72.6" r="0.9" />
+			<path class="steam" d="M74 67C73 64 76 62.6 75 60M81 67C80 64 83 62.6 82 60" />
+		{/if}
 		<g transform="translate(0 3)">
 			<path class="shade" d="M92 97.5L95 72L157 70L160 96Z" />
 			<path
@@ -1024,22 +1124,27 @@
 			<path class="line f-page" d="M96.5 72Q111 68.8 125.5 71.5V94Q110 91.8 95 95Z" />
 			<path class="line f-page" d="M125.5 71.5Q140 68.3 154 69.8L156.2 92.4Q141 90.8 125.5 94Z" />
 			<path class="shade" d="M121 71.3Q123.5 71.4 125.5 71.5V94Q123 93.6 120.5 93.4Z" />
-			<path
-				class="writing"
-				d="M99 76.5Q110 74 121 76M98.6 81Q110 78.5 121 80.5M98.2 85.5Q109 83 121 85M97.8 90Q105 88 113 89"
-			/>
-			<path
-				class="writing"
-				d="M129 75.5Q140 73 151.5 73.8M129 80Q140 77.5 152 78.3M129 84.5Q140 82 152.6 82.8M129 89Q140 86.5 153 87.3"
-			/>
-			<path
-				class="line f-sauce"
-				d="M134 78.5C136 74.6 141 75.6 142.5 77.5C145.5 76.5 148.5 79 147 82C150 84 148.5 88.5 145 88C144.6 91.5 142.6 92.6 141.4 91.2C140.4 92.8 137.4 92.8 137 90C133.5 90.6 131.5 87 133.5 85C130.5 83 131.5 79 134 78.5Z"
-			/>
-			<path class="light" d="M136 79.6C137.5 78 140 78 141 79.2C139.2 79.2 137.6 79.8 136.6 81Z" />
-			<circle class="line thin f-sauce" cx="150.6" cy="77.6" r="1.1" />
-			<circle class="line thin f-sauce" cx="131" cy="91.6" r="0.9" />
-			<circle class="line thin f-sauce" cx="151.8" cy="89.4" r="0.8" />
+			{#if after}
+				<path
+					class="writing"
+					d="M99 76.5Q110 74 121 76M98.6 81Q110 78.5 121 80.5M98.2 85.5Q109 83 121 85M97.8 90Q105 88 113 89"
+				/>
+				<path
+					class="writing"
+					d="M129 75.5Q140 73 151.5 73.8M129 80Q140 77.5 152 78.3M129 84.5Q140 82 152.6 82.8M129 89Q140 86.5 153 87.3"
+				/>
+				<path
+					class="line f-sauce"
+					d="M134 78.5C136 74.6 141 75.6 142.5 77.5C145.5 76.5 148.5 79 147 82C150 84 148.5 88.5 145 88C144.6 91.5 142.6 92.6 141.4 91.2C140.4 92.8 137.4 92.8 137 90C133.5 90.6 131.5 87 133.5 85C130.5 83 131.5 79 134 78.5Z"
+				/>
+				<path
+					class="light"
+					d="M136 79.6C137.5 78 140 78 141 79.2C139.2 79.2 137.6 79.8 136.6 81Z"
+				/>
+				<circle class="line thin f-sauce" cx="150.6" cy="77.6" r="1.1" />
+				<circle class="line thin f-sauce" cx="131" cy="91.6" r="0.9" />
+				<circle class="line thin f-sauce" cx="151.8" cy="89.4" r="0.8" />
+			{/if}
 		</g>
 	</g>
 {/if}

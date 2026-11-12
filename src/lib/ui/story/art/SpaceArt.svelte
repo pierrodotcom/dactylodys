@@ -2,16 +2,20 @@
 	import type { Snippet } from 'svelte';
 	import { checkerPath, starPath } from '$lib/ui/companion/geometry';
 	import StoryDino from '../StoryDino.svelte';
+	import type { StoryPhase } from '../phase';
 
 	const uid = $props.id();
 
 	interface Props {
 		/** One of `STORY_ART_GROUPS.space`. */
 		art: string;
+		/** `before`: what the sentence starts from; `after`: what it tells (ADR-057). */
+		phase?: StoryPhase;
 	}
 
 	type Mouth = 'o' | 'smile' | 'hmm';
-	type Pose = 'sip' | 'hold' | 'nap';
+	/** `busy`: before the pause, arms up and no cup. */
+	type Pose = 'sip' | 'hold' | 'nap' | 'busy';
 
 	const DECIMALS = 100;
 
@@ -134,6 +138,8 @@
 	/** The companion in its space suit (space-moon): its square, and the turn of its float. */
 	const ASTRONAUT = { x: 4, y: 20, size: 66, tilt: -10 } as const;
 	const SUIT_SCALE = ASTRONAUT.size / 120;
+	/** space-moon, before: the cup upright, its bottom in the companion's glove. */
+	const CUP_HELD = 'translate(66 66) scale(0.78) translate(-102.5 -58.5)';
 
 	/** Coffee leaving the cup, from its brim to the helmet: each drop trails behind its way. */
 	const COFFEE_FROM = { x: 97, y: 33 } as const;
@@ -207,7 +213,8 @@
 
 	const NOTEBOOK_RINGS = [24, 32, 40, 48, 56, 64, 72, 80] as const;
 
-	let { art }: Props = $props();
+	let { art, phase = 'after' }: Props = $props();
+	const after = $derived(phase === 'after');
 
 	const id = (name: string) => `${uid}-${name}`;
 </script>
@@ -310,7 +317,7 @@
 {/snippet}
 
 <!-- The rocket of the trip, upright, nose at (80, 6), with the companion at its porthole. -->
-{#snippet rocket(name: string)}
+{#snippet rocket(name: string, lit: boolean = true)}
 	<defs>
 		<radialGradient id={id(`${name}-glow`)}>
 			<stop offset="0" class="stop-glow" />
@@ -334,16 +341,18 @@
 			<circle cx={PORTHOLE.x} cy={PORTHOLE.y} r={PORTHOLE.glass} />
 		</clipPath>
 	</defs>
-	<circle fill="url(#{id(`${name}-glow`)})" cx="80" cy="86" r="28" />
-	<path
-		class="ln"
-		fill="url(#{id(`${name}-flame`)})"
-		d="M67 73C64 82 70 90 74 95C76.5 98.5 78.5 101 80 105C81.5 101 83.5 98.5 86 95C90 90 96 82 93 73Q80 77 67 73Z"
-	/>
-	<path
-		fill="url(#{id(`${name}-core`)})"
-		d="M71.5 73.5C70.5 80 74 85.5 76.5 89.5C78 92 79.2 94.5 80 97C80.8 94.5 82 92 83.5 89.5C86 85.5 89.5 80 88.5 73.5Q80 76.5 71.5 73.5Z"
-	/>
+	{#if lit}
+		<circle fill="url(#{id(`${name}-glow`)})" cx="80" cy="86" r="28" />
+		<path
+			class="ln"
+			fill="url(#{id(`${name}-flame`)})"
+			d="M67 73C64 82 70 90 74 95C76.5 98.5 78.5 101 80 105C81.5 101 83.5 98.5 86 95C90 90 96 82 93 73Q80 77 67 73Z"
+		/>
+		<path
+			fill="url(#{id(`${name}-core`)})"
+			d="M71.5 73.5C70.5 80 74 85.5 76.5 89.5C78 92 79.2 94.5 80 97C80.8 94.5 82 92 83.5 89.5C86 85.5 89.5 80 88.5 73.5Q80 76.5 71.5 73.5Z"
+		/>
+	{/if}
 	<!-- Fins and nozzle start under the hull. -->
 	<path
 		class="ln j"
@@ -511,6 +520,11 @@
 			<path class="ln thin {tone}" d="M1.2 -9.6Q3.2 -11.4 5.4 -9.6" />
 			{#if pose === 'sip'}
 				<path class="ln none" d="M-5 -8.4Q-3.2 -7 -1.4 -8.4M1.4 -8.4Q3.2 -7 5 -8.4" />
+			{:else if pose === 'busy'}
+				<circle class="ln thin white" cx="-3.2" cy="-7.6" r="1.8" />
+				<circle class="ln thin white" cx="3.2" cy="-7.6" r="1.8" />
+				<circle class="ink" cx="-3" cy="-7.8" r="0.9" />
+				<circle class="ink" cx="3.4" cy="-7.8" r="0.9" />
 			{:else}
 				<circle class="ln thin white" cx="-3.2" cy="-7.6" r="1.8" />
 				<circle class="ln thin white" cx="3.2" cy="-7.6" r="1.8" />
@@ -519,24 +533,40 @@
 				<circle class="ink" cx="-3" cy="-6.9" r="0.8" />
 				<circle class="ink" cx="3.4" cy="-6.9" r="0.8" />
 			{/if}
-			<!-- A cup held in both hands, near the mouth when it sips. -->
-			<g transform={pose === 'sip' ? 'translate(1.6 -3.2) rotate(-14)' : 'translate(0 2)'}>
-				<path class="ln none" d="M2.6 -3.6Q4.8 -3.6 4.6 -2Q4.4 -0.4 2.4 -0.8" />
+			{#if pose === 'busy'}
+				<ellipse class="ln thin ink" cx="0" cy="-3.4" rx="1.3" ry="1.6" />
 				<path
-					class="ln white"
-					d="M-2.8 -4.6L-2.3 -0.4Q-2.2 0.6 -1.2 0.6H1.2Q2.2 0.6 2.3 -0.4L2.8 -4.6Z"
+					class="ln {tone}"
+					d="M-6.8 -6.5C-9.8 -8.4 -11.4 -11.8 -11.2 -15C-11.1 -16.4 -9.6 -16.8 -9 -15.6C-8.6 -13 -7.6 -10.8 -5.4 -9.4Z"
 				/>
-				<ellipse class="ln thin coffee" cx="0" cy="-4.6" rx="2.8" ry="0.8" />
-				<path class="steam fine" d="M0.6 -6Q-0.4 -7.2 0.6 -8.4" />
-			</g>
-			<path
-				class="ln {tone}"
-				d="M-6.8 -6.5C-7.6 -3.4 -6 -1.2 -3.2 -1.4C-2 -1.5 -1.8 -3 -2.8 -3.4C-4 -3.8 -4.8 -5 -5.2 -7.2Z"
-			/>
-			<path
-				class="ln {tone}"
-				d="M6.8 -6.5C7.6 -3.4 6 -1.2 3.2 -1.4C2 -1.5 1.8 -3 2.8 -3.4C4 -3.8 4.8 -5 5.2 -7.2Z"
-			/>
+				<path
+					class="ln {tone}"
+					d="M6.8 -6.5C9.8 -8.4 11.4 -11.8 11.2 -15C11.1 -16.4 9.6 -16.8 9 -15.6C8.6 -13 7.6 -10.8 5.4 -9.4Z"
+				/>
+				<path
+					class="ln thin none"
+					d="M-13 -18.4L-14.6 -20M13 -18.4L14.6 -20M-13.8 -14.6H-15.8M13.8 -14.6H15.8"
+				/>
+			{:else}
+				<!-- A cup held in both hands, near the mouth when it sips. -->
+				<g transform={pose === 'sip' ? 'translate(1.6 -3.2) rotate(-14)' : 'translate(0 2)'}>
+					<path class="ln none" d="M2.6 -3.6Q4.8 -3.6 4.6 -2Q4.4 -0.4 2.4 -0.8" />
+					<path
+						class="ln white"
+						d="M-2.8 -4.6L-2.3 -0.4Q-2.2 0.6 -1.2 0.6H1.2Q2.2 0.6 2.3 -0.4L2.8 -4.6Z"
+					/>
+					<ellipse class="ln thin coffee" cx="0" cy="-4.6" rx="2.8" ry="0.8" />
+					<path class="steam fine" d="M0.6 -6Q-0.4 -7.2 0.6 -8.4" />
+				</g>
+				<path
+					class="ln {tone}"
+					d="M-6.8 -6.5C-7.6 -3.4 -6 -1.2 -3.2 -1.4C-2 -1.5 -1.8 -3 -2.8 -3.4C-4 -3.8 -4.8 -5 -5.2 -7.2Z"
+				/>
+				<path
+					class="ln {tone}"
+					d="M6.8 -6.5C7.6 -3.4 6 -1.2 3.2 -1.4C2 -1.5 1.8 -3 2.8 -3.4C4 -3.8 4.8 -5 5.2 -7.2Z"
+				/>
+			{/if}
 		{/if}
 	</g>
 {/snippet}
@@ -553,53 +583,58 @@
 			<path class="ln thin h" d={ringHalf(138, 24, 10, 2.6, 0.7, 'front')} />
 		</g>
 		<path class="ln n" d="M0 90Q80 82 160 90V100H0Z" />
-		<!-- Speed lines along the hull. -->
-		<path
-			class="streak"
-			d="M55 22Q53.5 32 54.5 42M59 10Q57.5 18 58 26M105 22Q106.5 32 105.5 42M101 10Q102.5 18 102 26"
-		/>
-		{@render rocket('launch')}
-		<clipPath id={id('smoke-left')}>
+		<!-- Before: on the ground, engine off; after: lift-off in its smoke. -->
+		{#if !after}
+			<g transform="translate(0 10)">{@render rocket('launch', false)}</g>
+		{:else}
+			<!-- Speed lines along the hull. -->
 			<path
+				class="streak"
+				d="M55 22Q53.5 32 54.5 42M59 10Q57.5 18 58 26M105 22Q106.5 32 105.5 42M101 10Q102.5 18 102 26"
+			/>
+			{@render rocket('launch')}
+			<clipPath id={id('smoke-left')}>
+				<path
+					d="M-2 101C-4 94 3 88 10 90C11 83 20 80 26 85C29 78 40 77 44 84C48 80 56 81 58 87C63 86 68 90 67 95C70 97 70 101 68 103H-2Z"
+				/>
+			</clipPath>
+			<clipPath id={id('smoke-right')}>
+				<path
+					d="M162 101C164 94 157 88 150 90C149 83 140 80 134 85C131 78 120 77 116 84C112 80 104 81 102 87C97 86 92 90 93 95C90 97 90 101 92 103H162Z"
+				/>
+			</clipPath>
+			<path
+				class="smoke"
 				d="M-2 101C-4 94 3 88 10 90C11 83 20 80 26 85C29 78 40 77 44 84C48 80 56 81 58 87C63 86 68 90 67 95C70 97 70 101 68 103H-2Z"
 			/>
-		</clipPath>
-		<clipPath id={id('smoke-right')}>
 			<path
+				class="smoke"
 				d="M162 101C164 94 157 88 150 90C149 83 140 80 134 85C131 78 120 77 116 84C112 80 104 81 102 87C97 86 92 90 93 95C90 97 90 101 92 103H162Z"
 			/>
-		</clipPath>
-		<path
-			class="smoke"
-			d="M-2 101C-4 94 3 88 10 90C11 83 20 80 26 85C29 78 40 77 44 84C48 80 56 81 58 87C63 86 68 90 67 95C70 97 70 101 68 103H-2Z"
-		/>
-		<path
-			class="smoke"
-			d="M162 101C164 94 157 88 150 90C149 83 140 80 134 85C131 78 120 77 116 84C112 80 104 81 102 87C97 86 92 90 93 95C90 97 90 101 92 103H162Z"
-		/>
-		<g clip-path="url(#{id('smoke-left')})">
-			<path class="shade" d="M0 95Q16 90 30 94Q46 89 70 96V104H0Z" />
-		</g>
-		<g clip-path="url(#{id('smoke-right')})">
-			<path class="shade" d="M160 95Q144 90 130 94Q114 89 90 96V104H160Z" />
-		</g>
-		<path
-			class="ln none"
-			d="M-2 101C-4 94 3 88 10 90C11 83 20 80 26 85C29 78 40 77 44 84C48 80 56 81 58 87C63 86 68 90 67 95C70 97 70 101 68 103"
-		/>
-		<path
-			class="ln none"
-			d="M162 101C164 94 157 88 150 90C149 83 140 80 134 85C131 78 120 77 116 84C112 80 104 81 102 87C97 86 92 90 93 95C90 97 90 101 92 103"
-		/>
-		<!-- Curls inside the smoke. -->
-		<path
-			class="ln thin none"
-			d="M14 93Q15 89 19 90.5M33 87Q35 83.5 39 85.5M50 91Q52 88 55.5 89.5M60 96Q62 93.5 64 95"
-		/>
-		<path
-			class="ln thin none"
-			d="M146 93Q145 89 141 90.5M127 87Q125 83.5 121 85.5M110 91Q108 88 104.5 89.5M100 96Q98 93.5 96 95"
-		/>
+			<g clip-path="url(#{id('smoke-left')})">
+				<path class="shade" d="M0 95Q16 90 30 94Q46 89 70 96V104H0Z" />
+			</g>
+			<g clip-path="url(#{id('smoke-right')})">
+				<path class="shade" d="M160 95Q144 90 130 94Q114 89 90 96V104H160Z" />
+			</g>
+			<path
+				class="ln none"
+				d="M-2 101C-4 94 3 88 10 90C11 83 20 80 26 85C29 78 40 77 44 84C48 80 56 81 58 87C63 86 68 90 67 95C70 97 70 101 68 103"
+			/>
+			<path
+				class="ln none"
+				d="M162 101C164 94 157 88 150 90C149 83 140 80 134 85C131 78 120 77 116 84C112 80 104 81 102 87C97 86 92 90 93 95C90 97 90 101 92 103"
+			/>
+			<!-- Curls inside the smoke. -->
+			<path
+				class="ln thin none"
+				d="M14 93Q15 89 19 90.5M33 87Q35 83.5 39 85.5M50 91Q52 88 55.5 89.5M60 96Q62 93.5 64 95"
+			/>
+			<path
+				class="ln thin none"
+				d="M146 93Q145 89 141 90.5M127 87Q125 83.5 121 85.5M110 91Q108 88 104.5 89.5M100 96Q98 93.5 96 95"
+			/>
+		{/if}
 	</g>
 {:else if art === 'space-moon'}
 	<g data-story-art="space-moon">
@@ -642,22 +677,25 @@
 				{@render suitFront()}
 			</g>
 		</g>
-		<!-- Coffee escaping the cup in round drops, each with its trail. -->
-		{#each COFFEE_DROPS as drop (drop.x)}
-			<path class="trail" d={drop.trail} />
-			<circle class="ln coffee" cx={drop.x} cy={drop.y} r={drop.r} />
-			<path
-				class="shade"
-				d={crescentPath(drop.x, drop.y, drop.r, -drop.r * 0.4, -drop.r * 0.4, drop.r)}
-			/>
-			<circle
-				class="light"
-				cx={round(drop.x - drop.r * 0.35)}
-				cy={round(drop.y - drop.r * 0.4)}
-				r={round(drop.r * 0.3)}
-			/>
-		{/each}
-		<g transform="rotate(22 102 46)">
+		<!-- Before: the cup in its glove, the coffee in it; after, it floats away. -->
+		{#if after}
+			<!-- Coffee escaping the cup in round drops, each with its trail. -->
+			{#each COFFEE_DROPS as drop (drop.x)}
+				<path class="trail" d={drop.trail} />
+				<circle class="ln coffee" cx={drop.x} cy={drop.y} r={drop.r} />
+				<path
+					class="shade"
+					d={crescentPath(drop.x, drop.y, drop.r, -drop.r * 0.4, -drop.r * 0.4, drop.r)}
+				/>
+				<circle
+					class="light"
+					cx={round(drop.x - drop.r * 0.35)}
+					cy={round(drop.y - drop.r * 0.4)}
+					r={round(drop.r * 0.3)}
+				/>
+			{/each}
+		{/if}
+		<g transform={after ? 'rotate(22 102 46)' : CUP_HELD}>
 			<path
 				class="ln i"
 				d="M111.4 40.4C117.6 40 119.4 44 118.8 47.2C118.2 50.8 115 53.2 110.6 53L110.8 49.8C113.6 49.9 115.3 48.4 115.6 46.6C115.9 44.8 114.8 43.2 111.2 43.5Z"
@@ -673,15 +711,19 @@
 			</g>
 			<ellipse class="ln white" cx="102.5" cy="38" rx="10.5" ry="2.8" />
 			<ellipse class="coffee" cx="102.5" cy="38.3" rx="8.6" ry="2" />
-			<!-- The last of the coffee is just leaving: a blob still holding on. -->
-			<path
-				class="ln coffee"
-				d="M97.6 38.6Q99 35.4 102.4 35.2Q105.8 35.4 107.4 38.4Q102.4 39.6 97.6 38.6Z"
-			/>
-			<circle class="ln coffee" cx="102.6" cy="31.2" r="2.5" />
-			<path class="shade" d={crescentPath(102.6, 31.2, 2.5, -1, -1, 2.5)} />
-			<circle class="light" cx="101.8" cy="30.3" r="0.7" />
-			<path class="trail" d="M97.4 33.4Q96.6 31.6 97 29.8M107.8 33.4Q108.6 31.6 108.2 29.8" />
+			{#if !after}
+				<path class="steam" d="M99 33Q97.4 30 99 27.4M106 33Q104.4 30 106 27.4" />
+			{:else}
+				<!-- The last of the coffee is just leaving: a blob still holding on. -->
+				<path
+					class="ln coffee"
+					d="M97.6 38.6Q99 35.4 102.4 35.2Q105.8 35.4 107.4 38.4Q102.4 39.6 97.6 38.6Z"
+				/>
+				<circle class="ln coffee" cx="102.6" cy="31.2" r="2.5" />
+				<path class="shade" d={crescentPath(102.6, 31.2, 2.5, -1, -1, 2.5)} />
+				<circle class="light" cx="101.8" cy="30.3" r="0.7" />
+				<path class="trail" d="M97.4 33.4Q96.6 31.6 97 29.8M107.8 33.4Q108.6 31.6 108.2 29.8" />
+			{/if}
 		</g>
 	</g>
 {:else if art === 'space-comet'}
@@ -721,43 +763,48 @@
 			class="streak fine"
 			d="M70 60.5C52 59.5 32 62 8 70M66 65C48 71 32 80 14 94M72 62.5C56 64 38 70 20 80"
 		/>
-		<path class="tail-edge" d="M77 59Q80 62 77 65" />
-		{#each TAIL_DUST as [x, y, r] (`${x}-${y}`)}
-			<circle class="star track" cx={x} cy={y} {r} />
-		{/each}
-		<g transform="translate(65 62.6) rotate(-14) scale(1.3)">
-			<ellipse class="ln thin white" cx="-2.6" cy="0" rx="1.9" ry="2.3" />
-			<ellipse class="ln thin white" cx="2.4" cy="0" rx="1.9" ry="2.3" />
-			<circle class="ink" cx="-1.8" cy="-0.7" r="1.05" />
-			<circle class="ink" cx="3.2" cy="-0.7" r="1.05" />
-			<path class="ln thin none" d="M-4.6 -3Q-3 -3.2 -1.2 -4.2M1.2 -4.2Q3 -3.2 4.6 -3" />
-			<path class="ln thin none" d="M-1.4 4.2Q0 3 1.4 4.2" />
-			<path
-				class="ln thin water"
-				d="M-4.2 2.2Q-3.4 3.6 -3.4 4.4A0.8 0.8 0 0 1 -5 4.4Q-5 3.6 -4.2 2.2Z"
-			/>
-		</g>
-		<!-- The way the comet went. -->
-		{#each COMET_TRACK as dot (dot.x)}
-			<circle class="star track" cx={dot.x} cy={dot.y} r={dot.r} />
-		{/each}
-		<circle fill="url(#{id('halo')})" cx="122" cy="30" r="26" />
-		<path class="streak" d="M106 40Q100 43 94 44.5M109 45Q104 49 98 51.5M104 34.5Q99 36 93 36" />
-		<g transform="translate(122 30) rotate(-24)">
-			<clipPath id={id('nucleus')}>
-				<path d={NUCLEUS} />
-			</clipPath>
-			<path class="ice" d={NUCLEUS} />
-			<g clip-path="url(#{id('nucleus')})">
-				<ellipse class="ln thin water" cx="-4" cy="-8.6" rx="1.8" ry="1.1" />
-				<ellipse class="ln thin water" cx="1.5" cy="9" rx="1.6" ry="1" />
-				<ellipse class="ln thin water" cx="-8" cy="4.5" rx="1.1" ry="0.8" />
-				<path class="shade" d={nightSide(0, 0, 12)} />
-				<path class="light" d={crescentPath(0, 0, 11.4, 0.9, 0.9, 11.4)} />
+		<!-- Before: the comet whole, its head at the start of its tail; after: off without it. -->
+		{#if after}
+			<path class="tail-edge" d="M77 59Q80 62 77 65" />
+			{#each TAIL_DUST as [x, y, r] (`${x}-${y}`)}
+				<circle class="star track" cx={x} cy={y} {r} />
+			{/each}
+			<g transform="translate(65 62.6) rotate(-14) scale(1.3)">
+				<ellipse class="ln thin white" cx="-2.6" cy="0" rx="1.9" ry="2.3" />
+				<ellipse class="ln thin white" cx="2.4" cy="0" rx="1.9" ry="2.3" />
+				<circle class="ink" cx="-1.8" cy="-0.7" r="1.05" />
+				<circle class="ink" cx="3.2" cy="-0.7" r="1.05" />
+				<path class="ln thin none" d="M-4.6 -3Q-3 -3.2 -1.2 -4.2M1.2 -4.2Q3 -3.2 4.6 -3" />
+				<path class="ln thin none" d="M-1.4 4.2Q0 3 1.4 4.2" />
+				<path
+					class="ln thin water"
+					d="M-4.2 2.2Q-3.4 3.6 -3.4 4.4A0.8 0.8 0 0 1 -5 4.4Q-5 3.6 -4.2 2.2Z"
+				/>
 			</g>
-			<path class="ln bold none" d={NUCLEUS} />
+			<!-- The way the comet went. -->
+			{#each COMET_TRACK as dot (dot.x)}
+				<circle class="star track" cx={dot.x} cy={dot.y} r={dot.r} />
+			{/each}
+		{/if}
+		<g transform={after ? undefined : 'translate(-38 31)'}>
+			<circle fill="url(#{id('halo')})" cx="122" cy="30" r="26" />
+			<path class="streak" d="M106 40Q100 43 94 44.5M109 45Q104 49 98 51.5M104 34.5Q99 36 93 36" />
+			<g transform="translate(122 30) rotate(-24)">
+				<clipPath id={id('nucleus')}>
+					<path d={NUCLEUS} />
+				</clipPath>
+				<path class="ice" d={NUCLEUS} />
+				<g clip-path="url(#{id('nucleus')})">
+					<ellipse class="ln thin water" cx="-4" cy="-8.6" rx="1.8" ry="1.1" />
+					<ellipse class="ln thin water" cx="1.5" cy="9" rx="1.6" ry="1" />
+					<ellipse class="ln thin water" cx="-8" cy="4.5" rx="1.1" ry="0.8" />
+					<path class="shade" d={nightSide(0, 0, 12)} />
+					<path class="light" d={crescentPath(0, 0, 11.4, 0.9, 0.9, 11.4)} />
+				</g>
+				<path class="ln bold none" d={NUCLEUS} />
+			</g>
+			{@render face(123, 30.5, -14, 0.5, 'smile', 160, 6)}
 		</g>
-		{@render face(123, 30.5, -14, 0.5, 'smile', 160, 6)}
 	</g>
 {:else if art === 'space-giants'}
 	<g data-story-art="space-giants">
@@ -773,17 +820,27 @@
 				<ellipse class="light" cx="25" cy="88" rx="3.4" ry="1.4" />
 			</g>
 		{/snippet}
-		{@render sphere('left', 4, 66, 46, 'astre-b', stripes)}
+		<!-- Before: the giants keep their distance and look away; after: they lean in to look. -->
+		<g transform={after ? undefined : 'translate(-16 8) rotate(-12 4 66)'}>
+			{@render sphere('left', 4, 66, 46, 'astre-b', stripes)}
+			{@render face(28, 56, 22, 1.05, after ? 'o' : 'hmm', after ? 82 : 40, after ? 70 : -40)}
+		</g>
 		{#snippet iceBands()}
 			<path class="water" d="M40 4Q84 12 128 4V8Q84 16 40 8Z" />
 			<path class="water" d="M40 -10Q84 -2 128 -10V-7Q84 1 40 -7Z" />
 		{/snippet}
-		{@render sphere('top', 84, -12, 34, 'astre-a', iceBands, false)}
-		<g transform="rotate(-22 156 58)">
+		<g transform={after ? undefined : 'translate(0 -12)'}>
+			{@render sphere('top', 84, -12, 34, 'astre-a', iceBands, false)}
+			{@render face(84, 12, -6, 0.85, 'hmm', after ? 82 : 10, after ? 70 : 10)}
+		</g>
+		<g transform={after ? 'rotate(-22 156 58)' : 'translate(16 6)'}>
 			<path class="ln sand" d={ringHalf(156, 58, 60, 12, 0.74, 'back')} />
 			{@render sphere('right', 156, 58, 36, 'astre-c', nothing)}
 			<path class="ln sand" d={ringHalf(156, 58, 60, 12, 0.74, 'front')} />
 			<path class="ln thin none" d="M101.6 58A54.4 10.9 0 0 0 210.4 58" />
+		</g>
+		<g transform={after ? undefined : 'translate(16 6) rotate(22 139 47)'}>
+			{@render face(139, 47, -18, 1, after ? 'smile' : 'hmm', after ? 82 : 160, after ? 70 : -20)}
 		</g>
 		<circle class="ln thin metal" cx="58" cy="22" r="3" />
 		<circle class="ln thin rock" cx="112" cy="90" r="2.2" />
@@ -791,9 +848,6 @@
 		<g transform="translate(82 74) rotate(6) scale(0.5) translate(-80 -40)">
 			{@render rocket('small')}
 		</g>
-		{@render face(28, 56, 22, 1.05, 'o', 82, 70)}
-		{@render face(84, 12, -6, 0.85, 'hmm', 82, 70)}
-		{@render face(139, 47, -18, 1, 'smile', 82, 70)}
 	</g>
 {:else if art === 'space-comma'}
 	<g data-story-art="space-comma">
@@ -817,7 +871,8 @@
 		</g>
 		<path class="ln bold none" d={COMMA_PATH} />
 		{#each RESTING as being (being.angle)}
-			{@render inhabitant(being.x, being.y, being.angle, being.tone, being.pose)}
+			<!-- Before: everybody busy, arms up; after: the little pause, a cup or a nap. -->
+			{@render inhabitant(being.x, being.y, being.angle, being.tone, after ? being.pose : 'busy')}
 		{/each}
 	</g>
 {:else if art === 'space-ending'}
@@ -865,36 +920,41 @@
 			<path class="ln none" d="M42 59Q48 56 54 59T66 59V69Q60 66 54 69T42 69Z" />
 			<circle class="ln thin c" cx="42.2" cy="56.4" r="1.6" />
 		</g>
-		<!-- Right page: the photo of the Earth, taped down. -->
-		<g transform="translate(113 50) rotate(5)">
-			<path class="shade" d="M-20 -24H24V30H-20Z" />
-			<path class="ln white" d="M-22 -26H22V28H-22Z" />
-			<path class="ln night" d="M-18 -22H18V14H-18Z" />
-			<circle class="star" cx="-13" cy="-17" r="0.7" />
-			<circle class="star" cx="13.5" cy="9" r="0.6" />
-			<circle class="star" cx="12" cy="-18" r="0.5" />
-			<circle class="star" cx="-14" cy="8" r="0.5" />
-			<circle class="atmosphere" cx="-1" cy="-3" r="14.6" />
-			{#snippet earthSurface()}
+		<!-- Right page: the photo of the Earth, taped down; before, the page still waits for it. -->
+		{#if after}
+			<g transform="translate(113 50) rotate(5)">
+				<path class="shade" d="M-20 -24H24V30H-20Z" />
+				<path class="ln white" d="M-22 -26H22V28H-22Z" />
+				<path class="ln night" d="M-18 -22H18V14H-18Z" />
+				<circle class="star" cx="-13" cy="-17" r="0.7" />
+				<circle class="star" cx="13.5" cy="9" r="0.6" />
+				<circle class="star" cx="12" cy="-18" r="0.5" />
+				<circle class="star" cx="-14" cy="8" r="0.5" />
+				<circle class="atmosphere" cx="-1" cy="-3" r="14.6" />
+				{#snippet earthSurface()}
+					<path
+						class="ln thin leaf"
+						d="M-9 -12Q-5 -15 -1 -13Q2 -11 0 -8Q-3 -6 -2 -3Q0 1 -2 5Q-4 8 -6 5Q-7 1 -9 -1Q-12 -3 -11 -7Q-11 -10 -9 -12Z"
+					/>
+					<path class="ln thin leaf" d="M4 -10Q8 -11 10 -8Q11 -5 8 -4Q5 -4 4 -7Z" />
+					<path class="ln thin sand" d="M3 0Q6 -1 7 2Q7 5 4 6Q2 4 3 0Z" />
+					<path class="cloud" d="M-14 -5Q-8 -8 -2 -6Q4 -4 9 -6" />
+					<path class="cloud" d="M-10 4Q-4 2 1 4" />
+					<path class="cloud" d="M2 -14Q6 -15.5 10 -13.5" />
+				{/snippet}
+				{@render sphere('photo-earth', -1, -3, 12.5, 'water-deep', earthSurface)}
+				{@render sphere('photo-moon', 12, -15, 2.6, 'rock', nothing)}
+				<path class="ln thin none" d="M-14 20Q-10 18.5 -6 20T2 20T10 19.5" />
 				<path
-					class="ln thin leaf"
-					d="M-9 -12Q-5 -15 -1 -13Q2 -11 0 -8Q-3 -6 -2 -3Q0 1 -2 5Q-4 8 -6 5Q-7 1 -9 -1Q-12 -3 -11 -7Q-11 -10 -9 -12Z"
+					class="ln tape"
+					d="M-27 -27L-15 -33L-12.5 -28L-14 -27.6L-13 -25.6L-24 -20L-25 -22L-26 -21.2Z"
 				/>
-				<path class="ln thin leaf" d="M4 -10Q8 -11 10 -8Q11 -5 8 -4Q5 -4 4 -7Z" />
-				<path class="ln thin sand" d="M3 0Q6 -1 7 2Q7 5 4 6Q2 4 3 0Z" />
-				<path class="cloud" d="M-14 -5Q-8 -8 -2 -6Q4 -4 9 -6" />
-				<path class="cloud" d="M-10 4Q-4 2 1 4" />
-				<path class="cloud" d="M2 -14Q6 -15.5 10 -13.5" />
-			{/snippet}
-			{@render sphere('photo-earth', -1, -3, 12.5, 'water-deep', earthSurface)}
-			{@render sphere('photo-moon', 12, -15, 2.6, 'rock', nothing)}
-			<path class="ln thin none" d="M-14 20Q-10 18.5 -6 20T2 20T10 19.5" />
-			<path
-				class="ln tape"
-				d="M-27 -27L-15 -33L-12.5 -28L-14 -27.6L-13 -25.6L-24 -20L-25 -22L-26 -21.2Z"
-			/>
-			<path class="ln tape" d="M27 -27L15 -33L12.5 -28L14 -27.6L13 -25.6L24 -20L25 -22L26 -21.2Z" />
-		</g>
+				<path
+					class="ln tape"
+					d="M27 -27L15 -33L12.5 -28L14 -27.6L13 -25.6L24 -20L25 -22L26 -21.2Z"
+				/>
+			</g>
+		{/if}
 		{#each NOTEBOOK_RINGS as ring (ring)}
 			<path class="ring-edge" d="M76 {ring}C76 {ring - 3.5} 84 {ring - 3.5} 84 {ring}" />
 			<path class="ring" d="M76 {ring}C76 {ring - 3.5} 84 {ring - 3.5} 84 {ring}" />

@@ -51,6 +51,14 @@ const SECOND = DINOS.lessons[1] as Lesson;
 const LAST_DINO = DINOS.lessons.at(-1) as Lesson;
 const FIRST_KITCHEN = KITCHEN.lessons[0] as Lesson;
 const GROUP_LABEL = templateRegex('ui_target_text_label');
+/** The state of a story picture that tells what changed (ADR-057, proposal 19). */
+const AFTER = '[data-story-phase="after"]';
+const BEFORE = '[data-story-phase="before"]';
+const ALL_ARTS = story.worlds.flatMap((world) => [
+	world.openingArt,
+	...world.lessons.map((line) => line.art),
+	world.endingArt
+]);
 
 function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
@@ -126,7 +134,7 @@ async function typeToResult(page: Page) {
 /** The moment on screen: its picture and its sentence, then Enter on "Continue". */
 async function expectToldThenContinue(page: Page, art: string, text: string, worldTitle: string) {
 	await expect(told(page)).toHaveAttribute('data-art', art);
-	await expect(told(page).locator(`[data-story-art="${art}"]`)).toBeAttached();
+	await expect(told(page).locator(`${AFTER} [data-story-art="${art}"]`)).toBeAttached();
 	await expect(told(page).getByText(text, { exact: true })).toBeVisible();
 	await expect(heading(page, worldTitle)).toBeVisible();
 	await expect(continueButton(page)).toBeFocused();
@@ -316,8 +324,79 @@ test.describe('the story pages for developers', () => {
 		]);
 		await expect(page.locator('li[data-art]')).toHaveCount(moments.length);
 		for (const art of moments) {
-			await expect(page.locator(`li[data-art="${art}"] [data-story-art="${art}"]`)).toBeAttached();
+			const states = page.locator(`li[data-art="${art}"] [data-states]`);
+			await expect(states.locator(`${BEFORE} [data-story-art="${art}"]`)).toBeAttached();
+			await expect(states.locator(`${AFTER} [data-story-art="${art}"]`)).toBeAttached();
 		}
+	});
+
+	test('draws a before that differs from its after, for every picture', async ({ page }) => {
+		await openPage(page, '/dev/recit');
+		await expect(page.locator('li[data-art]').first()).toBeVisible();
+		const same = await page.locator('li[data-art]').evaluateAll((items) =>
+			items.flatMap((item) => {
+				// Clip paths and gradients are named after each drawing: only the drawing is compared.
+				const drawn = (phase: string) =>
+					(item.querySelector(`[data-states] [data-story-phase="${phase}"]`)?.innerHTML ?? '')
+						.replace(/id="[^"]*"/g, '')
+						.replace(/url\(#[^)]*\)/g, '');
+				return drawn('before') === drawn('after') ? [item.getAttribute('data-art')] : [];
+			})
+		);
+		expect(same).toEqual([]);
+	});
+});
+
+test.describe('the two states of a story picture', () => {
+	test('shows before, then fades to after on the screen of the story', async ({ page }) => {
+		await reachMapAs(page, advancedProfile({ name: 'Nour', passed: {} }));
+		await page.getByRole('button', { name: FIRST.title }).click();
+		const picture = told(page).locator('svg.story-picture');
+		await expect(
+			picture.locator(`${BEFORE} [data-story-art="${TOLD_DINOS.openingArt}"]`)
+		).toBeAttached();
+		const change = picture.locator(`${AFTER}[data-story-change]`);
+		await expect(change).toBeAttached();
+
+		// The fade, read from the animation itself: at its start only `before` shows, at its end `after`.
+		const start = await change.evaluate((element) => {
+			const [fade] = element.getAnimations();
+			if (fade === undefined) return null;
+			fade.pause();
+			fade.currentTime = 0;
+			const opacity = getComputedStyle(element).opacity;
+			const delay = fade.effect?.getComputedTiming().delay ?? 0;
+			fade.play();
+			return { opacity, delay };
+		});
+		expect(start?.opacity).toBe('0');
+		expect(start?.delay).toBeGreaterThan(0);
+		await expect
+			.poll(() => change.evaluate((element) => getComputedStyle(element).opacity))
+			.toBe('1');
+	});
+
+	test('shows after at once in calm motion', async ({ page }) => {
+		const child = advancedProfile({ name: 'Paz', passed: {} });
+		await reachMapAs(page, { ...child, settings: { ...child.settings, motion: 'reduced' } });
+		await page.getByRole('button', { name: FIRST.title }).click();
+		const picture = told(page).locator('svg.story-picture');
+		await expect(
+			picture.locator(`${AFTER} [data-story-art="${TOLD_DINOS.openingArt}"]`)
+		).toBeAttached();
+		await expect(picture.locator(BEFORE)).toHaveCount(0);
+		await expect(picture.locator('[data-story-change]')).toHaveCount(0);
+		await expect(picture.locator(AFTER)).toHaveCSS('opacity', '1');
+	});
+
+	test('shows after alone in the story so far', async ({ page }) => {
+		await reachMapAs(page, advancedProfile({ name: 'Ezra', passed: passed([FIRST]) }));
+		await button(page, message('play_story_so_far_open')).click();
+		const items = page.locator('main li[data-art]');
+		await expect(items).toHaveCount(2);
+		await expect(items.locator(AFTER)).toHaveCount(2);
+		await expect(items.locator(BEFORE)).toHaveCount(0);
+		await expect(items.locator('[data-story-change]')).toHaveCount(0);
 	});
 });
 
@@ -337,6 +416,12 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await page.getByRole('button', { name: FIRST_KITCHEN.title }).click();
 			await expect(told(page)).toHaveAttribute('data-art', TOLD_KITCHEN.openingArt);
 			await expect(continueButton(page)).toBeFocused();
+			await expectNoAxeViolation(page);
+		});
+
+		test('has no axe violation on the trial page of the story pictures', async ({ page }) => {
+			await openPage(page, '/dev/recit');
+			await expect(page.locator('li[data-art] [data-states]')).toHaveCount(ALL_ARTS.length);
 			await expectNoAxeViolation(page);
 		});
 	});

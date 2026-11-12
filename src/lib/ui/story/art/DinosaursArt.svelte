@@ -2,12 +2,15 @@
 	import type { Snippet } from 'svelte';
 	import { m } from '$lib/paraglide/messages.js';
 	import StoryDino from '../StoryDino.svelte';
+	import type { StoryPhase } from '../phase';
 
 	const uid = $props.id();
 
 	interface Props {
 		/** One of `STORY_ART_GROUPS.dinosaurs`. */
 		art: string;
+		/** `before`: what the sentence starts from; `after`: what it tells (ADR-057). */
+		phase?: StoryPhase;
 	}
 
 	/** A point of a limb's bone and the half-thickness of the limb there. */
@@ -33,7 +36,8 @@
 		outline?: string;
 	}
 
-	let { art }: Props = $props();
+	let { art, phase = 'after' }: Props = $props();
+	const after = $derived(phase === 'after');
 
 	/** Unique id of a clip path or gradient of this picture. */
 	const ref = (name: string): string => `${uid}-${name}`;
@@ -262,6 +266,12 @@
 		'M-9.8 -30.6C-12 -31.6 -13 -33.4 -12.6 -35C-11 -34.6 -9.6 -33.4 -9 -32Z'
 	] as const;
 
+	// dino-eggs, before: the whole egg each baby comes out of.
+	const EGG =
+		'M0 -36C9 -36 15.5 -20 15.5 -9C15.5 0 9 5 0 5C-9 5 -15.5 0 -15.5 -9C-15.5 -20 -9 -36 0 -36Z';
+	const EGG_SHADE =
+		'M15.5 -9C15.5 0 9 5 0 5C7 2 11.4 -3 11.6 -10C11.8 -18 9.4 -27 5.4 -33.6C11 -29 15.5 -19 15.5 -9Z';
+
 	// dino-diplodocus
 	const DIPLO_BODY =
 		'M104 33C112 26 124 18 133 13C138 9 146 10 150 14C153 17 151 21 146 22C143 23 140 22 138 23C130 28 118 40 110 48C104 55 96 58 86 58C78 58 71 56 66 54C56 58 50 66 47 76C46 80 46 84 45 88C43 89 41 88 41 85C41 72 48 50 64 40C76 32 94 29 104 33Z';
@@ -293,6 +303,7 @@
 		[70, 62, 3.6],
 		[65, 62.5, 3.6]
 	]);
+	const DIPLO_TAKE_OFF = 'translate(-62 9) rotate(-6 100 60)';
 	const RIVER =
 		'M74 58C70 66 56 74 30 84C24 87 20 92 18 100L142 100C140 92 134 86 126 82C106 74 92 66 86 58Z';
 	const BANK_LEFT = 'M-4 60C20 58 50 58 74 58C70 66 56 74 30 84C24 87 20 92 18 100L-4 100Z';
@@ -382,6 +393,8 @@
 		'M37 56C33.6 58.6 30 60.6 25.6 61C29 58 31.6 56.4 33.6 55Z',
 		'M43 57.6C40.6 61.4 37.6 64 34 65.4C36.4 62 38.4 59.6 39.6 57Z'
 	] as const;
+	const POND_WATER =
+		'M20.6 84.4C23 77.4 58 76 80 76C103 76 135.6 77.4 139.4 84.4C143 91.6 109 95.4 80 95.4C51 95.4 17 91.6 20.6 84.4Z';
 	const POND =
 		'M18 84C22 76 60 74 80 74C104 74 138 76 142 84C146 92 110 97 80 97C50 97 14 92 18 84Z';
 
@@ -668,6 +681,26 @@
 	</g>
 {/snippet}
 
+{#snippet egg(b: (typeof BABIES)[number])}
+	<g transform="translate({b.x} {b.y}) rotate({b.tilt / 3})">
+		{#if b.kind === 'shout'}
+			<path class="open thin-line" d="M-20 -24Q-22.4 -19 -20 -14M20 -24Q22.4 -19 20 -14" />
+		{/if}
+		<path class="shell line" d={EGG} />
+		<circle class="egg-spot" cx="-7" cy="-6" r="1.8" />
+		<circle class="egg-spot" cx="6" cy="-8" r="1.4" />
+		<circle class="egg-spot" cx="2" cy="-1" r="1.6" />
+		<circle class="egg-spot" cx="-5" cy="-19" r="1.7" />
+		<circle class="egg-spot" cx="6" cy="-24" r="1.3" />
+		<circle class="egg-spot" cx="-1.6" cy="-30" r="1.1" />
+		<path class="shade" d={EGG_SHADE} />
+		<ellipse class="light" cx="-7" cy="-22" rx="2" ry="4.4" transform="rotate(18 -7 -22)" />
+		{#if b.kind === 'shout'}
+			<path class="open line" d="M-7 -14L-4 -11L-1 -15L2 -11L5 -14L7.4 -12" />
+		{/if}
+	</g>
+{/snippet}
+
 {#if art === 'dino-opening'}
 	<g data-story-art="dino-opening">
 		{@render sky('stop-paper')}
@@ -715,22 +748,46 @@
 		<g
 			transform="translate({OPENING_HAND[0]} {OPENING_HAND[1]}) rotate(-4) scale(0.78) translate(-1 -10)"
 		>
-			<path
-				class="a line"
-				d="M-1 2C10 0 18 1 20 4C22 1 30 0 41 2L41 26C30 24 22 25 20 28C18 25 10 24 -1 26Z"
-			/>
-			<path class="paper line" d="M1 3C10 1 17 2 20 5L20 26C17 23 10 23 1 24Z" />
-			<path class="paper line" d="M39 3C30 1 23 2 20 5L20 26C23 23 30 23 39 24Z" />
-			<path class="shade" d="M20 5C18.6 4 17 3.6 16 3.6L16 23.6C17.4 23.8 18.8 24.6 20 26Z" />
-			<path
-				class="shade"
-				d="M20 5C19.4 4.6 18.8 4.4 18.2 4.4L18.2 24.4C18.8 24.8 19.4 25.4 20 26Z"
-			/>
-			<path class="shade" d="M20 5C21.4 4 23 3.6 24 3.6L24 23.6C22.6 23.8 21.2 24.6 20 26Z" />
-			<path
-				class="shade"
-				d="M20 5C20.6 4.6 21.2 4.4 21.8 4.4L21.8 24.4C21.2 24.8 20.6 25.4 20 26Z"
-			/>
+			{#if after}
+				<path
+					class="a line"
+					d="M-1 2C10 0 18 1 20 4C22 1 30 0 41 2L41 26C30 24 22 25 20 28C18 25 10 24 -1 26Z"
+				/>
+				<path class="paper line" d="M1 3C10 1 17 2 20 5L20 26C17 23 10 23 1 24Z" />
+				<path class="paper line" d="M39 3C30 1 23 2 20 5L20 26C23 23 30 23 39 24Z" />
+				<path class="shade" d="M20 5C18.6 4 17 3.6 16 3.6L16 23.6C17.4 23.8 18.8 24.6 20 26Z" />
+				<path
+					class="shade"
+					d="M20 5C19.4 4.6 18.8 4.4 18.2 4.4L18.2 24.4C18.8 24.8 19.4 25.4 20 26Z"
+				/>
+				<path class="shade" d="M20 5C21.4 4 23 3.6 24 3.6L24 23.6C22.6 23.8 21.2 24.6 20 26Z" />
+				<path
+					class="shade"
+					d="M20 5C20.6 4.6 21.2 4.4 21.8 4.4L21.8 24.4C21.2 24.8 20.6 25.4 20 26Z"
+				/>
+			{:else}
+				<!-- Closed, held up: the empty notebook is still to open. -->
+				<path
+					class="paper line"
+					d="M11 2L33 2C34 2 34.6 2.6 34.6 3.6L34.6 26.4C34.6 27.4 34 28 33 28L11 28Z"
+				/>
+				<path class="open thin-line" d="M33 5L33 25M31.6 4L31.6 26" />
+				<path
+					class="a line"
+					d="M8 1.6C8 0.6 8.6 0 9.6 0L30 0C31 0 31.6 0.6 31.6 1.6L31.6 26.4C31.6 27.4 31 28 30 28L9.6 28C8.6 28 8 27.4 8 26.4Z"
+				/>
+				<path
+					class="shade"
+					d="M8 1.6C8 0.6 8.6 0 9.6 0L11.6 0L11.6 28L9.6 28C8.6 28 8 27.4 8 26.4Z"
+				/>
+				<path class="open thin-line" d="M11.6 0.4L11.6 27.6" />
+				<path
+					class="paper thin-line"
+					d="M15 6C15 5.4 15.4 5 16 5L27 5C27.6 5 28 5.4 28 6L28 12C28 12.6 27.6 13 27 13L16 13C15.4 13 15 12.6 15 12Z"
+				/>
+				<path class="open thin-line" d="M17.4 8.4L25.6 8.4M17.4 10.6L23 10.6" />
+				<path class="d line" d="M27.4 -0.4L29.4 -0.4L29.4 28.4L27.4 28.4Z" />
+			{/if}
 			<path class="d line" d="M19 27C19 30 18 32 17 34L19 33L20.5 35C21 32 21 30 21 27Z" />
 		</g>
 	</g>
@@ -755,7 +812,11 @@
 			d="M24 75C30 73 36 72.4 42 72.6M56 70.6C62 70 68 70 74 70.4M98 70.2C104 70 110 70.4 116 71M120 74C126 73.4 132 74 136 75.2M30 78.4C36 77.6 42 77.8 48 78.6"
 		/>
 		{#each BABIES as b (b.kind)}
-			{@render baby(b)}
+			{#if after}
+				{@render baby(b)}
+			{:else}
+				{@render egg(b)}
+			{/if}
 		{/each}
 		<path
 			class="wood line"
@@ -788,49 +849,54 @@
 		<path class="open wood-stroke" d="M134 84C133 78 133 72 135 66M140 86C140 80 141 74 143 69" />
 		<ellipse class="p line" cx="135" cy="68" rx="1.6" ry="4" transform="rotate(10 135 68)" />
 		<ellipse class="p line" cx="143.2" cy="71" rx="1.6" ry="4" transform="rotate(15 143 71)" />
-		<ellipse class="shade" cx="92" cy="80" rx="22" ry="3" />
-		<path class="open thin-line" d="M52 30Q60 24 72 23M44 40Q50 34 58 33" />
-		{@render member('diplo-front-far', DIPLO_FRONT_FAR, 'g', true)}
-		{@render member('diplo-hind-far', DIPLO_HIND_FAR, 'g', true)}
-		{#snippet diploInside()}
+		<!-- Before: still on its bank, taking off; its tail is out of the picture. -->
+		<g transform={after ? undefined : DIPLO_TAKE_OFF}>
+			<ellipse class="shade" cx="92" cy="80" rx="22" ry="3" />
+			<path class="open thin-line" d="M52 30Q60 24 72 23M44 40Q50 34 58 33" />
+			{@render member('diplo-front-far', DIPLO_FRONT_FAR, 'g', true)}
+			{@render member('diplo-hind-far', DIPLO_HIND_FAR, 'g', true)}
+			{#snippet diploInside()}
+				<path
+					class="c"
+					d="M150 22C140 24 136 24 132 27C124 34 114 44 106 49C99 53 92 54 85 54C78 54 72 52 66 50C58 54 52 62 49 72L44 100L170 100L170 22Z"
+				/>
+				<ellipse class="a" cx="78" cy="38" rx="3.4" ry="2" transform="rotate(-12 78 38)" />
+				<ellipse class="a" cx="89" cy="35" rx="3.6" ry="2.2" />
+				<ellipse class="a" cx="100" cy="37" rx="2.6" ry="1.8" transform="rotate(10 100 37)" />
+				<ellipse class="a" cx="69" cy="43" rx="2.2" ry="1.5" transform="rotate(-30 69 43)" />
+				<ellipse class="a" cx="114" cy="31" rx="2" ry="1.4" transform="rotate(-35 114 31)" />
+				<ellipse class="a" cx="58" cy="50" rx="1.8" ry="1.3" transform="rotate(-50 58 50)" />
+				<path class="light" d="M66 40C76 33 92 31 102 34C92 33 78 35 68 42Z" />
+				<path class="light" d="M134 14C138 11 144 11 148 13C144 12.5 139 13 135 15Z" />
+			{/snippet}
+			{@render form('diplo-body', DIPLO_BODY, 'g', { inside: diploInside, bold: true })}
+			{@render member('diplo-hind', DIPLO_HIND, 'g')}
+			{@render nails(DIPLO_HIND, 0.7)}
+			{@render member('diplo-front', DIPLO_FRONT, 'g')}
+			{@render nails(DIPLO_FRONT, 0.7)}
+			{@render eye(142.6, 15.4, 2.5, 0.8, 0.2)}
 			<path
-				class="c"
-				d="M150 22C140 24 136 24 132 27C124 34 114 44 106 49C99 53 92 54 85 54C78 54 72 52 66 50C58 54 52 62 49 72L44 100L170 100L170 22Z"
+				class="g line"
+				d="M139.8 14.6C140 12 145 11.6 145.4 14.4C143.6 13.4 141.6 13.6 139.8 14.6Z"
 			/>
-			<ellipse class="a" cx="78" cy="38" rx="3.4" ry="2" transform="rotate(-12 78 38)" />
-			<ellipse class="a" cx="89" cy="35" rx="3.6" ry="2.2" />
-			<ellipse class="a" cx="100" cy="37" rx="2.6" ry="1.8" transform="rotate(10 100 37)" />
-			<ellipse class="a" cx="69" cy="43" rx="2.2" ry="1.5" transform="rotate(-30 69 43)" />
-			<ellipse class="a" cx="114" cy="31" rx="2" ry="1.4" transform="rotate(-35 114 31)" />
-			<ellipse class="a" cx="58" cy="50" rx="1.8" ry="1.3" transform="rotate(-50 58 50)" />
-			<path class="light" d="M66 40C76 33 92 31 102 34C92 33 78 35 68 42Z" />
-			<path class="light" d="M134 14C138 11 144 11 148 13C144 12.5 139 13 135 15Z" />
-		{/snippet}
-		{@render form('diplo-body', DIPLO_BODY, 'g', { inside: diploInside, bold: true })}
-		{@render member('diplo-hind', DIPLO_HIND, 'g')}
-		{@render nails(DIPLO_HIND, 0.7)}
-		{@render member('diplo-front', DIPLO_FRONT, 'g')}
-		{@render nails(DIPLO_FRONT, 0.7)}
-		{@render eye(142.6, 15.4, 2.5, 0.8, 0.2)}
-		<path
-			class="g line"
-			d="M139.8 14.6C140 12 145 11.6 145.4 14.4C143.6 13.4 141.6 13.6 139.8 14.6Z"
-		/>
-		<path class="open line" d="M139.6 11.4Q142.6 9.8 146 11.6" />
-		<circle class="dark" cx="149" cy="15.2" r="0.6" />
-		<path
-			class="open line"
-			d="M151 19.4C148 20.6 144 20.8 141.4 20.2C140.6 20 140.2 19.4 140.4 18.8"
-		/>
-		<path class="water" d="M36 86C38 84 48 84 50 86C48 88.5 38 88.5 36 86Z" />
-		<ellipse class="ripple" cx="43" cy="86.5" rx="8" ry="1.8" />
-		<ellipse class="ripple" cx="43" cy="87" rx="13" ry="3" />
-		<path
-			class="water thin-line"
-			d="M31 87.4C32 85 33 83 33.2 80.6C34.6 82.4 35.4 84.4 36 85.6C36.4 83 37.4 80.6 38.8 79C39.4 81.6 39.6 83.6 39.4 85.4L47 85.4C46.8 83.6 47 81.6 47.6 79C49 80.6 50 83 50.4 85.6C51 84.4 51.8 82.4 53.2 80.6C53.4 83 54.4 85 55.4 87.4C48 89 38 89 31 87.4Z"
-		/>
-		<circle class="water thin-line" cx="37.6" cy="75.6" r="1" />
-		<circle class="water thin-line" cx="49.2" cy="75.4" r="0.9" />
+			<path class="open line" d="M139.6 11.4Q142.6 9.8 146 11.6" />
+			<circle class="dark" cx="149" cy="15.2" r="0.6" />
+			<path
+				class="open line"
+				d="M151 19.4C148 20.6 144 20.8 141.4 20.2C140.6 20 140.2 19.4 140.4 18.8"
+			/>
+		</g>
+		{#if after}
+			<path class="water" d="M36 86C38 84 48 84 50 86C48 88.5 38 88.5 36 86Z" />
+			<ellipse class="ripple" cx="43" cy="86.5" rx="8" ry="1.8" />
+			<ellipse class="ripple" cx="43" cy="87" rx="13" ry="3" />
+			<path
+				class="water thin-line"
+				d="M31 87.4C32 85 33 83 33.2 80.6C34.6 82.4 35.4 84.4 36 85.6C36.4 83 37.4 80.6 38.8 79C39.4 81.6 39.6 83.6 39.4 85.4L47 85.4C46.8 83.6 47 81.6 47.6 79C49 80.6 50 83 50.4 85.6C51 84.4 51.8 82.4 53.2 80.6C53.4 83 54.4 85 55.4 87.4C48 89 38 89 31 87.4Z"
+			/>
+			<circle class="water thin-line" cx="37.6" cy="75.6" r="1" />
+			<circle class="water thin-line" cx="49.2" cy="75.4" r="0.9" />
+		{/if}
 	</g>
 {:else if art === 'dino-nest'}
 	<g data-story-art="dino-nest">
@@ -861,9 +927,12 @@
 				class="sand thin-line"
 				d="M7 23C7 21.5 8 21 9.5 21L35.5 21C37 21 38 21.5 38 23L38 45C38 46.5 37 47 35.5 47L9.5 47C8 47 7 46.5 7 45Z"
 			/>
+			<!-- The password typed: the four dots filled, the padlock opens. -->
 			<path
 				class="open metal-stroke"
-				d="M17.5 33L17.5 29C17.5 25 20 23.5 22.5 23.5C25 23.5 27.5 25 27.5 29L27.5 33"
+				d={after
+					? 'M27.5 31L27.5 26.6C27.5 22.6 25 21.4 22.5 21.4C20 21.4 17.5 22.6 17.5 26.6L17.5 28'
+					: 'M17.5 33L17.5 29C17.5 25 20 23.5 22.5 23.5C25 23.5 27.5 25 27.5 29L27.5 33'}
 			/>
 			<path
 				class="star line"
@@ -873,10 +942,9 @@
 				class="dark"
 				d="M22.5 33.5C21.4 33.5 20.8 34.4 20.8 35.2C20.8 35.9 21.2 36.4 21.7 36.6L21.3 38.8L23.7 38.8L23.3 36.6C23.8 36.4 24.2 35.9 24.2 35.2C24.2 34.4 23.6 33.5 22.5 33.5Z"
 			/>
-			<circle class="dark" cx="14.5" cy="44" r="1.2" />
-			<circle class="dark" cx="19.5" cy="44" r="1.2" />
-			<circle class="dark" cx="24.5" cy="44" r="1.2" />
-			<circle class="dark" cx="29.5" cy="44" r="1.2" />
+			{#each [14.5, 19.5, 24.5, 29.5] as dot (dot)}
+				<circle class={after ? 'dark' : 'paper thin-line'} cx={dot} cy="44" r="1.2" />
+			{/each}
 		</g>
 		<ellipse class="shade" cx="96" cy="91" rx="40" ry="4" />
 		{@render member('tri-front-far', TRI_FRONT_FAR, 'h', true)}
@@ -909,10 +977,13 @@
 		{/snippet}
 		{@render form('tri-head', TRI_HEAD, 'h', { inside: headInside, bold: true })}
 		<path class="open line" d="M41 57C44 59 46 62 46 64" />
-		<path class="open line" d="M46 64C52 66 57 66 61 64.5" />
+		<path
+			class="open line"
+			d={after ? 'M46 64C52 68 57.4 67.6 61.6 63.4' : 'M46 64C52 66 57 66 61 64.5'}
+		/>
 		{@render eye(59, 53, 2.6, -1, 0.4)}
 		<path class="h line" d="M56.2 52.4C56.4 49.4 61.6 49.4 61.8 52.4Z" />
-		<path class="open line" d="M55.5 48.8L62.5 48.4" />
+		<path class="open line" d={after ? 'M55.5 48.4Q59 46.6 62.5 48' : 'M55.5 48.8L62.5 48.4'} />
 		<circle class="dark" cx="43.4" cy="57.4" r="0.6" />
 	</g>
 {:else if art === 'dino-pond'}
@@ -922,24 +993,26 @@
 		<path class="grass line" d="M-4 68C30 64 70 64 100 66C130 68 146 66 164 65L164 104L-4 104Z" />
 		{@render fern(12, 72, 1)}
 		{@render fern(150, 70, 1.1)}
-		<path class="water thin-line" d="M0 80C4 76 18 76 22 79C26 82 18 86 8 85C2 85 -2 83 0 80Z" />
-		<path
-			class="water thin-line"
-			d="M140 80C144 76 158 76 162 79L164 86C156 86 146 86 142 84C138 83 138 81 140 80Z"
-		/>
-		<path class="water thin-line" d="M-4 94C4 90 18 90 22 94C24 98 10 100 -4 100Z" />
-		<path
-			class="water thin-line"
-			d="M136 96C140 92 156 91 164 93L164 100C152 101 138 100 136 96Z"
-		/>
-		<path
-			class="ripple"
-			d="M5 80.6Q9 79.4 13 80.6M146 80.4Q150 79.2 154 80.4M3 95.4Q8 94 13 95.4M146 96Q151 94.6 156 96"
-		/>
-		<path
-			class="water thin-line"
-			d="M31.6 54.6C32.4 56.6 32.8 58 31.6 58.6C30.4 58.6 30.2 57 30.8 54.8Z"
-		/>
+		{#if after}
+			<path class="water thin-line" d="M0 80C4 76 18 76 22 79C26 82 18 86 8 85C2 85 -2 83 0 80Z" />
+			<path
+				class="water thin-line"
+				d="M140 80C144 76 158 76 162 79L164 86C156 86 146 86 142 84C138 83 138 81 140 80Z"
+			/>
+			<path class="water thin-line" d="M-4 94C4 90 18 90 22 94C24 98 10 100 -4 100Z" />
+			<path
+				class="water thin-line"
+				d="M136 96C140 92 156 91 164 93L164 100C152 101 138 100 136 96Z"
+			/>
+			<path
+				class="ripple"
+				d="M5 80.6Q9 79.4 13 80.6M146 80.4Q150 79.2 154 80.4M3 95.4Q8 94 13 95.4M146 96Q151 94.6 156 96"
+			/>
+			<path
+				class="water thin-line"
+				d="M31.6 54.6C32.4 56.6 32.8 58 31.6 58.6C30.4 58.6 30.2 57 30.8 54.8Z"
+			/>
+		{/if}
 		<path class="sand line" d={POND} />
 		<path
 			class="soil thin-line"
@@ -949,13 +1022,15 @@
 			class="open thin-line"
 			d="M44 86L52 84L56 88M100 90L106 86L114 88M70 92L76 89L82 91M118 83L124 85"
 		/>
-		<g transform="translate(36 88) rotate(-25)">
-			<path class="n line" d="M5 0C8 -3 10 -4 12 -3C11 -1 11 1 12 3C10 4 8 3 5 0Z" />
-			<path class="g line" d="M-7 0C-7 -4 -2 -6 2 -5C5 -4 7 -2 7 0C7 2 5 4 2 5C-2 6 -7 4 -7 0Z" />
-			{@render eye(-3.4, -1.2, 1.6, -0.3, 0)}
-			<path class="open thin-line" d="M-6.8 1.4Q-5.5 2.4 -4.2 1.8" />
-		</g>
-		<ellipse class="shade" cx="84" cy="90" rx="38" ry="4" />
+		{#if after}
+			<g transform="translate(36 88) rotate(-25)">
+				<path class="n line" d="M5 0C8 -3 10 -4 12 -3C11 -1 11 1 12 3C10 4 8 3 5 0Z" />
+				<path class="g line" d="M-7 0C-7 -4 -2 -6 2 -5C5 -4 7 -2 7 0C7 2 5 4 2 5C-2 6 -7 4 -7 0Z" />
+				{@render eye(-3.4, -1.2, 1.6, -0.3, 0)}
+				<path class="open thin-line" d="M-6.8 1.4Q-5.5 2.4 -4.2 1.8" />
+			</g>
+			<ellipse class="shade" cx="84" cy="90" rx="38" ry="4" />
+		{/if}
 		{@render member('stego-hind-far', STEGO_HIND_FAR, 'n', true)}
 		{@render member('stego-front-far', STEGO_FRONT_FAR, 'n', true)}
 		{#each STEGO_PLATES as p (p.x)}
@@ -991,19 +1066,44 @@
 		{@render nails(STEGO_HIND, 0.85)}
 		{@render member('stego-front', STEGO_FRONT, 'n')}
 		{@render nails(STEGO_FRONT, 0.8)}
+		{#if !after}
+			<!-- Before the dive: the pond is full, up to the stegosaurus' knees, and a fish swims. -->
+			<path class="water thin-line" d={POND_WATER} />
+			<path
+				class="ripple"
+				d="M30 85Q36 83.6 42 85M118 82Q124 80.6 130 82M50 91Q58 89.4 66 91M92 92Q100 90.4 108 92M60 79.6Q64 78.6 68 79.6M98 79.6Q103 78.6 108 79.6"
+			/>
+			<path class="ripple" d="M62 82Q69 84 76 82M98 83Q105 85 112 83" />
+			<g transform="translate(40 88) rotate(-8)">
+				<path
+					class="n thin-line"
+					d="M5 0C8 -2.6 10 -3.4 11.6 -2.6L11 0L11.6 2.6C10 3.4 8 2.6 5 0Z"
+				/>
+				<path
+					class="g thin-line"
+					d="M-6 0C-6 -3 -2 -4.6 1.4 -4C4.4 -3.4 6 -1.6 6 0C6 1.6 4.4 3.4 1.4 4C-2 4.6 -6 3 -6 0Z"
+				/>
+				<circle class="dark" cx="-3" cy="-0.8" r="0.8" />
+			</g>
+		{/if}
 		{@render eye(129, 58.6, 2.4, 0.6, 0.6)}
 		<path class="n line" d="M126.4 58.2C126.6 55.4 131.4 55.4 131.6 58.2Z" />
 		<path class="open line" d="M126 54.6Q129 53.6 132 55" />
 		<path class="open line" d="M137 63.4C134 64.6 130 64.4 127.6 63.6" />
-		<path
-			class="water thin-line"
-			d="M131 65.6C131.6 67.6 132 69 130.8 69.6C129.6 69.6 129.4 68 130 65.8Z"
-		/>
-		<path class="water thin-line" d="M82 74.6C82.6 77 83 78.4 81.8 79C80.6 79 80.4 77.4 81 74.8Z" />
-		<path
-			class="water thin-line"
-			d="M66 71.2C66.6 73.4 67 75 65.8 75.4C64.6 75.4 64.4 74 65 71.4Z"
-		/>
+		{#if after}
+			<path
+				class="water thin-line"
+				d="M131 65.6C131.6 67.6 132 69 130.8 69.6C129.6 69.6 129.4 68 130 65.8Z"
+			/>
+			<path
+				class="water thin-line"
+				d="M82 74.6C82.6 77 83 78.4 81.8 79C80.6 79 80.4 77.4 81 74.8Z"
+			/>
+			<path
+				class="water thin-line"
+				d="M66 71.2C66.6 73.4 67 75 65.8 75.4C64.6 75.4 64.4 74 65 71.4Z"
+			/>
+		{/if}
 		<g transform="translate(131 52.4) rotate(8)">
 			<path
 				class="e line"
@@ -1030,9 +1130,11 @@
 		{@render form('rock', 'M4 90C0 70 4 52 18 42C32 32 54 32 66 44C76 54 78 74 76 90Z', 'rock', {
 			inside: rockInside
 		})}
-		<text class="word" x="36" y="74" text-anchor="middle" transform="rotate(-4 36 74)"
-			>{m.story_art_miam()}</text
-		>
+		{#if after}
+			<text class="word" x="36" y="74" text-anchor="middle" transform="rotate(-4 36 74)"
+				>{m.story_art_miam()}</text
+			>
+		{/if}
 		{@render tuft(6, 92, 1.2)}
 		{@render tuft(78, 91, 1)}
 		<ellipse class="shade" cx="118" cy="90" rx="20" ry="3" />
@@ -1095,22 +1197,31 @@
 		<path class="grass line" d="M-4 84C30 80 70 80 100 82C130 84 146 82 164 81L164 104L-4 104Z" />
 		{@render fern(10, 90, 0.8)}
 		{@render tuft(70, 88, 1.1)}
-		<path
-			class="open line"
-			d="M31 41C27.4 46 27.4 53 31 58M24 36C18.6 43.6 18.6 55.4 24 63M17 31C9.6 41 9.6 58 17 68"
-		/>
-		<g transform="translate(106 11) rotate(26) scale(0.9)">
-			<path class="b line" d="M6 1C12 -0.5 18 0.5 19 4C14 5.5 9 4.5 5 3Z" />
-			<path class="b line" d="M-8 2C-9 -6 -4 -9.5 0 -9.5C5 -9.5 9 -6 8 2C3 3.4 -3 3.4 -8 2Z" />
-			<path class="open thin-line" d="M0 -9.5C-1 -6 -1 -2 0 2.6M-6 -6C-4 -3 -4 0 -4 2.6" />
-			<circle class="b line" cx="0" cy="-9.5" r="1.4" />
+		{#snippet cap()}
+			<g
+				transform={after
+					? 'translate(106 11) rotate(26) scale(0.9)'
+					: 'translate(80 12.6) rotate(-6) scale(-0.9 0.9)'}
+			>
+				<path class="b line" d="M6 1C12 -0.5 18 0.5 19 4C14 5.5 9 4.5 5 3Z" />
+				<path class="b line" d="M-8 2C-9 -6 -4 -9.5 0 -9.5C5 -9.5 9 -6 8 2C3 3.4 -3 3.4 -8 2Z" />
+				<path class="open thin-line" d="M0 -9.5C-1 -6 -1 -2 0 2.6M-6 -6C-4 -3 -4 0 -4 2.6" />
+				<circle class="b line" cx="0" cy="-9.5" r="1.4" />
+				<path
+					class="c thin-line"
+					d="M2.6 -4.6L3.5 -2.6L5.6 -2.4L4 -1L4.4 1L2.6 0L0.8 1L1.2 -1L-0.4 -2.4L1.7 -2.6Z"
+				/>
+			</g>
+		{/snippet}
+		{#if after}
 			<path
-				class="c thin-line"
-				d="M2.6 -4.6L3.5 -2.6L5.6 -2.4L4 -1L4.4 1L2.6 0L0.8 1L1.2 -1L-0.4 -2.4L1.7 -2.6Z"
+				class="open line"
+				d="M31 41C27.4 46 27.4 53 31 58M24 36C18.6 43.6 18.6 55.4 24 63M17 31C9.6 41 9.6 58 17 68"
 			/>
-		</g>
-		<path class="open thin-line" d="M90 13C92 10 95 8.4 98 8M93 18C96 15.6 99 15 102 15.6" />
-		<path class="open thin-line" d="M80 11.6L79.4 8.6M86 12.4L87.6 9.8M74 13.6L72.4 11.4" />
+			{@render cap()}
+			<path class="open thin-line" d="M90 13C92 10 95 8.4 98 8M93 18C96 15.6 99 15 102 15.6" />
+			<path class="open thin-line" d="M80 11.6L79.4 8.6M86 12.4L87.6 9.8M74 13.6L72.4 11.4" />
+		{/if}
 		<ellipse class="shade" cx="110" cy="91" rx="24" ry="3.4" />
 		{@render member('trex-leg-far', TREX_LEG_FAR, 'a', true)}
 		<path class="white thin-line" d="M113.6 86.4C111.6 86.6 110.6 88.2 111.4 89.8L114 89.4Z" />
@@ -1144,18 +1255,23 @@
 			<path class="open thin-line" d="M60 55.8C67 54.2 74 52 80.6 49.8" />
 			<path class="light" d="M56 53.4C61 52.6 66 52 70 51.2C66 52.8 61 53.8 56.6 54.6Z" />
 		{/snippet}
-		{@render form('trex-mouth', TREX_MOUTH, 'f', { inside: mouthInside })}
-		<path
-			class="f thin-line"
-			d="M74.6 43.4C74.4 45.6 74.6 47.6 75.8 48.4C77 47.6 77.2 45.6 77 44Z"
-		/>
-		<path class="white thin-line" d={TREX_UPPER_TEETH} />
-		<path class="white thin-line" d={TREX_LOWER_TEETH} />
+		{#if after}
+			{@render form('trex-mouth', TREX_MOUTH, 'f', { inside: mouthInside })}
+			<path
+				class="f thin-line"
+				d="M74.6 43.4C74.4 45.6 74.6 47.6 75.8 48.4C77 47.6 77.2 45.6 77 44Z"
+			/>
+			<path class="white thin-line" d={TREX_UPPER_TEETH} />
+			<path class="white thin-line" d={TREX_LOWER_TEETH} />
+		{/if}
 		{#snippet jawInside()}
 			<path class="c" d="M46 67C60 66.4 76 61 91 53L93 76L44 76Z" />
 			<path class="light" d="M55 62.6C62 60.6 69 57.4 76 53.2C70 57.8 62 61.4 56 64Z" />
 		{/snippet}
-		{@render form('trex-jaw', TREX_JAW, 'a', { inside: jawInside, bold: true })}
+		<!-- Before the roar: the jaw shut against the skull, the cap still on. -->
+		<g transform={after ? undefined : 'rotate(38 84 46)'}>
+			{@render form('trex-jaw', TREX_JAW, 'a', { inside: jawInside, bold: true })}
+		</g>
 		{#snippet skullInside()}
 			<path class="light" d="M40 27.6C48 25 56 23 63 21C56 24 48 26.4 41 29.4Z" />
 			<path class="j" transform="translate(91 19.4) rotate(48)" d={stripePath(6)} />
@@ -1166,6 +1282,9 @@
 		<path class="open thin-line" d="M88.6 32C90.4 35 90.4 39 88.6 42" />
 		{@render eye(80.2, 24.8, 3.6, -1.1, 0.2)}
 		<path class="a line" d={TREX_BROW} />
+		{#if !after}
+			{@render cap()}
+		{/if}
 		<path class="white thin-line" d="M93.6 87.2C91.4 87.4 90.4 89 91.2 90.8L94 90.4Z" />
 		{@render member('trex-leg', TREX_LEG, 'a')}
 		<path class="white thin-line" d="M96.6 88.6C94.6 88.8 93.8 90.4 94.6 91.6L97 91.2Z" />
@@ -1231,35 +1350,41 @@
 			d="M106 74.4C107 74 108 73.9 108.6 73.9L108.6 91.2C107.6 91.6 106.8 92 106 92.6Z"
 		/>
 		<path class="open dash-line" d="M70 77L90 76L91 88L69.6 88.8Z" />
-		<path
-			class="shell thin-line"
-			d="M94.6 84.6C94.6 80.6 96.6 78.4 98.6 78.4C100.6 78.4 102.6 80.6 102.6 84.6C100.6 86 96.6 86 94.6 84.6Z"
-		/>
-		<path class="open thin-line" d="M94.8 82.6L96.6 81.4L98.2 82.8L100 81.2L102 82.4" />
-		<path
-			class="open thin-line"
-			d="M62 85.6Q64 84.6 66 85.6T70 85.6M60.6 88.6Q63 87.6 65.4 88.6T70.2 88.6"
-		/>
-		<path
-			class="open thin-line"
-			d="M112 78.6Q115 77.6 118 78.6T124 78.6T130 78.6M112 81.6Q115 80.6 118 81.6T124 81.6T130 81.6M112 84.6Q115 83.6 118 84.6T124 84.6"
-		/>
-		<path class="leaf thin-line" d="M134 82C136 77.6 141 76.4 146 77.6C143.6 81 139 83 134 82Z" />
-		<path class="open thin-line" d="M135 81.6C138 80 141 79 144.6 78.2" />
-		<g class="dark">
-			<ellipse cx="120" cy="88.4" rx="2" ry="1.4" />
-			<circle cx="117.6" cy="86.4" r="0.7" />
-			<circle cx="120" cy="85.8" r="0.7" />
-			<circle cx="122.4" cy="86.4" r="0.7" />
-		</g>
-		<path
-			class="b thin-line"
-			d="M129 88C129 85.6 130.8 84.4 133 84.4C135.2 84.4 136.8 85.6 136.8 88C138.6 88 139.8 88.4 140.2 89.2C136 89.8 131.4 89.6 129 88Z"
-		/>
-		<path
-			class="star thin-line"
-			d="M147 82.4L148.2 85L151 85.3L148.9 87.2L149.5 90L147 88.6L144.5 90L145.1 87.2L143 85.3L145.8 85Z"
-		/>
+		<!-- The page filled: the drawings appear and the photo is stuck in its frame. -->
+		{#if after}
+			<path
+				class="shell thin-line"
+				d="M94.6 84.6C94.6 80.6 96.6 78.4 98.6 78.4C100.6 78.4 102.6 80.6 102.6 84.6C100.6 86 96.6 86 94.6 84.6Z"
+			/>
+			<path class="open thin-line" d="M94.8 82.6L96.6 81.4L98.2 82.8L100 81.2L102 82.4" />
+			<path
+				class="open thin-line"
+				d="M62 85.6Q64 84.6 66 85.6T70 85.6M60.6 88.6Q63 87.6 65.4 88.6T70.2 88.6"
+			/>
+			<path
+				class="open thin-line"
+				d="M112 78.6Q115 77.6 118 78.6T124 78.6T130 78.6M112 81.6Q115 80.6 118 81.6T124 81.6T130 81.6M112 84.6Q115 83.6 118 84.6T124 84.6"
+			/>
+			<path class="leaf thin-line" d="M134 82C136 77.6 141 76.4 146 77.6C143.6 81 139 83 134 82Z" />
+			<path class="open thin-line" d="M135 81.6C138 80 141 79 144.6 78.2" />
+			<g class="dark">
+				<ellipse cx="120" cy="88.4" rx="2" ry="1.4" />
+				<circle cx="117.6" cy="86.4" r="0.7" />
+				<circle cx="120" cy="85.8" r="0.7" />
+				<circle cx="122.4" cy="86.4" r="0.7" />
+			</g>
+			<path
+				class="b thin-line"
+				d="M129 88C129 85.6 130.8 84.4 133 84.4C135.2 84.4 136.8 85.6 136.8 88C138.6 88 139.8 88.4 140.2 89.2C136 89.8 131.4 89.6 129 88Z"
+			/>
+			<path
+				class="star thin-line"
+				d="M147 82.4L148.2 85L151 85.3L148.9 87.2L149.5 90L147 88.6L144.5 90L145.1 87.2L143 85.3L145.8 85Z"
+			/>
+			<g transform="translate(73.4 76.4) rotate(-2.4) scale(0.66)">
+				{@render photo()}
+			</g>
+		{/if}
 		<g transform="translate(36 95) rotate(6)">
 			<path
 				class="b line"
@@ -1268,22 +1393,25 @@
 			<path class="white line" d="M4 -2L9 -2C10 -2 10.5 -1 10.5 0C10.5 1 10 2 9 2L4 2Z" />
 		</g>
 		<StoryDino x={ENDING_DINO.x} y={ENDING_DINO.y} size={ENDING_DINO.size} flip />
-		<g transform="translate({ENDING_HAND[0]} {ENDING_HAND[1]}) rotate(10) translate(-1.5 -3)">
-			<path class="white line" d="M0 0L21 0L21 18L0 18Z" />
-			<path class="sky" d="M2 2L19 2L19 13L2 13Z" />
-			<path class="grass" d="M2 10C7 9.2 14 9.2 19 10L19 13L2 13Z" />
-			<path
-				class="g thin-line"
-				d="M3.6 11.4C3.6 8.6 5.4 7.6 8 7.6C9.8 7.6 10.8 6.6 11.6 3.8C12.2 2.8 13.4 2.8 13.8 3.8C12.6 5.6 11.8 8.6 11.2 11Z"
-			/>
-			<path
-				class="a thin-line"
-				d="M14 11.4C13.8 9 15 7.4 17 7.2L19 7.4L19 9L17 9.6L19 10.2L19 11.4Z"
-			/>
-			<path class="open thin-line" d="M2 2L19 2L19 13L2 13Z" />
-		</g>
+		{#if !after}
+			<g transform="translate({ENDING_HAND[0]} {ENDING_HAND[1]}) rotate(10) translate(-1.5 -3)">
+				{@render photo()}
+			</g>
+		{/if}
 	</g>
 {/if}
+
+{#snippet photo()}
+	<path class="white line" d="M0 0L21 0L21 18L0 18Z" />
+	<path class="sky" d="M2 2L19 2L19 13L2 13Z" />
+	<path class="grass" d="M2 10C7 9.2 14 9.2 19 10L19 13L2 13Z" />
+	<path
+		class="g thin-line"
+		d="M3.6 11.4C3.6 8.6 5.4 7.6 8 7.6C9.8 7.6 10.8 6.6 11.6 3.8C12.2 2.8 13.4 2.8 13.8 3.8C12.6 5.6 11.8 8.6 11.2 11Z"
+	/>
+	<path class="a thin-line" d="M14 11.4C13.8 9 15 7.4 17 7.2L19 7.4L19 9L17 9.6L19 10.2L19 11.4Z" />
+	<path class="open thin-line" d="M2 2L19 2L19 13L2 13Z" />
+{/snippet}
 
 <style>
 	.line,
