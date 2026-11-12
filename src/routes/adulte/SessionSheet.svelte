@@ -76,7 +76,9 @@
 	});
 
 	function written(chars: readonly string[]): string {
-		return format.list(chars.map((char) => keyLabel(char, m.ui_key_space(), locale)));
+		return format.list(
+			chars.map((char) => keyLabel(char, m.ui_key_space(), locale, m.ui_key_enter()))
+		);
 	}
 
 	function print() {

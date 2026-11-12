@@ -50,7 +50,9 @@
 
 	function written(chars: readonly string[]): string {
 		if (chars.length === 0) return m.adult_keys_none();
-		return format.list(chars.map((char) => keyLabel(char, m.ui_key_space(), locale)));
+		return format.list(
+			chars.map((char) => keyLabel(char, m.ui_key_space(), locale, m.ui_key_enter()))
+		);
 	}
 </script>
 
