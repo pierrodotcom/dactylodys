@@ -1,0 +1,7 @@
+{
+	"schemaVersion": 1,
+	"minWords": 20,
+	"minPhrases": 10,
+	"minStoryPhrases": 2,
+	"minTexts": 2
+}

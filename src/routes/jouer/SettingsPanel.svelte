@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { AMBIENCE_IDS } from '$lib/audio/ambience';
+	import { AGE_BANDS } from '$lib/engine/progression/banks';
 	import { toGraphemes } from '$lib/engine/graphemes';
 	import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import { calmDown, type CalmChange } from '$lib/state/calm';
 	import type {
+		AgeBand,
 		AmbiencePreference,
 		ErrorPolicy,
 		HandGuidePreference,
@@ -90,6 +92,11 @@
 		effects: m.settings_calm_effects,
 		sound: m.settings_calm_sound
 	};
+	const AGE_LABELS: Readonly<Record<AgeBand, () => string>> = {
+		'8-9': m.settings_age_8_9,
+		'10-12': m.settings_age_10_12
+	};
+	const AGE_OPTIONS = AGE_BANDS.map((band) => ({ value: band, label: AGE_LABELS[band]() }));
 	const LAYOUT_OPTIONS = LAYOUT_IDS.map((id) => ({ value: id, label: LAYOUT_LABELS[id]() }));
 	const sample = toGraphemes(m.settings_sample_text());
 
@@ -222,6 +229,16 @@
 			value={settings.handGuide}
 			onchange={(value) => change({ handGuide: value as HandGuidePreference })}
 		/>
+		<div class="setting" data-setting="age">
+			<ChoiceGroup
+				legend={m.settings_age_label()}
+				name="setting-age"
+				options={AGE_OPTIONS}
+				value={settings.ageBand}
+				onchange={(value) => change({ ageBand: value as AgeBand })}
+			/>
+			{#if adult}<p class="hint">{m.settings_age_hint()}</p>{/if}
+		</div>
 		<ChoiceGroup
 			legend={m.settings_layout_label()}
 			name="setting-layout"

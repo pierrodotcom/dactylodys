@@ -1,5 +1,18 @@
+import { AGE_BANDS } from '$lib/engine/progression/banks';
 import type { LayoutPlatform } from '$lib/keyboard/types';
 import { normalizeName } from '$lib/state/profile';
+import type { AgeBand } from '$lib/state/types';
+
+/** The answer of a child who does not know their age group (or would rather not say). */
+export const UNKNOWN_AGE = 'unknown';
+
+/** What the child answers to "You are…" when the player is created. */
+export type AgeAnswer = AgeBand | typeof UNKNOWN_AGE;
+
+/** The age group the child chose, `null` when they do not know: the profile keeps its own. */
+export function ageBandOfAnswer(answer: string): AgeBand | null {
+	return AGE_BANDS.find((band) => band === answer) ?? null;
+}
 
 export type NameCheck =
 	| { readonly ok: true; readonly name: string }

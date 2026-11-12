@@ -14,7 +14,7 @@
 	const decor = $derived(decorFor('train', props.playCount));
 
 	function quipFor(view: GameView): string {
-		return pickCyclic(QUIPS, view.rewardIndex)?.() ?? '';
+		return pickCyclic(QUIPS, view.rewardIndex)?.(props.settings.ageBand) ?? '';
 	}
 
 	function announce(view: GameView): string {

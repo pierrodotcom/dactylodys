@@ -1,7 +1,12 @@
 import type { AmbienceId } from '../audio/ambience';
 import type { GhostRun } from '../engine/ghost/types';
 import type { ErrorPolicy } from '../engine/types';
-import type { HandGuidePreference, ProgressState, StarCount } from '../engine/progression/types';
+import type {
+	AgeBand,
+	HandGuidePreference,
+	ProgressState,
+	StarCount
+} from '../engine/progression/types';
 import type { CompanionChoice, HelpQuestRecord } from '../engine/rewards/types';
 import type { FingeringProfileId, LayoutId } from '../keyboard/layout-ids';
 
@@ -44,9 +49,14 @@ export interface Settings {
 	readonly effects: boolean;
 	/** A soft background sound during the games and between them (version 11); none by default. */
 	readonly ambience: AmbiencePreference;
+	/**
+	 * Age group of the child (version 12), never an age nor a birth date: it only changes which
+	 * words, phrases and texts are offered. `8-9` by default and for older profiles.
+	 */
+	readonly ageBand: AgeBand;
 }
 
-export type { CompanionChoice, ErrorPolicy, HandGuidePreference, HelpQuestRecord };
+export type { AgeBand, CompanionChoice, ErrorPolicy, HandGuidePreference, HelpQuestRecord };
 
 /**
  * One finished play of a lesson, passed or not (version 7): what the adult space follows from one
@@ -83,7 +93,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 11;
+	readonly schemaVersion: 12;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

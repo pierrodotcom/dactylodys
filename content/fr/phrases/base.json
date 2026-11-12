@@ -380,7 +380,8 @@
 			"text": "le cheval fait de la balançoire",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "human"
+			"review": "human",
+			"ages": ["8-9"]
 		},
 		{ "text": "Le chat a mis ses lunettes.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{ "text": "Où est ma chaussette ?", "themes": [], "level": 1, "review": "human" },
@@ -593,7 +594,13 @@
 			"level": 2,
 			"review": "human"
 		},
-		{ "text": "Un, deux, trois, je saute.", "themes": [], "level": 1, "review": "human" },
+		{
+			"text": "Un, deux, trois, je saute.",
+			"themes": [],
+			"level": 1,
+			"review": "human",
+			"ages": ["8-9"]
+		},
 		{
 			"text": "Le lundi, le tracteur va au cinéma.",
 			"themes": ["vehicules"],
@@ -632,7 +639,13 @@
 			"level": 2,
 			"review": "human"
 		},
-		{ "text": "Tu as vu ce lapin bleu ?", "themes": ["animaux"], "level": 1, "review": "human" },
+		{
+			"text": "Tu as vu ce lapin bleu ?",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"ages": ["8-9"]
+		},
 		{
 			"text": "Mon sous-marin a peur de l'eau.",
 			"themes": ["vehicules"],
@@ -788,7 +801,8 @@
 			"text": "Le crocodile naïf a avalé une ancre.",
 			"themes": ["animaux"],
 			"level": 3,
-			"review": "human"
+			"review": "human",
+			"ages": ["10-12"]
 		},
 		{
 			"text": "Le canoë du pirate fait des bulles.",
@@ -803,7 +817,13 @@
 			"level": 3,
 			"review": "human"
 		},
-		{ "text": "La vache a une voix aiguë.", "themes": ["animaux"], "level": 3, "review": "human" },
+		{
+			"text": "La vache a une voix aiguë.",
+			"themes": ["animaux"],
+			"level": 3,
+			"review": "human",
+			"ages": ["10-12"]
+		},
 		{
 			"text": "Le dinosaure a dîné sur la lune.",
 			"themes": ["espace"],
@@ -930,7 +950,8 @@
 			"text": "La mosaïque du garage a fondu.",
 			"themes": ["maison"],
 			"level": 3,
-			"review": "human"
+			"review": "human",
+			"ages": ["10-12"]
 		},
 		{
 			"text": "Le maïs pousse sur le toit du bus.",
@@ -1004,7 +1025,13 @@
 			"level": 1,
 			"review": "human"
 		},
-		{ "text": "Le chien aboie \"ouaf\".", "themes": ["animaux"], "level": 1, "review": "human" },
+		{
+			"text": "Le chien aboie \"ouaf\".",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "human",
+			"ages": ["8-9"]
+		},
 		{
 			"text": "Le panneau dit \"attention\".",
 			"themes": ["vehicules"],
@@ -1027,7 +1054,8 @@
 			"text": "Le chat répond \"miaou\" et s'en va.",
 			"themes": ["animaux"],
 			"level": 2,
-			"review": "human"
+			"review": "human",
+			"ages": ["8-9"]
 		},
 		{
 			"text": "Le klaxon fait \"pouet\" ; tout le monde rit.",

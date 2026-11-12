@@ -152,7 +152,8 @@ export function generateHelpExercise(
 		}
 	}
 	if (context.words !== undefined) {
-		for (const entry of usableWords(context.words, allowed, { maxLevel: context.maxLevel })) {
+		const options = { maxLevel: context.maxLevel, ageBand: context.ageBand };
+		for (const entry of usableWords(context.words, allowed, options)) {
 			wordSet.add(entry.text);
 		}
 	}

@@ -17,6 +17,7 @@ node tools/content/fetch-sources.js [--lexique-zip <chemin>] [--refresh]
 node tools/content/build-words.js [--report <dossier>] [--no-write]
 node tools/content/build-phrases.js
 node tools/content/build-texts.js
+node tools/content/apply-ages.js
 node tools/content/check.js
 ```
 
@@ -29,7 +30,8 @@ node tools/content/check.js
    5. _Décisions de relecture_ : `data/additions.txt` (ajouts), `data/theme-corrections.txt` (thèmes), `data/exclusions.txt` (retraits, appliqués en dernier et toujours gagnants).
 3. **build-phrases** : transforme `data/phrases.fr.txt` (une phrase par ligne : `niveau | thèmes | texte`) en `content/fr/phrases/base.json`.
 4. **build-texts** : transforme `data/texts.fr.txt` (un en-tête `@ identifiant | leçon | niveau`, puis les lignes du texte) en `content/fr/texts/base.json`, la banque des petits textes utiles du dernier monde, tapés ligne par ligne avec Entrée ; un identifiant listé dans `data/validated-texts.txt` passe à `review: "human"`.
-5. **check** : contrôle les deux fichiers (doublons, caractères de l'ordre d'apprentissage, nombre de mots et de phrases par palier de lettres) et affiche les chiffres réels.
+5. **apply-ages** : reporte les tranches d'âge de `data/ages.txt` dans les trois banques telles qu'elles sont (la banque de mots se reconstruit sinon depuis Lexique, pas toujours téléchargé). Les trois constructeurs appliquent les mêmes marques : reconstruire une banque redonne le même résultat.
+6. **check** : contrôle les deux fichiers (doublons, caractères de l'ordre d'apprentissage, nombre de mots et de phrases par palier de lettres) et affiche les chiffres réels.
 
 ## Rapports (hors dépôt)
 
@@ -44,6 +46,7 @@ Dans `.cache/report/` : `kept.tsv` (mots retenus avec fréquence et notoriété)
 | `data/additions.txt`         | `mot \| thèmes \| niveau` : ajouts (les noms de dinosaures par ex.)  |
 | `data/theme-corrections.txt` | `mot \| -thème +thème` : corrections de sens (par ex. « marine »)    |
 | `data/phrases.fr.txt`        | phrases originales, `niveau \| thèmes \| texte`                      |
+| `data/ages.txt`              | `mot \| phrase \| texte`, l'entrée, ses tranches d'âge (`8-9`, `10-12`) ; absente = toutes |
 
 La relecture humaine (cases à cocher de `docs/relecture/`) se reporte dans ces fichiers, puis on relance la chaîne. Tout mot ou toute phrase générée porte `review: "agent"` ; seule une personne peut le faire passer à `"human"`.
 

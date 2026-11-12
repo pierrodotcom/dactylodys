@@ -1,11 +1,12 @@
 import { m } from '$lib/paraglide/messages.js';
+import { withOlderVariant, type AgedText } from '../shared/age-text';
 
 /** What the companion says when it has fished an object out, in this order. */
-export const QUIPS: readonly (() => string)[] = [
+export const QUIPS: readonly AgedText[] = [
 	m.game_river_quip_1,
 	m.game_river_quip_2,
 	m.game_river_quip_3,
-	m.game_river_quip_4,
+	withOlderVariant(m.game_river_quip_4, m.game_river_quip_4_older),
 	m.game_river_quip_5,
 	m.game_river_quip_6,
 	m.game_river_quip_7,

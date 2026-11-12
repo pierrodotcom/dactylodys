@@ -19,7 +19,7 @@
 			? m.game_river_announce_last({ object })
 			: m.game_river_announce_group({
 					object,
-					quip: pickCyclic(QUIPS, view.rewardIndex)?.() ?? ''
+					quip: pickCyclic(QUIPS, view.rewardIndex)?.(props.settings.ageBand) ?? ''
 				});
 	}
 </script>
@@ -44,5 +44,5 @@
 {/snippet}
 
 {#snippet scene(view: GameView)}
-	<Scene {view} {decor} />
+	<Scene {view} {decor} ageBand={props.settings.ageBand} />
 {/snippet}
