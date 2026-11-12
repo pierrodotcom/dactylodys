@@ -576,7 +576,7 @@
 	{#if trick === 'float'}
 		<g class="trick appear">
 			<path class="shadow" d={SOFT_SHADOW} />
-			<path class="sparkle line" d={FLOAT_SPARKLES} />
+			<path class="sparkle line" d={FLOAT_SPARKLES} data-effect />
 		</g>
 	{:else if trick === 'cartwheel'}
 		<g class="trick appear">
@@ -587,8 +587,8 @@
 		<path class="shadow trick appear" d={GROUND_SHADOW} />
 	{/if}
 	{#if mood === 'cheer'}
-		<path class="sparkle line" d={SPARKLE_PATH} />
-		<path class="sparkle line" d={SPARKLE_PATH} transform="translate(86 -4)" />
+		<path class="sparkle line" d={SPARKLE_PATH} data-effect />
+		<path class="sparkle line" d={SPARKLE_PATH} transform="translate(86 -4)" data-effect />
 	{/if}
 	<!-- Everything but the body: where a raised arm may show its outline. -->
 	<clipPath id={ref('outside-body')}><path clip-rule="evenodd" d={FRAME + BODY} /></clipPath>

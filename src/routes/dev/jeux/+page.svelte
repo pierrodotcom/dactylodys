@@ -31,6 +31,8 @@
 	let showScenes = $state(false);
 	let backspace = $state(false);
 	let fadeHomeRow = $state(false);
+	/** Off: what the settings of a child mark as a light effect is hidden (ADR-057). */
+	let effects = $state(true);
 	let step = $state<Step>('choose');
 	let ActiveGame = $state.raw<Component<GameProps> | null>(null);
 	let outcome = $state.raw<GameOutcome | null>(null);
@@ -54,7 +56,7 @@
 			hesitationMs: 0
 		},
 		lookReminderEvery: LOOK_REMINDER_EVERY,
-		scenes: showScenes ? (SCENE_SCHEDULE.games[gameId] ?? []) : [],
+		scenes: showScenes && effects ? (SCENE_SCHEDULE.games[gameId] ?? []) : [],
 		fadedKeys: fadeHomeRow ? homeRow : []
 	});
 
@@ -87,7 +89,7 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<main>
+<main data-effects={effects ? undefined : 'off'}>
 	{#if step === 'playing' && ActiveGame}
 		<ActiveGame
 			exercise={SAMPLE_EXERCISE}
@@ -139,6 +141,10 @@
 				<label>
 					<input type="checkbox" bind:checked={showScenes} />
 					<span>{m.dev_games_scenes_label()}</span>
+				</label>
+				<label>
+					<input type="checkbox" bind:checked={effects} />
+					<span>{m.dev_games_effects_label()}</span>
 				</label>
 				<label>
 					<input type="checkbox" bind:checked={backspace} />

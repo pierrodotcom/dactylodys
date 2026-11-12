@@ -132,7 +132,13 @@
 							<span class="home-mark"></span>
 						{/if}
 						{#if noteCode === key.code && !still}
-							<svg class="note" viewBox="0 0 20 20" focusable="false" aria-hidden="true">
+							<svg
+								class="note"
+								viewBox="0 0 20 20"
+								focusable="false"
+								aria-hidden="true"
+								data-effect
+							>
 								<ellipse cx="6" cy="15" rx="4" ry="3" />
 								{#each NOTE_PATHS as path (path)}
 									<path d={path} />

@@ -10,7 +10,7 @@
 		<AstreShape variant={0} lit={true} halo={false} />
 	</g>
 	{#each PICTURE.sparkles as sparkle (sparkle)}
-		<path class="sparkle" d={sparkle} />
+		<path class="sparkle" d={sparkle} data-effect />
 	{/each}
 	{#each PICTURE.trail as puff (puff)}
 		<path class="underlay" d={puff} />

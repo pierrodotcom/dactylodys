@@ -80,6 +80,11 @@ export interface GameProps {
 	 * and clicks of the page meanwhile.
 	 */
 	readonly suspended?: boolean;
+	/**
+	 * Told each time the child pauses the game or takes it up again (ADR-057): the route stops
+	 * the background sound during the pause. Called by the shell shared by the games.
+	 */
+	readonly onPauseChange?: (paused: boolean) => void;
 }
 
 /** A mini-game as the play flow sees it. Its title and description live in the messages, keyed by `id`. */

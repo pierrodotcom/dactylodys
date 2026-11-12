@@ -55,10 +55,19 @@ describe('applySettings', () => {
 		expect(attributes.has('data-motion')).toBe(false);
 	});
 
-	it('writes only the four documented attributes', () => {
+	it('marks the light effects off, and only when they are', () => {
 		const { root, attributes } = fakeRoot();
-		applySettings(settingsWith({ theme: 'dark', motion: 'full' }), root);
+		applySettings(settingsWith({ effects: false }), root);
+		expect(attributes.get('data-effects')).toBe('off');
+		applySettings(settingsWith({ effects: true }), root);
+		expect(attributes.has('data-effects')).toBe(false);
+	});
+
+	it('writes only the five documented attributes', () => {
+		const { root, attributes } = fakeRoot();
+		applySettings(settingsWith({ theme: 'dark', motion: 'full', effects: false }), root);
 		expect([...attributes.keys()].sort()).toEqual([
+			'data-effects',
 			'data-motion',
 			'data-text-scale',
 			'data-text-spacing',

@@ -69,7 +69,8 @@ p {
 /*
  * Settings written on <html> by the settings layer:
  * data-text-scale="md|lg|xl", data-text-spacing="normal|wide|wider",
- * data-motion="reduced|full" (absent = follow the system), data-theme="light|dark".
+ * data-motion="reduced|full" (absent = follow the system), data-theme="light|dark",
+ * data-effects="off" (absent = the light effects are shown).
  */
 :root[data-text-scale='lg'] {
 	--dd-typing-size-current: var(--dd-typing-size-lg);
@@ -87,6 +88,18 @@ p {
 :root[data-text-spacing='wider'] {
 	--dd-typing-letter-spacing-current: var(--dd-typing-letter-spacing-wider);
 	--dd-typing-word-spacing-current: var(--dd-typing-word-spacing-wider);
+}
+
+/*
+ * Light effects (ADR-057): sparkles, halos, glows, confetti. The one place that cuts them: an
+ * element marked data-effect is hidden under data-effects="off", set on <html> by the settings
+ * or on any ancestor (the trial page of the games). Its room is kept, so nothing else moves.
+ * What moves follows data-motion; what tells the child something is never marked.
+ */
+[data-effects='off'] [data-effect],
+[data-effects='off'] [data-effect] * {
+	visibility: hidden !important;
+	animation-name: none !important;
 }
 
 /*
