@@ -135,6 +135,7 @@
 				<label>
 					<span>{place}</span>
 					<select
+						data-place-select={place}
 						value={chosen[place] ?? NO_VALUE}
 						onchange={(event) => {
 							const value = event.currentTarget.value;

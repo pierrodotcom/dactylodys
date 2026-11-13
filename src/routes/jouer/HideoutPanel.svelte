@@ -384,26 +384,31 @@
 		font-size: var(--dd-font-size-sm);
 	}
 
+	/* One line under the name of the place: the whole name of the object is in the button's name. */
+	.place-object {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
 	.place[data-filled] {
 		border-color: var(--dd-color-accent-base);
 	}
 
 	.objects {
-		grid-template-columns: repeat(auto-fill, minmax(var(--dd-size-choice-card-min), 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(var(--dd-size-hideout-card), 1fr));
 	}
 
 	.object {
-		grid-template-columns: var(--dd-size-hideout-thumb) minmax(0, 1fr);
-		column-gap: var(--dd-space-sm);
-	}
-
-	.object .where {
-		grid-column: 2;
+		align-content: start;
+		justify-items: center;
+		padding: var(--dd-space-sm) var(--dd-space-xs);
+		font-size: var(--dd-font-size-sm);
+		text-align: center;
 	}
 
 	.thumb {
 		display: block;
-		grid-row: span 2;
 		inline-size: var(--dd-size-hideout-thumb);
 	}
 

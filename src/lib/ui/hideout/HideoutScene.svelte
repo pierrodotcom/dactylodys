@@ -213,6 +213,16 @@
 			<stop class="glow-stop" offset="0" />
 			<stop class="glow-stop end" offset="1" />
 		</radialGradient>
+		{#each [0, 1, 2] as tone (tone)}
+			<radialGradient id="{uid}-fairy-{tone}">
+				<stop class="fairy-stop tone-{tone}" offset="0.25" />
+				<stop class="fairy-stop tone-{tone} end" offset="1" />
+			</radialGradient>
+		{/each}
+		<linearGradient id="{uid}-depth" x1="0" y1="0" x2="0" y2="1">
+			<stop class="depth-stop" offset="0" />
+			<stop class="depth-stop end" offset="0.45" />
+		</linearGradient>
 		<linearGradient id="{uid}-beam" x1="0" y1="0" x2="0" y2="1">
 			<stop class="glow-stop" offset="0" />
 			<stop class="glow-stop end" offset="1" />
@@ -230,6 +240,8 @@
 		{/if}
 	{/each}
 	<path class="grain" d={GRAIN.join('')} />
+	<!-- Under the roof, the top of the wall is in the shade. -->
+	<rect x="0" y="0" width={SCENE_WIDTH} height={FLOOR_Y} fill="url(#{uid}-depth)" />
 	{#each SEAMS as x (x)}
 		<path class="seam" d="M{x} 18V{FLOOR_Y}" />
 	{/each}
@@ -355,19 +367,6 @@
 	<path class="beam" d="M452 20L466 20L512 62L512 76Z" />
 	<path class="iron-line" d="M192 19.5H200M196 20V24.6C196 29 201.6 29 201.6 25.4" />
 	<path class="fairy-string" d={fairyPath} />
-	{#each FAIRY_BULBS as bulb, index (index)}
-		<path
-			class="fairy-cap"
-			d="M{bulb.x - 1.4} {bulb.y}H{bulb.x + 1.4}V{bulb.y + 2}H{bulb.x - 1.4}Z"
-		/>
-		<path
-			class="fairy tone-{bulb.tone}"
-			d="M{bulb.x} {bulb.y + 1.6}C{bulb.x + 3} {bulb.y + 3} {bulb.x + 2.6} {bulb.y +
-				7.4} {bulb.x} {bulb.y + 8}C{bulb.x - 2.6} {bulb.y + 7.4} {bulb.x - 3} {bulb.y +
-				3} {bulb.x} {bulb.y + 1.6}Z"
-			data-index={index}
-		/>
-	{/each}
 
 	<!-- The floor: boards, a skirting board, a trapdoor with its ring. -->
 	<rect class="floor" x="0" y={FLOOR_Y} width={SCENE_WIDTH} height={SCENE_HEIGHT - FLOOR_Y} />
@@ -522,9 +521,23 @@
 			class="fairy-glow tone-{bulb.tone}"
 			cx={bulb.x}
 			cy={bulb.y + 5}
-			r="6"
+			r="9"
+			fill="url(#{uid}-fairy-{bulb.tone})"
 			data-effect
 			data-twinkle={index % 3}
+		/>
+	{/each}
+	{#each FAIRY_BULBS as bulb, index (index)}
+		<path
+			class="fairy-cap"
+			d="M{bulb.x - 1.4} {bulb.y}H{bulb.x + 1.4}V{bulb.y + 2}H{bulb.x - 1.4}Z"
+		/>
+		<path
+			class="fairy tone-{bulb.tone}"
+			d="M{bulb.x} {bulb.y + 1.6}C{bulb.x + 3} {bulb.y + 3} {bulb.x + 2.6} {bulb.y +
+				7.4} {bulb.x} {bulb.y + 8}C{bulb.x - 2.6} {bulb.y + 7.4} {bulb.x - 3} {bulb.y +
+				3} {bulb.x} {bulb.y + 1.6}Z"
+			data-index={index}
 		/>
 	{/each}
 
@@ -599,6 +612,12 @@
 		stop-color: var(--dd-color-hideout-glow);
 	}
 
+	.depth-stop {
+		stop-color: var(--dd-color-hideout-shade);
+		stop-opacity: var(--dd-opacity-hideout-cast);
+	}
+
+	.depth-stop.end,
 	.glow-stop.end {
 		stop-opacity: 0;
 	}
@@ -863,19 +882,32 @@
 		fill: var(--dd-color-hideout-iron);
 	}
 
-	.fairy.tone-0,
-	.fairy-glow.tone-0 {
+	.fairy.tone-0 {
 		fill: var(--dd-color-hideout-fairy-a);
 	}
 
-	.fairy.tone-1,
-	.fairy-glow.tone-1 {
+	.fairy.tone-1 {
 		fill: var(--dd-color-hideout-fairy-b);
 	}
 
-	.fairy.tone-2,
-	.fairy-glow.tone-2 {
+	.fairy.tone-2 {
 		fill: var(--dd-color-hideout-fairy-c);
+	}
+
+	.fairy-stop.tone-0 {
+		stop-color: var(--dd-color-hideout-fairy-a);
+	}
+
+	.fairy-stop.tone-1 {
+		stop-color: var(--dd-color-hideout-fairy-b);
+	}
+
+	.fairy-stop.tone-2 {
+		stop-color: var(--dd-color-hideout-fairy-c);
+	}
+
+	.fairy-stop.end {
+		stop-opacity: 0;
 	}
 
 	.fairy {

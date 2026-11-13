@@ -33,10 +33,21 @@ export const PLACE_SPOTS: Readonly<Record<string, PlaceSpot>> = {
 /** Where the companion stands, and the side of its square, in units of the cabin. */
 export const COMPANION_SPOT = { x: 230, y: 184, size: 110 } as const;
 
-/** The outline around a place being chosen: the room of the place, a little wider. */
+/** Share of its room an object hanging from a peg may rise above it (a hat on a peg). */
+const ABOVE_HOOK = 0.45;
+
+/**
+ * The outline around a place being chosen: the room of the place, a little wider, and above a
+ * hook what a hat may cover; always inside the drawing.
+ */
 export function markOf(spot: PlaceSpot, margin: number): [number, number, number, number] {
 	const [x, y] = spot.point;
 	const [width, height] = spot.room;
-	const top = spot.mount === 'hang' ? y - margin : y - height - margin;
-	return [x - width / 2 - margin, top, width + 2 * margin, height + 2 * margin];
+	const above = spot.mount === 'hang' ? height * ABOVE_HOOK : height;
+	const below = spot.mount === 'hang' ? height * (1 - ABOVE_HOOK / 2) : 0;
+	const left = Math.max(x - width / 2 - margin, 0);
+	const top = Math.max(y - above - margin, 0);
+	const right = Math.min(x + width / 2 + margin, SCENE_WIDTH);
+	const bottom = Math.min(y + below + margin, SCENE_HEIGHT);
+	return [left, top, right - left, bottom - top];
 }
