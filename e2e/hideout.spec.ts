@@ -51,6 +51,10 @@ const PLACE_NAMES: Record<string, string> = {
 	corner: message('play_hideout_place_corner')
 };
 
+function placeName(place: string): string {
+	return PLACE_NAMES[place] ?? place;
+}
+
 function itemOf(lessonId: string): RewardDefinition {
 	const item = catalogue.rewards.find(
 		(reward) =>
@@ -161,7 +165,7 @@ test.describe('the hideout', () => {
 		const chosen = page.getByRole('heading', { level: 2 });
 		await expect(chosen).toBeFocused();
 		await expect(chosen).toHaveText(
-			message('play_hideout_place_free', { place: PLACE_NAMES['pegs'] })
+			message('play_hideout_place_free', { place: placeName('pegs') })
 		);
 		await page.keyboard.press('Tab');
 		await page.keyboard.press('Tab');
@@ -171,7 +175,7 @@ test.describe('the hideout', () => {
 		await expect(pegsObject).toHaveAttribute('aria-pressed', 'true');
 		await expect(page.getByRole('status')).toHaveText(
 			message('play_hideout_done_put', {
-				place: PLACE_NAMES['pegs'],
+				place: placeName('pegs'),
 				item: inSentence(onPegs.title)
 			})
 		);
@@ -184,7 +188,7 @@ test.describe('the hideout', () => {
 		await expect(placeButton(page, 'pegs')).toBeFocused();
 		await expect(placeButton(page, 'pegs')).toHaveAccessibleName(
 			message('play_hideout_place_with', {
-				place: PLACE_NAMES['pegs'],
+				place: placeName('pegs'),
 				item: inSentence(onPegs.title)
 			})
 		);
@@ -203,7 +207,7 @@ test.describe('the hideout', () => {
 		await page.keyboard.press('Enter');
 		await expect(sceneObject(page, 'window')).toHaveCount(0);
 		await expect(page.getByRole('status')).toHaveText(
-			message('play_hideout_done_remove', { place: PLACE_NAMES['window'] })
+			message('play_hideout_done_remove', { place: placeName('window') })
 		);
 
 		await page.keyboard.press('Escape');
@@ -236,7 +240,7 @@ test.describe('the hideout', () => {
 		).toHaveCount(0);
 		for (const place of rules.places) {
 			await expect(placeButton(page, place)).toHaveAccessibleName(
-				message('play_hideout_place_free', { place: PLACE_NAMES[place] })
+				message('play_hideout_place_free', { place: placeName(place) })
 			);
 		}
 		await placeButton(page, 'shelf').click();
