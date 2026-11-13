@@ -181,6 +181,11 @@ function toVersion12(record: StoredRecord): StoredRecord {
 	};
 }
 
+/* Version 13 (ADR-057, proposal 18): the hideout is empty, nothing is put in it yet. */
+function toVersion13(record: StoredRecord): StoredRecord {
+	return { hideout: {}, ...record, schemaVersion: 13 };
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -193,7 +198,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[8, toVersion9],
 	[9, toVersion10],
 	[10, toVersion11],
-	[11, toVersion12]
+	[11, toVersion12],
+	[12, toVersion13]
 ]);
 
 function versionOf(record: StoredRecord): number {

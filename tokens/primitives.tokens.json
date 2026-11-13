@@ -302,6 +302,32 @@
 			"dark": {
 				"$value": "#00000066"
 			}
+		},
+		"honey": {
+			"100": {
+				"$value": "#f6e0b8"
+			},
+			"200": {
+				"$value": "#ecc993"
+			},
+			"300": {
+				"$value": "#dfb077"
+			},
+			"400": {
+				"$value": "#c98e57"
+			},
+			"500": {
+				"$value": "#a9703f"
+			},
+			"600": {
+				"$value": "#8a552c"
+			},
+			"700": {
+				"$value": "#6b3f20"
+			},
+			"800": {
+				"$value": "#4f2e18"
+			}
 		}
 	},
 	"dimension": {
@@ -424,7 +450,13 @@
 		"4000": {
 			"$value": "4000ms"
 		},
-		"$type": "duration"
+		"$type": "duration",
+		"5000": {
+			"$value": "5000ms"
+		},
+		"7000": {
+			"$value": "7000ms"
+		}
 	},
 	"easing": {
 		"$type": "cubicBezier",

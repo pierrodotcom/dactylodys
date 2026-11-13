@@ -17,6 +17,7 @@ import {
 	withHelpQuest,
 	withAdultWords,
 	withLastGame,
+	withHideout,
 	withOpenedWorld,
 	withProgress
 } from './profile';
@@ -149,7 +150,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 12,
+			schemaVersion: 13,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -166,7 +167,8 @@ describe('createProfile', () => {
 			practiceDays: [],
 			handwritingSamples: [],
 			adultWords: [],
-			openedWorldIds: []
+			openedWorldIds: [],
+			hideout: {}
 		});
 	});
 
@@ -400,6 +402,20 @@ describe('profile updates', () => {
 	});
 });
 
+describe('withHideout', () => {
+	it('keeps the hideout as the child arranged it, in place of the previous one', () => {
+		const once = withHideout(sampleProfile(), { shelf: 'fr.reward.crown' });
+		const twice = withHideout(once, { rug: 'fr.reward.springs' });
+		expect(once.hideout).toEqual({ shelf: 'fr.reward.crown' });
+		expect(twice.hideout).toEqual({ rug: 'fr.reward.springs' });
+		expect(parseProfile(twice)).toEqual(twice);
+	});
+
+	it('refuses an empty reward identifier', () => {
+		expect(() => withHideout(sampleProfile(), { shelf: '' })).toThrow(/hideout\.shelf/);
+	});
+});
+
 describe('withOpenedWorld', () => {
 	it('keeps each world once, in the order they were opened', () => {
 		const once = withOpenedWorld(sampleProfile(), WORLD);
@@ -454,7 +470,7 @@ describe('parseProfile', () => {
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
 		['the schema version before', ['schemaVersion'], 11, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 13, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 14, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -625,7 +641,11 @@ describe('parseProfile', () => {
 		['an empty adult word', ['adultWords'], ['vélo', ''], /adultWords\[1\]/],
 		['missing opened worlds', ['openedWorldIds'], REMOVE, /profile\.openedWorldIds/],
 		['a world opened twice', ['openedWorldIds'], [WORLD, WORLD], /openedWorldIds\[1\]/],
-		['an opened world that is not text', ['openedWorldIds'], [3], /openedWorldIds\[0\]/]
+		['an opened world that is not text', ['openedWorldIds'], [3], /openedWorldIds\[0\]/],
+		['a missing hideout', ['hideout'], REMOVE, /profile\.hideout/],
+		['a hideout that is a list', ['hideout'], ['fr.reward.crown'], /profile\.hideout/],
+		['an empty reward in the hideout', ['hideout', 'shelf'], '', /hideout\.shelf/],
+		['a reward of the hideout that is not text', ['hideout', 'shelf'], 3, /hideout\.shelf/]
 	])('rejects %s', (_label, path, value, message) => {
 		expect(() => parseProfile(mutate(path, value))).toThrow(message);
 	});

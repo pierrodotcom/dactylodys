@@ -134,3 +134,7 @@ $//'` après coup | Active |
 | L-123 | 2026-11-13 | Outillage | Sous PowerShell, du Python passé en ligne (`python -c`) avec des guillemets imbriqués est mal découpé et casse | Écrire le Python dans un fichier de script et l'exécuter | Active |
 | L-124 | 2026-11-13 | Clavier | Dans `layouts/*.json`, `keys` a été lu comme un tableau alors que c'est un objet indexé par `code` | Lire le schéma de la disposition (`keyboard/`) avant d'écrire un accès à `keys` | Active |
 | L-125 | 2026-11-13 | Tests | Le jeu du train finit sur « Voir mon bilan » : un parcours e2e qui attendait le bilan directement restait bloqué | Dans un parcours e2e jusqu'au bilan, cliquer d'abord `game_shared_finale_continue` quand le jeu a une scène de fin | Active |
+| L-126 | 2026-11-13 | Tests | Après un rechargement, le dernier joueur revient directement sur la carte : un test qui recliquait sur son nom attendait un écran absent | Après `reload`, attendre la carte, pas l'écran des joueurs | Active |
+| L-127 | 2026-11-13 | UI | L'attribut `data-reward` est animé partout par `app.css` : le réutiliser pour un autre usage anime l'élément | Chercher un nom d'attribut `data-*` dans `app.css` avant de l'employer | Active |
+| L-128 | 2026-11-13 | UI | `getBBox` des dessins du compagnon est faussé par le tracé de contour `AROUND` | Mesurer les dessins forme par forme | Active |
+| L-129 | 2026-11-13 | Outillage | `TaskStop` sur `npx vite` laisse le processus node vivant et le port pris | Lancer `node node_modules/vite/bin/vite.js` pour un serveur qu'on arrêtera | Active |

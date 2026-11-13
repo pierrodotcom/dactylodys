@@ -1,4 +1,4 @@
-import { expect as baseExpect, test, type Page } from '@playwright/test';
+import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import { withAdultWords, withGhost } from '../src/lib/state/profile';
 import {
@@ -84,6 +84,11 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await expectWayOutAtTop(page, message('play_companion_back'));
 	await button(page, message('play_companion_back')).click();
 
+	await button(page, message('play_hideout_open')).click();
+	await expect(heading(page, message('play_hideout_title'))).toBeVisible();
+	await expectWayOutAtTop(page, message('play_hideout_back'));
+	await button(page, message('play_hideout_back')).click();
+
 	await button(page, message('play_story_so_far_open')).click();
 	await expect(heading(page, message('play_story_so_far_title'))).toBeVisible();
 	await expectWayOutAtTop(page, message('play_story_so_far_back'));
@@ -102,6 +107,46 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await throughStory(page, heading(page, FIRST.title));
 	await expectWayOutAtTop(page, message('play_intro_back'));
 });
+
+test('keeps the hideout in view while the child goes down the objects to set down', async ({
+	page
+}) => {
+	const every = progressionWorlds.flatMap((world) => world.lessons);
+	const child = advancedProfile({
+		name: 'Lou',
+		passed: Object.fromEntries(every.map((lesson) => [lesson.id, PASSED_STARS]))
+	});
+	await openPage(page, '/jouer');
+	await installProfile(page, child);
+	await reloadPage(page);
+	await page.getByRole('button', { name: child.name }).click();
+	await button(page, message('play_hideout_open')).click();
+	await expect(heading(page, message('play_hideout_title'))).toBeVisible();
+
+	// The places and the whole cabin fit a laptop screen without scrolling.
+	const scene = page.locator('[data-hideout-scene]');
+	const places = page.locator('button[data-place]');
+	await expectInView(scene);
+	await expectInView(places.last());
+
+	await page.locator('button[data-place="pegs"]').click();
+	const objects = page.locator('button[data-object]');
+	await objects.first().focus();
+	await page.keyboard.press('End');
+	await expect(objects.last()).toBeFocused();
+	await expectInView(objects.last());
+	await expectInView(scene);
+});
+
+/** The element is entirely on the screen, as it is scrolled now. */
+async function expectInView(element: Locator) {
+	const box = await element.evaluate((node) => {
+		const rect = node.getBoundingClientRect();
+		return { top: rect.top, bottom: rect.bottom, height: innerHeight };
+	});
+	expect(box.top).toBeGreaterThanOrEqual(0);
+	expect(box.bottom).toBeLessThanOrEqual(box.height);
+}
 
 test('puts the way out of the adult space at the top of each of its screens', async ({ page }) => {
 	const child = advancedProfile({ name: 'Lou', passed: {} });

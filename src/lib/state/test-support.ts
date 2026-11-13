@@ -152,9 +152,14 @@ export const EMPTY_JOURNAL = {
 	openedWorldIds: []
 } as const satisfies Partial<Profile>;
 
+/** What a profile becomes once migrated from version 12 or older: an empty hideout. */
+export function withEmptyHideout(profile: Profile): Profile {
+	return { ...profile, hideout: {} };
+}
+
 /** What a profile becomes once migrated from version 11 or older: the words of the 8-9 year olds. */
 export function withYoungerAgeBand(profile: Profile): Profile {
-	return { ...profile, settings: { ...profile.settings, ageBand: '8-9' } };
+	return withEmptyHideout({ ...profile, settings: { ...profile.settings, ageBand: '8-9' } });
 }
 
 /** What a profile becomes once migrated from version 10 or older: effects on, no background sound. */
@@ -175,11 +180,21 @@ export function withRetryPolicy(profile: Profile): Profile {
 	return withKeyboardFade({ ...profile, settings: { ...profile.settings, errorPolicy: 'retry' } });
 }
 
-/** The record version 11 of the app stored: the same profile without the age group. */
+/** The record version 12 of the app stored: the same profile without the hideout. */
+export function asVersion12(profile: Profile): Record<string, unknown> {
+	const stored: Record<string, unknown> = { ...profile, schemaVersion: 12 };
+	delete stored['hideout'];
+	return stored;
+}
+
+/** The record version 11 of the app stored: version 12 without the age group. */
 export function asVersion11(profile: Profile): Record<string, unknown> {
-	const settings: Record<string, unknown> = { ...profile.settings };
+	const version12 = asVersion12(profile);
+	const settings: Record<string, unknown> = {
+		...(version12['settings'] as Record<string, unknown>)
+	};
 	delete settings['ageBand'];
-	return { ...profile, schemaVersion: 11, settings };
+	return { ...version12, schemaVersion: 11, settings };
 }
 
 /** The record version 10 of the app stored: version 11 without the effects nor the background sound. */

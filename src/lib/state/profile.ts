@@ -66,7 +66,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 12;
+export const PROFILE_SCHEMA_VERSION = 13;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -96,7 +96,8 @@ const PROFILE_KEYS = [
 	'practiceDays',
 	'handwritingSamples',
 	'adultWords',
-	'openedWorldIds'
+	'openedWorldIds',
+	'hideout'
 ] as const satisfies readonly (keyof Profile)[];
 const SESSION_KEYS = [
 	'lessonId',
@@ -214,7 +215,8 @@ export function createProfile(input: NewProfileInput): Profile {
 		practiceDays: [],
 		handwritingSamples: [],
 		adultWords: [],
-		openedWorldIds: []
+		openedWorldIds: [],
+		hideout: {}
 	};
 }
 
@@ -284,6 +286,14 @@ export function withOpenedWorld(profile: Profile, worldId: string): Profile {
 	const id = expectIdentifier(worldId, 'worldId');
 	if (profile.openedWorldIds.includes(id)) return profile;
 	return { ...profile, openedWorldIds: [...profile.openedWorldIds, id] };
+}
+
+/**
+ * The hideout as the child arranged it, in place of the previous one: a reward identifier by place
+ * identifier. Which places and rewards make sense is decided with the catalogue, by the caller.
+ */
+export function withHideout(profile: Profile, hideout: Readonly<Record<string, string>>): Profile {
+	return { ...profile, hideout: parseRecordOf(hideout, 'hideout', expectIdentifier) };
 }
 
 /** The words given by the adult, in place of the previous ones; an empty list removes them. */
@@ -655,6 +665,7 @@ export function parseProfile(data: unknown): Profile {
 		adultWords: expectArray(root['adultWords'], 'profile.adultWords').map((raw, index) =>
 			expectIdentifier(raw, `profile.adultWords[${index}]`)
 		),
-		openedWorldIds: parseUniqueIdentifiers(root['openedWorldIds'], 'profile.openedWorldIds')
+		openedWorldIds: parseUniqueIdentifiers(root['openedWorldIds'], 'profile.openedWorldIds'),
+		hideout: parseRecordOf(root['hideout'], 'profile.hideout', expectIdentifier)
 	};
 }

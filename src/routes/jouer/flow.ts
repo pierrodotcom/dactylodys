@@ -18,6 +18,8 @@ export type Screen =
 	| { readonly name: 'result'; readonly lessonId: string }
 	| { readonly name: 'break' }
 	| { readonly name: 'companion'; readonly back: SettingsOrigin }
+	/** The hideout the child decorates, opened from the map only (ADR-057, proposal 18). */
+	| { readonly name: 'hideout' }
 	/** The short game of a help quest: no lesson, no stars. */
 	| { readonly name: 'help-game' }
 	/** The companion says thank you after a help quest. */
@@ -64,6 +66,8 @@ export type FlowEvent =
 	| { readonly type: 'close-settings' }
 	| { readonly type: 'open-companion' }
 	| { readonly type: 'close-companion' }
+	| { readonly type: 'open-hideout' }
+	| { readonly type: 'close-hideout' }
 	| { readonly type: 'start-help' }
 	| { readonly type: 'open-free' }
 	| { readonly type: 'change-player' }
@@ -94,6 +98,7 @@ const CAN_CHANGE_PLAYER: ReadonlySet<Screen['name']> = new Set([
 	'break',
 	'keyboard-check',
 	'companion',
+	'hideout',
 	'help-done',
 	'story-so-far',
 	'free-intro',
@@ -178,7 +183,10 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 			}
 			if (event.type === 'open-story-so-far') return { name: 'story-so-far' };
 			if (event.type === 'open-free') return { name: 'free-intro' };
+			if (event.type === 'open-hideout') return { name: 'hideout' };
 			return screen;
+		case 'hideout':
+			return event.type === 'close-hideout' ? { name: 'map' } : screen;
 		case 'settings':
 			return event.type === 'close-settings' ? screen.back : screen;
 		case 'companion':

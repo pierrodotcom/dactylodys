@@ -6,11 +6,13 @@
 		name: string;
 		/** Opens the screen of the companion; no button without it. */
 		oncompanion?: () => void;
+		/** Opens the hideout; no button without it (the map only). */
+		onhideout?: () => void;
 		onsettings: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { name, oncompanion, onsettings, onchangeplayer }: Props = $props();
+	let { name, oncompanion, onhideout, onsettings, onchangeplayer }: Props = $props();
 </script>
 
 <header class="top-bar">
@@ -23,6 +25,15 @@
 					<circle cx="12" cy="14.5" r="6.5" />
 				</svg>
 				<span>{m.play_companion_open()}</span>
+			</Button>
+		{/if}
+		{#if onhideout}
+			<Button variant="secondary" onclick={onhideout}>
+				<svg class="icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+					<path d="M3.5 11.5L12 4L20.5 11.5M6 9.5V20H18V9.5" />
+					<path d="M10 20V15H14V20" />
+				</svg>
+				<span>{m.play_hideout_open()}</span>
 			</Button>
 		{/if}
 		<Button variant="secondary" onclick={onsettings}>
@@ -71,6 +82,7 @@
 		stroke: currentColor;
 		stroke-width: var(--dd-border-width-thick);
 		stroke-linecap: round;
+		stroke-linejoin: round;
 		vector-effect: non-scaling-stroke;
 	}
 </style>
