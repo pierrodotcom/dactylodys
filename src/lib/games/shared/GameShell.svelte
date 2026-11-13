@@ -72,6 +72,7 @@
 		group: (text) => m.game_shared_announce_group({ text }),
 		error: (char) => m.game_shared_announce_error({ char }),
 		erase: (char) => m.game_shared_announce_erase({ char }),
+		repair: (text, char) => m.game_shared_announce_repair({ text, char }),
 		spoken: spokenGrapheme
 	};
 
@@ -104,7 +105,10 @@
 
 	let game = $state.raw<GameState>(
 		untrack(() =>
-			createGame(exercise.groups, settings.errorPolicy, { finale: finale !== undefined })
+			createGame(exercise.groups, settings.errorPolicy, {
+				finale: finale !== undefined,
+				starts: exercise.starts
+			})
 		)
 	);
 	let capsLock = $state(false);

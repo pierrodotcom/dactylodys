@@ -255,6 +255,32 @@
 			],
 			"level": 2,
 			"review": "agent"
+		},
+		{
+			"id": "fr.text.bonnet-pingouin",
+			"lessonId": "fr.lesson.reparer-message",
+			"lines": [
+				"Salut le pingouin !",
+				"Ton bonnet est sec.",
+				"Je te le rapporte",
+				"demain à 10 h."
+			],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.course-escargot",
+			"lessonId": "fr.lesson.reparer-message",
+			"lines": ["Coucou l'escargot !", "La course est finie :", "tu as gagné, bravo !"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"id": "fr.text.note-dragon",
+			"lessonId": "fr.lesson.reparer-message",
+			"lines": ["Note pour le dragon :", "ne pas éternuer", "sur les gâteaux.", "Merci !"],
+			"level": 2,
+			"review": "agent"
 		}
 	]
 }

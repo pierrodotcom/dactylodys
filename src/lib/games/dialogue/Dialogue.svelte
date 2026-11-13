@@ -14,14 +14,12 @@
 
 	const decor = $derived(decorFor('dialogue', props.playCount));
 
-	/** A new question is said once, with the text to type, the moment it appears. */
+	/**
+	 * A new question is said once, with the text to type, the moment it appears, even when the answer
+	 * arrives begun with a mistake to erase (lesson of repairs).
+	 */
 	function isNewQuestion(view: GameView): boolean {
-		return (
-			view.phase === 'typing' &&
-			view.position === 0 &&
-			view.errorIndex === null &&
-			view.pending.length === 0
-		);
+		return view.phase === 'typing' && view.untouched;
 	}
 
 	function announce(view: GameView): string {

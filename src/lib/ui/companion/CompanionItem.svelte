@@ -901,6 +901,18 @@
 	const SCARF_FLYING_FRINGE =
 		'M110.6 67.4L113.8 66.4M111.2 69.6L114.6 69M111.8 71.8L115.2 71.6M112.4 74L115.6 74.2';
 
+	/* ---------- Pencil with its eraser, the eraser up: held to mend a mistake ---------- */
+
+	const PENCIL_ERASER = 'M-3 -27.2C-3 -31 3 -31 3 -27.2L3 -24H-3Z';
+	const PENCIL_ERASER_GLOSS =
+		'M-1.9 -28.4C-1.7 -29.6 -0.8 -30 0 -30L-0.2 -29.2C-1 -29 -1.4 -28.6 -1.5 -28Z';
+	const PENCIL_FERRULE = 'M-3.3 -24.6H3.3V-20H-3.3Z';
+	const PENCIL_RIDGES = 'M-3.3 -23.1H3.3M-3.3 -21.5H3.3';
+	const PENCIL_BODY = 'M-3 -20.2H3V9H-3Z';
+	const PENCIL_FACETS = 'M-1 -20V9M1 -20V9';
+	const PENCIL_WOOD = 'M-3 9H3L1 14.6H-1Z';
+	const PENCIL_LEAD = 'M-1 14.6H1L0 17.2Z';
+
 	/* ---------- Magnifier ---------- */
 
 	const MAGNIFIER_HANDLE =
@@ -2173,6 +2185,26 @@
 				<path class="open lace" d={CLOCK_HANDS} />
 			{/snippet}
 			{@render piece('clock-face', CLOCK_FACE, 'cream', { shade: 0.9, deep: 0.3, rim: 0 }, dial)}
+		</g>
+	{:else if artId === 'eraser-pencil'}
+		<g transform="translate({grip.x} {grip.y}) {HAND_TILT}">
+			{@render piece('pencil-lead', PENCIL_LEAD, 'ink', { shade: 0, deep: 0, rim: 0 })}
+			{@render piece('pencil-wood', PENCIL_WOOD, 'cream', { shade: 0.8, deep: 0.3 })}
+			{#snippet facets()}<path class="open fine" d={PENCIL_FACETS} />{/snippet}
+			{@render piece('pencil-body', PENCIL_BODY, 'gold', { shade: 1.2, deep: 0.5 }, facets)}
+			{#snippet ridges()}<path class="open fine" d={PENCIL_RIDGES} />{/snippet}
+			{@render piece(
+				'pencil-ferrule',
+				PENCIL_FERRULE,
+				'metal',
+				{ shade: 0.8, deep: 0.3, rim: 0.4 },
+				ridges
+			)}
+			{@render piece('pencil-eraser', PENCIL_ERASER, 'jewel', {
+				shade: 1,
+				deep: 0.4,
+				gloss: PENCIL_ERASER_GLOSS
+			})}
 		</g>
 	{:else if artId === 'snail-slippers'}
 		{#each SLIPPERS as slipper (slipper.fx)}

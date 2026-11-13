@@ -383,6 +383,7 @@
 	"game_shared_announce_group": "À taper : {text}",
 	"game_shared_announce_error": "Pas cette touche. Il faut taper : {char}",
 	"game_shared_announce_erase": "En trop : {char}. Appuie sur Retour arrière pour l'effacer.",
+	"game_shared_announce_repair": "À réparer : {text}. En trop à la fin : {char}. Efface avec Retour arrière, puis continue.",
 	"game_shared_erase_reminder": "Efface avec la touche Retour arrière, puis continue.",
 	"game_shared_caps_lock": "La touche Verr. Maj est allumée, alors tes lettres sortent en majuscules. Appuie une fois dessus pour revenir aux minuscules.",
 	"game_shared_look_reminder": "Regarde toujours l'écran, jamais tes doigts ;-)",

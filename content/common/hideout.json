@@ -46,6 +46,7 @@
 		"referee-whistle": ["wall", "pegs", "coat-stand"],
 		"alarm-clock": ["shelf", "desk", "window", "chest"],
 		"snail-slippers": ["rug", "corner"],
+		"eraser-pencil": ["desk", "shelf", "window", "chest"],
 		"medal-dinosaurs": ["wall", "pegs"],
 		"medal-kitchen": ["wall", "pegs"],
 		"medal-zoo": ["wall", "pegs"],

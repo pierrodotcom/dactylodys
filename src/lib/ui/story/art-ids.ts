@@ -53,6 +53,7 @@ export const STORY_ART_GROUPS = {
 		'post-score',
 		'post-train',
 		'post-at',
+		'post-repair',
 		'post-ending'
 	]
 } as const satisfies Readonly<Record<string, readonly string[]>>;
