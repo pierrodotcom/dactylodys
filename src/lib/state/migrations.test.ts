@@ -351,8 +351,8 @@ describe('migrateProfile', () => {
 			hideout: {}
 		});
 		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
-		const withoutHideout: Partial<Profile> = { ...profileOfVersion4 };
-		delete withoutHideout.hideout;
+		const withoutHideout: Record<string, unknown> = { ...profileOfVersion4 };
+		delete withoutHideout['hideout'];
 		expect(asVersion7(profileOfVersion4)).toEqual({
 			...withoutHideout,
 			settings: STORED_BY_VERSION_4.settings,

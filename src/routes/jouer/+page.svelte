@@ -51,6 +51,7 @@
 		markCalibrated,
 		updateSettings,
 		withCompanion,
+		withHideout,
 		withGamePlayed,
 		withLastGame
 	} from '$lib/state/profile';
@@ -90,6 +91,8 @@
 		wearItem
 	} from './companion';
 	import CompanionPanel from './CompanionPanel.svelte';
+	import HideoutPanel from './HideoutPanel.svelte';
+	import type { HideoutLayout } from './hideout';
 	import { progressionFor } from './content';
 	import { INITIAL_SCREEN, transition, type FlowEvent, type Screen } from './flow';
 	import FreeIntro from './FreeIntro.svelte';
@@ -197,6 +200,7 @@
 	/** "Later" to the name of the companion: not asked again during this visit. */
 	let nameLater = $state(false);
 	let companionSaveFailed = $state(false);
+	let hideoutSaveFailed = $state(false);
 
 	const sounds = createProfileSounds(() => profile?.settings ?? null);
 	/** The soft background sound, when the profile asks for it (ADR-057). */
@@ -473,6 +477,23 @@
 			return;
 		}
 		companionSaveFailed = !(await commit(next));
+	}
+
+	function openHideout() {
+		hideoutSaveFailed = false;
+		go({ type: 'open-hideout' });
+	}
+
+	/** Every change in the hideout is kept at once. */
+	async function saveHideout(layout: HideoutLayout) {
+		if (!profile) return;
+		let next: Profile;
+		try {
+			next = withHideout(profile, layout);
+		} catch {
+			return;
+		}
+		hideoutSaveFailed = !(await commit(next));
 	}
 
 	function wear(item: RewardDefinition) {
@@ -855,6 +876,7 @@
 	<TopBar
 		name={profile.name}
 		oncompanion={catalogue ? openCompanion : undefined}
+		onhideout={catalogue && screen.name === 'map' ? openHideout : undefined}
 		onsettings={openSettings}
 		onchangeplayer={changePlayer}
 	/>
@@ -915,6 +937,17 @@
 				saveFailed={companionSaveFailed}
 				onchange={saveCompanion}
 				onback={() => go({ type: 'close-companion' })}
+			/>
+		{/if}
+	{:else if screen.name === 'hideout'}
+		{#if catalogue}
+			<HideoutPanel
+				{catalogue}
+				{owned}
+				layout={profile.hideout}
+				saveFailed={hideoutSaveFailed}
+				onchange={saveHideout}
+				onback={() => go({ type: 'close-hideout' })}
 			/>
 		{/if}
 	{:else if screen.name === 'intro'}

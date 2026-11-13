@@ -495,6 +495,35 @@
 					"$value": "{color.leather.400}"
 				}
 			}
+		},
+		"hideout": {
+			"sky-high": {
+				"$value": "{color.navy.800}"
+			},
+			"sky-low": {
+				"$value": "{color.plum.900}"
+			},
+			"sky-light": {
+				"$value": "{color.cream.50}"
+			},
+			"sky-far": {
+				"$value": "{color.teal.900}"
+			},
+			"leaf": {
+				"$value": "{color.teal.600}"
+			},
+			"leaf-dark": {
+				"$value": "{color.teal.900}"
+			},
+			"leaf-light": {
+				"$value": "{color.sage.400}"
+			},
+			"glow": {
+				"$value": "{color.amber.300}"
+			},
+			"mark": {
+				"$value": "{color.focus.ring}"
+			}
 		}
 	},
 	"opacity": {
@@ -519,6 +548,24 @@
 		},
 		"decor-frost": {
 			"$value": 0.5
+		},
+		"hideout-night": {
+			"$value": 0.38
+		},
+		"hideout-stars": {
+			"$value": 1
+		},
+		"hideout-sun": {
+			"$value": 0
+		},
+		"hideout-beam": {
+			"$value": 0.1
+		},
+		"hideout-glow": {
+			"$value": 0.55
+		},
+		"hideout-fairy-glow": {
+			"$value": 0.7
 		}
 	},
 	"shadow": {

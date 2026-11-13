@@ -353,6 +353,16 @@ describe('screen automaton', () => {
 			expect(transition(notebook, { type: 'change-player' })).toEqual({ name: 'players' });
 		});
 
+		it('opens the hideout from the map only, and goes back to the map', () => {
+			const hideout = transition({ name: 'map' }, { type: 'open-hideout' });
+			expect(hideout).toEqual({ name: 'hideout' });
+			expect(transition(hideout, { type: 'close-hideout' })).toEqual({ name: 'map' });
+			expect(transition(hideout, { type: 'change-player' })).toEqual({ name: 'players' });
+			expect(transition(hideout, { type: 'open-settings' })).toEqual(hideout);
+			const result: Screen = { name: 'result', lessonId: NEXT };
+			expect(transition(result, { type: 'open-hideout' })).toEqual(result);
+		});
+
 		it('opens neither settings nor the companion over the story', () => {
 			const story = run(
 				[{ type: 'tell', moments: [LINE], then: { name: 'intro', lessonId: NEXT } }],
