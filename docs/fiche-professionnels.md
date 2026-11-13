@@ -16,7 +16,7 @@ L'objectif : taper au moins aussi vite que l'enfant écrit à la main, de façon
 
 C'est la condition retenue en ergothérapie pour que le clavier allège l'écriture au lieu d'ajouter une tâche (Freeman et al., 2005). Il y faut au moins 25 à 30 heures de pratique.
 
-Le parcours compte 33 leçons en 6 mondes : F et J, les voyelles tôt pour taper de vrais mots, puis toutes les lettres, les accents, les majuscules, la ponctuation, les chiffres et l'arobase, et enfin de petits textes utiles (une liste, un message, une recette).
+Le parcours compte 34 leçons en 6 mondes : F et J, les voyelles tôt pour taper de vrais mots, puis toutes les lettres, les accents, les majuscules, la ponctuation, les chiffres et l'arobase, et enfin de petits textes utiles (une liste, un message, une recette), jusqu'à effacer une faute pour réparer un message.
 
 ## Les choix de conception et leurs raisons
 

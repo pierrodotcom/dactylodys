@@ -74,6 +74,16 @@ describe('the sheet for professionals', () => {
 		expect(missing).toEqual([]);
 	});
 
+	it('gives the Markdown sheet the course described by the page, with the figures of the data', () => {
+		const lessons = progression.worlds.reduce((count, world) => count + world.lessons.length, 0);
+		const path = (messages['pro_audience_path'] ?? '')
+			.replace('{lessons}', String(lessons))
+			.replace('{worlds}', String(progression.worlds.length));
+
+		expect(path).not.toBe('');
+		expect(sheet).toContain(path);
+	});
+
 	it('never writes the name of the app in the page itself', () => {
 		const appName = messages['app_name'] ?? '';
 

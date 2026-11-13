@@ -1051,7 +1051,7 @@
 	"pro_audience_who": "Il est pensé pour les enfants de 8 à 12 ans, en particulier ceux qui ont un TDAH ou une dysgraphie, pour qui écrire à la main demande beaucoup d'effort.",
 	"pro_audience_goal": "L'objectif : taper au moins aussi vite que l'enfant écrit à la main, de façon lisible et sans regarder ses mains, soit souvent 10 à 15 mots par minute. La cible est propre à chaque enfant : l'adulte mesure sa vitesse à la main en une minute.",
 	"pro_audience_why": "C'est la condition retenue en ergothérapie pour que le clavier allège l'écriture au lieu d'ajouter une tâche (Freeman et al., 2005). Il y faut au moins 25 à 30 heures de pratique.",
-	"pro_audience_path": "Le parcours compte {lessons} leçons en {worlds} mondes : F et J, les voyelles tôt pour taper de vrais mots, puis toutes les lettres, les accents, les majuscules, la ponctuation, les chiffres et l'arobase, et enfin de petits textes utiles (une liste, un message, une recette).",
+	"pro_audience_path": "Le parcours compte {lessons} leçons en {worlds} mondes : F et J, les voyelles tôt pour taper de vrais mots, puis toutes les lettres, les accents, les majuscules, la ponctuation, les chiffres et l'arobase, et enfin de petits textes utiles (une liste, un message, une recette), jusqu'à effacer une faute pour réparer un message.",
 	"pro_design_title": "Les choix de conception et leurs raisons",
 	"pro_design_intro": "Chaque choix s'appuie sur une synthèse de la recherche publiée avec le projet. Peu d'études portent sur des enfants : plusieurs choix sont des déductions prudentes, pas des résultats démontrés.",
 	"pro_design_accuracy_name": "La précision avant la vitesse.",
