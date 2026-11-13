@@ -2,6 +2,7 @@ import { toGraphemes } from '../graphemes';
 import { lessonTexts, storyPhrases, textGroups, textOf, usablePhrases, usableWords } from './banks';
 import { LINE_BREAK, findLesson, freshChars, learnedChars } from './definition';
 import { recentErrorRate } from './progress';
+import { repairStarts } from './repair';
 import type {
 	Exercise,
 	ExerciseContext,
@@ -405,6 +406,8 @@ export function generateExercise(
 	const groups: string[] = [];
 	const asked = new Map<string, number>();
 	let total = 0;
+	/** Index of the first group of the ending, once it is placed. */
+	let endingFrom: number | undefined;
 	const record = (group: string) => {
 		groups.push(group);
 		const graphemes = toGraphemes(group);
@@ -429,6 +432,7 @@ export function generateExercise(
 				accepted = buildFiller(endingRoom - total, previous);
 			}
 			if (accepted === undefined) {
+				endingFrom = groups.length;
 				groups.push(...ending);
 				break;
 			}
@@ -454,5 +458,15 @@ export function generateExercise(
 		if (accepted.reserve === words) owesWord = false;
 		record(accepted.text);
 	}
-	return { lessonId, groups };
+	if (lesson.repair === undefined) return { lessonId, groups };
+	// The mistakes are planted last, so that the groups are those the lesson would give without them.
+	const starts = repairStarts(
+		groups,
+		endingFrom ?? groups.length,
+		lesson.repair,
+		learned,
+		context.neighbors,
+		rng
+	);
+	return { lessonId, groups, starts };
 }

@@ -1,4 +1,4 @@
-import type { SessionMetrics } from '../types';
+import type { SessionMetrics, SessionStart } from '../types';
 
 /** Returns a number in [0, 1). Injected so that exercise generation is reproducible. */
 export type Rng = () => number;
@@ -125,7 +125,30 @@ export interface LessonDefinition {
 	 * each new character at least `rules.newCharMinCount` times (checked). Absent: generated.
 	 */
 	readonly warmUp?: readonly string[];
+	/**
+	 * A lesson of repairs (ADR-057, proposal 10): its groups arrive begun, with one or more wrong
+	 * characters after the right ones, to erase with Backspace. Absent: every group starts empty.
+	 */
+	readonly repair?: RepairRules;
 }
+
+/** How a lesson of repairs plants its mistakes: data, never constants in the code. */
+export interface RepairRules {
+	/**
+	 * Share (0 to 1) of the groups of the text that ends the exercise which arrive with mistakes to
+	 * erase (the first one among them when the text opens the exercise); every group before the
+	 * text does, and so does every group of an exercise without text.
+	 */
+	readonly share: number;
+	/** Most wrong characters written in one group, at least 1. */
+	readonly maxPending: number;
+}
+
+/**
+ * Characters of the keys next to the key of each character, at the same level, as the layout and
+ * the shape of the keyboard place them: the likely slips of a finger.
+ */
+export type KeyNeighbors = ReadonlyMap<string, readonly string[]>;
 
 export interface WorldDefinition {
 	/** `<language>.world.<slug>`. */
@@ -254,12 +277,22 @@ export interface ExerciseContext {
 	readonly themeId?: string;
 	/** Age group of the child: only the entries of the banks meant for it are used; absent: all. */
 	readonly ageBand?: AgeBand;
+	/**
+	 * Neighbouring keys of the layout of the child (`keyNeighbors`): a lesson of repairs takes its
+	 * mistakes among them. Absent: among the characters learned.
+	 */
+	readonly neighbors?: KeyNeighbors;
 }
 
 /** What a mini-game receives: short targets typed one after the other. */
 export interface Exercise {
 	readonly lessonId: string;
 	readonly groups: readonly string[];
+	/**
+	 * How each group starts, in the order of `groups` (a lesson of repairs only): `null` for a group
+	 * that starts empty, else where it arrives begun with mistakes to erase. Absent: all start empty.
+	 */
+	readonly starts?: readonly (SessionStart | null)[];
 }
 
 export interface LessonEvaluation {
