@@ -112,12 +112,13 @@ function isPrimitive(value) {
 
 /**
  * Serialises like Prettier 3 does for JSON with tabs, so that `prettier --check` passes.
- * `prefix`: characters written before the value on its line (its key), counted in the width.
+ * `prefix`: characters written before the value on its line (its key), counted in the width;
+ * `suffix`: those written after it (the comma before the next entry), counted too.
  */
-export function toPrettierJson(value, depth = 0, prefix = 0) {
+export function toPrettierJson(value, depth = 0, prefix = 0, suffix = 0) {
 	const pad = '\t'.repeat(depth);
 	const inner = '\t'.repeat(depth + 1);
-	const width = (text) => text.length + depth * TAB_WIDTH + prefix;
+	const width = (text) => text.length + depth * TAB_WIDTH + prefix + suffix;
 	if (isPrimitive(value)) return JSON.stringify(value);
 	if (Array.isArray(value)) {
 		if (value.length === 0) return '[]';
@@ -128,9 +129,10 @@ export function toPrettierJson(value, depth = 0, prefix = 0) {
 	const entries = Object.entries(value);
 	if (entries.length === 0) return '{}';
 	return `{\n${entries
-		.map(([key, item]) => {
+		.map(([key, item], index) => {
 			const name = `${JSON.stringify(key)}: `;
-			return `${inner}${name}${toPrettierJson(item, depth + 1, name.length)}`;
+			const comma = index < entries.length - 1 ? 1 : 0;
+			return `${inner}${name}${toPrettierJson(item, depth + 1, name.length, comma)}`;
 		})
 		.join(',\n')}\n${pad}}`;
 }

@@ -140,7 +140,7 @@ describe('azerty-decouverte', () => {
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 2, newKeysUntil: 33, hesitationMs: 3000 },
+			handGuide: { everyKeyUntil: 2, newKeysUntil: 34, hesitationMs: 3000 },
 			starAlmostMargin: 3,
 			storyPhraseEvery: 2,
 			textGroupLength: 24,
@@ -199,7 +199,9 @@ describe('azerty-decouverte', () => {
 				[],
 				['1', '2', '3', '4', '5'],
 				['6', '7', '8', '9', '0'],
-				['@']
+				['@'],
+				// Then a lesson of repairs: Backspace is a key, not a character (ADR-057).
+				[]
 			]
 		]);
 	});
@@ -225,8 +227,10 @@ describe('azerty-decouverte', () => {
 		}
 	});
 
-	it('guides the hand up to the last lesson that brings a key (ADR-068)', () => {
-		const last = lessons.findLastIndex((lesson) => lesson.newChars.length > 0);
+	it('guides the hand up to the last lesson that brings a key, Backspace included (ADR-068)', () => {
+		const last = lessons.findLastIndex(
+			(lesson) => lesson.newChars.length > 0 || lesson.repair !== undefined
+		);
 		expect(progression.rules.handGuide?.newKeysUntil).toBe(last + 1);
 	});
 

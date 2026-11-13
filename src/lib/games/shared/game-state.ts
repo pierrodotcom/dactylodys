@@ -2,7 +2,7 @@ import type { SoundId } from '../../audio/sounds';
 import { pacePoints } from '../../engine/ghost/ghost';
 import { combineMetrics, computeMetrics } from '../../engine/metrics';
 import { applyKeystroke, createSession } from '../../engine/session';
-import type { ErrorPolicy, SessionMetrics, SessionState } from '../../engine/types';
+import type { ErrorPolicy, SessionMetrics, SessionStart, SessionState } from '../../engine/types';
 import type { KeyCode, NormalizedKeystroke } from '../../keyboard/types';
 import type { GameOutcome } from '../types';
 
@@ -20,6 +20,11 @@ export type GamePhase = 'typing' | 'celebrating' | 'finale' | 'complete';
 
 export interface GameState {
 	readonly groups: readonly string[];
+	/**
+	 * How each group starts (`Exercise.starts`): a group with a start arrives begun, with mistakes to
+	 * erase whatever the error policy; the others follow `errorPolicy`. Empty: all start empty.
+	 */
+	readonly starts: readonly (SessionStart | null)[];
 	readonly errorPolicy: ErrorPolicy;
 	/** Whether the game keeps a final picture after the last reward. */
 	readonly hasFinale: boolean;
@@ -70,6 +75,18 @@ export interface GameStep {
 
 export interface GameOptions {
 	readonly finale?: boolean;
+	/** How each group starts, in the order of the groups (`Exercise.starts`). */
+	readonly starts?: readonly (SessionStart | null)[];
+}
+
+function sessionOf(
+	groups: readonly string[],
+	starts: readonly (SessionStart | null)[],
+	index: number,
+	errorPolicy: ErrorPolicy
+): SessionState {
+	const start = starts[index] ?? undefined;
+	return createSession(groups[index] as string, { errorPolicy, start });
 }
 
 export function createGame(
@@ -77,14 +94,15 @@ export function createGame(
 	errorPolicy: ErrorPolicy,
 	options: GameOptions = {}
 ): GameState {
-	const first = groups[0];
-	if (first === undefined) throw new RangeError('An exercise needs at least one group');
+	if (groups.length === 0) throw new RangeError('An exercise needs at least one group');
+	const starts = options.starts ?? [];
 	return {
 		groups,
+		starts,
 		errorPolicy,
 		hasFinale: options.finale ?? false,
 		groupIndex: 0,
-		session: createSession(first, { errorPolicy }),
+		session: sessionOf(groups, starts, 0, errorPolicy),
 		finished: [],
 		phase: 'typing',
 		settled: false,
@@ -110,12 +128,11 @@ function advance(state: GameState): GameStep {
 		return { state: { ...state, phase: state.hasFinale ? 'finale' : 'complete' }, sounds: [] };
 	}
 	const groupIndex = state.groupIndex + 1;
-	const next = state.groups[groupIndex] as string;
 	return {
 		state: {
 			...state,
 			groupIndex,
-			session: createSession(next, { errorPolicy: state.errorPolicy }),
+			session: sessionOf(state.groups, state.starts, groupIndex, state.errorPolicy),
 			phase: 'typing',
 			settled: false,
 			errorIndex: null,

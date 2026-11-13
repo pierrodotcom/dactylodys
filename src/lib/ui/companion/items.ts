@@ -65,7 +65,8 @@ export const ITEM_ARTS: Readonly<Record<string, ItemArt>> = {
 	'party-balloons': { slot: 'back', frame: [83, -8, 37, 75], pictureLayers: ['back'] },
 	'referee-whistle': { slot: 'neck', frame: [37, 70, 46, 29] },
 	'alarm-clock': { slot: 'hand', frame: [-11, -2, 22, 25] },
-	'snail-slippers': { slot: 'feet', frame: [26, 97, 68, 20] }
+	'snail-slippers': { slot: 'feet', frame: [26, 97, 68, 20] },
+	'eraser-pencil': { slot: 'hand', frame: [-23, -28, 36, 44] }
 };
 
 /** The worn items by slot, in drawing order: the first one of a slot wins, unknown drawings are left out. */

@@ -408,6 +408,92 @@ describe('applyKeystroke with the backspace policy', () => {
 	});
 });
 
+describe('a session that starts with a mistake already written', () => {
+	const begun = (errorPolicy?: ErrorPolicy) =>
+		createSession('bonjour', { errorPolicy, start: { typed: 3, pending: ['k', 'p'] } });
+
+	it('starts after the right graphemes, with the wrong ones to erase and nothing recorded', () => {
+		expect(begun()).toEqual({
+			target: ['b', 'o', 'n', 'j', 'o', 'u', 'r'],
+			position: 3,
+			pending: ['k', 'p'],
+			startedAt: null,
+			endedAt: null,
+			records: [],
+			options: { errorPolicy: 'backspace' }
+		});
+	});
+
+	it('asks for Backspace whatever the error policy given', () => {
+		for (const errorPolicy of [undefined, ...POLICIES]) {
+			expect(begun(errorPolicy).options.errorPolicy).toBe('backspace');
+		}
+	});
+
+	it('takes no right key before the mistakes are erased, and counts it as a mistake of the child', () => {
+		const { state, events } = run(begun('retry'), [char('j', 10)]);
+		expect(state.position).toBe(3);
+		expect(state.pending).toEqual(['k', 'p', 'j']);
+		expect(events).toEqual([{ type: 'error', index: 5, expected: 'j', typed: 'j' }]);
+	});
+
+	it('ends without any mistake once the wrong characters are erased and the rest is typed', () => {
+		const keys = [backspace(10), backspace(20), char('j', 30), char('o', 40)];
+		const { state, events } = run(begun(), [...keys, char('u', 50), char('r', 60)]);
+		expect(isComplete(state)).toBe(true);
+		expect(events.slice(0, 3)).toEqual([
+			{ type: 'erased', index: 4 },
+			{ type: 'erased', index: 3 },
+			{ type: 'correct', index: 3, char: 'j' }
+		]);
+		const metrics = computeMetrics(state);
+		expect(metrics).toMatchObject({ accuracy: 100, errorCount: 0, totalKeystrokes: 4 });
+		expect(Object.keys(metrics.perChar)).toEqual(['j', 'o', 'u', 'r']);
+	});
+
+	it('counts the planted mistakes in no accuracy and in the results of no key', () => {
+		const keys = [backspace(10), char('x', 20), backspace(30), backspace(40)];
+		const { state } = run(begun(), [...keys, char('j', 50), char('o', 60)]);
+		const metrics = computeMetrics(state, 70);
+		expect(metrics.errorCount).toBe(1);
+		expect(metrics.perChar).toEqual({
+			j: { attempts: 2, errors: 1, meanLatencyMs: 10 },
+			o: { attempts: 1, errors: 0, meanLatencyMs: 10 }
+		});
+	});
+
+	it('starts its clock at the first key and measures the first right key from the last Backspace', () => {
+		const { state } = run(begun(), [backspace(1000), backspace(1400), char('j', 2000)]);
+		expect(state.startedAt).toBe(1000);
+		expect(computeMetrics(state).perChar['j']?.meanLatencyMs).toBe(600);
+	});
+
+	it('can start at the very beginning of the group', () => {
+		const state = createSession('ab', { start: { typed: 0, pending: ['q'] } });
+		expect(state.position).toBe(0);
+		expect(run(state, [backspace(1), char('a', 2), char('b', 3)]).state.endedAt).toBe(3);
+	});
+
+	it('normalizes the wrong characters to NFC', () => {
+		const state = createSession('ab', { start: { typed: 1, pending: ['é'] } });
+		expect(state.pending).toEqual(['é']);
+	});
+
+	it.each([
+		['no grapheme left to type', { typed: 2, pending: ['x'] }],
+		['a negative position', { typed: -1, pending: ['x'] }],
+		['a position that is not an integer', { typed: 0.5, pending: ['x'] }],
+		['no wrong character', { typed: 1, pending: [] }],
+		['an empty wrong character', { typed: 1, pending: [''] }],
+		['two graphemes in one wrong character', { typed: 1, pending: ['xy'] }],
+		['a line break as a wrong character', { typed: 1, pending: ['\n'] }],
+		['a control character as a wrong character', { typed: 1, pending: ['\u0007'] }],
+		['the expected grapheme as the first wrong character', { typed: 1, pending: ['b'] }]
+	])('refuses a start with %s', (_label, start) => {
+		expect(() => createSession('ab', { start })).toThrow(RangeError);
+	});
+});
+
 const textArbitrary = fc.string({ unit: 'grapheme', minLength: 1, maxLength: 30 });
 const policyArbitrary = fc.constantFrom<ErrorPolicy>('retry', 'backspace');
 
@@ -444,6 +530,31 @@ function keystrokeSpecs(alphabet: readonly string[]) {
 		}),
 		{ maxLength: 80 }
 	);
+}
+
+/** A text and a valid start: a place before its end and one or two wrong characters. */
+const beginArbitrary = textArbitrary
+	.chain((text) => {
+		const length = toGraphemes(text).length;
+		return fc.record({
+			text: fc.constant(text),
+			typed: fc.integer({ min: 0, max: length - 1 }),
+			pending: fc.array(fc.constantFrom('x', 'k', 'é', '7', '@'), { minLength: 1, maxLength: 2 })
+		});
+	})
+	.map(({ text, typed, pending }) => {
+		const expected = toGraphemes(text)[typed];
+		const first = pending[0] === expected ? (expected === 'x' ? 'k' : 'x') : pending[0];
+		return { text, start: { typed, pending: [first as string, ...pending.slice(1)] } };
+	});
+
+function throws(action: () => unknown): boolean {
+	try {
+		action();
+		return false;
+	} catch (error) {
+		return error instanceof RangeError;
+	}
 }
 
 describe('session properties', () => {
@@ -563,6 +674,62 @@ describe('session properties', () => {
 					}
 				}
 				return true;
+			})
+		);
+	});
+
+	it('ends a begun group without any mistake once its wrong characters are erased and the rest typed', () => {
+		fc.assert(
+			fc.property(beginArbitrary, policyArbitrary, ({ text, start }, errorPolicy) => {
+				const initial = createSession(text, { errorPolicy, start });
+				const erase = start.pending.map((_, i) => backspace(i * 50));
+				const rest = initial.target
+					.slice(start.typed)
+					.map((grapheme, i) => keystrokeFor(grapheme, 1000 + i * 120));
+				const { state, events } = run(initial, [...erase, ...rest]);
+				const metrics = computeMetrics(state);
+				return (
+					isComplete(state) &&
+					metrics.accuracy === 100 &&
+					metrics.errorCount === 0 &&
+					metrics.totalKeystrokes === initial.target.length - start.typed &&
+					events.filter((event) => event.type === 'erased').length === start.pending.length
+				);
+			})
+		);
+	});
+
+	it('takes no key of a begun group before its wrong characters are erased', () => {
+		fc.assert(
+			fc.property(beginArbitrary, keystrokeSpecs(['a', 'b', 'e']), ({ text, start }, specs) => {
+				const keys = buildKeystrokes(specs.filter((spec) => spec.kind !== 'backspace'));
+				const { state } = run(createSession(text, { start }), keys);
+				return state.position === start.typed && state.pending.length >= start.pending.length;
+			})
+		);
+	});
+
+	it('counts as mistakes only the wrong keys of the child in a begun group', () => {
+		fc.assert(
+			fc.property(beginArbitrary, keystrokeSpecs(['a', 'b', 'e']), ({ text, start }, specs) => {
+				let state = createSession(text, { start });
+				let errors = 0;
+				for (const keystroke of buildKeystrokes(specs)) {
+					const step = applyKeystroke(state, keystroke);
+					errors += step.events.filter((event) => event.type === 'error').length;
+					state = step.state;
+				}
+				return computeMetrics(state).errorCount === errors;
+			})
+		);
+	});
+
+	it('refuses a start that leaves nothing to type', () => {
+		fc.assert(
+			fc.property(textArbitrary, fc.nat({ max: 10 }), (text, extra) => {
+				const length = toGraphemes(text).length;
+				const start = { typed: length + extra, pending: ['§'] };
+				return throws(() => createSession(text, { start }));
 			})
 		);
 	});

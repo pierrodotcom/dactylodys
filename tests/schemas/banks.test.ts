@@ -54,7 +54,9 @@ const STEPS: readonly (readonly string[])[] = [
 	// Then the digits, those of the left hand first, and @, for the texts of everyday life.
 	['1', '2', '3', '4', '5'],
 	['6', '7', '8', '9', '0'],
-	['@']
+	['@'],
+	// The lesson of repairs brings Backspace, which is no character.
+	[]
 ];
 const STEP = {
 	restRowVowels: 5,

@@ -92,6 +92,12 @@ describe('answerSoFar', () => {
 		expect(answerSoFar(viewAfter('fx'))).toBe('f');
 	});
 
+	it('says the right beginning of a group that arrives begun, never its mistakes', () => {
+		const begun = createGame(['sl fj'], 'retry', { starts: [{ typed: 3, pending: ['d', 'k'] }] });
+		expect(answerSoFar(viewOf(begun, false))).toBe('sl ');
+		expect(answerSoFar(viewOf(type(begun, 'f'), false))).toBe('sl ');
+	});
+
 	it('says the whole group once it is typed, spaces included', () => {
 		expect(answerSoFar(viewAfter('fj'))).toBe('fj');
 		expect(answerSoFar(viewAfter('sl fj', 0, ['sl fj']))).toBe('sl fj');

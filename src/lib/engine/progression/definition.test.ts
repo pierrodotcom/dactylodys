@@ -349,6 +349,45 @@ describe('parseProgression', () => {
 		).toThrow(message);
 	});
 
+	it('reads the repairs of a lesson, absent by default', () => {
+		expect(findLesson(parseProgression(BASE), 'fr.lesson.c')?.repair).toBeUndefined();
+		const parsed = parseProgression(
+			variant((raw) => {
+				lessonOf(raw, 1, 0)['repair'] = { share: 0.5, maxPending: 2 };
+			})
+		);
+		expect(findLesson(parsed, 'fr.lesson.c')?.repair).toEqual({ share: 0.5, maxPending: 2 });
+	});
+
+	it.each([
+		['that is not an object', 2, /repair: expected an object/],
+		['with an unknown property', { share: 1, maxPending: 1, extra: 1 }, /repair\.extra/],
+		['with a share above 1', { share: 1.5, maxPending: 1 }, /repair\.share/],
+		['with a negative share', { share: -0.1, maxPending: 1 }, /repair\.share/],
+		['without wrong characters', { share: 1, maxPending: 0 }, /repair\.maxPending/],
+		['with a fractional number of wrong characters', { share: 1, maxPending: 1.5 }, /maxPending/],
+		['without a share', { maxPending: 1 }, /repair\.share/]
+	])('rejects repairs %s', (_name, repair, message) => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					lessonOf(raw, 1, 0)['repair'] = repair;
+				})
+			)
+		).toThrow(message);
+	});
+
+	it('rejects repairs in groups too short to arrive begun', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					lessonOf(raw, 1, 0)['groupLength'] = [1, 4];
+					lessonOf(raw, 1, 0)['repair'] = { share: 1, maxPending: 1 };
+				})
+			)
+		).toThrow(/repair: expected groups of at least 2/);
+	});
+
 	it('accepts any minimum count for a lesson without new characters', () => {
 		expect(() =>
 			parseProgression(

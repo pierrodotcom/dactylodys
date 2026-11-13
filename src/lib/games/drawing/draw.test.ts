@@ -110,6 +110,16 @@ describe('locateShare', () => {
 	});
 });
 
+describe('drawnShare of a group that arrives begun', () => {
+	it('counts its right beginning, and nothing more before the mistake is erased', () => {
+		const begun = createGame(['fjdk', 'fjdk'], 'retry', {
+			starts: [{ typed: 2, pending: ['s'] }, null]
+		});
+		expect(drawnShare(viewOf(begun, false))).toBeCloseTo(0.25);
+		expect(drawnShare(viewOf(press(begun, 'd'), false))).toBeCloseTo(0.25);
+	});
+});
+
 describe('drawnShare', () => {
 	it('is nothing before the first good key, whatever the number of groups', () => {
 		for (const count of [5, 10]) {

@@ -7,6 +7,7 @@ import type {
 	MasteryRules,
 	ProgressionDefinition,
 	ProgressionRules,
+	RepairRules,
 	WorldDefinition
 } from './types';
 
@@ -406,6 +407,23 @@ function parseWarmUp(
 	return groups;
 }
 
+/** A group arrives begun after at least one right grapheme, and leaves at least one to type. */
+const MIN_REPAIR_GROUP_LENGTH = 2;
+
+function parseRepair(value: unknown, minGroupLength: number, path: string): RepairRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['share', 'maxPending'], path);
+	const share = expectRate(record['share'], `${path}.share`);
+	const maxPending = expectAtLeastOne(record['maxPending'], `${path}.maxPending`);
+	if (minGroupLength < MIN_REPAIR_GROUP_LENGTH) {
+		fail(
+			path,
+			`expected groups of at least ${MIN_REPAIR_GROUP_LENGTH} characters (groupLength), to arrive begun`
+		);
+	}
+	return { share, maxPending };
+}
+
 function parseLesson(
 	value: unknown,
 	introduced: Introduced,
@@ -428,7 +446,8 @@ function parseLesson(
 			'groupCount',
 			'targetLength',
 			'groupLength',
-			'warmUp'
+			'warmUp',
+			'repair'
 		],
 		path
 	);
@@ -482,6 +501,11 @@ function parseLesson(
 					`${path}.warmUp`
 				);
 
+	const repair =
+		record['repair'] === undefined
+			? undefined
+			: parseRepair(record['repair'], min, `${path}.repair`);
+
 	const lesson: LessonDefinition = {
 		id,
 		title,
@@ -493,7 +517,8 @@ function parseLesson(
 		groupCount,
 		targetLength,
 		groupLength: [min, max],
-		...(warmUp === undefined ? {} : { warmUp })
+		...(warmUp === undefined ? {} : { warmUp }),
+		...(repair === undefined ? {} : { repair })
 	};
 	checkGeneratable(lesson, known, rules.newCharMinCount, path);
 	if (warmUp !== undefined && warmUp.length > groupCount) {

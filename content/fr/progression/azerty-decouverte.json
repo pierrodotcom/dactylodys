@@ -14,7 +14,7 @@
 		"lengthSlack": 12,
 		"handGuide": {
 			"everyKeyUntil": 2,
-			"newKeysUntil": 33,
+			"newKeysUntil": 34,
 			"hesitationMs": 3000
 		},
 		"starAlmostMargin": 3,
@@ -656,6 +656,26 @@
 					"targetLength": 35,
 					"groupLength": [4, 6],
 					"warmUp": ["@ @ @", "moi@", "toi@", "nous@"]
+				},
+				{
+					"id": "fr.lesson.reparer-message",
+					"title": "Réparer un message",
+					"intro": "Une faute est déjà écrite au bout : ton auriculaire droit l'efface avec Retour arrière, puis tu continues.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"repair": {
+						"share": 0.75,
+						"maxPending": 2
+					}
 				}
 			]
 		}

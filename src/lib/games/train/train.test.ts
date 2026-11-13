@@ -82,6 +82,12 @@ describe('the wagon that rolls in', () => {
 		expect(ratios).toEqual([0, 0.25, 0.5, 0.75, 1]);
 	});
 
+	it('starts a group that arrives begun where its right beginning puts it, and waits for the erasing', () => {
+		const begun = createGame(['fjdk'], 'retry', { starts: [{ typed: 2, pending: ['s'] }] });
+		expect(rollRatio(viewOf(begun, false))).toBe(0.5);
+		expect(rollRatio(viewOf(press(begun, 'd'), false))).toBe(0.5);
+	});
+
 	it('stays where it is on a wrong key', () => {
 		const state = press(createGame(['fjdk'], 'retry'), 'f');
 		const after = press(state, 'x');
