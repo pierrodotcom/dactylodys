@@ -68,6 +68,23 @@ describe('typingAnnouncement', () => {
 		expect(announced(type(erased, 'j'))).toBe('');
 	});
 
+	it('says the text of a begun group and what to erase first, then only what is left to erase', () => {
+		const words = { ...WORDS, repair: (text: string, char: string) => `repair ${text}, ${char}` };
+		const begun = createGame(['fj f'], 'retry', { starts: [{ typed: 2, pending: ['k', ' '] }] });
+		expect(typingAnnouncement(viewOf(begun, false), words)).toBe('repair fj f, space');
+		expect(announced(begun)).toBe('erase space');
+
+		const backspace: NormalizedKeystroke = {
+			kind: 'backspace',
+			char: null,
+			code: 'Backspace',
+			timestamp: 1000,
+			composed: false
+		};
+		const once = reduce(begun, { type: 'keystroke', keystroke: backspace }).state;
+		expect(typingAnnouncement(viewOf(once, false), words)).toBe('erase k');
+	});
+
 	it('says the next group once the reward of the last one is over, and nothing in between', () => {
 		const done = type(createGame(['fj', 'jf'], 'retry'), 'fj');
 		expect(announced(done)).toBe('');

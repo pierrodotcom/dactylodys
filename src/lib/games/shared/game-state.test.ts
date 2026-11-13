@@ -264,6 +264,63 @@ describe('the backspace policy', () => {
 	});
 });
 
+describe('groups that arrive begun with mistakes to erase', () => {
+	const starts = [{ typed: 1, pending: ['k'] }, null, { typed: 2, pending: ['s', 'd'] }];
+	const begin = (errorPolicy: 'retry' | 'backspace') =>
+		createGame(['fj', 'jf', 'fjf'], errorPolicy, { starts });
+
+	it('opens a begun group after its right beginning, with its mistakes written, whatever the policy', () => {
+		for (const policy of ['retry', 'backspace'] as const) {
+			const state = begin(policy);
+			expect(state.session.position).toBe(1);
+			expect(state.session.pending).toEqual(['k']);
+			expect(state.session.options.errorPolicy).toBe('backspace');
+			expect(state.errorIndex).toBeNull();
+			expect(state.mood).toBe('idle');
+		}
+	});
+
+	it('takes no right key before the mistake is erased, then goes on', () => {
+		const early = reduce(begin('retry'), char('j'));
+		expect(early.state.session.position).toBe(1);
+		expect(early.sounds).toEqual(['error']);
+
+		const repaired = play(begin('retry'), [key('backspace'), char('j')]);
+		expect(repaired.phase).toBe('celebrating');
+		expect(exerciseMetrics(repaired)).toMatchObject({ errorCount: 0, accuracy: 100 });
+	});
+
+	it('follows the policy of the adult in a group that arrives empty', () => {
+		for (const policy of ['retry', 'backspace'] as const) {
+			let state = play(begin(policy), [key('backspace'), char('j')]);
+			state = reduce(state, { type: 'advance' }).state;
+			expect(state.session.position).toBe(0);
+			expect(state.session.pending).toEqual([]);
+			expect(state.session.options.errorPolicy).toBe(policy);
+		}
+	});
+
+	it('opens the next begun group with its own mistakes', () => {
+		let state = play(begin('retry'), [key('backspace'), char('j')]);
+		state = reduce(state, { type: 'advance' }).state;
+		state = typeText(state, 'jf');
+		state = reduce(state, { type: 'advance' }).state;
+		expect(state.session.position).toBe(2);
+		expect(state.session.pending).toEqual(['s', 'd']);
+	});
+
+	it('counts in the exercise only the keys of the child', () => {
+		let state = play(begin('retry'), [char('x'), key('backspace'), key('backspace'), char('j')]);
+		state = reduce(state, { type: 'advance' }).state;
+		state = reduce(typeText(state, 'jf'), { type: 'advance' }).state;
+		state = play(state, [key('backspace'), key('backspace'), char('f')]);
+		const metrics = exerciseMetrics(state);
+		expect(state.phase).toBe('celebrating');
+		expect(metrics.totalKeystrokes).toBe(5);
+		expect(metrics.errorCount).toBe(1);
+	});
+});
+
 describe('a group typed to the end', () => {
 	it('starts the reward with the group sound', () => {
 		const state = typeText(createGame(['fj', 'jf'], 'retry'), 'f');

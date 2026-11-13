@@ -23,6 +23,11 @@ export interface GameView {
 	 * they were typed (`backspace` policy only; always empty with `retry`).
 	 */
 	readonly pending: readonly string[];
+	/**
+	 * No key has been pressed in the current group yet: it has just appeared, empty or, in a lesson
+	 * of repairs, already begun with mistakes to erase.
+	 */
+	readonly untouched: boolean;
 	readonly wrongCode: KeyCode | null;
 	/** Draw the new state only: no movement. */
 	readonly reducedMotion: boolean;
@@ -61,6 +66,7 @@ export function viewOf(
 		mood: state.mood,
 		errorIndex: state.errorIndex,
 		pending: state.session.pending,
+		untouched: state.session.records.length === 0,
 		wrongCode: state.wrongCode,
 		reducedMotion,
 		rewardIndex,

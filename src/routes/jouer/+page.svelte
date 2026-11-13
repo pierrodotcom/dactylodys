@@ -14,6 +14,7 @@
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
+	import { keyNeighbors } from '$lib/engine/progression/repair';
 	import { generateFreeExercise } from '$lib/engine/free-practice/exercise';
 	import type { RaceWinner } from '$lib/engine/ghost/race';
 	import type { GhostRun } from '$lib/engine/ghost/types';
@@ -176,6 +177,8 @@
 	let profiles = $state.raw<readonly Profile[]>([]);
 	let profile = $state.raw<Profile | null>(null);
 	let assets = $state.raw<KeyboardAssets | null>(null);
+	// The keys next to each key of the layout of the child: where a lesson of repairs takes its mistakes.
+	const neighbors = $derived(assets ? keyNeighbors(assets.layout, assets.geometry) : undefined);
 	let exercise = $state.raw<Exercise | null>(null);
 	/** The ghost of the game being played, when the child chose to race it; never kept for a replay. */
 	let raceGhost = $state.raw<GhostRun | null>(null);
@@ -645,7 +648,8 @@
 			progress: profile.progress,
 			themeId: world.themeId,
 			maxLevel: PLAY_RULES.maxWordLevel,
-			ageBand: profile.settings.ageBand
+			ageBand: profile.settings.ageBand,
+			neighbors
 		});
 		raceGhost = race
 			? raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor)
