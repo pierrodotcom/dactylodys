@@ -138,3 +138,5 @@ $//'` après coup | Active |
 | L-127 | 2026-11-13 | UI | L'attribut `data-reward` est animé partout par `app.css` : le réutiliser pour un autre usage anime l'élément | Chercher un nom d'attribut `data-*` dans `app.css` avant de l'employer | Active |
 | L-128 | 2026-11-13 | UI | `getBBox` des dessins du compagnon est faussé par le tracé de contour `AROUND` | Mesurer les dessins forme par forme | Active |
 | L-129 | 2026-11-13 | Outillage | `TaskStop` sur `npx vite` laisse le processus node vivant et le port pris | Lancer `node node_modules/vite/bin/vite.js` pour un serveur qu'on arrêtera | Active |
+| L-130 | 2026-11-13 | Tests | Un `vite preview` laissé ouvert pendant une reconstruction sert l'ancien site (la liste des fichiers est lue au démarrage) : les captures d'impression comptaient 4 pages au lieu de 2 | Relancer le serveur d'aperçu après chaque `build` ; arrêter le processus node lui-même (L-129) | Active |
+| L-131 | 2026-11-13 | Outillage | L-120 refaite : un heredoc Python contenant `\n` a cassé un test | Deuxième occurrence : la consigne « Python dans un fichier de script » figure désormais dans chaque ordre de mission | Active |
