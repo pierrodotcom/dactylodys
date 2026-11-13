@@ -220,6 +220,11 @@
 					"lessonId": "fr.lesson.adresse-du-dino",
 					"line": "Ton dino a une adresse avec un petit escargot dedans : l'arobase.",
 					"art": "post-at"
+				},
+				{
+					"lessonId": "fr.lesson.reparer-message",
+					"line": "Le yak a écrit « bonjoir ». Ton dino efface la faute : bonjour, le yak !",
+					"art": "post-repair"
 				}
 			]
 		}

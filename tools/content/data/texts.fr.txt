@@ -151,3 +151,19 @@ La poste des dinos
 change d'adresse :
 poste@exemple.com
 Merci et à bientôt !
+
+# Réparer un message : une faute est déjà écrite au bout de certaines lignes, à effacer.
+@ bonnet-pingouin | fr.lesson.reparer-message | 1
+Salut le pingouin !
+Ton bonnet est sec.
+Je te le rapporte
+demain à 10 h.
+@ course-escargot | fr.lesson.reparer-message | 1
+Coucou l'escargot !
+La course est finie :
+tu as gagné, bravo !
+@ note-dragon | fr.lesson.reparer-message | 2
+Note pour le dragon :
+ne pas éternuer
+sur les gâteaux.
+Merci !

@@ -132,6 +132,14 @@ export const DECORATION_ARTS: Readonly<Record<string, DecorationArt>> = {
 		anchor: [60, 58],
 		holder: 'none'
 	}),
+	'eraser-pencil': item({
+		mount: 'stand',
+		frame: [-4, -32, 8, 50],
+		// Low in the jar: the yellow of the pencil shows above it, not only its eraser.
+		anchor: [0, 10],
+		turn: UPRIGHT,
+		holder: 'jar'
+	}),
 	'ladle-mic': item({
 		mount: 'stand',
 		frame: [-11, -38, 22, 54],

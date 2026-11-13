@@ -16,6 +16,9 @@ import {
 } from '../../src/lib/engine/progression/banks';
 import { learnedChars, parseProgression } from '../../src/lib/engine/progression/definition';
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
+import { keyNeighbors } from '../../src/lib/engine/progression/repair';
+import { parseGeometry } from '../../src/lib/keyboard/geometry';
+import { parseLayout } from '../../src/lib/keyboard/layout';
 import { emptyProgress } from '../../src/lib/engine/progression/progress';
 import { seededRng } from '../../src/lib/engine/progression/test-support';
 import type { ProgressState } from '../../src/lib/engine/progression/types';
@@ -444,4 +447,46 @@ describe('useful texts and progression together', () => {
 			).toBe(true);
 		}
 	});
+});
+
+describe('the lesson of repairs over the shipped content', () => {
+	const layout = parseLayout(readJson('layouts/fr-fr-azerty-pc.json'));
+	const geometry = parseGeometry(readJson('layouts/geometry/iso-105.json'));
+	const neighbors = keyNeighbors(layout, geometry);
+	const repairLessons = entries.filter(({ lesson }) => lesson.repair !== undefined);
+
+	it('ends the last world with the only lesson of repairs, after the last key', () => {
+		expect(repairLessons.map(({ lesson }) => lesson.id)).toEqual(['fr.lesson.reparer-message']);
+		expect(entries.at(-1)?.lesson.id).toBe('fr.lesson.reparer-message');
+	});
+
+	it.each(repairLessons.map(({ world, lesson }) => [lesson.id, world, lesson] as const))(
+		`plants in %s mistakes of learned keys, ending with a text with some lines to repair, over ${SEED_COUNT} seeds`,
+		(lessonId, world, lesson) => {
+			const learned = learnedChars(progression, lessonId);
+			for (let seed = 0; seed < SEED_COUNT; seed++) {
+				const exercise = generateExercise(progression, lessonId, seededRng(seed), {
+					words,
+					phrases,
+					texts,
+					...options,
+					themeId: world.themeId,
+					progress: playedOnce(lessonId),
+					neighbors
+				});
+				const starts = exercise.starts ?? [];
+				expect(starts).toHaveLength(exercise.groups.length);
+				const begun = starts.filter((start) => start !== null);
+				expect(begun.length).toBeGreaterThan(0);
+				expect(begun.length).toBeLessThan(exercise.groups.length);
+				exercise.groups.forEach((group, index) => {
+					const start = starts[index] ?? null;
+					if (start === null) return;
+					expect(start.pending.length).toBeLessThanOrEqual(lesson.repair?.maxPending ?? 0);
+					for (const char of start.pending) expect(learned).toContain(char);
+					expect(start.pending[0]).not.toBe(toGraphemes(group)[start.typed]);
+				});
+			}
+		}
+	);
 });

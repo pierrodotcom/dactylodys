@@ -15,7 +15,15 @@
 	}
 
 	type Paper =
-		'letters' | 'list' | 'envelope' | 'recipe' | 'caption' | 'postcard' | 'invitation' | 'flight';
+		| 'letters'
+		| 'list'
+		| 'envelope'
+		| 'recipe'
+		| 'caption'
+		| 'postcard'
+		| 'invitation'
+		| 'flight'
+		| 'mended';
 
 	interface PostPicture {
 		/** The drawing of an earlier world it starts from, always in its finished state. */
@@ -82,6 +90,7 @@
 			paper: 'letters',
 			at: [140, 22, 6, 0.9]
 		},
+		'post-repair': { base: ZooArt, baseArt: 'zoo-yak', paper: 'mended', at: [134, 28, -7, 1] },
 		'post-ending': {
 			base: DinosaursArt,
 			baseArt: 'dino-ending',
@@ -134,6 +143,8 @@
 					{@render caption()}
 				{:else if picture.paper === 'postcard'}
 					{@render postcard()}
+				{:else if picture.paper === 'mended'}
+					{@render mended()}
 				{:else}
 					{@render invitation()}
 				{/if}
@@ -206,6 +217,19 @@
 	{#each [3, 7] as y (y)}
 		<path class="pencil open" d="M4 {y}H15" />
 	{/each}
+{/snippet}
+
+<!-- A note mended: its last line goes on where the mistake was, the eraser beside its crumbs. -->
+{#snippet mended()}
+	{@render sheet(34, 26, 'paper-fill')}
+	<path class="pencil open" d="M-12 -7H12M-12 -1H12M-12 5H1" />
+	<g transform="translate(9 9) rotate(-20)">
+		<rect class="line eraser" x="-5" y="-2.6" width="10" height="5.2" rx="1" />
+		<path class="line thin open" d="M1.4 -2.6V2.6" />
+	</g>
+	<circle class="crumb" cx="2.4" cy="9.6" r="0.8" />
+	<circle class="crumb" cx="4.6" cy="11.4" r="0.6" />
+	<circle class="crumb" cx="1" cy="11.8" r="0.5" />
 {/snippet}
 
 <!-- An invitation: a folded card with confetti and a ribbon. -->
@@ -296,8 +320,13 @@
 		fill: var(--dd-color-story-h);
 	}
 
-	.confetti-a {
+	.confetti-a,
+	.eraser {
 		fill: var(--dd-color-story-f);
+	}
+
+	.crumb {
+		fill: var(--dd-color-story-soil);
 	}
 
 	.confetti-b {

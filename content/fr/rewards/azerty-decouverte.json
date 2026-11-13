@@ -445,6 +445,18 @@
 			}
 		},
 		{
+			"id": "fr.reward.eraser-pencil",
+			"kind": "item",
+			"title": "Le crayon à gomme",
+			"description": "Réussis la leçon « Réparer un message ».",
+			"artId": "eraser-pencil",
+			"slot": "hand",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.reparer-message"
+			}
+		},
+		{
 			"id": "fr.reward.roar",
 			"kind": "skill",
 			"title": "Rugir",
