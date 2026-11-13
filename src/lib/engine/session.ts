@@ -3,25 +3,53 @@ import { toGraphemes } from './graphemes';
 import type {
 	KeystrokeRecord,
 	SessionEvent,
-	SessionOptions,
+	SessionSetup,
+	SessionStart,
 	SessionState,
 	SessionStep
 } from './types';
 
-export function createSession(text: string, options: Partial<SessionOptions> = {}): SessionState {
+const LINE_BREAK = '\n';
+const CONTROL_PATTERN = /\p{Cc}/u;
+
+export function createSession(text: string, options: SessionSetup = {}): SessionState {
 	const target = toGraphemes(text);
 	if (target.length === 0) {
 		throw new RangeError('Session text must not be empty');
 	}
+	const { start } = options;
+	if (start !== undefined) checkStart(target, start);
 	return {
 		target,
-		position: 0,
-		pending: [],
+		position: start?.typed ?? 0,
+		pending: start === undefined ? [] : start.pending.map((char) => char.normalize('NFC')),
 		startedAt: null,
 		endedAt: null,
 		records: [],
-		options: { errorPolicy: options.errorPolicy ?? 'retry' }
+		// Mistakes already written can only be erased: the group asks for Backspace, whatever the setting.
+		options: { errorPolicy: start === undefined ? (options.errorPolicy ?? 'retry') : 'backspace' }
 	};
+}
+
+function checkStart(target: readonly string[], start: SessionStart): void {
+	const { typed, pending } = start;
+	if (!Number.isSafeInteger(typed) || typed < 0 || typed >= target.length) {
+		throw new RangeError('A session start must leave at least one grapheme to type');
+	}
+	if (pending.length === 0) {
+		throw new RangeError('A session start needs at least one wrong character to erase');
+	}
+	for (const char of pending) {
+		const graphemes = toGraphemes(char);
+		if (graphemes.length !== 1 || graphemes[0] === LINE_BREAK || CONTROL_PATTERN.test(char)) {
+			throw new RangeError('A wrong character of a session start must be one printable grapheme');
+		}
+	}
+	if (pending[0]?.normalize('NFC') === target[typed]) {
+		throw new RangeError(
+			'The first wrong character of a session start must not be the expected one'
+		);
+	}
 }
 
 export function isComplete(state: SessionState): boolean {

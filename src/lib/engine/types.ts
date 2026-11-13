@@ -10,6 +10,24 @@ export interface SessionOptions {
 	readonly errorPolicy: ErrorPolicy;
 }
 
+/**
+ * A group that arrives already begun, like a message to repair (ADR-057, proposal 10): its first
+ * `typed` graphemes are written right, followed by the wrong characters of `pending`, to erase with
+ * Backspace before going on. The child did not type them: they count neither as mistakes nor as
+ * keystrokes. Such a session always uses the `backspace` policy.
+ */
+export interface SessionStart {
+	/** Graphemes of the target already written right, from 0 to the length of the target minus 1. */
+	readonly typed: number;
+	/** Wrong characters written after them, at least one, the first one not the expected grapheme. */
+	readonly pending: readonly string[];
+}
+
+/** What `createSession` accepts: the options, and where a group that arrives begun starts. */
+export interface SessionSetup extends Partial<SessionOptions> {
+	readonly start?: SessionStart;
+}
+
 export interface KeystrokeRecord {
 	/** Index in `SessionState.target` of the grapheme that was expected. */
 	readonly targetIndex: number;
