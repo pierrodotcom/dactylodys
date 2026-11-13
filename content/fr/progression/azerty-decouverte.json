@@ -14,7 +14,7 @@
 		"lengthSlack": 12,
 		"handGuide": {
 			"everyKeyUntil": 2,
-			"newKeysUntil": 25,
+			"newKeysUntil": 33,
 			"hesitationMs": 3000
 		},
 		"starAlmostMargin": 3,
@@ -605,6 +605,57 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.score-du-match",
+					"title": "Le score du match",
+					"intro": "Les chiffres sont tout en haut du clavier : tiens Maj avec l'auriculaire droit, puis tape 1, 2, 3, 4 ou 5.",
+					"newChars": ["1", "2", "3", "4", "5"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"warmUp": ["12345", "54321", "123 45", "543 21", "12 345"]
+				},
+				{
+					"id": "fr.lesson.train-huit-heures",
+					"title": "Le train de huit heures",
+					"intro": "Pour 6, 7, 8, 9 et 0, c'est l'auriculaire gauche qui tient Maj, et la main droite tape le chiffre.",
+					"newChars": ["6", "7", "8", "9", "0"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"warmUp": ["67890", "09876", "678 90", "098 76", "67 890"]
+				},
+				{
+					"id": "fr.lesson.adresse-du-dino",
+					"title": "L'adresse du dino",
+					"intro": "Sur un PC, l'arobase @ se tape avec AltGr, tenue par le pouce droit, et la touche du à.",
+					"newChars": ["@"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"warmUp": ["@ @ @", "moi@", "toi@", "nous@"]
 				}
 			]
 		}

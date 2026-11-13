@@ -409,6 +409,42 @@
 			}
 		},
 		{
+			"id": "fr.reward.referee-whistle",
+			"kind": "item",
+			"title": "Le sifflet d'arbitre",
+			"description": "Réussis la leçon « Le score du match ».",
+			"artId": "referee-whistle",
+			"slot": "neck",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.score-du-match"
+			}
+		},
+		{
+			"id": "fr.reward.alarm-clock",
+			"kind": "item",
+			"title": "Le réveil à sonnette",
+			"description": "Réussis la leçon « Le train de huit heures ».",
+			"artId": "alarm-clock",
+			"slot": "hand",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.train-huit-heures"
+			}
+		},
+		{
+			"id": "fr.reward.snail-slippers",
+			"kind": "item",
+			"title": "Les chaussons escargots",
+			"description": "Réussis la leçon « L'adresse du dino ».",
+			"artId": "snail-slippers",
+			"slot": "feet",
+			"condition": {
+				"kind": "lesson-passed",
+				"lessonId": "fr.lesson.adresse-du-dino"
+			}
+		},
+		{
 			"id": "fr.reward.roar",
 			"kind": "skill",
 			"title": "Rugir",
@@ -607,6 +643,19 @@
 			"condition": {
 				"kind": "chars-mastered",
 				"chars": [",", ".", "?", "!", "-", ":", "'"],
+				"minAttempts": 20,
+				"maxErrorRate": 0.1
+			}
+		},
+		{
+			"id": "fr.reward.keys-digits",
+			"kind": "trophy",
+			"title": "Les chiffres apprivoisés",
+			"description": "Tape les dix chiffres presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "keys-digits",
+			"condition": {
+				"kind": "chars-mastered",
+				"chars": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
 				"minAttempts": 20,
 				"maxErrorRate": 0.1
 			}

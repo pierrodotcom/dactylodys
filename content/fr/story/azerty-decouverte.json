@@ -205,6 +205,21 @@
 					"lessonId": "fr.lesson.invitation-fete",
 					"line": "Tout le monde dit oui pour la fête. Même le klaxon : pouet.",
 					"art": "post-invite"
+				},
+				{
+					"lessonId": "fr.lesson.score-du-match",
+					"line": "Le zèbre note le score du match. Il compte encore sur ses rayures.",
+					"art": "post-score"
+				},
+				{
+					"lessonId": "fr.lesson.train-huit-heures",
+					"line": "Le train répond : il arrivera à huit heures. Enfin, il croit.",
+					"art": "post-train"
+				},
+				{
+					"lessonId": "fr.lesson.adresse-du-dino",
+					"line": "Ton dino a une adresse avec un petit escargot dedans : l'arobase.",
+					"art": "post-at"
 				}
 			]
 		}

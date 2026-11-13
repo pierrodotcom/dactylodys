@@ -304,6 +304,51 @@ describe('parseProgression', () => {
 		).not.toThrow();
 	});
 
+	it('reads a warm-up written by hand, normalized, absent by default', () => {
+		expect(findLesson(parseProgression(BASE), 'fr.lesson.c')?.warmUp).toBeUndefined();
+		const parsed = parseProgression(
+			variant((raw) => {
+				raw.rules['newCharMinCount'] = 3;
+				lessonOf(raw, 1, 0)['warmUp'] = ['d d', 'fd', 'de'];
+			})
+		);
+		expect(findLesson(parsed, 'fr.lesson.c')?.warmUp).toEqual(['d d', 'fd', 'de']);
+	});
+
+	it('leaves room for a story phrase after a warm-up written by hand', () => {
+		const withPhrases = (warmUp: string[]) =>
+			variant((raw) => {
+				raw.rules['newCharMinCount'] = 1;
+				raw.rules['storyPhraseEvery'] = 2;
+				lessonOf(raw, 1, 0)['warmUp'] = warmUp;
+			});
+		expect(() => parseProgression(withPhrases(['dd', 'fd', 'dd', 'fd']))).not.toThrow();
+		expect(() => parseProgression(withPhrases(['dd', 'fd', 'dd', 'fd', 'dd']))).toThrow(
+			/lessons\[0\]\.groupCount: expected more than 5 groups/
+		);
+	});
+
+	it.each([
+		['on a lesson without new characters', [], ['f'], /only a lesson with new characters/],
+		['that is empty', ['d'], [], /expected at least one group/],
+		['with a character not learned yet', ['d'], ['dk'], /warmUp\[0\].*"k" is not learned/],
+		['longer than a group of the lesson', ['d'], ['ddfdd'], /warmUp\[0\].*2 to 4/],
+		['shorter than a group of the lesson', ['d'], ['d', 'dd', 'fd'], /warmUp\[0\].*2 to 4/],
+		['with the same group twice in a row', ['d'], ['d d', 'd d', 'df'], /warmUp\[1\].*twice/],
+		['asking a new character too few times', ['d'], ['dd', 'fe'], /"d" at least 3 times/],
+		['with more groups than the lesson', ['d'], ['dd', 'fd', 'dd', 'fd', 'dd', 'fd'], /at most 5/]
+	])('rejects a warm-up %s', (_name, newChars, warmUp, message) => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					raw.rules['newCharMinCount'] = 3;
+					lessonOf(raw, 1, 0)['newChars'] = newChars;
+					lessonOf(raw, 1, 0)['warmUp'] = warmUp;
+				})
+			)
+		).toThrow(message);
+	});
+
 	it('accepts any minimum count for a lesson without new characters', () => {
 		expect(() =>
 			parseProgression(

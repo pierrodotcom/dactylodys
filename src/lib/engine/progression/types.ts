@@ -119,6 +119,12 @@ export interface LessonDefinition {
 	readonly targetLength: number;
 	/** Minimum and maximum number of graphemes in a generated group. */
 	readonly groupLength: readonly [number, number];
+	/**
+	 * Warm-up written by hand, typed as it is, in this order, at the start of every exercise
+	 * instead of generated suites: for keys whose clearest practice is a series (`1 2 3`). It asks
+	 * each new character at least `rules.newCharMinCount` times (checked). Absent: generated.
+	 */
+	readonly warmUp?: readonly string[];
 }
 
 export interface WorldDefinition {

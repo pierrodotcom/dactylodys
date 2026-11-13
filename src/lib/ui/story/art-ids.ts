@@ -50,6 +50,9 @@ export const STORY_ART_GROUPS = {
 		'post-caption',
 		'post-card',
 		'post-invite',
+		'post-score',
+		'post-train',
+		'post-at',
 		'post-ending'
 	]
 } as const satisfies Readonly<Record<string, readonly string[]>>;

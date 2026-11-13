@@ -34,7 +34,12 @@ export const LEARNING_STEPS = [
 	{ id: 'tiret-deux-points', chars: ['-', ':'] },
 	{ id: 'circonflexes-e-a', chars: ['ê', 'â'] },
 	{ id: 'circonflexes-i-o-u', chars: ['î', 'ô', 'û'] },
-	{ id: 'trémas', chars: ['ë', 'ï'] }
+	{ id: 'trémas', chars: ['ë', 'ï'] },
+	// The last world: Enter, then the digits and @ for its texts (ADR-068).
+	{ id: 'entree', chars: ['\n'] },
+	{ id: 'chiffres-1-5', chars: ['1', '2', '3', '4', '5'] },
+	{ id: 'chiffres-6-0', chars: ['6', '7', '8', '9', '0'] },
+	{ id: 'arobase', chars: ['@'] }
 ];
 
 export const STEP_INDEX = Object.fromEntries(LEARNING_STEPS.map((step, i) => [step.id, i]));
