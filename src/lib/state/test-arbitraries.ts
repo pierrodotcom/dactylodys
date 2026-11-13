@@ -219,9 +219,10 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 			handwritingSamples: fc.array(handwritingSampleArb, { maxLength: 3 }),
 			adultWords: fc.array(identifierArb, { maxLength: 4 }),
 			openedWorldIds: fc.uniqueArray(identifierArb, { maxLength: 3 })
-		})
+		}),
+		hideout: fc.dictionary(fc.string({ maxLength: 12 }), identifierArb, { maxKeys: 4 })
 	})
-	.map(({ base, companion, games, ghosts, earned, helpQuest, journal }) => {
+	.map(({ base, companion, games, ghosts, earned, helpQuest, journal, hideout }) => {
 		let profile = withCompanion(base, companion);
 		for (const [worldId, gameId] of Object.entries(games)) {
 			profile = withLastGame(profile, worldId, gameId);
@@ -231,5 +232,5 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 		}
 		profile = withEarnedRewards(profile, earned);
 		profile = helpQuest === null ? profile : withHelpQuest(profile, helpQuest);
-		return parseProfile({ ...profile, ...journal });
+		return parseProfile({ ...profile, ...journal, hideout });
 	});

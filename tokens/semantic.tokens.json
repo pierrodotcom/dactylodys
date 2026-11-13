@@ -1945,6 +1945,179 @@
 					"$value": "{color.leather.400}"
 				}
 			}
+		},
+		"hideout": {
+			"wall": {
+				"$value": "{color.honey.200}"
+			},
+			"wall-seam": {
+				"$value": "{color.honey.500}"
+			},
+			"wall-grain": {
+				"$value": "{color.honey.400}"
+			},
+			"beam": {
+				"$value": "{color.honey.600}"
+			},
+			"beam-dark": {
+				"$value": "{color.honey.700}"
+			},
+			"beam-light": {
+				"$value": "{color.honey.300}"
+			},
+			"floor": {
+				"$value": "{color.honey.400}"
+			},
+			"floor-seam": {
+				"$value": "{color.honey.600}"
+			},
+			"floor-light": {
+				"$value": "{color.honey.300}"
+			},
+			"furniture": {
+				"$value": "{color.honey.500}"
+			},
+			"furniture-dark": {
+				"$value": "{color.honey.700}"
+			},
+			"furniture-light": {
+				"$value": "{color.honey.300}"
+			},
+			"bark": {
+				"$value": "{color.brown.500}"
+			},
+			"bark-dark": {
+				"$value": "{color.brown.600}"
+			},
+			"bark-light": {
+				"$value": "{color.brown.400}"
+			},
+			"leaf": {
+				"$value": "{color.jade.300}"
+			},
+			"leaf-dark": {
+				"$value": "{color.sage.400}"
+			},
+			"leaf-light": {
+				"$value": "{color.mint.200}"
+			},
+			"sky-high": {
+				"$value": "{color.azure.300}"
+			},
+			"sky-low": {
+				"$value": "{color.azure.50}"
+			},
+			"sky-light": {
+				"$value": "{color.lemon.50}"
+			},
+			"sky-far": {
+				"$value": "{color.mint.200}"
+			},
+			"star": {
+				"$value": "{color.lemon.50}"
+			},
+			"night": {
+				"$value": "{color.navy.800}"
+			},
+			"glow": {
+				"$value": "{color.lemon.300}"
+			},
+			"bulb": {
+				"$value": "{color.lemon.50}"
+			},
+			"lamp": {
+				"$value": "{color.lagoon.500}"
+			},
+			"lamp-dark": {
+				"$value": "{color.teal.600}"
+			},
+			"metal": {
+				"$value": "{color.gold.500}"
+			},
+			"metal-dark": {
+				"$value": "{color.amber.700}"
+			},
+			"iron": {
+				"$value": "{color.brown.600}"
+			},
+			"paper": {
+				"$value": "{color.cream.50}"
+			},
+			"ink": {
+				"$value": "{color.brown.900}"
+			},
+			"rug-base": {
+				"$value": "{color.cream.100}"
+			},
+			"rug-a": {
+				"$value": "{color.tomato.300}"
+			},
+			"rug-b": {
+				"$value": "{color.lemon.300}"
+			},
+			"rug-c": {
+				"$value": "{color.lagoon.300}"
+			},
+			"rug-edge": {
+				"$value": "{color.tomato.500}"
+			},
+			"cushion": {
+				"$value": "{color.plum.300}"
+			},
+			"cushion-dark": {
+				"$value": "{color.plum.500}"
+			},
+			"saucer": {
+				"$value": "{color.cream.50}"
+			},
+			"saucer-rim": {
+				"$value": "{color.lagoon.300}"
+			},
+			"jar": {
+				"$value": "{color.lagoon.300}"
+			},
+			"book-a": {
+				"$value": "{color.tomato.300}"
+			},
+			"book-b": {
+				"$value": "{color.ocean.400}"
+			},
+			"book-c": {
+				"$value": "{color.sunflower.300}"
+			},
+			"pages": {
+				"$value": "{color.cream.100}"
+			},
+			"pot": {
+				"$value": "{color.clay.400}"
+			},
+			"plant": {
+				"$value": "{color.jade.300}"
+			},
+			"plant-dark": {
+				"$value": "{color.sage.400}"
+			},
+			"cord": {
+				"$value": "{color.brown.600}"
+			},
+			"fairy-a": {
+				"$value": "{color.amber.300}"
+			},
+			"fairy-b": {
+				"$value": "{color.pink.300}"
+			},
+			"fairy-c": {
+				"$value": "{color.lagoon.300}"
+			},
+			"shade": {
+				"$value": "{color.brown.900}"
+			},
+			"light": {
+				"$value": "{color.cream.50}"
+			},
+			"mark": {
+				"$value": "{color.focus.ring}"
+			}
 		}
 	},
 	"typing": {
@@ -2273,6 +2446,21 @@
 		},
 		"print-page-margin": {
 			"$value": "14mm"
+		},
+		"hideout": {
+			"$description": "Widest drawing of the hideout, beside the choices on a wide page.",
+			"$value": "40rem"
+		},
+		"hideout-panel": {
+			"$description": "The column of the places and the objects, beside the hideout.",
+			"$value": "22rem"
+		},
+		"hideout-thumb": {
+			"$value": "3.5rem"
+		},
+		"hideout-card": {
+			"$description": "Narrowest card of an object to set down in the hideout: three side by side beside the cabin.",
+			"$value": "6.5rem"
 		}
 	},
 	"radius": {
@@ -2517,6 +2705,36 @@
 		},
 		"decor-dust": {
 			"$value": 0.75
+		},
+		"hideout-shade": {
+			"$value": 0.16
+		},
+		"hideout-plank": {
+			"$value": 0.07
+		},
+		"hideout-light": {
+			"$value": 0.5
+		},
+		"hideout-cast": {
+			"$value": 0.2
+		},
+		"hideout-night": {
+			"$value": 0
+		},
+		"hideout-stars": {
+			"$value": 0
+		},
+		"hideout-sun": {
+			"$value": 1
+		},
+		"hideout-beam": {
+			"$value": 0.22
+		},
+		"hideout-glow": {
+			"$value": 0.3
+		},
+		"hideout-fairy-glow": {
+			"$value": 0.35
 		}
 	},
 	"duration": {
@@ -2614,6 +2832,14 @@
 		},
 		"race-flag": {
 			"$value": "{duration.2800}"
+		},
+		"hideout-sway": {
+			"$description": "The leaves at the window of the hideout go to and fro: slow, never a flash.",
+			"$value": "{duration.7000}"
+		},
+		"hideout-glow": {
+			"$description": "The lamp and the little lights of the hideout breathe, slowly.",
+			"$value": "{duration.5000}"
 		}
 	},
 	"easing": {
