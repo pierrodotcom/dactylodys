@@ -54,7 +54,13 @@ test.describe('home page', () => {
 
 		const paths = await linkedPaths(page);
 
-		expect(paths).toEqual(['/jouer', '/pour-les-adultes', '/confidentialite', '/accessibilite']);
+		expect(paths).toEqual([
+			'/jouer',
+			'/pour-les-adultes',
+			'/pour-les-professionnels',
+			'/confidentialite',
+			'/accessibilite'
+		]);
 		expect(paths.filter((path) => path.startsWith('/dev'))).toEqual([]);
 	});
 

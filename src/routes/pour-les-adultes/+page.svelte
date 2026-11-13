@@ -11,6 +11,11 @@
 
 <InfoPage id="adults" title={m.info_link_adults()}>
 	<p>{m.guide_intro({ appName })}</p>
+	<p data-print-hidden>
+		<a href={resolve('/pour-les-professionnels')} data-professionals-link
+			>{m.guide_professionals_link()}</a
+		>
+	</p>
 	<div data-print-hidden>
 		<Button variant="secondary" onclick={() => window.print()}>{m.info_print()}</Button>
 	</div>

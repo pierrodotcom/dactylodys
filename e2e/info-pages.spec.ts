@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { installProfile, advancedProfile, loadMessages, openPage, readJson } from './support';
@@ -7,7 +8,8 @@ const expect = baseExpect.configure({ timeout: 15_000 });
 
 /*
  * The pages for adults (J5, lot 5): reached from the home page and the adult space, never from a
- * screen of the child; readable at 320 pixels, by keyboard alone; the guide prints on one sheet.
+ * screen of the child; readable at 320 pixels, by keyboard alone; the guide prints on one sheet,
+ * the sheet for professionals on two pages at most.
  */
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const COLOR_SCHEMES = ['light', 'dark'] as const;
@@ -15,6 +17,9 @@ const NARROW = { width: 320, height: 640 } as const;
 /** One A4 sheet, printed on both sides. */
 const MAX_PRINTED_PAGES = 2;
 const PRESS_BUDGET = 40;
+const PROFESSIONALS = '/pour-les-professionnels';
+const REVIEW_FORM =
+	'https://github.com/pierrodotcom/dactylodys/issues/new?template=relecture-ergotherapeute.yml';
 
 const { message } = loadMessages();
 const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
@@ -23,6 +28,7 @@ const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
 
 const PAGES = [
 	{ path: '/pour-les-adultes', title: message('info_link_adults') },
+	{ path: PROFESSIONALS, title: message('info_link_professionals') },
 	{ path: '/confidentialite', title: message('info_link_privacy') },
 	{ path: '/accessibilite', title: message('info_link_accessibility') }
 ] as const;
@@ -68,7 +74,7 @@ async function gateNumber(page: Page): Promise<number> {
 	return number.value;
 }
 
-test('links the three pages from the foot of the home page', async ({ page }) => {
+test('links the pages for adults from the foot of the home page', async ({ page }) => {
 	await openPage(page, '/');
 	expect(await pathsOf(page.locator('footer [data-info-links] a'))).toEqual(PATHS);
 
@@ -83,7 +89,7 @@ test('links the three pages from the foot of the home page', async ({ page }) =>
 	}
 });
 
-test('links the three pages from the adult space, and not from the screens of the child', async ({
+test('links the pages for adults from the adult space, and not from the screens of the child', async ({
 	page
 }) => {
 	await openPage(page, '/jouer');
@@ -157,7 +163,9 @@ test('opens a page from the home page and goes back, by keyboard alone', async (
 test.describe('reflow at 320 pixels', () => {
 	test.use({ viewport: NARROW });
 
-	test('keeps the three pages and the home page within the width of the page', async ({ page }) => {
+	test('keeps the pages for adults and the home page within the width of the page', async ({
+		page
+	}) => {
 		const outside: Record<string, number> = {};
 		for (const path of ['/', ...PATHS]) {
 			await openPage(page, path);
@@ -172,19 +180,21 @@ test.describe('reflow at 320 pixels', () => {
 });
 
 test.describe('printing', () => {
-	test('prints the guide for adults on one A4 sheet, both sides', async ({ page }, testInfo) => {
-		test.skip(testInfo.project.name !== 'chromium', 'Only Chromium prints a page to PDF');
-		await openPage(page, '/pour-les-adultes');
-		await page.evaluate(() => document.fonts.ready);
-		await page.emulateMedia({ media: 'print' });
-		const pdf = (await page.pdf({ preferCSSPageSize: true, printBackground: false })).toString(
-			'latin1'
-		);
-		const pages = pdf.match(/\/Type\s*\/Page(?![a-zA-Z])/g)?.length ?? 0;
+	for (const path of ['/pour-les-adultes', PROFESSIONALS]) {
+		test(`prints ${path} on one A4 sheet, both sides`, async ({ page }, testInfo) => {
+			test.skip(testInfo.project.name !== 'chromium', 'Only Chromium prints a page to PDF');
+			await openPage(page, path);
+			await page.evaluate(() => document.fonts.ready);
+			await page.emulateMedia({ media: 'print' });
+			const pdf = (await page.pdf({ preferCSSPageSize: true, printBackground: false })).toString(
+				'latin1'
+			);
+			const pages = pdf.match(/\/Type\s*\/Page(?![a-zA-Z])/g)?.length ?? 0;
 
-		expect(pages).toBeGreaterThan(0);
-		expect(pages).toBeLessThanOrEqual(MAX_PRINTED_PAGES);
-	});
+			expect(pages).toBeGreaterThan(0);
+			expect(pages).toBeLessThanOrEqual(MAX_PRINTED_PAGES);
+		});
+	}
 
 	test('prints dark ink on light paper in the dark theme, without its buttons', async ({
 		page
@@ -210,18 +220,87 @@ test.describe('printing', () => {
 	});
 });
 
+test.describe('the sheet for professionals', () => {
+	const title = message('info_link_professionals');
+
+	test('opens from the guide for adults, by keyboard alone', async ({ page }) => {
+		await openPage(page, '/pour-les-adultes');
+		const link = page.locator('main [data-professionals-link]');
+		await expect(link).toHaveText(message('guide_professionals_link'));
+		await focusByTab(page, link);
+		await page.keyboard.press('Enter');
+
+		await expect(page).toHaveURL(new RegExp(`${PROFESSIONALS}$`));
+		await expect(heading(page, title)).toBeVisible();
+	});
+
+	test('prints with its button, by keyboard alone', async ({ page }) => {
+		await openPage(page, PROFESSIONALS);
+		await page.evaluate(() => {
+			const counted = window as unknown as { printed: number };
+			counted.printed = 0;
+			window.print = () => {
+				counted.printed += 1;
+			};
+		});
+		await focusByTab(page, page.getByRole('button', { name: message('info_print') }));
+		await page.keyboard.press('Enter');
+
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { printed: number }).printed))
+			.toBe(1);
+	});
+
+	test('gives on paper the addresses that cannot be clicked there', async ({ page }) => {
+		await openPage(page, PROFESSIONALS);
+		const gameAddress = page.locator('[data-game-address]');
+		const formAddress = page.getByText(message('pro_review_address', { url: REVIEW_FORM }));
+		await expect(gameAddress).toBeHidden();
+		await expect(formAddress).toBeHidden();
+		await expect(page.locator('[data-review-link]')).toBeVisible();
+
+		await page.emulateMedia({ media: 'print' });
+		const url = new URL('/', page.url()).href;
+		await expect(gameAddress).toHaveText(message('pro_game_address', { url }));
+		await expect(formAddress).toBeVisible();
+		await expect(page.locator('[data-review-link]')).toBeHidden();
+		await expect(page.locator('[data-research-link]')).toBeHidden();
+	});
+
+	test('says that the game is no treatment', async ({ page }) => {
+		await openPage(page, PROFESSIONALS);
+		await expect(page.locator('[data-info-notice]')).toHaveText(message('pro_not_treatment'));
+	});
+
+	test('sends the review to the issue form of the repository', async ({ page }) => {
+		await openPage(page, PROFESSIONALS);
+		await expect(page.locator('[data-review-link]')).toHaveAttribute('href', REVIEW_FORM);
+		const questions = await page.locator('[data-review-questions] > li').count();
+		expect(questions).toBeGreaterThanOrEqual(5);
+		expect(questions).toBeLessThanOrEqual(8);
+	});
+
+	test('shows the same section titles as its Markdown version', async ({ page }) => {
+		const sheet = readFileSync('docs/fiche-professionnels.md', 'utf8');
+		const headings = [...sheet.matchAll(/^## (.+)$/gm)].map((match) => match[1]?.trim());
+
+		await openPage(page, PROFESSIONALS);
+		await expect(page.locator('main h2')).toHaveText(headings as string[]);
+	});
+});
+
 for (const colorScheme of COLOR_SCHEMES) {
 	test.describe(`pages for adults, ${colorScheme} theme`, () => {
 		test.use({ colorScheme });
 
-		test('has no axe violation on the three pages and the home page', async ({ page }) => {
+		test('has no axe violation on the pages for adults and the home page', async ({ page }) => {
 			for (const path of ['/', ...PATHS]) {
 				await openPage(page, path);
 				await expectNoAxeViolation(page);
 			}
 		});
 
-		test('has no axe violation at 320 pixels on the three pages', async ({ page }) => {
+		test('has no axe violation at 320 pixels on the pages for adults', async ({ page }) => {
 			await page.setViewportSize(NARROW);
 			for (const path of PATHS) {
 				await openPage(page, path);

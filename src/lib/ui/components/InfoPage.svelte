@@ -85,6 +85,11 @@
 		font-weight: var(--dd-font-weight-bold);
 	}
 
+	/* Only on paper: what a reader of the printed page needs but cannot click, an address. */
+	.info-page :global([data-print-only]) {
+		display: none;
+	}
+
 	footer {
 		padding: var(--dd-space-lg);
 		border-block-start-width: var(--dd-border-width-thin);
@@ -94,7 +99,8 @@
 
 	/*
 	 * On paper: dark ink on light paper whatever the theme, small type, no buttons nor links to
-	 * other pages. The guide for adults fits on one sheet, both sides (tested in e2e/info-pages).
+	 * other pages. The guide for adults fits on one sheet, both sides, and so does the sheet for
+	 * professionals (tested in e2e/info-pages).
 	 */
 	@page {
 		size: A4;
@@ -131,8 +137,22 @@
 			line-height: var(--dd-print-line-height);
 		}
 
+		.info-page :global([data-print-only]) {
+			display: block;
+			overflow-wrap: anywhere;
+		}
+
 		.text :global(section) {
 			gap: var(--dd-print-space-sm);
+			break-inside: avoid;
+		}
+
+		/* A section longer than half a page may go on over the next one, never inside an item. */
+		.text :global(section[data-print-breakable]) {
+			break-inside: auto;
+		}
+
+		.text :global(li) {
 			break-inside: avoid;
 		}
 

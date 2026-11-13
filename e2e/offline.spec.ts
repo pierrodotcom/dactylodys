@@ -23,6 +23,7 @@ const PAGES = [
 	'/jouer',
 	'/adulte',
 	'/pour-les-adultes',
+	'/pour-les-professionnels',
 	'/confidentialite',
 	'/accessibilite',
 	'/dev/ui',

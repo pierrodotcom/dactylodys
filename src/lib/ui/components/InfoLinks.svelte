@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	/** The pages written for adults, linked from the home page and from the adult space. */
-	export type InfoPageId = 'adults' | 'privacy' | 'accessibility';
+	export type InfoPageId = 'adults' | 'professionals' | 'privacy' | 'accessibility';
 </script>
 
 <script lang="ts">
@@ -18,6 +18,11 @@
 
 	const links = [
 		{ id: 'adults', route: '/pour-les-adultes', label: m.info_link_adults() },
+		{
+			id: 'professionals',
+			route: '/pour-les-professionnels',
+			label: m.info_link_professionals()
+		},
 		{ id: 'privacy', route: '/confidentialite', label: m.info_link_privacy() },
 		{ id: 'accessibility', route: '/accessibilite', label: m.info_link_accessibility() }
 	] as const;
