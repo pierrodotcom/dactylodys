@@ -1036,6 +1036,85 @@
 	/** The basket hangs from the hand by the top of its handle. */
 	const BASKET_HANG = 3.4;
 
+	/* ---------- Referee whistle ---------- */
+
+	/** Hung on a cord around the neck, at the lowest point of the cord. */
+	const WHISTLE_RING = ring(60, 85.6, 1.7, 0.8);
+	const WHISTLE_BARREL = circlePath(61.6, 91.6, 5.4);
+	const WHISTLE_BARREL_GLOSS = ovalPath(59.6, 89.4, 1.6, 1) + ovalPath(64.8, 94.2, 0.6, 0.5);
+	const WHISTLE_MOUTH =
+		'M48.6 87.8C48.6 86.9 49.2 86.4 50.1 86.4L59.4 86.4L59.4 91.4L50.1 91.4C49.2 91.4 48.6 90.9 48.6 90Z';
+	const WHISTLE_MOUTH_LIGHT = 'M50 87.2L58.6 87.2L58.6 88L50 88Z';
+	const WHISTLE_SLOT = 'M55.2 86.4L58.4 86.4L58.6 88.4L55 88.4Z';
+
+	/* ---------- Alarm clock ---------- */
+
+	/** Held by its handle, the clock hanging below the hand. */
+	const CLOCK = { cx: 0, cy: 12, r: 8.4 } as const;
+	const CLOCK_HANDLE = 'M-4.2 3.6C-4.2 -1.6 4.2 -1.6 4.2 3.6';
+	const CLOCK_BELLS = [-1, 1].map((side) => {
+		const x = side * 6.2;
+		return {
+			side,
+			bell: `M${x - 3.6} 5.4C${x - 3.6} 2.4 ${x - 1.8} 0.6 ${x} 0.6C${x + 1.8} 0.6 ${x + 3.6} 2.4 ${x + 3.6} 5.4Z`,
+			gloss: ovalPath(round(x - 1.4), 2.6, 0.8, 0.6)
+		};
+	});
+	const CLOCK_HAMMER = 'M-0.7 1.4L0.7 1.4L0.7 4.4L-0.7 4.4Z';
+	const CLOCK_FEET = [-1, 1]
+		.map((side) => {
+			const x = side * 5.2;
+			return `M${x - 1.6} 19L${x + 1.6} 19L${x + 2 * side + 0.8} 22.4L${x + 2 * side - 0.8} 22.4Z`;
+		})
+		.join('');
+	const CLOCK_FACE = circlePath(CLOCK.cx, CLOCK.cy, 6.2);
+	const CLOCK_TICKS = [0, 90, 180, 270]
+		.map((angle) => {
+			const [x, y] = [Math.sin((angle * Math.PI) / 180), -Math.cos((angle * Math.PI) / 180)];
+			return circlePath(round(x * 4.8), round(CLOCK.cy + y * 4.8), 0.55);
+		})
+		.join('');
+	const CLOCK_HANDS = `M0 ${CLOCK.cy}L0 ${CLOCK.cy - 4}M0 ${CLOCK.cy}L3 ${CLOCK.cy + 1.4}`;
+	const CLOCK_GLOSS = ovalPath(-4.6, 8, 1.4, 0.9);
+
+	/* ---------- Snail slippers ---------- */
+
+	/** A coiled line from the centre of a shell outwards: the snail winks at the at sign. */
+	function spiralPath(cx: number, cy: number, r: number, turns: number): string {
+		const steps = 28;
+		const points: string[] = [];
+		for (let i = 0; i <= steps; i++) {
+			const angle = (i / steps) * turns * 2 * Math.PI;
+			const radius = (i / steps) * r;
+			points.push(
+				`${round(cx + Math.cos(angle) * radius)} ${round(cy + Math.sin(angle) * radius)}`
+			);
+		}
+		return `M${points.join('L')}`;
+	}
+
+	/** A slipper on each foot, the snail's head out on the outer side (`dir`: 1 left, -1 right). */
+	function slipperOf(fx: number, dir: number) {
+		const x = (dx: number) => round(fx + dir * dx);
+		const shell = { cx: x(2.4), cy: 104.6, r: 6.4 };
+		return {
+			body: `M${x(-13)} 110.8C${x(-13)} 106.8 ${x(-10)} 104.6 ${x(-6)} 104.6L${x(7)} 104.6C${x(11)} 104.6 ${x(13)} 107.2 ${x(13)} 110.8C${x(13)} 113 ${x(11.6)} 114.4 ${x(9.6)} 114.4L${x(-10.4)} 114.4C${x(-12)} 114.4 ${x(-13)} 113 ${x(-13)} 110.8Z`,
+			bodyShade: `M${x(-14)} 112C${x(-4)} 113 ${x(6)} 113 ${x(14)} 111.6L${x(14)} 116L${x(-14)} 116Z`,
+			sole: `M${x(-12.6)} 113L${x(12.6)} 113C${x(12.6)} 115 ${x(11)} 116 ${x(9.6)} 116L${x(-9.6)} 116C${x(-11)} 116 ${x(-12.6)} 115 ${x(-12.6)} 113Z`,
+			shell: circlePath(shell.cx, shell.cy, shell.r),
+			spiral: spiralPath(shell.cx, shell.cy, shell.r - 1.2, 2.2),
+			shellGloss: ovalPath(round(shell.cx - 2.6), 101.8, 1.2, 0.8),
+			head: ovalPath(x(-12.4), 106, 3.2, 2.8),
+			mouth: `M${x(-13.8)} 107.2Q${x(-12.6)} 108.2 ${x(-11.2)} 107.4`,
+			stalks: `M${x(-13.6)} 103.6L${x(-15.6)} 99M${x(-11.4)} 103.4L${x(-11.6)} 98.6`,
+			eyes: [
+				[x(-15.6), 99],
+				[x(-11.6), 98.6]
+			] as const
+		};
+	}
+	const SLIPPERS = FEET_X.map((fx, i) => ({ fx, ...slipperOf(fx, i === 0 ? 1 : -1) }));
+
 	/* ---------- Party balloons ---------- */
 
 	/** Tied behind the right shoulder, they float above it. */
@@ -2050,6 +2129,73 @@
 		{@render piece('bag', BAG, 'leather', { shade: 2, deep: 0.8 }, bagSeams)}
 		{@render piece('bag-flap', BAG_FLAP, 'red', { shade: 1.4, lights: BAG_FLAP_LIGHT })}
 		{@render piece('bag-buckle', BAG_BUCKLE, 'gold', { shade: 0.6, deep: 0, rim: 0.4 })}
+	{:else if artId === 'referee-whistle'}
+		{#if !alone}
+			<path class="open cast-line" d={NECK_CORD_PATH} transform="translate(0.8 1.4)" />
+		{/if}
+		{@render cord(NECK_CORD_PATH, 'cord-red')}
+		{@render piece('whistle-ring', WHISTLE_RING, 'metal', { shade: 0.5, deep: 0, rim: 0.3 })}
+		{#snippet whistleSlot()}<path class="ink" d={WHISTLE_SLOT} />{/snippet}
+		{@render piece(
+			'whistle-mouth',
+			WHISTLE_MOUTH,
+			'metal',
+			{ shade: 1, deep: 0.4, lights: WHISTLE_MOUTH_LIGHT },
+			whistleSlot
+		)}
+		{@render piece('whistle-barrel', WHISTLE_BARREL, 'metal', {
+			shade: 2,
+			deep: 0.9,
+			rim: 0.6,
+			gloss: WHISTLE_BARREL_GLOSS
+		})}
+	{:else if artId === 'alarm-clock'}
+		<g transform="translate({grip.x} {grip.y})">
+			{@render cord(CLOCK_HANDLE, 'cord-gold')}
+			<path class="ink" d={CLOCK_FEET} />
+			{@render piece('clock-hammer', CLOCK_HAMMER, 'metal', { shade: 0.3, deep: 0, rim: 0 })}
+			{#each CLOCK_BELLS as bell (bell.side)}
+				{@render piece(`clock-bell-${bell.side}`, bell.bell, 'gold', {
+					shade: 1,
+					deep: 0.4,
+					rim: 0.4,
+					gloss: bell.gloss
+				})}
+			{/each}
+			{@render piece('clock', circlePath(CLOCK.cx, CLOCK.cy, CLOCK.r), 'red', {
+				shade: 1.8,
+				deep: 0.8,
+				rim: 0.6,
+				gloss: CLOCK_GLOSS
+			})}
+			{#snippet dial()}
+				<path class="ink" d={CLOCK_TICKS} />
+				<path class="open lace" d={CLOCK_HANDS} />
+			{/snippet}
+			{@render piece('clock-face', CLOCK_FACE, 'cream', { shade: 0.9, deep: 0.3, rim: 0 }, dial)}
+		</g>
+	{:else if artId === 'snail-slippers'}
+		{#each SLIPPERS as slipper (slipper.fx)}
+			{@render piece(`slipper-sole-${slipper.fx}`, slipper.sole, 'rubber', { shade: 0, rim: 0.4 })}
+			{@render piece(`slipper-${slipper.fx}`, slipper.body, 'cream', {
+				shade: 1.4,
+				shades: slipper.bodyShade
+			})}
+			<path class="open lace" d={slipper.stalks} />
+			{#each slipper.eyes as [x, y], i (i)}
+				{@render ball(`slipper-eye-${slipper.fx}-${i}`, x, y, 1.2, 'ink')}
+			{/each}
+			{#snippet smile()}<path class="open fine" d={slipper.mouth} />{/snippet}
+			{@render piece(`slipper-head-${slipper.fx}`, slipper.head, 'cream', { shade: 0.8 }, smile)}
+			{#snippet coil()}<path class="open fine" d={slipper.spiral} />{/snippet}
+			{@render piece(
+				`slipper-shell-${slipper.fx}`,
+				slipper.shell,
+				'leather',
+				{ shade: 1.4, deep: 0.6, gloss: slipper.shellGloss },
+				coil
+			)}
+		{/each}
 	{:else if artId === 'picnic-basket'}
 		<g transform="translate({grip.x} {grip.y + BASKET_HANG})">
 			{@render cord(BASKET_HANDLE, 'cord-twig')}

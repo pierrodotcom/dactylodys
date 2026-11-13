@@ -1704,3 +1704,105 @@ describe('useful texts', () => {
 		);
 	});
 });
+
+describe('warm-up written by hand', () => {
+	const NL = String.fromCharCode(10);
+	const DIGITS_WARM_UP = ['123', '321', '1 2 3'];
+	const AT_WARM_UP = ['@ @', 'le@', '@ @ @'];
+	const HAND_RULES = {
+		newCharMinCount: 3,
+		lengthSlack: 5,
+		textGroupLength: 16,
+		storyPhraseEvery: 1
+	};
+	const HAND_LESSONS = [
+		lesson('fj', ['f', 'j'], { groupLength: [2, 4] }),
+		lesson('space', [SPACE], { groupLength: [3, 4] }),
+		lesson('letters', [...'dkeilsut'], { groupLength: [4, 8], groupCount: 12 }),
+		lesson('enter', [NL], { groupLength: [4, 6], groupCount: 8, targetLength: 20 }),
+		lesson('digits', ['1', '2', '3'], {
+			groupLength: [3, 5],
+			groupCount: 6,
+			targetLength: 20,
+			mix: EVERYTHING,
+			warmUp: DIGITS_WARM_UP
+		}),
+		lesson('at', ['@'], {
+			groupLength: [3, 5],
+			groupCount: 6,
+			targetLength: 20,
+			mix: EVERYTHING,
+			warmUp: AT_WARM_UP
+		})
+	];
+	const HAND_PROGRESSION = progressionOf(HAND_LESSONS, HAND_RULES);
+	const TEXT_BANK = parseTextBank({
+		schemaVersion: 1,
+		id: 'fr.texts.synthetic',
+		locale: 'fr-FR',
+		texts: [
+			{
+				id: 'fr.text.skis',
+				lessonId: 'fr.lesson.digits',
+				lines: ['des skis', '2 et 3'],
+				level: 1,
+				review: 'agent'
+			},
+			{
+				id: 'fr.text.adresse',
+				lessonId: 'fr.lesson.at',
+				lines: ['dis le', 'kiki@site'],
+				level: 1,
+				review: 'agent'
+			}
+		]
+	});
+	const context: ExerciseContext = { ...FULL_CONTEXT, texts: TEXT_BANK };
+
+	it.each([
+		['fr.lesson.digits', DIGITS_WARM_UP],
+		['fr.lesson.at', AT_WARM_UP]
+	])('opens every exercise of %s with its warm-up as written, then its text', (id, warmUp) => {
+		const text = TEXT_BANK.texts.find((entry) => entry.lessonId === id)!;
+		for (let seed = 0; seed < 20; seed++) {
+			const { groups } = generate(HAND_PROGRESSION, id, seed, context);
+			expect(groups.slice(0, warmUp.length)).toEqual(warmUp);
+			expect(groups.join('').endsWith(textOf(text))).toBe(true);
+		}
+	});
+
+	it('asks digits and @ only where they are learned, enough times, for any seed', () => {
+		fc.assert(
+			fc.property(SEEDS, fc.boolean(), (seed, withTexts) => {
+				for (const id of ['fr.lesson.digits', 'fr.lesson.at']) {
+					const exercise = generate(HAND_PROGRESSION, id, seed, withTexts ? context : FULL_CONTEXT);
+					const learned = new Set(learnedChars(HAND_PROGRESSION, id));
+					for (const group of exercise.groups) {
+						for (const char of toGraphemes(group)) expect(learned.has(char)).toBe(true);
+					}
+					for (const char of findLesson(HAND_PROGRESSION, id)?.newChars ?? []) {
+						expect(countOf(exercise.groups, char)).toBeGreaterThanOrEqual(
+							HAND_PROGRESSION.rules.newCharMinCount
+						);
+					}
+					expect(generate(HAND_PROGRESSION, id, seed, context)).toEqual(
+						generate(HAND_PROGRESSION, id, seed, context)
+					);
+				}
+				const digits = generate(HAND_PROGRESSION, 'fr.lesson.digits', seed, FULL_CONTEXT);
+				expect(digits.groups.join('')).not.toContain('@');
+			}),
+			{ numRuns: 60 }
+		);
+	});
+
+	it('still generates the warm-up of a lesson that has none written', () => {
+		const generated = progressionOf(
+			HAND_LESSONS.map((entry) => ({ ...entry, warmUp: undefined })),
+			HAND_RULES
+		);
+		const { groups } = generate(generated, 'fr.lesson.digits', 3, FULL_CONTEXT);
+		expect(groups.slice(0, DIGITS_WARM_UP.length)).not.toEqual(DIGITS_WARM_UP);
+		expect(countOf(groups, '1')).toBeGreaterThanOrEqual(3);
+	});
+});

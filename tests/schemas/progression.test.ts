@@ -140,7 +140,7 @@ describe('azerty-decouverte', () => {
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 2, newKeysUntil: 25, hesitationMs: 3000 },
+			handGuide: { everyKeyUntil: 2, newKeysUntil: 33, hesitationMs: 3000 },
 			starAlmostMargin: 3,
 			storyPhraseEvery: 2,
 			textGroupLength: 24,
@@ -188,8 +188,19 @@ describe('azerty-decouverte', () => {
 				['î', 'ô', 'û'],
 				['ë', 'ï']
 			],
-			// Useful texts (ADR-057): Enter first, then the texts of everyday life.
-			[[String.fromCharCode(10)], [], [], [], [], []]
+			// Useful texts (ADR-057): Enter first, then the texts of everyday life, then the digits of
+			// each hand and @ for the hours, dates, scores and addresses.
+			[
+				[String.fromCharCode(10)],
+				[],
+				[],
+				[],
+				[],
+				[],
+				['1', '2', '3', '4', '5'],
+				['6', '7', '8', '9', '0'],
+				['@']
+			]
 		]);
 	});
 
@@ -207,8 +218,26 @@ describe('azerty-decouverte', () => {
 		expect(ids.indexOf('fr.lesson.trema')).toBe(ids.indexOf(circumflexes[1]?.id ?? '') + 1);
 	});
 
-	it('introduces at most three characters in one lesson', () => {
-		for (const lesson of lessons) expect(lesson.newChars.length).toBeLessThanOrEqual(3);
+	it('introduces at most three characters in one lesson, or the five digits of one hand', () => {
+		for (const lesson of lessons) {
+			const digits = lesson.newChars.every((char) => /^[0-9]$/.test(char));
+			expect(lesson.newChars.length).toBeLessThanOrEqual(digits ? 5 : 3);
+		}
+	});
+
+	it('guides the hand up to the last lesson that brings a key (ADR-068)', () => {
+		const last = lessons.findLastIndex((lesson) => lesson.newChars.length > 0);
+		expect(progression.rules.handGuide?.newKeysUntil).toBe(last + 1);
+	});
+
+	it('warms the digits and @ up with short series written by hand', () => {
+		const written = lessons.filter((lesson) => lesson.warmUp !== undefined);
+		expect(written.map((lesson) => lesson.newChars.join(''))).toEqual(['12345', '67890', '@']);
+		for (const lesson of written) {
+			for (const group of lesson.warmUp ?? []) {
+				expect(group, lesson.id).toMatch(/^[0-9@ a-z]+$/);
+			}
+		}
 	});
 
 	it('keeps the identifiers of the lessons that already existed', () => {

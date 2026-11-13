@@ -14,8 +14,8 @@ describe('the shipped story', () => {
 		expect(validateStory(STORY, progression)).toEqual([]);
 	});
 
-	it('tells 42 moments: an opening and an ending per world, a line per lesson', () => {
-		expect(wholeStory(STORY)).toHaveLength(42);
+	it('tells 45 moments: an opening and an ending per world, a line per lesson', () => {
+		expect(wholeStory(STORY)).toHaveLength(45);
 	});
 
 	it('has a drawing for every picture it names, and no drawing it does not name', () => {
