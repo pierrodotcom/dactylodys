@@ -282,6 +282,21 @@ export function storyPhrases(bank: PhraseBank, lessonId: string, ageBand?: AgeBa
 	);
 }
 
+/**
+ * Cutting a text into graphemes is the slow part of drawing from a bank, and every exercise reads
+ * the whole bank: the cut of an entry is kept as long as the entry lives.
+ */
+const cuts = new WeakMap<object, readonly string[]>();
+
+function graphemesOf(entry: { readonly text: string }): readonly string[] {
+	let graphemes = cuts.get(entry);
+	if (graphemes === undefined) {
+		graphemes = toGraphemes(entry.text);
+		cuts.set(entry, graphemes);
+	}
+	return graphemes;
+}
+
 function usable<
 	T extends {
 		readonly text: string;
@@ -295,7 +310,7 @@ function usable<
 		(entry) =>
 			entry.level <= maxLevel &&
 			fitsAgeBand(entry, options.ageBand) &&
-			toGraphemes(entry.text).every((char) => known.has(char))
+			graphemesOf(entry).every((char) => known.has(char))
 	);
 }
 

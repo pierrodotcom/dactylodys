@@ -2,6 +2,7 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import type { Profile } from '$lib/state/types';
 	import Button from '$lib/ui/components/Button.svelte';
+	import InfoLinks from '$lib/ui/components/InfoLinks.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import BackupLoad from './BackupLoad.svelte';
 	import CodeSettings from './CodeSettings.svelte';
@@ -94,6 +95,11 @@
 		<InstallSection />
 
 		<CodeSettings {codeLength} />
+
+		<section aria-labelledby="info-title" data-adult-info>
+			<h2 id="info-title">{m.info_links_label()}</h2>
+			<InfoLinks labelledby="info-title" />
+		</section>
 	</div>
 </ScreenFrame>
 
