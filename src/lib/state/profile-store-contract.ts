@@ -217,6 +217,138 @@ export function describeProfileStoreContract(
 			await expect((await createStore()).removeUnreadable('missing')).resolves.toBeUndefined();
 		});
 
+		it('keeps the lesson stored by one page when another page changes a setting from an older copy', async () => {
+			const store = await createStore();
+			await store.save(profileAt('a', 10));
+			// Two pages opened on the same profile: each keeps what it read then.
+			const inGame = (await store.get('a')) as Profile;
+			const inAdultSpace = (await store.get('a')) as Profile;
+			const lessons = {
+				'fr.lesson.x': { bestAccuracy: 96, stars: 3 as const, attempts: 1, lastPlayedAt: 50 }
+			};
+
+			await store.update(inGame.id, (current) =>
+				withProgress(current, { ...current.progress, lessons })
+			);
+			await store.update(inAdultSpace.id, (current) => updateSettings(current, { theme: 'dark' }));
+
+			const stored = (await store.get('a')) as Profile;
+			expect(stored.progress.lessons).toEqual(lessons);
+			expect(stored.settings.theme).toBe('dark');
+		});
+
+		it('gives back the profile as it is stored after a change', async () => {
+			const store = await createStore();
+			await store.save(profileAt('a', 10));
+			const stored = await store.update('a', (current) =>
+				updateSettings(current, { voiceEnabled: false })
+			);
+			expect(stored).toEqual(updateSettings(profileAt('a', 10), { voiceEnabled: false }));
+			expect(await store.get('a')).toEqual(stored);
+		});
+
+		it('changes a record of the first version from its profile of the current one', async () => {
+			const profile = profileAt('a', 10);
+			const store = await createStore([asVersion1(profile)]);
+			const stored = await store.update('a', (current) =>
+				updateSettings(current, { theme: 'dark' })
+			);
+			expect(stored).toEqual(updateSettings(profile, { theme: 'dark' }));
+			expect(await store.list()).toEqual([stored]);
+		});
+
+		it('creates nothing when the profile to change is gone', async () => {
+			const store = await createStore();
+			await store.save(profileAt('b', 20));
+			let asked = false;
+			const stored = await store.update('a', (current) => {
+				asked = true;
+				return current;
+			});
+			expect(stored).toBeNull();
+			expect(asked).toBe(false);
+			expect((await store.list()).map((profile) => profile.id)).toEqual(['b']);
+		});
+
+		it('stores nothing when a change fails, gives an invalid profile or another id', async () => {
+			const store = await createStore();
+			const profile = profileAt('a', 10);
+			await store.save(profile);
+
+			await expect(
+				store.update('a', () => {
+					throw new RangeError('refused');
+				})
+			).rejects.toThrow('refused');
+			await expect(store.update('a', (current) => ({ ...current, name: '' }))).rejects.toThrow();
+			await expect(store.update('a', (current) => ({ ...current, id: 'b' }))).rejects.toThrow(
+				RangeError
+			);
+
+			expect(await store.list()).toEqual([profile]);
+			await store.update('a', (current) => updateSettings(current, { theme: 'dark' }));
+			expect((await store.get('a'))?.settings.theme).toBe('dark');
+		});
+
+		it('refuses to change a record it cannot open', async () => {
+			const store = await createStore([fromLaterVersion(profileAt('a', 10, 'Zoé'))]);
+			const unreadable = await store.listUnreadable();
+			await expect(store.update('a', (current) => current)).rejects.toThrow(UnreadableProfileError);
+			expect(await store.listUnreadable()).toEqual(unreadable);
+		});
+
+		it('is not affected by later changes to the profile a change gave or got back', async () => {
+			const store = await createStore();
+			await store.save(profileAt('a', 10));
+			let given: Profile | undefined;
+			const stored = await store.update('a', (current) => {
+				given = updateSettings(current, { theme: 'dark' });
+				return given;
+			});
+			(given as unknown as { name: string }).name = 'changed';
+			(stored as unknown as { settings: { theme: string } }).settings.theme = 'light';
+			expect((await store.get('a'))?.name).toBe('Léa');
+			expect((await store.get('a'))?.settings.theme).toBe('dark');
+		});
+
+		it('saves several profiles at once, new ones and replaced ones', async () => {
+			const store = await createStore();
+			await store.save(profileAt('a', 10, 'Léa'));
+			await store.saveAll([profileAt('a', 10, 'Zoé'), profileAt('b', 20, 'Noé')]);
+			expect((await store.list()).map((profile) => profile.name)).toEqual(['Zoé', 'Noé']);
+		});
+
+		it('accepts saving no profile at all', async () => {
+			const store = await createStore();
+			await expect(store.saveAll([])).resolves.toBeUndefined();
+			expect(await store.list()).toEqual([]);
+		});
+
+		it('saves none of several profiles when one of them is invalid', async () => {
+			const store = await createStore();
+			const kept = profileAt('a', 10, 'Léa');
+			await store.save(kept);
+			const invalid = { ...profileAt('c', 30), name: '' };
+
+			await expect(
+				store.saveAll([profileAt('a', 10, 'Zoé'), profileAt('b', 20), invalid])
+			).rejects.toThrow();
+
+			expect(await store.list()).toEqual([kept]);
+		});
+
+		it('saves none of several profiles when one of them would replace a record it cannot open', async () => {
+			const store = await createStore([{ id: 'c', garbage: true }]);
+			const unreadable = await store.listUnreadable();
+
+			await expect(
+				store.saveAll([profileAt('a', 10), profileAt('b', 20), profileAt('c', 30)])
+			).rejects.toThrow(UnreadableProfileError);
+
+			expect(await store.list()).toEqual([]);
+			expect(await store.listUnreadable()).toEqual(unreadable);
+		});
+
 		it('leaves the records it cannot open alone while other profiles come and go', async () => {
 			const store = await createStore([fromLaterVersion(profileAt('a', 10, 'Zoé'))]);
 			await store.list();
