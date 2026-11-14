@@ -198,6 +198,8 @@ test.describe('offline', () => {
 	});
 
 	test('keeps no trial page of /dev, which still opens with a connection', async ({ page }) => {
+		// The worker downloads the whole game before it is ready: long on a busy machine.
+		test.slow();
 		await visitOnce(page);
 		const kept = await page.evaluate(async () => {
 			const paths: string[] = [];
