@@ -3,6 +3,14 @@
 	"breakAfterMinutes": 12,
 	"breakAfterExercises": 4,
 	"maxWordLevel": 3,
+	"wordLevels": {
+		"8-9": [1, 1, 2, 3],
+		"10-12": [1, 2, 3]
+	},
+	"shortWords": {
+		"beforeLesson": 12,
+		"maxLength": 7
+	},
 	"bankLoadTimeoutMs": 3000,
 	"ghostPaceFactor": 0.9,
 	"lookReminderEveryGroups": 4,

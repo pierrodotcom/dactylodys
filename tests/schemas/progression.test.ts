@@ -145,8 +145,40 @@ describe('azerty-decouverte', () => {
 			storyPhraseEvery: 2,
 			textGroupLength: 24,
 			// A key fades once acquired as the report of the adult space says it.
-			keyboardFade: ADULT_RULES.mastery
+			keyboardFade: ADULT_RULES.mastery,
+			// Real words as early as possible (audit of pedagogy, P-04, P-05, P-08, P-22).
+			wordWarmUp: { minWords: 1, maxWordLength: 7 },
+			// A mark in its place takes more room than in a suite (see the report of the lot).
+			writtenWarmUpMinCount: 2,
+			drillPatterns: progression.rules.drillPatterns,
+			suiteFreeMinWords: 60,
+			uppercaseMinCount: 10,
+			weakChars: { minCount: 4, maxChars: 2, minAttempts: 5, minErrorRate: 0.2 },
+			phraseEnd: '.'
 		});
+	});
+
+	it('reviews a key as weak exactly where the report of the adult space calls it fragile', () => {
+		expect(progression.rules.weakChars?.minAttempts).toBe(ADULT_RULES.mastery.fragileMinAttempts);
+		expect(progression.rules.weakChars?.minErrorRate).toBe(ADULT_RULES.mastery.fragileMinErrorRate);
+	});
+
+	it('describes its suites as shapes of two consonants or of syllables, every vowel named', () => {
+		const patterns = progression.rules.drillPatterns;
+		expect(patterns?.shapes.length).toBeGreaterThan(10);
+		// Before any vowel is learned, two keys alternate; then a consonant goes with a vowel.
+		expect(patterns?.shapes).toEqual(expect.arrayContaining(['CDC', 'C D', 'CVCV', 'CV CW']));
+		const learned = new Set(lessons.flatMap((lesson) => lesson.newChars));
+		for (const vowel of patterns?.vowels ?? []) expect(learned.has(vowel), vowel).toBe(true);
+		for (const vowel of 'aeiouyéèàùâêîôûëï') expect(patterns?.vowels).toContain(vowel);
+		// Every lesson has a shape of the length of its groups.
+		for (const lesson of lessons) {
+			const [min, max] = lesson.groupLength;
+			expect(
+				patterns?.shapes.some((shape) => shape.length >= min && shape.length <= max),
+				lesson.id
+			).toBe(true);
+		}
 	});
 
 	it('has six worlds with their theme and their games', () => {
@@ -235,13 +267,57 @@ describe('azerty-decouverte', () => {
 	});
 
 	it('warms the digits and @ up with short series written by hand', () => {
-		const written = lessons.filter((lesson) => lesson.warmUp !== undefined);
+		const written = lessons.filter(
+			(lesson) => lesson.warmUp !== undefined && lesson.newChars.some((char) => /[0-9@]/.test(char))
+		);
 		expect(written.map((lesson) => lesson.newChars.join(''))).toEqual(['12345', '67890', '@']);
 		for (const lesson of written) {
 			for (const group of lesson.warmUp ?? []) {
 				expect(group, lesson.id).toMatch(/^[0-9@ a-z]+$/);
 			}
 		}
+	});
+
+	it('warms capitals, marks and dead keys up in their place, written by hand (audit P-04, P-05)', () => {
+		const written = lessons.filter(
+			(lesson) =>
+				lesson.warmUp !== undefined && !lesson.newChars.some((char) => /[0-9@]/.test(char))
+		);
+		expect(written.map((lesson) => lesson.newChars.join(''))).toEqual([
+			'',
+			',.;',
+			'?!"',
+			'-:',
+			'êâ',
+			'îôû',
+			'ëï'
+		]);
+		for (const lesson of written) {
+			for (const group of lesson.warmUp ?? []) {
+				// A mark or an accent always comes with a word: never a group of marks alone.
+				expect(group, lesson.id).toMatch(/\p{L}{2}|\p{L} ?[,;]/u);
+				// French typography: a space before ; : ? and !, none before a comma or a full stop.
+				expect(group, lesson.id).not.toMatch(/[^ "][;:?!]| [,.]/u);
+				expect(group, lesson.id).not.toMatch(/[;:?!,.][^ "]/u);
+			}
+		}
+	});
+
+	it('warms the capitals up with short words, one hand then the other', () => {
+		const lesson = lessons.find((candidate) => candidate.unlocks.includes('uppercase'));
+		const words = (lesson?.warmUp ?? []).flatMap((group) => group.split(' '));
+		// The words of the bank, drawn with a capital, bring the rest up to `uppercaseMinCount`.
+		expect(words.length).toBeGreaterThanOrEqual(6);
+		expect(words.length).toBeLessThan(progression.rules.uppercaseMinCount ?? 0);
+		for (const word of words) expect(word).toMatch(/^[A-Z][a-z]{1,2}$/);
+		// On an AZERTY keyboard: capitals under the right hand first (Shift held by the left one),
+		// then under the left hand.
+		const rightHand = 'YUIOPHJKLMN';
+		const hands = words.map((word) => (rightHand.includes(word.charAt(0)) ? 'right' : 'left'));
+		const firstLeft = hands.indexOf('left');
+		expect(firstLeft).toBeGreaterThan(0);
+		expect(hands.slice(0, firstLeft).every((hand) => hand === 'right')).toBe(true);
+		expect(hands.slice(firstLeft).every((hand) => hand === 'left')).toBe(true);
 	});
 
 	it('keeps the identifiers of the lessons that already existed', () => {
@@ -289,10 +365,29 @@ describe('azerty-decouverte', () => {
 		}
 	});
 
-	it('hand-picks words for e i and r u only', () => {
-		expect(lessons.map((lesson) => lesson.words.length > 0)).toEqual(
-			lessons.map((_, index) => index === 4 || index === 5)
-		);
+	it('hand-picks words for e i and r u, and for the keys the bank has few or no words for', () => {
+		const picked = lessons.filter((lesson) => lesson.words.length > 0);
+		expect(picked.map((lesson) => lesson.newChars.join(''))).toEqual([
+			'ei',
+			'ru',
+			'qm',
+			"é'",
+			'zw',
+			'èà',
+			'çù'
+		]);
+		// After the first words, a word picked by hand always holds a new key of its lesson.
+		for (const lesson of picked.slice(2)) {
+			for (const word of lesson.words) {
+				expect(
+					lesson.newChars.some((char) => word.includes(char)),
+					`${lesson.id}: ${word}`
+				).toBe(true);
+			}
+		}
+		const apostrophes = lessons[10]?.words ?? [];
+		expect(apostrophes.filter((word) => word.includes("'")).length).toBeGreaterThanOrEqual(5);
+		expect(lessons[16]?.words).toContain('où');
 		for (const lesson of lessons.slice(4, 6)) {
 			expect(lesson.words.length).toBeGreaterThanOrEqual(15);
 		}

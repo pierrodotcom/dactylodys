@@ -25,7 +25,67 @@
 			"acquiredMaxErrorRate": 0.1,
 			"fragileMinAttempts": 5,
 			"fragileMinErrorRate": 0.2
-		}
+		},
+		"wordWarmUp": {
+			"minWords": 1,
+			"maxWordLength": 7
+		},
+		"writtenWarmUpMinCount": 2,
+		"drillPatterns": {
+			"vowels": [
+				"a",
+				"e",
+				"i",
+				"o",
+				"u",
+				"y",
+				"é",
+				"è",
+				"à",
+				"ù",
+				"â",
+				"ê",
+				"î",
+				"ô",
+				"û",
+				"ë",
+				"ï"
+			],
+			"shapes": [
+				"CD",
+				"CDC",
+				"CCD",
+				"CDD",
+				"CDCD",
+				"CDDC",
+				"CCDD",
+				"CDCDC",
+				"C D",
+				"CD C",
+				"C DC",
+				"CC D",
+				"C DD",
+				"CD CD",
+				"CV",
+				"CVC",
+				"VCV",
+				"CVCV",
+				"CVCW",
+				"CVDV",
+				"CVDW",
+				"CV CW",
+				"CV DV"
+			]
+		},
+		"suiteFreeMinWords": 60,
+		"uppercaseMinCount": 10,
+		"weakChars": {
+			"minCount": 4,
+			"maxChars": 2,
+			"minAttempts": 5,
+			"minErrorRate": 0.2
+		},
+		"phraseEnd": "."
 	},
 	"worlds": [
 		{
@@ -227,7 +287,7 @@
 					"title": "La quiche qui rigole",
 					"intro": "Tes deux auriculaires se posent sur Q à gauche et sur M à droite.",
 					"newChars": ["q", "m"],
-					"words": [],
+					"words": ["qui", "que", "quoi", "quand", "quatre", "queue"],
 					"mix": {
 						"drills": 1,
 						"words": 3,
@@ -259,7 +319,20 @@
 					"title": "Les épices surprises",
 					"intro": "Sur la rangée des chiffres, ton annulaire gauche tape É et ton index gauche tape l'apostrophe.",
 					"newChars": ["é", "'"],
-					"words": [],
+					"words": [
+						"l'été",
+						"l'épée",
+						"l'idée",
+						"l'école",
+						"l'épice",
+						"j'ai",
+						"c'est",
+						"l'ami",
+						"d'ici",
+						"l'eau",
+						"s'il",
+						"qu'il"
+					],
 					"mix": {
 						"drills": 1,
 						"words": 3,
@@ -331,7 +404,7 @@
 					"title": "Le zèbre à rayures",
 					"intro": "Ton annulaire gauche monte sur Z et ton auriculaire gauche descend sur W.",
 					"newChars": ["z", "w"],
-					"words": [],
+					"words": ["kiwi", "clown", "wapiti", "zoo", "zéro", "onze"],
 					"mix": {
 						"drills": 1,
 						"words": 3,
@@ -355,7 +428,7 @@
 					"title": "Le café de la Lune",
 					"intro": "Sur la rangée des chiffres, ton index droit tape È et ton auriculaire droit tape À.",
 					"newChars": ["è", "à"],
-					"words": [],
+					"words": ["à", "là", "déjà", "voilà"],
 					"mix": {
 						"drills": 1,
 						"words": 2,
@@ -371,7 +444,7 @@
 					"title": "La comète pressée",
 					"intro": "Monte ton annulaire droit sur Ç, et ton auriculaire droit tape Ù, à droite de M.",
 					"newChars": ["ç", "ù"],
-					"words": [],
+					"words": ["où", "ça", "reçu", "déçu", "garçon", "glaçon", "maçon"],
 					"mix": {
 						"drills": 1,
 						"words": 2,
@@ -396,7 +469,8 @@
 					"unlocks": ["uppercase"],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["Le La", "Il Un", "Tu Te", "De Sa"]
 				},
 				{
 					"id": "fr.lesson.virgule-point",
@@ -412,7 +486,8 @@
 					"unlocks": [],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["Oui, non.", "Do, ré ; mi.", "Ici ; là."]
 				}
 			]
 		},
@@ -436,7 +511,8 @@
 					"unlocks": [],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["Qui ? Moi !", "\"Oui !\"", "\"Non ?\""]
 				},
 				{
 					"id": "fr.lesson.tiret-deux-points",
@@ -452,7 +528,8 @@
 					"unlocks": [],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["Tic-tac : midi", "Vas-y : file"]
 				},
 				{
 					"id": "fr.lesson.chapeau-circonflexe",
@@ -468,7 +545,8 @@
 					"unlocks": [],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["même âge", "âne têtu", "pâte prête"]
 				},
 				{
 					"id": "fr.lesson.casque-circonflexe",
@@ -484,7 +562,8 @@
 					"unlocks": [],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["île tôt sûr", "gîte côte mûr"]
 				},
 				{
 					"id": "fr.lesson.trema",
@@ -500,7 +579,8 @@
 					"unlocks": [],
 					"groupCount": 8,
 					"targetLength": 35,
-					"groupLength": [4, 6]
+					"groupLength": [4, 6],
+					"warmUp": ["caïman en canoë", "ouïe aiguë"]
 				}
 			]
 		},
