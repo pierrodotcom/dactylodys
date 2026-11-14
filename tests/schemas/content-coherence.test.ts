@@ -54,6 +54,11 @@ const MIN_USABLE_PHRASES = 6;
 const MIN_PHRASES_PER_NEW_CHAR = 6;
 const MAX_STORY_PHRASE_LENGTH = 45;
 const SEED_COUNT = 20;
+/**
+ * For the tests that generate every lesson over `SEED_COUNT` seeds: a few seconds alone, more than
+ * the default five when the whole suite shares a busy machine. The global timeout stays as it is.
+ */
+const HEAVY_PROPERTY_TIMEOUT_MS = 30_000;
 const STORY_SEED_COUNT = 5;
 const HELP_SEED_COUNT = 8;
 
@@ -149,7 +154,8 @@ describe('progression and banks together', () => {
 					`${lessonId} seed ${seed}: ${exercise.groups.join(' | ')}`
 				).toBe(true);
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
 	it('offers only games that exist in the registry', () => {
@@ -187,7 +193,8 @@ describe('progression and banks together', () => {
 					}
 				}
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
 	it('writes every story phrase for an existing lesson, with the keys learned there', () => {
@@ -256,7 +263,8 @@ describe('progression and banks together', () => {
 					);
 				}
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 });
 
@@ -423,7 +431,8 @@ describe('useful texts and progression together', () => {
 					}
 				}
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
 	it('writes every e-mail address on a domain reserved for examples, never a real one', () => {
@@ -487,6 +496,7 @@ describe('the lesson of repairs over the shipped content', () => {
 					expect(start.pending[0]).not.toBe(toGraphemes(group)[start.typed]);
 				});
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 });
