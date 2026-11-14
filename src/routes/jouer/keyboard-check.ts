@@ -29,7 +29,7 @@ export function chooseCheckSteps(layout: LayoutDefinition, codes: readonly KeyCo
  * language reports the right key while it writes another letter.
  */
 export function stepMatches(step: CheckStep, keystroke: NormalizedKeystroke): boolean {
-	return keystroke.char.toLowerCase() === step.char.toLowerCase();
+	return keystroke.char?.toLowerCase() === step.char.toLowerCase();
 }
 
 export function checkOutcome(matches: readonly boolean[]): CheckOutcome {
