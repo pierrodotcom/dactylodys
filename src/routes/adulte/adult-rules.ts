@@ -35,6 +35,12 @@ export interface AdultRules {
 	/** Words written in one minute that the adult may enter for a handwriting speed. */
 	readonly handwritingMinWords: number;
 	readonly handwritingMaxWords: number;
+	/**
+	 * Largest file read as a backup, in bytes: a bigger one is refused before it is read, so that a
+	 * file chosen by mistake (a film) never freezes the page. Far above a real backup, which stays
+	 * under a megabyte for a child who has played two thousand times.
+	 */
+	readonly maxBackupFileBytes: number;
 }
 
 /*
@@ -55,5 +61,6 @@ export const ADULT_RULES: AdultRules = {
 	keyboardSpeedSessions: 5,
 	keyboardSpeedMinCurrentRule: 3,
 	handwritingMinWords: 1,
-	handwritingMaxWords: 60
+	handwritingMaxWords: 60,
+	maxBackupFileBytes: 50_000_000
 };
