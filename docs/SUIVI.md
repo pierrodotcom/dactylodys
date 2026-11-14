@@ -18,6 +18,27 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 
 **Lot 5 de J5 fusionné le 2026-11-14** avec le seul formulaire GitHub comme moyen de contact (accord du porteur) ; une adresse mail de contact s'ajoutera aux pages « Accessibilité » et « Pour les professionnels » quand le porteur l'aura choisie. **Audit complet demandé par le porteur le 2026-11-13** (qualité logicielle, pédagogie et dys/TDAH, ergonomie et accessibilité, contenu) : rapports dans `docs/audit/` (hors dépôt), corrections par lots ; ensuite, CI proposée sur 3 navigateurs et version 1.0.
 
+**Corrections de l'audit (choix du porteur : ADR-075)**, un ou deux lots à la fois, jamais deux suites complètes en même temps (L-136). Missions prêtes dans le dossier de travail de la session, constats dans `docs/audit/*.md` :
+
+| Lot | Constats | État |
+|---|---|---|
+| Vrais mots | P-04, P-05, P-08, P-16, P-22 | Fait (ADR-074) ; réserve d'échauffements en relecture chez le porteur |
+| Mesures justes | Q-04, Q-05, Q-15, P-06 | Code rendu (branche `fix/mesures-justes`, profil version 14), à vérifier et fusionner |
+| Tests e2e fiables | Q-06, Q-13 | À lancer (seul sur Playwright) |
+| Le jeu ne lâche pas l'enfant | E-01, E-02, E-03 d, E-12, E-23 | À lancer après « mesures justes » (même fichier `GameShell`) |
+| Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | À lancer après « mesures justes » |
+| Tout tient à l'écran | E-03, E-05, E-08, E-10, E-20 | À faire |
+| Bilan en étapes, « Qui joue ? », réglages | E-04, E-17, E-18, E-16, E-19 | À faire |
+| Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24, P-07, P-09 | À faire |
+| Rappel « regarde l'écran » | P-20, I-4 ; le compter en caractères (il ne s'affiche plus aux leçons de 3 ou 4 groupes, ADR-074) | À faire, avec la campagne de voix |
+| Vérification du clavier, Mac | Q-03, Q-09, Q-17, Q-31 | À faire |
+| Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | À faire (migration des progrès) |
+| Textes et typographie | C-01 à C-07, C-10, C-11, C-16, C-17, E-09, E-13 | À faire, avant la campagne de voix |
+| Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27 | À faire |
+| Espace adulte | E-14, E-15, P-17, P-21 | À faire |
+| Doigtés réduits | § 5 de l'audit de pédagogie | Après les lots ci-dessus |
+| Voix | P-01, P-12, P-13 | Campagne du porteur, quand les textes sont figés |
+
 **Après la 1.0 (ADR-057)**, un lot à la fois : ~~phrases qui racontent~~ (fait, ADR-058) → ~~animations, niveau 1~~ (fait, ADR-059) → ~~retour arrière au choix de l'adulte~~ (fait, ADR-060) → ~~clavier qui s'efface~~ (fait, ADR-061) → ~~fiche « séance type »~~ (fait, ADR-062) → ~~réglages sensoriels~~ (fait, ADR-063) → ~~images du récit à deux états~~ (fait, ADR-064) → ~~animations niveau 2 (décors)~~ (fait, ADR-065) → ~~deux nouveaux jeux~~ (fait, ADR-066 et 067) → textes utiles après la leçon 24 (~~monde 6 et Entrée~~ fait, ADR-068 ; ~~chiffres et @~~ fait, ADR-070 ; ~~effacement~~ fait, ADR-073) → dictée (étude de la voix synthétique d'abord) → doigté simplifié (revue des publications d'abord) → ~~contenu selon l'âge~~ (fait, ADR-069) → ~~coin à soi~~ (fait, ADR-071) → ~~faire connaître le jeu~~ (fait, ADR-072 ; fusionné avec le lot 5 de J5).
 
 0. **J5 (ADR-054)**, une session par lot : ~~lot 1 socle~~ (fait) → ~~lot 2a espace adulte~~ (fait) → ~~lot 2b~~ (fait) → ~~lot 3 hors-ligne~~ (fait, icône A choisie par le porteur le 2026-11-05) → ~~lot 4 audit~~ (fait ; essai NVDA du porteur avec `docs/essai-nvda.md`) → ~~lot 5 pages d'information~~ (fait, fusionné avec la page « Pour les professionnels », ADR-072) → audit complet et corrections → fin de jalon.
@@ -224,3 +245,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-13** — Faire connaître le jeu (ADR-072) : page « Pour les professionnels », imprimable sur deux pages, avec un appel à relecture de huit questions aux ergothérapeutes (réponse par un formulaire GitHub) et la même fiche en Markdown à diffuser. Branche `feat/faire-connaitre`, empilée sur le lot 5 de J5 (non fusionné : adresse de contact attendue). Textes envoyés au porteur (`docs/relecture-professionnels.md`, hors dépôt, 80 points).
 - **2026-11-14** — Lot 5 de J5 et page « Pour les professionnels » fusionnés ensemble : pages « Pour les adultes », « Accessibilité », « Confidentialité » et « Pour les professionnels », liées depuis l'accueil et l'espace adulte ; contact par le formulaire GitHub en attendant une adresse. Audit complet lancé (quatre audits, rapports dans `docs/audit/`, hors dépôt).
 - **2026-11-13** — Effacer comme une compétence (ADR-073) : leçon « Réparer un message » à la fin du monde 6, des lignes arrivent avec une faute au bout que l'enfant efface avec Retour arrière avant de continuer, quel que soit le réglage de l'adulte. Textes envoyés au porteur (`docs/relecture-effacement.md`, hors dépôt) ; consigne et ligne du récit à enregistrer sur /dev/voix.
+- **2026-11-14** — Audit complet rendu (quatre rapports, `docs/audit/`) ; le porteur suit les 22 recommandations (ADR-075). Lot 5 de J5 et page « Pour les professionnels » fusionnés (PR 103). Lot « vrais mots » (ADR-074) : plus de suites de lettres au hasard aux leçons 8 à 24, échauffements variés. Leçons L-135 à L-139.

@@ -7,7 +7,9 @@ import {
 	parseTextBank,
 	parseWordBank
 } from '$lib/engine/progression/banks';
-import { parseProgression } from '$lib/engine/progression/definition';
+import { lessonIds, parseProgression } from '$lib/engine/progression/definition';
+import type { AgeBand } from '$lib/engine/progression/types';
+import { wordLimits } from '$lib/engine/progression/word-limits';
 import { PLAY_RULES } from '../../src/routes/jouer/play-rules';
 
 /**
@@ -27,10 +29,48 @@ const banks = {
 	texts: parseTextBank(readJson('content/fr/texts/base.json')),
 	maxLevel: PLAY_RULES.maxWordLevel
 };
+/** As the game draws them: the level follows the world and the age group, short words first. */
+const limited = {
+	...banks,
+	limits: (lessonId: string, ageBand: AgeBand) =>
+		wordLimits(PLAY_RULES, progression, lessonId, ageBand)
+};
 
 describe('content by age group', () => {
 	it('keeps enough words, phrases and texts in every lesson for every age group', () => {
 		expect(ageCoverageIssues(progression, banks, rules)).toEqual([]);
+	});
+
+	it('still keeps enough of them at the level and the length of each lesson (audit P-16)', () => {
+		expect(ageCoverageIssues(progression, limited, rules)).toEqual([]);
+	});
+
+	it('gives the youngest easier words for longer than the oldest, and never harder ones', () => {
+		const ids = lessonIds(progression);
+		const levels = (band: AgeBand) =>
+			ids.map((id) => wordLimits(PLAY_RULES, progression, id, band).maxLevel);
+		const young = levels('8-9');
+		const old = levels('10-12');
+		young.forEach((level, index) => expect(level).toBeLessThanOrEqual(old[index] ?? 0));
+		expect(young.filter((level) => level === 1).length).toBeGreaterThan(
+			old.filter((level) => level === 1).length
+		);
+		// 8-9: level 1 up to the end of the second world, level 3 from the fourth one.
+		const worldOf = (id: string) =>
+			progression.worlds.findIndex((world) => world.lessons.some((lesson) => lesson.id === id));
+		ids.forEach((id, index) => {
+			const world = worldOf(id);
+			expect(young[index], id).toBe(world <= 1 ? 1 : world === 2 ? 2 : 3);
+			expect(old[index], id).toBe(world === 0 ? 1 : world === 1 ? 2 : 3);
+		});
+	});
+
+	it('keeps the words short before the twelfth lesson', () => {
+		const ids = lessonIds(progression);
+		ids.forEach((id, index) => {
+			const { maxWordLength } = wordLimits(PLAY_RULES, progression, id, '8-9');
+			expect(maxWordLength, id).toBe(index + 1 < 12 ? 7 : undefined);
+		});
 	});
 
 	it.each(AGE_BANDS)('marks some words and phrases for the %s year olds only', (band) => {

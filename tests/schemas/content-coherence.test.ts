@@ -14,7 +14,11 @@ import {
 	validateStoryPhrases,
 	validateTexts
 } from '../../src/lib/engine/progression/banks';
-import { learnedChars, parseProgression } from '../../src/lib/engine/progression/definition';
+import {
+	findLesson,
+	learnedChars,
+	parseProgression
+} from '../../src/lib/engine/progression/definition';
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
 import { keyNeighbors } from '../../src/lib/engine/progression/repair';
 import { parseGeometry } from '../../src/lib/keyboard/geometry';
@@ -144,8 +148,12 @@ describe('progression and banks together', () => {
 					themeId,
 					maxLevel: PLAY_RULES.maxWordLevel
 				});
+				// A word alone, one of the words put side by side to warm a new key up, or a word
+				// drawn with a capital in the lesson of capitals.
+				const isWord = (part: string) =>
+					usable.has(part) || usable.has(`${part.charAt(0).toLowerCase()}${part.slice(1)}`);
 				expect(
-					exercise.groups.some((group) => usable.has(group)),
+					exercise.groups.some((group) => group.split(' ').some(isWord)),
 					`${lessonId} seed ${seed}: ${exercise.groups.join(' | ')}`
 				).toBe(true);
 			}
@@ -240,6 +248,11 @@ describe('progression and banks together', () => {
 	)(
 		`%s asks each new character at least the minimum number of times over ${SEED_COUNT} seeds`,
 		(lessonId, themeId, newChars) => {
+			// A warm-up written by hand shows a mark in its place: it has its own, lower, minimum.
+			const written = findLesson(progression, lessonId)?.warmUp !== undefined;
+			const minimum =
+				(written ? progression.rules.writtenWarmUpMinCount : undefined) ??
+				progression.rules.newCharMinCount;
 			for (let seed = 1; seed <= SEED_COUNT; seed++) {
 				const exercise = generateExercise(progression, lessonId, seededRng(seed), {
 					words,
@@ -251,9 +264,7 @@ describe('progression and banks together', () => {
 				const asked = exercise.groups.flatMap((group) => toGraphemes(group));
 				for (const char of newChars) {
 					const count = asked.filter((grapheme) => grapheme === char).length;
-					expect(count, `${lessonId} seed ${seed}: "${char}"`).toBeGreaterThanOrEqual(
-						progression.rules.newCharMinCount
-					);
+					expect(count, `${lessonId} seed ${seed}: "${char}"`).toBeGreaterThanOrEqual(minimum);
 				}
 			}
 		}

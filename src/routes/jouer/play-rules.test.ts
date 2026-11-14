@@ -33,6 +33,23 @@ describe('parsePlayRules', () => {
 		});
 	});
 
+	it('reads the level of the words by age group and the length of the first ones', () => {
+		const rules = parsePlayRules({
+			...VALID,
+			wordLevels: { '8-9': [1, 1, 2, 3], '10-12': [1, 2, 3] },
+			shortWords: { beforeLesson: 12, maxLength: 7 }
+		});
+		expect(rules.wordLevels).toEqual({ '8-9': [1, 1, 2, 3], '10-12': [1, 2, 3] });
+		expect(rules.shortWords).toEqual({ beforeLesson: 12, maxLength: 7 });
+		expect(parsePlayRules(VALID)).not.toHaveProperty('wordLevels');
+		expect(parsePlayRules(VALID)).not.toHaveProperty('shortWords');
+	});
+
+	it('ships easier words for the youngest, for longer (audit P-16)', () => {
+		expect(PLAY_RULES.wordLevels).toEqual({ '8-9': [1, 1, 2, 3], '10-12': [1, 2, 3] });
+		expect(PLAY_RULES.shortWords).toEqual({ beforeLesson: 12, maxLength: 7 });
+	});
+
 	it('can turn the reminder to look at the screen off', () => {
 		expect(parsePlayRules({ ...VALID, lookReminderEveryGroups: 0 }).lookReminderEveryGroups).toBe(
 			0
@@ -53,6 +70,9 @@ describe('parsePlayRules', () => {
 		['a delay that is not a number', { ...VALID, breakAfterMinutes: '12' }],
 		['a level that does not exist', { ...VALID, maxWordLevel: 4 }],
 		['no level', { ...VALID, maxWordLevel: undefined }],
+		['levels for an unknown age group', { ...VALID, wordLevels: { '6-7': [1] } }],
+		['levels that go down', { ...VALID, wordLevels: { '8-9': [2, 1] } }],
+		['short words of no length', { ...VALID, shortWords: { beforeLesson: 12, maxLength: 0 } }],
 		['no wait for the banks', { ...VALID, bankLoadTimeoutMs: 0 }],
 		['a wait that is not a number', { ...VALID, bankLoadTimeoutMs: '3000' }],
 		['a ghost that does not move', { ...VALID, ghostPaceFactor: 0 }],

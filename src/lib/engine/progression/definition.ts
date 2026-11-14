@@ -1,5 +1,6 @@
 import { toGraphemes } from '../graphemes';
 import type {
+	DrillPatternRules,
 	ExerciseMix,
 	HandGuideRules,
 	LessonDefinition,
@@ -8,6 +9,9 @@ import type {
 	ProgressionDefinition,
 	ProgressionRules,
 	RepairRules,
+	WarmUpReserve,
+	WeakCharRules,
+	WordWarmUpRules,
 	WorldDefinition
 } from './types';
 
@@ -141,7 +145,15 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'starAlmostMargin',
 			'storyPhraseEvery',
 			'keyboardFade',
-			'textGroupLength'
+			'textGroupLength',
+			'wordWarmUp',
+			'writtenWarmUpMinCount',
+			'warmUpReserveSlack',
+			'drillPatterns',
+			'suiteFreeMinWords',
+			'uppercaseMinCount',
+			'weakChars',
+			'phraseEnd'
 		],
 		path
 	);
@@ -195,6 +207,47 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		record['textGroupLength'] === undefined
 			? undefined
 			: expectAtLeastOne(record['textGroupLength'], `${path}.textGroupLength`);
+	const wordWarmUp =
+		record['wordWarmUp'] === undefined
+			? undefined
+			: parseWordWarmUp(record['wordWarmUp'], `${path}.wordWarmUp`);
+	const writtenWarmUpMinCount =
+		record['writtenWarmUpMinCount'] === undefined
+			? undefined
+			: expectAtLeastOne(record['writtenWarmUpMinCount'], `${path}.writtenWarmUpMinCount`);
+	const warmUpReserveSlack =
+		record['warmUpReserveSlack'] === undefined
+			? undefined
+			: expectInteger(record['warmUpReserveSlack'], `${path}.warmUpReserveSlack`);
+	if (warmUpReserveSlack !== undefined && warmUpReserveSlack < 0) {
+		fail(`${path}.warmUpReserveSlack`, 'expected an integer of at least 0');
+	}
+	const drillPatterns =
+		record['drillPatterns'] === undefined
+			? undefined
+			: parseDrillPatterns(record['drillPatterns'], `${path}.drillPatterns`);
+	const suiteFreeMinWords =
+		record['suiteFreeMinWords'] === undefined
+			? undefined
+			: expectAtLeastOne(record['suiteFreeMinWords'], `${path}.suiteFreeMinWords`);
+	const uppercaseMinCount =
+		record['uppercaseMinCount'] === undefined
+			? undefined
+			: expectInteger(record['uppercaseMinCount'], `${path}.uppercaseMinCount`);
+	if (uppercaseMinCount !== undefined && uppercaseMinCount < 0) {
+		fail(`${path}.uppercaseMinCount`, 'expected an integer of at least 0');
+	}
+	const weakChars =
+		record['weakChars'] === undefined
+			? undefined
+			: parseWeakChars(record['weakChars'], `${path}.weakChars`);
+	const phraseEnd =
+		record['phraseEnd'] === undefined
+			? undefined
+			: expectGrapheme(record['phraseEnd'], `${path}.phraseEnd`);
+	if (phraseEnd !== undefined && (phraseEnd === SPACE || phraseEnd === LINE_BREAK)) {
+		fail(`${path}.phraseEnd`, 'expected a punctuation mark');
+	}
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -208,7 +261,70 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		...(starAlmostMargin === undefined ? {} : { starAlmostMargin }),
 		...(storyPhraseEvery === undefined ? {} : { storyPhraseEvery }),
 		...(keyboardFade === undefined ? {} : { keyboardFade }),
-		...(textGroupLength === undefined ? {} : { textGroupLength })
+		...(textGroupLength === undefined ? {} : { textGroupLength }),
+		...(wordWarmUp === undefined ? {} : { wordWarmUp }),
+		...(writtenWarmUpMinCount === undefined ? {} : { writtenWarmUpMinCount }),
+		...(warmUpReserveSlack === undefined ? {} : { warmUpReserveSlack }),
+		...(drillPatterns === undefined ? {} : { drillPatterns }),
+		...(suiteFreeMinWords === undefined ? {} : { suiteFreeMinWords }),
+		...(uppercaseMinCount === undefined ? {} : { uppercaseMinCount }),
+		...(weakChars === undefined ? {} : { weakChars }),
+		...(phraseEnd === undefined ? {} : { phraseEnd })
+	};
+}
+
+function parseWordWarmUp(value: unknown, path: string): WordWarmUpRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['minWords', 'maxWordLength', 'scoreShare'], path);
+	const scoreShare =
+		record['scoreShare'] === undefined
+			? undefined
+			: expectRate(record['scoreShare'], `${path}.scoreShare`);
+	if (scoreShare !== undefined && scoreShare <= 0) {
+		fail(`${path}.scoreShare`, 'expected a number above 0 and up to 1');
+	}
+	return {
+		minWords: expectAtLeastOne(record['minWords'], `${path}.minWords`),
+		maxWordLength: expectAtLeastOne(record['maxWordLength'], `${path}.maxWordLength`),
+		...(scoreShare === undefined ? {} : { scoreShare })
+	};
+}
+
+const SHAPE_PATTERN = /^[CDVW]+(?: [CDVW]+)*$/;
+
+function parseDrillPatterns(value: unknown, path: string): DrillPatternRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['vowels', 'shapes'], path);
+	const vowels: string[] = [];
+	expectArray(record['vowels'], `${path}.vowels`).forEach((raw, i) => {
+		const vowel = expectGrapheme(raw, `${path}.vowels[${i}]`);
+		if (vowels.includes(vowel)) fail(`${path}.vowels[${i}]`, `duplicate vowel "${vowel}"`);
+		vowels.push(vowel);
+	});
+	const shapes: string[] = [];
+	expectArray(record['shapes'], `${path}.shapes`).forEach((raw, i) => {
+		const shape = expectString(raw, `${path}.shapes[${i}]`);
+		if (!SHAPE_PATTERN.test(shape)) {
+			fail(
+				`${path}.shapes[${i}]`,
+				'expected C and D (consonants), V and W (vowels), and single spaces inside'
+			);
+		}
+		if (shapes.includes(shape)) fail(`${path}.shapes[${i}]`, `duplicate shape "${shape}"`);
+		shapes.push(shape);
+	});
+	if (shapes.length === 0) fail(`${path}.shapes`, 'expected at least one shape');
+	return { vowels, shapes };
+}
+
+function parseWeakChars(value: unknown, path: string): WeakCharRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['minCount', 'maxChars', 'minAttempts', 'minErrorRate'], path);
+	return {
+		minCount: expectAtLeastOne(record['minCount'], `${path}.minCount`),
+		maxChars: expectAtLeastOne(record['maxChars'], `${path}.maxChars`),
+		minAttempts: expectAtLeastOne(record['minAttempts'], `${path}.minAttempts`),
+		minErrorRate: expectRate(record['minErrorRate'], `${path}.minErrorRate`)
 	};
 }
 
@@ -367,31 +483,28 @@ function checkGeneratable(
 }
 
 /**
- * A warm-up written by hand: groups typed as they are, each one like a word of the lesson and no
- * longer than its groups, two in a row never the same, asking each new character at least
- * `newCharMinCount` times in all.
+ * A warm-up written by hand: groups typed as they are, each one like a word of the lesson, at
+ * least as long as its shortest group and no longer than a whole exercise, two in a row never the
+ * same, asking each new character at least `minCount` times in all (`rule` names where it comes
+ * from).
  */
 function parseWarmUp(
 	value: unknown,
 	newChars: readonly string[],
+	unlocksCapitals: boolean,
 	known: ReadonlySet<string>,
 	[minLength, maxLength]: readonly [number, number],
-	newCharMinCount: number,
+	{ minCount, rule }: { readonly minCount: number; readonly rule: string },
 	path: string
 ): string[] {
-	if (newChars.length === 0) fail(path, 'only a lesson with new characters has a warm-up');
+	if (newChars.length === 0 && !unlocksCapitals) {
+		fail(path, 'only a lesson with new characters, or that unlocks capitals, has a warm-up');
+	}
 	const raw = expectArray(value, path);
 	if (raw.length === 0) fail(path, 'expected at least one group');
 	const groups: string[] = [];
 	raw.forEach((item, i) => {
-		const group = parseWord(item, known, `${path}[${i}]`);
-		const length = toGraphemes(group).length;
-		if (length < minLength || length > maxLength) {
-			fail(
-				`${path}[${i}]`,
-				`expected ${minLength} to ${maxLength} characters, like a group of the lesson`
-			);
-		}
+		const group = parseWarmUpGroup(item, known, [minLength, maxLength], `${path}[${i}]`);
 		if (group === groups.at(-1)) fail(`${path}[${i}]`, 'the same group twice in a row');
 		groups.push(group);
 	});
@@ -400,11 +513,117 @@ function parseWarmUp(
 		for (const char of toGraphemes(group)) counts.set(char, (counts.get(char) ?? 0) + 1);
 	}
 	for (const char of newChars) {
-		if ((counts.get(char) ?? 0) < newCharMinCount) {
-			fail(path, `expected "${char}" at least ${newCharMinCount} times (rules.newCharMinCount)`);
+		if ((counts.get(char) ?? 0) < minCount) {
+			fail(path, `expected "${char}" at least ${minCount} times (rules.${rule})`);
 		}
 	}
 	return groups;
+}
+
+function parseWarmUpGroup(
+	value: unknown,
+	known: ReadonlySet<string>,
+	[minLength, maxLength]: readonly [number, number],
+	path: string
+): string {
+	const group = parseWord(value, known, path);
+	const length = toGraphemes(group).length;
+	if (length < minLength || length > maxLength) {
+		fail(
+			path,
+			`expected ${minLength} to ${maxLength} characters: a group of the lesson at least, a whole exercise at most`
+		);
+	}
+	return group;
+}
+
+function isCapital(char: string): boolean {
+	return CAPITAL_PATTERN.test(char);
+}
+
+function countOf(group: string, matches: (char: string) => boolean): number {
+	return toGraphemes(group).filter(matches).length;
+}
+
+/**
+ * The reserve of a warm-up written by hand. Whatever the draw (one group for each place, the
+ * written one or one of its alternatives), no group comes twice, each new character is asked
+ * `minCount` times at least, the capitals of a lesson that unlocks them are as many as written,
+ * and the length stays within `slack` characters of the warm-up as written.
+ */
+function parseWarmUpReserve(
+	value: unknown,
+	warmUp: readonly string[],
+	newChars: readonly string[],
+	unlocksCapitals: boolean,
+	known: ReadonlySet<string>,
+	lengths: readonly [number, number],
+	{ minCount, rule }: { readonly minCount: number; readonly rule: string },
+	slack: number | undefined,
+	path: string
+): WarmUpReserve {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['alternatives', 'keepFirst'], path);
+	const keepFirst = record['keepFirst'];
+	if (keepFirst !== undefined && typeof keepFirst !== 'boolean') {
+		fail(`${path}.keepFirst`, 'expected true or false');
+	}
+	const seen = new Set<string>();
+	warmUp.forEach((group) => {
+		if (seen.has(group)) fail(path, `"${group}" is written twice: a draw could type it twice`);
+		seen.add(group);
+	});
+
+	let alternatives: string[][] | undefined;
+	if (record['alternatives'] !== undefined) {
+		const here = `${path}.alternatives`;
+		const raw = expectArray(record['alternatives'], here);
+		if (raw.length !== warmUp.length) {
+			fail(here, `expected ${warmUp.length} lists, one for each group of the warm-up`);
+		}
+		alternatives = raw.map((list, place) =>
+			expectArray(list, `${here}[${place}]`).map((item, i) => {
+				const at = `${here}[${place}][${i}]`;
+				const group = parseWarmUpGroup(item, known, lengths, at);
+				if (seen.has(group)) fail(at, `duplicate group "${group}"`);
+				seen.add(group);
+				const written = warmUp[place] as string;
+				if (unlocksCapitals && countOf(group, isCapital) < countOf(written, isCapital)) {
+					fail(at, `expected at least as many capitals as "${written}"`);
+				}
+				return group;
+			})
+		);
+	}
+
+	const options = warmUp.map((group, place) => [group, ...(alternatives?.[place] ?? [])]);
+	for (const char of newChars) {
+		const least = options.reduce(
+			(sum, list) => sum + Math.min(...list.map((group) => countOf(group, (c) => c === char))),
+			0
+		);
+		if (least < minCount) {
+			fail(path, `expected "${char}" at least ${minCount} times whatever the draw (rules.${rule})`);
+		}
+	}
+	if (slack !== undefined) {
+		const lengthOf = (group: string) => toGraphemes(group).length;
+		const total = (pick: (list: readonly number[]) => number) =>
+			options.reduce((sum, list) => sum + pick(list.map(lengthOf)), 0);
+		const written = warmUp.reduce((sum, group) => sum + lengthOf(group), 0);
+		const longest = total((list) => Math.max(...list));
+		const shortest = total((list) => Math.min(...list));
+		if (longest - written > slack || written - shortest > slack) {
+			fail(
+				path,
+				`a draw has ${shortest} to ${longest} characters, more than ${slack} away from the ${written} written (rules.warmUpReserveSlack)`
+			);
+		}
+	}
+	return {
+		...(alternatives === undefined ? {} : { alternatives }),
+		...(keepFirst === true ? { keepFirst: true } : {})
+	};
 }
 
 /** A group arrives begun after at least one right grapheme, and leaves at least one to type. */
@@ -447,6 +666,7 @@ function parseLesson(
 			'targetLength',
 			'groupLength',
 			'warmUp',
+			'warmUpReserve',
 			'repair'
 		],
 		path
@@ -489,16 +709,39 @@ function parseLesson(
 		words.push(word);
 	});
 
+	const writtenLengths = [min, Math.max(max, targetLength)] as const;
+	const writtenMinimum =
+		rules.writtenWarmUpMinCount === undefined
+			? { minCount: rules.newCharMinCount, rule: 'newCharMinCount' }
+			: { minCount: rules.writtenWarmUpMinCount, rule: 'writtenWarmUpMinCount' };
 	const warmUp =
 		record['warmUp'] === undefined
 			? undefined
 			: parseWarmUp(
 					record['warmUp'],
 					newChars,
+					unlocks.includes('uppercase'),
 					known,
-					[min, max],
-					rules.newCharMinCount,
+					writtenLengths,
+					writtenMinimum,
 					`${path}.warmUp`
+				);
+	if (record['warmUpReserve'] !== undefined && warmUp === undefined) {
+		fail(`${path}.warmUpReserve`, 'only a warm-up written by hand has a reserve');
+	}
+	const warmUpReserve =
+		record['warmUpReserve'] === undefined || warmUp === undefined
+			? undefined
+			: parseWarmUpReserve(
+					record['warmUpReserve'],
+					warmUp,
+					newChars,
+					unlocks.includes('uppercase'),
+					known,
+					writtenLengths,
+					writtenMinimum,
+					rules.warmUpReserveSlack,
+					`${path}.warmUpReserve`
 				);
 
 	const repair =
@@ -518,13 +761,14 @@ function parseLesson(
 		targetLength,
 		groupLength: [min, max],
 		...(warmUp === undefined ? {} : { warmUp }),
+		...(warmUpReserve === undefined ? {} : { warmUpReserve }),
 		...(repair === undefined ? {} : { repair })
 	};
 	checkGeneratable(lesson, known, rules.newCharMinCount, path);
 	if (warmUp !== undefined && warmUp.length > groupCount) {
 		fail(`${path}.warmUp`, `expected at most ${groupCount} groups (groupCount)`);
 	}
-	const warmUpGroups = newChars.length === 0 ? 0 : (warmUp?.length ?? rules.newCharMinCount);
+	const warmUpGroups = warmUp?.length ?? (newChars.length === 0 ? 0 : rules.newCharMinCount);
 	if (rules.storyPhraseEvery !== undefined && warmUpGroups >= groupCount) {
 		fail(
 			`${path}.groupCount`,
