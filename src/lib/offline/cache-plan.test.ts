@@ -3,6 +3,7 @@ import {
 	CACHE_PREFIX,
 	cacheName,
 	homeCandidates,
+	isTrialPage,
 	pageCandidates,
 	precacheUrls,
 	staleCaches
@@ -29,9 +30,10 @@ describe('precacheUrls', () => {
 	const site = {
 		build: ['/base/_app/immutable/entry/start.js', '/base/_app/immutable/assets/font.woff2'],
 		files: ['/base/voice/fr/manifest.json', '/base/voice/fr/a.mp3', '/base/manifest.webmanifest'],
-		prerendered: ['/base/', '/base/jouer', '/base/adulte', '/base/dev/ui'],
+		prerendered: ['/base/', '/base/jouer', '/base/adulte', '/base/credits'],
 		base: '/base'
 	};
+	const trialPages = ['/base/dev/traces', '/base/dev/voix', '/base/dev/ui', '/base/dev'];
 
 	it('lists every page, script, style, font, voice and the manifest once', () => {
 		const { required, optional } = precacheUrls(site);
@@ -46,6 +48,28 @@ describe('precacheUrls', () => {
 		const { required, optional } = precacheUrls(site);
 		expect(required).toEqual(expect.arrayContaining([...site.prerendered, ...site.build]));
 		expect(optional).toEqual(site.files);
+	});
+
+	it('keeps no trial page of /dev, with or without a base path', () => {
+		const withTrials = { ...site, prerendered: [...site.prerendered, ...trialPages] };
+		const { required, optional } = precacheUrls(withTrials);
+		expect([...required, ...optional].filter((url) => url.includes('/dev'))).toEqual([]);
+		expect(required).toEqual(precacheUrls(site).required);
+
+		const atRoot = precacheUrls({
+			build: ['/_app/immutable/entry/start.js'],
+			files: [],
+			prerendered: ['/', '/jouer', '/dev/traces', '/dev/voix'],
+			base: ''
+		});
+		expect(atRoot.required).toEqual(['/', '/jouer', '/_app/immutable/entry/start.js']);
+	});
+
+	it('takes for a trial page only what is under /dev', () => {
+		expect(isTrialPage('/base/dev/traces', '/base')).toBe(true);
+		expect(isTrialPage('/dev', '')).toBe(true);
+		expect(isTrialPage('/devoirs', '')).toBe(false);
+		expect(isTrialPage('/base/jouer/dev/x', '/base')).toBe(false);
 	});
 
 	it('always keeps the home page, even when nothing was prerendered for it', () => {
