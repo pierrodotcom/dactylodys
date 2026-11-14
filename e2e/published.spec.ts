@@ -81,8 +81,9 @@ test('serves the game and the two trial pages asked of testers', async ({ page }
 test('no longer serves the internal trial pages', async ({ page }) => {
 	expect(INTERNAL_DEV_PAGES).toContain('compagnon');
 	for (const name of INTERNAL_DEV_PAGES) {
-		const response = await page.goto(`${origin}/dev/${name}`);
-		expect(response?.status(), name).toBe(404);
+		// Asked without opening the page: Firefox never ends the load of an answer without a body.
+		const response = await page.request.get(`${origin}/dev/${name}`);
+		expect(response.status(), name).toBe(404);
 	}
 	const published = readdirSync(join(SITE, 'dev')).sort();
 	expect(published).toEqual(PUBLISHED_DEV_PAGES.map((name) => `${name}.html`).sort());
