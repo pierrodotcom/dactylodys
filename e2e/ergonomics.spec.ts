@@ -186,7 +186,8 @@ test('puts the way out of the pages for adults at the top of the page', async ({
 		'info_link_adults',
 		'info_link_professionals',
 		'info_link_privacy',
-		'info_link_accessibility'
+		'info_link_accessibility',
+		'info_link_credits'
 	]) {
 		await openPage(page, '/');
 		await page
