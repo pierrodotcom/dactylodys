@@ -34,6 +34,8 @@ const FAR_DOWN = 100_000;
 /** Groups a test may type before it meets the character it looks for. */
 const GROUP_BUDGET = 6;
 const SKIP_KEY = 'Enter';
+/** Stands for a parameter of a message whose value a test does not know. */
+const ANYTHING = 'ANYTHINGTOKEN';
 /** Time given to a reward to give way to the next group or to the result. */
 const STEP_TIMEOUT = 15_000;
 const CIRCUMFLEX_LETTER = 'ê';
@@ -210,9 +212,10 @@ async function expectNoAxeViolation(page: Page) {
 }
 
 /** A message whose parameters may hold anything. */
-function anyParams(key: string): RegExp {
-	const escaped = message(key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	return new RegExp(`^${escaped.replace(/\\\{\w+\\\}/g, '.+')}$`, 's');
+function anyParams(key: string, names: readonly string[]): RegExp {
+	const filled = message(key, Object.fromEntries(names.map((name) => [name, ANYTHING])));
+	const escaped = filled.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return new RegExp(`^${escaped.replaceAll(ANYTHING, '.+')}$`, 's');
 }
 
 test.beforeEach(async ({ page }) => {
@@ -460,7 +463,7 @@ test.describe('a screen reader', () => {
 		await expect(groupLabel(page)).toHaveText(GROUP_ERASE);
 
 		await expect(announcement(page)).toHaveText(
-			anyParams('game_dialogue_announce_question_repair')
+			anyParams('game_dialogue_announce_question_repair', ['question', 'text', 'char'])
 		);
 		await expect(page.getByRole('status')).toHaveCount(1);
 	});
