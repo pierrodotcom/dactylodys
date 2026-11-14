@@ -23,12 +23,13 @@ export function chooseCheckSteps(layout: LayoutDefinition, codes: readonly KeyCo
 }
 
 /**
- * The physical key is what counts. When the browser did not tell which key it was
- * (some browsers send the key event after the text), the produced character is compared instead.
+ * The produced character is what counts, as in the games; Caps Lock does not change the key.
+ * The physical key the browser reports is not compared: a browser that resists fingerprinting
+ * reports the keys of an American keyboard for a real AZERTY one, and a system set to another
+ * language reports the right key while it writes another letter.
  */
 export function stepMatches(step: CheckStep, keystroke: NormalizedKeystroke): boolean {
-	if (keystroke.code !== null) return keystroke.code === step.code;
-	return keystroke.char === step.char;
+	return keystroke.char.toLowerCase() === step.char.toLowerCase();
 }
 
 export function checkOutcome(matches: readonly boolean[]): CheckOutcome {
