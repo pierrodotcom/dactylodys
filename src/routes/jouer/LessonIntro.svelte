@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
-	import { targetKeyPress } from '$lib/games/shared/target';
 	import type { KeyPress } from '$lib/keyboard/types';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { RewardDefinition } from '$lib/engine/rewards';
@@ -14,10 +13,13 @@
 	import type { KeyboardAssets } from './assets';
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
+	import { introKeys } from './intro-keys';
 	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
 		lesson: LessonDefinition;
+		/** What the lesson brings: its new characters, and the capitals it unlocks. */
+		fresh: readonly string[];
 		number: number;
 		assets: KeyboardAssets;
 		/** The games of the world; each one starts the lesson. */
@@ -43,6 +45,7 @@
 
 	let {
 		lesson,
+		fresh,
 		number,
 		assets,
 		games,
@@ -67,13 +70,9 @@
 		return () => speaker.stop();
 	});
 
-	const presses = $derived(
-		lesson.newChars.flatMap((char) => {
-			const press = targetKeyPress(assets.charIndex, char);
-			return press === null ? [] : [{ char, press }];
-		})
-	);
-	const marked = $derived(presses.map((entry) => entry.press.code));
+	// A lesson of capitals has no new key: it shows the gesture, Shift and a letter, for each hand.
+	const presses = $derived(introKeys(lesson, fresh, assets.charIndex, assets.fingering));
+	const marked = $derived(presses.flatMap((entry) => entry.codes));
 	const noTarget: KeyPress | null = null;
 	const hands = $derived(
 		guide === 'none'
