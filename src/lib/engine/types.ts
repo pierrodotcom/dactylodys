@@ -26,6 +26,26 @@ export interface SessionStart {
 /** What `createSession` accepts: the options, and where a group that arrives begun starts. */
 export interface SessionSetup extends Partial<SessionOptions> {
 	readonly start?: SessionStart;
+	/**
+	 * Moment the group can be typed (on screen and ready), on the clock of the keystrokes: its time
+	 * is counted from then. Absent: counted from its first keystroke, as it was before.
+	 */
+	readonly shownAt?: number;
+}
+
+/** A pause that is over, on the clock of the keystrokes: its time is not time spent typing. */
+export interface SessionPause {
+	readonly from: number;
+	readonly to: number;
+}
+
+/** How the time of a group is measured: data, never a constant in the logic. */
+export interface MeasureRules {
+	/**
+	 * Longest wait before the first keystroke of a group that counts as time spent on it, in
+	 * milliseconds: reading and finding the first key count, looking away does not.
+	 */
+	readonly firstKeyWaitCapMs: number;
 }
 
 export interface KeystrokeRecord {
@@ -38,6 +58,11 @@ export interface KeystrokeRecord {
 	readonly correct: boolean;
 	readonly code: KeyCode | null;
 	readonly timestamp: number;
+	/**
+	 * Typed over a mistake that is not erased yet (`backspace` policy): written and to erase, but
+	 * counted neither right nor wrong, like Backspace. One mistake, one error.
+	 */
+	readonly overMistake?: true;
 }
 
 /** Immutable; every keystroke yields a new state. */
@@ -53,6 +78,12 @@ export interface SessionState {
 	readonly endedAt: number | null;
 	readonly records: readonly KeystrokeRecord[];
 	readonly options: SessionOptions;
+	/** See `SessionSetup.shownAt`; absent when it was not given. */
+	readonly shownAt?: number;
+	/** The pauses that are over, in order; absent before the first one. */
+	readonly pauses?: readonly SessionPause[];
+	/** Start of the pause in progress; absent when the group is not paused. */
+	readonly pausedAt?: number;
 }
 
 export type SessionEvent =
@@ -79,8 +110,21 @@ export interface CharStats {
 }
 
 export interface SessionMetrics {
+	/**
+	 * Time spent on the text, pauses left out. With `speedRule` 2, from the moment each group could
+	 * be typed (the wait before its first keystroke capped by `MeasureRules`); else from its first
+	 * keystroke.
+	 */
 	readonly elapsedMs: number;
-	/** Character and Enter keystrokes; Backspace is not counted. */
+	/**
+	 * 2 when the time of every group was counted from the moment it could be typed; absent when
+	 * it was counted from its first keystroke, as before: the two speeds do not compare.
+	 */
+	readonly speedRule?: 2;
+	/**
+	 * Character and Enter keystrokes; Backspace is not counted, nor what is typed over a mistake
+	 * that is not erased yet.
+	 */
 	readonly totalKeystrokes: number;
 	readonly correctKeystrokes: number;
 	readonly errorCount: number;

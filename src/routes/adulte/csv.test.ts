@@ -161,10 +161,22 @@ describe('measuresCsv', () => {
 			'9',
 			'92,5',
 			'12,6',
+			'63',
+			'non',
 			'2',
 			'oui'
 		]);
 		expect(rows).toHaveLength(2);
+	});
+
+	it('gives the speed in characters per minute too, and says how each play was measured', () => {
+		const plays = [session({ correctCharsPerMinute: 74.96 }), session({ speedRule: 2 })];
+		const rows = parseCsv(measuresCsv([child('Lou', plays)], FORMAT).slice(1), SEPARATOR);
+		const column = (name: (typeof MEASURE_COLUMNS)[number]) =>
+			rows.slice(1).map((row) => row[MEASURE_COLUMNS.indexOf(name)]);
+		expect(column('wordsPerMinute')).toEqual(['15', '12,6']);
+		expect(column('charsPerMinute')).toEqual(['75', '63']);
+		expect(column('readingTimeCounted')).toEqual(['non', 'oui']);
 	});
 
 	it('keeps a nickname with a separator, quotes and a line break in one cell', () => {

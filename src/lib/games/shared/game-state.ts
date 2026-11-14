@@ -1,7 +1,7 @@
 import type { SoundId } from '../../audio/sounds';
 import { pacePoints } from '../../engine/ghost/ghost';
-import { combineMetrics, computeMetrics } from '../../engine/metrics';
-import { applyKeystroke, createSession } from '../../engine/session';
+import { combineMetrics, computeMetrics, sessionTypingMs } from '../../engine/metrics';
+import { applyKeystroke, createSession, pauseSession, resumeSession } from '../../engine/session';
 import type { ErrorPolicy, SessionMetrics, SessionStart, SessionState } from '../../engine/types';
 import type { KeyCode, NormalizedKeystroke } from '../../keyboard/types';
 import type { GameOutcome } from '../types';
@@ -32,6 +32,11 @@ export interface GameState {
 	readonly session: SessionState;
 	/** Metrics of the groups already typed, in order. */
 	readonly finished: readonly SessionMetrics[];
+	/**
+	 * Time each group already typed took from its first to its last keystroke, pauses left out,
+	 * in order: the pace kept for the ghost, on the clock the race is run with (`followGame`).
+	 */
+	readonly typedMs: readonly number[];
 	readonly phase: GamePhase;
 	/**
 	 * The reward has been on screen long enough to be seen: from then on a key moves the game
@@ -54,16 +59,21 @@ export interface GameState {
 	readonly missedChars: readonly string[];
 }
 
+/*
+ * `at` is the moment of the action on the clock of the keystrokes. A game gives it each time: the
+ * time of a group is counted from the moment it can be typed, pauses left out. Without it, the
+ * group is measured from its first keystroke and a pause counts as typing, as it was before.
+ */
 export type GameAction =
 	| { readonly type: 'keystroke'; readonly keystroke: NormalizedKeystroke }
-	/** The time given to the reward is over. */
-	| { readonly type: 'advance' }
+	/** The time given to the reward is over: the next group can be typed from `at`. */
+	| { readonly type: 'advance'; readonly at?: number }
 	/** The reward has had the time to be seen. */
 	| { readonly type: 'settle' }
 	/** The moment after a mistake is over. */
 	| { readonly type: 'calm' }
-	| { readonly type: 'pause' }
-	| { readonly type: 'resume' }
+	| { readonly type: 'pause'; readonly at?: number }
+	| { readonly type: 'resume'; readonly at?: number }
 	/** The child is done with the final picture. */
 	| { readonly type: 'finish' };
 
@@ -77,16 +87,19 @@ export interface GameOptions {
 	readonly finale?: boolean;
 	/** How each group starts, in the order of the groups (`Exercise.starts`). */
 	readonly starts?: readonly (SessionStart | null)[];
+	/** Moment the first group can be typed, on the clock of the keystrokes (see `GameAction`). */
+	readonly at?: number;
 }
 
 function sessionOf(
 	groups: readonly string[],
 	starts: readonly (SessionStart | null)[],
 	index: number,
-	errorPolicy: ErrorPolicy
+	errorPolicy: ErrorPolicy,
+	shownAt: number | undefined
 ): SessionState {
 	const start = starts[index] ?? undefined;
-	return createSession(groups[index] as string, { errorPolicy, start });
+	return createSession(groups[index] as string, { errorPolicy, start, shownAt });
 }
 
 export function createGame(
@@ -102,8 +115,9 @@ export function createGame(
 		errorPolicy,
 		hasFinale: options.finale ?? false,
 		groupIndex: 0,
-		session: sessionOf(groups, starts, 0, errorPolicy),
+		session: sessionOf(groups, starts, 0, errorPolicy, options.at),
 		finished: [],
+		typedMs: [],
 		phase: 'typing',
 		settled: false,
 		paused: false,
@@ -122,7 +136,7 @@ function isLastGroup(state: GameState): boolean {
 	return state.groupIndex === state.groups.length - 1;
 }
 
-function advance(state: GameState): GameStep {
+function advance(state: GameState, at: number | undefined): GameStep {
 	if (state.phase !== 'celebrating') return unchanged(state);
 	if (isLastGroup(state)) {
 		return { state: { ...state, phase: state.hasFinale ? 'finale' : 'complete' }, sounds: [] };
@@ -132,7 +146,7 @@ function advance(state: GameState): GameStep {
 		state: {
 			...state,
 			groupIndex,
-			session: sessionOf(state.groups, state.starts, groupIndex, state.errorPolicy),
+			session: sessionOf(state.groups, state.starts, groupIndex, state.errorPolicy, at),
 			phase: 'typing',
 			settled: false,
 			errorIndex: null,
@@ -144,7 +158,9 @@ function advance(state: GameState): GameStep {
 }
 
 function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
-	if (state.phase === 'celebrating') return state.settled ? advance(state) : unchanged(state);
+	if (state.phase === 'celebrating') {
+		return state.settled ? advance(state, keystroke.timestamp) : unchanged(state);
+	}
 	if (state.phase !== 'typing') return unchanged(state);
 
 	// Enter is a habit at the end of a word, not a mistake, unless the text asks for a line break.
@@ -183,6 +199,7 @@ function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
 			next = {
 				...next,
 				finished: [...next.finished, computeMetrics(step.state)],
+				typedMs: [...next.typedMs, sessionTypingMs(step.state)],
 				phase: 'celebrating',
 				errorIndex: null,
 				wrongCode: null,
@@ -193,12 +210,23 @@ function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
 	return { state: next, sounds };
 }
 
+/** The time of the group being typed stops with the game; a group already done has nothing to stop. */
+function stopped(state: GameState, at: number | undefined): SessionState {
+	return at === undefined ? state.session : pauseSession(state.session, at);
+}
+
+function restarted(state: GameState, at: number | undefined): SessionState {
+	const { session } = state;
+	// A pause whose end is not known is forgotten rather than left open: the group must take keys again.
+	return resumeSession(session, at ?? session.pausedAt ?? 0);
+}
+
 export function reduce(state: GameState, action: GameAction): GameStep {
 	switch (action.type) {
 		case 'keystroke':
 			return state.paused ? unchanged(state) : type(state, action.keystroke);
 		case 'advance':
-			return state.paused ? unchanged(state) : advance(state);
+			return state.paused ? unchanged(state) : advance(state, action.at);
 		case 'calm':
 			return state.mood === 'oops'
 				? { state: { ...state, mood: 'idle' }, sounds: [] }
@@ -210,9 +238,11 @@ export function reduce(state: GameState, action: GameAction): GameStep {
 		case 'pause':
 			return state.paused || state.phase === 'finale' || state.phase === 'complete'
 				? unchanged(state)
-				: { state: { ...state, paused: true }, sounds: [] };
+				: { state: { ...state, paused: true, session: stopped(state, action.at) }, sounds: [] };
 		case 'resume':
-			return state.paused ? { state: { ...state, paused: false }, sounds: [] } : unchanged(state);
+			return state.paused
+				? { state: { ...state, paused: false, session: restarted(state, action.at) }, sounds: [] }
+				: unchanged(state);
 		case 'finish':
 			return state.phase === 'finale'
 				? { state: { ...state, phase: 'complete' }, sounds: [] }
@@ -232,5 +262,10 @@ export function exerciseMetrics(state: GameState): SessionMetrics {
 
 /** What a game reports once every group has been typed. */
 export function exerciseOutcome(state: GameState): GameOutcome {
-	return { metrics: exerciseMetrics(state), pace: pacePoints(state.finished) };
+	// The ghost follows the time spent typing: the time spent reading a group is not part of its pace.
+	const typed = state.finished.map((metrics, index) => ({
+		...metrics,
+		elapsedMs: state.typedMs[index] ?? metrics.elapsedMs
+	}));
+	return { metrics: exerciseMetrics(state), pace: pacePoints(typed) };
 }

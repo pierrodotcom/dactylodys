@@ -186,6 +186,15 @@ function toVersion13(record: StoredRecord): StoredRecord {
 	return { hideout: {}, ...record, schemaVersion: 13 };
 }
 
+/*
+ * Version 14: a play may say that its speed counts the time before the first keystroke of each
+ * group (`SessionRecord.speedRule`). The plays already kept were not measured that way: they keep
+ * their numbers and stay without the mark.
+ */
+function toVersion14(record: StoredRecord): StoredRecord {
+	return { ...record, schemaVersion: 14 };
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -199,7 +208,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[9, toVersion10],
 	[10, toVersion11],
 	[11, toVersion12],
-	[12, toVersion13]
+	[12, toVersion13],
+	[13, toVersion14]
 ]);
 
 function versionOf(record: StoredRecord): number {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { KeystrokeKind, NormalizedKeystroke } from '../keyboard/types';
 import { toGraphemes } from './graphemes';
 import { computeMetrics } from './metrics';
-import { applyKeystroke, createSession, isComplete } from './session';
+import { applyKeystroke, createSession, isComplete, pauseSession, resumeSession } from './session';
 import type { ErrorPolicy, SessionEvent, SessionState } from './types';
 
 const POLICIES: readonly ErrorPolicy[] = ['retry', 'backspace'];
@@ -136,7 +136,8 @@ describe.each(POLICIES)('applyKeystroke with the %s policy', (errorPolicy) => {
 							kind: 'char',
 							correct: false,
 							code: null,
-							timestamp: 20
+							timestamp: 20,
+							overMistake: true
 						},
 						{
 							targetIndex: 0,
@@ -145,7 +146,8 @@ describe.each(POLICIES)('applyKeystroke with the %s policy', (errorPolicy) => {
 							kind: 'char',
 							correct: false,
 							code: null,
-							timestamp: 30
+							timestamp: 30,
+							overMistake: true
 						}
 					])
 		]);
@@ -341,6 +343,30 @@ describe('applyKeystroke with the backspace policy', () => {
 		expect(events[1]).toEqual({ type: 'error', index: 1, expected: 'a', typed: 'a' });
 	});
 
+	it('marks the keys typed over a mistake not erased yet, and only them', () => {
+		const keys = [char('x', 1), char('a', 2), backspace(3), backspace(4), char('a', 5)];
+		const { state } = run(start('ab'), keys);
+		expect(state.records.map((record) => record.overMistake)).toEqual([
+			undefined,
+			true,
+			undefined,
+			undefined,
+			undefined
+		]);
+		expect(state.records[1]).toMatchObject({ expected: 'a', typed: 'a', correct: false });
+	});
+
+	it('counts one error for a mistake, whatever is typed before it is erased', () => {
+		const keys = [char('x', 1), char('a', 2), char('b', 3), backspace(4), backspace(5)];
+		const { state } = run(start('ab'), [...keys, backspace(6), char('a', 7), char('b', 8)]);
+		expect(computeMetrics(state)).toMatchObject({
+			totalKeystrokes: 3,
+			correctKeystrokes: 2,
+			errorCount: 1,
+			perChar: { a: { attempts: 2, errors: 1 }, b: { attempts: 1, errors: 0 } }
+		});
+	});
+
 	it('erases the last pending character with an erased event', () => {
 		const typed = run(start('abc'), [char('x', 1), char('y', 2), char('z', 3)]).state;
 		const step = applyKeystroke(typed, backspace(4));
@@ -430,11 +456,13 @@ describe('a session that starts with a mistake already written', () => {
 		}
 	});
 
-	it('takes no right key before the mistakes are erased, and counts it as a mistake of the child', () => {
+	it('takes no right key before the mistakes are erased, and counts it neither right nor wrong', () => {
 		const { state, events } = run(begun('retry'), [char('j', 10)]);
 		expect(state.position).toBe(3);
 		expect(state.pending).toEqual(['k', 'p', 'j']);
 		expect(events).toEqual([{ type: 'error', index: 5, expected: 'j', typed: 'j' }]);
+		expect(state.records[0]?.overMistake).toBe(true);
+		expect(computeMetrics(state)).toMatchObject({ totalKeystrokes: 0, errorCount: 0 });
 	});
 
 	it('ends without any mistake once the wrong characters are erased and the rest is typed', () => {
@@ -455,10 +483,18 @@ describe('a session that starts with a mistake already written', () => {
 		const keys = [backspace(10), char('x', 20), backspace(30), backspace(40)];
 		const { state } = run(begun(), [...keys, char('j', 50), char('o', 60)]);
 		const metrics = computeMetrics(state, 70);
-		expect(metrics.errorCount).toBe(1);
+		expect(metrics.errorCount).toBe(0);
 		expect(metrics.perChar).toEqual({
-			j: { attempts: 2, errors: 1, meanLatencyMs: 10 },
+			j: { attempts: 1, errors: 0, meanLatencyMs: 10 },
 			o: { attempts: 1, errors: 0, meanLatencyMs: 10 }
+		});
+	});
+
+	it('counts a mistake of the child made once the planted ones are erased', () => {
+		const keys = [backspace(10), backspace(20), char('x', 30), char('j', 40), backspace(50)];
+		const { state } = run(begun(), [...keys, backspace(60), char('j', 70)]);
+		expect(computeMetrics(state).perChar).toEqual({
+			j: { attempts: 2, errors: 1, meanLatencyMs: 10 }
 		});
 	});
 
@@ -491,6 +527,53 @@ describe('a session that starts with a mistake already written', () => {
 		['the expected grapheme as the first wrong character', { typed: 1, pending: ['b'] }]
 	])('refuses a start with %s', (_label, start) => {
 		expect(() => createSession('ab', { start })).toThrow(RangeError);
+	});
+});
+
+describe('pauseSession and resumeSession', () => {
+	it('keeps the moment the group was shown', () => {
+		expect(createSession('ab', { shownAt: 1234 }).shownAt).toBe(1234);
+		expect(createSession('ab').shownAt).toBeUndefined();
+	});
+
+	it('notes the pause, then keeps it once it is over', () => {
+		const paused = pauseSession(createSession('ab', { shownAt: 0 }), 500);
+		expect(paused.pausedAt).toBe(500);
+		const resumed = resumeSession(paused, 2500);
+		expect(resumed.pausedAt).toBeUndefined();
+		expect(resumed.pauses).toEqual([{ from: 500, to: 2500 }]);
+		const again = resumeSession(pauseSession(resumed, 3000), 3100);
+		expect(again.pauses).toEqual([
+			{ from: 500, to: 2500 },
+			{ from: 3000, to: 3100 }
+		]);
+	});
+
+	it('changes nothing when pausing twice, resuming without a pause, or pausing a finished group', () => {
+		const state = createSession('a', { shownAt: 0 });
+		const paused = pauseSession(state, 100);
+		expect(pauseSession(paused, 900)).toBe(paused);
+		expect(resumeSession(state, 100)).toBe(state);
+		const done = applyKeystroke(state, char('a', 50)).state;
+		expect(pauseSession(done, 100)).toBe(done);
+	});
+
+	it('never ends a pause before it started', () => {
+		const resumed = resumeSession(pauseSession(createSession('a'), 900), 100);
+		expect(resumed.pauses).toEqual([{ from: 900, to: 900 }]);
+	});
+
+	it('takes no keystroke while paused', () => {
+		const paused = pauseSession(createSession('ab', { shownAt: 0 }), 100);
+		const step = applyKeystroke(paused, char('a', 200));
+		expect(step.state).toBe(paused);
+		expect(step.events).toEqual([]);
+	});
+
+	it('does not mutate the state it receives', () => {
+		const state = deepFreeze(createSession('ab', { shownAt: 0 }));
+		const paused = deepFreeze(pauseSession(state, 10));
+		expect(() => resumeSession(paused, 20)).not.toThrow();
 	});
 });
 
@@ -709,18 +792,65 @@ describe('session properties', () => {
 		);
 	});
 
-	it('counts as mistakes only the wrong keys of the child in a begun group', () => {
+	it('counts as mistakes only the wrong keys of the child in a begun group, each mistake once', () => {
 		fc.assert(
 			fc.property(beginArbitrary, keystrokeSpecs(['a', 'b', 'e']), ({ text, start }, specs) => {
 				let state = createSession(text, { start });
 				let errors = 0;
 				for (const keystroke of buildKeystrokes(specs)) {
 					const step = applyKeystroke(state, keystroke);
-					errors += step.events.filter((event) => event.type === 'error').length;
+					// A key typed over what is still to erase, planted or not, opens no new mistake.
+					if (state.pending.length === 0) {
+						errors += step.events.filter((event) => event.type === 'error').length;
+					}
 					state = step.state;
 				}
 				return computeMetrics(state).errorCount === errors;
 			})
+		);
+	});
+
+	it('counts in the backspace policy one error each time a mistake starts, never more', () => {
+		fc.assert(
+			fc.property(textArbitrary, keystrokeSpecs(['a', 'b', 'e']), (text, specs) => {
+				let state = createSession(text, { errorPolicy: 'backspace' });
+				let started = 0;
+				for (const keystroke of buildKeystrokes(specs)) {
+					const next = applyKeystroke(state, keystroke).state;
+					if (state.pending.length === 0 && next.pending.length === 1) started += 1;
+					state = next;
+				}
+				const metrics = computeMetrics(state);
+				return metrics.errorCount === started && metrics.correctKeystrokes === state.position;
+			})
+		);
+	});
+
+	it('takes no keystroke while paused and leaves what was typed as it was', () => {
+		fc.assert(
+			fc.property(
+				textArbitrary,
+				policyArbitrary,
+				keystrokeSpecs(['a', 'b', 'e']),
+				fc.nat({ max: 5000 }),
+				(text, p, specs, at) => {
+					const keystrokes = buildKeystrokes(specs);
+					const typed = run(createSession(text, { errorPolicy: p }), keystrokes).state;
+					const paused = pauseSession(typed, at);
+					if (typed.endedAt !== null) return paused === typed;
+					for (const keystroke of keystrokes) {
+						const step = applyKeystroke(paused, keystroke);
+						if (step.state !== paused || step.events.length !== 0) return false;
+					}
+					const resumed = resumeSession(paused, at + 1000);
+					return (
+						resumed.position === typed.position &&
+						resumed.records === typed.records &&
+						resumed.pending === typed.pending &&
+						resumed.pausedAt === undefined
+					);
+				}
+			)
 		);
 	});
 

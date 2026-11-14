@@ -202,9 +202,12 @@ describe('the backspace policy', () => {
 		expect(step.sounds).toEqual(['error']);
 	});
 
-	it('takes no right key while a wrong one is written, and counts each one as a mistake', () => {
-		const state = play(createGame(['fj'], 'backspace'), [char('d'), char('f'), char('j')]);
+	it('takes no right key while a wrong one is written, and plays the error sound for each', () => {
+		const wrong = reduce(createGame(['fj'], 'backspace'), char('d')).state;
+		const step = reduce(wrong, char('f'));
+		const state = reduce(step.state, char('j')).state;
 
+		expect(step.sounds).toEqual(['error']);
 		expect(state.session.pending).toEqual(['d', 'f', 'j']);
 		expect(state.session.position).toBe(0);
 		expect(state.errorIndex).toBe(0);
@@ -236,7 +239,7 @@ describe('the backspace policy', () => {
 		expect(reduce(state, key('backspace')).state).toBe(state);
 	});
 
-	it('counts the wrong keys and not the Backspaces in the metrics of the group', () => {
+	it('counts one error for a mistake, not the keys typed over it nor the Backspaces', () => {
 		const state = play(createGame(['fj'], 'backspace'), [
 			char('d'),
 			char('s'),
@@ -249,9 +252,22 @@ describe('the backspace policy', () => {
 		const metrics = exerciseMetrics(state);
 
 		expect(state.phase).toBe('celebrating');
-		expect(metrics.totalKeystrokes).toBe(4);
+		expect(metrics.totalKeystrokes).toBe(3);
 		expect(metrics.correctKeystrokes).toBe(2);
-		expect(metrics.errorCount).toBe(2);
+		expect(metrics.errorCount).toBe(1);
+	});
+
+	it('charges a word finished before its first mistake was seen with one error on that key', () => {
+		const wrong = [...'xhat'].map((value) => char(value));
+		const erased = wrong.map(() => key('backspace'));
+		const state = typeText(play(createGame(['chat'], 'backspace'), [...wrong, ...erased]), 'chat');
+
+		const metrics = exerciseMetrics(state);
+
+		expect(metrics.accuracy).toBe(80);
+		expect(metrics.perChar['c']).toMatchObject({ attempts: 2, errors: 1 });
+		expect(metrics.perChar['h']).toMatchObject({ attempts: 1, errors: 0 });
+		expect(state.missedChars).toEqual(['c']);
 	});
 
 	it('starts the next group with nothing left to erase', () => {
@@ -310,7 +326,8 @@ describe('groups that arrive begun with mistakes to erase', () => {
 	});
 
 	it('counts in the exercise only the keys of the child', () => {
-		let state = play(begin('retry'), [char('x'), key('backspace'), key('backspace'), char('j')]);
+		let state = play(begin('retry'), [char('x'), key('backspace'), key('backspace')]);
+		state = play(state, [char('x'), key('backspace'), char('j')]);
 		state = reduce(state, { type: 'advance' }).state;
 		state = reduce(typeText(state, 'jf'), { type: 'advance' }).state;
 		state = play(state, [key('backspace'), key('backspace'), char('f')]);
@@ -441,10 +458,10 @@ describe('the last group', () => {
 
 describe('the outcome of an exercise', () => {
 	function playGroups(groups: readonly string[], typed: readonly string[]): GameState {
-		let state = createGame(groups, 'retry');
+		let state = createGame(groups, 'retry', { at: clock });
 		for (const text of typed) {
 			state = typeText(state, text);
-			state = play(state, [{ type: 'advance' }]);
+			state = play(state, [{ type: 'advance', at: clock }]);
 		}
 		return state;
 	}
@@ -464,14 +481,16 @@ describe('the outcome of an exercise', () => {
 		]);
 	});
 
-	it('ends the pace on the correct keystrokes and the time of the metrics', () => {
+	it('ends the pace on the correct keystrokes of the metrics, and on the time spent typing', () => {
 		const { metrics, pace } = exerciseOutcome(playGroups(['fj', 'jfj', 'f'], ['fxj', 'jfj', 'f']));
 
 		expect(pace).toHaveLength(3);
 		expect(pace[pace.length - 1]).toEqual({
 			correctChars: metrics.correctKeystrokes,
-			activeMs: metrics.elapsedMs
+			activeMs: 400
 		});
+		// The measure counts the time before the first key of each group too; the ghost does not.
+		expect(metrics.elapsedMs).toBe(700);
 	});
 
 	it('counts a mistake as time spent, not as a character', () => {
@@ -481,11 +500,11 @@ describe('the outcome of an exercise', () => {
 	});
 
 	it('leaves the time between two groups out of the pace', () => {
-		let state = typeText(createGame(['fj', 'jf'], 'retry'), 'fj');
+		let state = typeText(createGame(['fj', 'jf'], 'retry', { at: clock }), 'fj');
 		clock += 60_000;
-		state = play(state, [{ type: 'advance' }]);
+		state = play(state, [{ type: 'advance', at: clock }]);
 		clock += 60_000;
-		state = play(typeText(state, 'jf'), [{ type: 'advance' }]);
+		state = play(typeText(state, 'jf'), [{ type: 'advance', at: clock }]);
 
 		expect(exerciseOutcome(state).pace).toEqual([
 			{ correctChars: 2, activeMs: 100 },
@@ -493,13 +512,127 @@ describe('the outcome of an exercise', () => {
 		]);
 	});
 
-	it('gives no time to a group of a single character', () => {
+	it('gives no time to a group of a single character in the pace, but in the measure', () => {
 		const state = playGroups(['f', 'jf'], ['f', 'jf']);
 
 		expect(exerciseOutcome(state).pace).toEqual([
 			{ correctChars: 1, activeMs: 0 },
 			{ correctChars: 3, activeMs: 100 }
 		]);
+		expect(state.finished.map((metrics) => metrics.elapsedMs)).toEqual([100, 200]);
+	});
+
+	it('measures a game that gives no moment from the first keystroke of each group, as before', () => {
+		let state = typeText(createGame(['fjf', 'jf'], 'retry'), 'fjf');
+		state = typeText(play(state, [{ type: 'advance' }]), 'jf');
+
+		expect(exerciseMetrics(state).elapsedMs).toBe(300);
+		expect(exerciseMetrics(state).speedRule).toBeUndefined();
+	});
+});
+
+describe('the time and the speed of an exercise', () => {
+	interface PauseAt {
+		readonly group: number;
+		readonly index: number;
+		readonly ms: number;
+	}
+
+	function keyAt(value: string, timestamp: number): GameAction {
+		return {
+			type: 'keystroke',
+			keystroke: { kind: 'char', char: value, code: null, timestamp, composed: false }
+		};
+	}
+
+	/** A child who presses one key every `keyMs`; the reward of a group lasts `betweenMs`. */
+	function playRegular(
+		groups: readonly string[],
+		keyMs: number,
+		betweenMs: number,
+		pauseAt?: PauseAt
+	) {
+		let at = 0;
+		let state = createGame(groups, 'retry', { at });
+		groups.forEach((group, groupIndex) => {
+			[...group].forEach((value, index) => {
+				at += keyMs;
+				if (pauseAt && pauseAt.group === groupIndex && pauseAt.index === index) {
+					state = reduce(state, { type: 'pause', at }).state;
+					at += pauseAt.ms;
+					state = reduce(state, { type: 'resume', at }).state;
+				}
+				state = reduce(state, keyAt(value, at)).state;
+			});
+			state = reduce(state, { type: 'settle' }).state;
+			at += betweenMs;
+			state = reduce(state, { type: 'advance', at }).state;
+		});
+		return exerciseOutcome(state);
+	}
+
+	it.each([
+		['groups of 2 to 4', ['fj', 'jfj', 'ffjj', 'jf', 'fjf', 'jjf', 'fj', 'jfjf']],
+		['words of 5', ['salut', 'livre', 'table', 'route', 'porte', 'lampe', 'tasse']],
+		['one phrase of 35', ['le chat dort sur le lit de la maison']],
+		['groups of one letter', ['f', 'j', 'f', 'j']]
+	])('measures 60 characters per minute for one key per second, in %s', (_name, groups) => {
+		const { metrics } = playRegular(groups, 1000, 3000);
+
+		expect(metrics.correctCharsPerMinute).toBeCloseTo(60, 10);
+		expect(metrics.wordsPerMinute).toBeCloseTo(12, 10);
+		expect(metrics.speedRule).toBe(2);
+	});
+
+	it('counts neither a pause of two minutes in the middle of a word nor a hesitation after it', () => {
+		const groups = ['salut', 'livre', 'table', 'route'];
+		const plain = playRegular(groups, 1000, 3000).metrics;
+		const paused = playRegular(groups, 1000, 3000, { group: 1, index: 2, ms: 120_000 }).metrics;
+
+		expect(plain.elapsedMs).toBe(20_000);
+		expect(paused.elapsedMs).toBe(20_000);
+		expect(paused.correctCharsPerMinute).toBe(plain.correctCharsPerMinute);
+		expect(plain.perChar['v']?.meanLatencyMs).toBe(1000);
+		expect(paused.perChar['v']?.meanLatencyMs).toBeNull();
+	});
+
+	it('gives the ghost the same pace with and without a pause', () => {
+		const groups = ['salut', 'livre'];
+		const paused = playRegular(groups, 500, 2000, { group: 0, index: 3, ms: 90_000 });
+
+		expect(paused.pace).toEqual(playRegular(groups, 500, 2000).pace);
+		expect(paused.pace).toEqual([
+			{ correctChars: 5, activeMs: 2000 },
+			{ correctChars: 10, activeMs: 4000 }
+		]);
+	});
+
+	it('counts the next group from the key that skipped the reward', () => {
+		let state = createGame(['f', 'j'], 'retry', { at: 0 });
+		state = play(state, [keyAt('f', 400), { type: 'settle' }, keyAt('x', 2000), keyAt('j', 2600)]);
+
+		expect(state.phase).toBe('celebrating');
+		expect(state.finished.map((metrics) => metrics.elapsedMs)).toEqual([400, 600]);
+	});
+
+	it('does not count a pause taken during a reward against the next group', () => {
+		let state = createGame(['f', 'j'], 'retry', { at: 0 });
+		state = play(state, [keyAt('f', 400), { type: 'pause', at: 500 }]);
+		state = play(state, [
+			{ type: 'resume', at: 90_000 },
+			{ type: 'advance', at: 91_000 }
+		]);
+		state = play(state, [keyAt('j', 91_300)]);
+
+		expect(exerciseMetrics(state).elapsedMs).toBe(700);
+	});
+
+	it('takes the keys again after a pause whose end is not given', () => {
+		let state = createGame(['fj'], 'retry', { at: 0 });
+		state = play(state, [{ type: 'pause', at: 100 }, { type: 'resume' }, keyAt('f', 300)]);
+
+		expect(state.session.position).toBe(1);
+		expect(state.session.pausedAt).toBeUndefined();
 	});
 });
 

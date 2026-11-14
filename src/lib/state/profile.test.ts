@@ -150,7 +150,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 13,
+			schemaVersion: 14,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -469,8 +469,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 11, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 14, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 13, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 15, /schemaVersion/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],
@@ -612,6 +612,15 @@ describe('parseProfile', () => {
 		['an endless speed', [...SESSION, 'correctCharsPerMinute'], null, /correctCharsPerMinute/],
 		['four stars', [...SESSION, 'stars'], 4, /sessions\[0\]\.stars/],
 		['a session passed as text', [...SESSION, 'passed'], 'yes', /sessions\[0\]\.passed/],
+		[
+			'a session measured with the former rule, written out',
+			[...SESSION, 'speedRule'],
+			1,
+			/speedRule/
+		],
+		['a session measured with an unknown rule', [...SESSION, 'speedRule'], 3, /speedRule/],
+		['a session whose rule is text', [...SESSION, 'speedRule'], '2', /speedRule/],
+		['a session whose rule is empty', [...SESSION, 'speedRule'], null, /speedRule/],
 		['missing days', ['practiceDays'], REMOVE, /profile\.practiceDays/],
 		['a day written otherwise', ['practiceDays'], ['04/11/2026'], /practiceDays\[0\]/],
 		['a day that does not exist', ['practiceDays'], ['2026-02-30'], /practiceDays\[0\]/],

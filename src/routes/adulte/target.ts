@@ -1,6 +1,23 @@
 import type { HandwritingSample, Profile, SessionRecord } from '$lib/state/types';
-import { wordsPerMinuteOf } from './evolution';
+import type { AdultRules } from './adult-rules';
+import { isMeasuredFromShown, wordsPerMinuteOf } from './evolution';
 import { readDigits } from './gate';
+
+/**
+ * The plays the speed at the keyboard is read from, oldest first. Once enough plays are measured
+ * with the current rule, only those, the most recent ones: the two rules give speeds that do not
+ * compare, and a median over both would say nothing. Before that, the most recent plays as they are.
+ */
+export function speedSessions(
+	sessions: readonly SessionRecord[],
+	rules: Pick<AdultRules, 'keyboardSpeedSessions' | 'keyboardSpeedMinCurrentRule'>
+): readonly SessionRecord[] {
+	const count = Math.max(0, rules.keyboardSpeedSessions);
+	if (count === 0) return [];
+	const current = sessions.filter(isMeasuredFromShown);
+	const read = current.length >= rules.keyboardSpeedMinCurrentRule ? current : sessions;
+	return read.slice(-count);
+}
 
 /** The speed at the keyboard: the median of the `count` most recent plays, `null` without any. */
 export function keyboardSpeed(sessions: readonly SessionRecord[], count: number): number | null {

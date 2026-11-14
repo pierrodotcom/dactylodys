@@ -23,7 +23,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Lot | Constats | État |
 |---|---|---|
 | Vrais mots | P-04, P-05, P-08, P-16, P-22 | Fait (ADR-074) ; réserve d'échauffements en relecture chez le porteur |
-| Mesures justes | Q-04, Q-05, Q-15, P-06 | Code rendu (branche `fix/mesures-justes`, profil version 14), à vérifier et fusionner |
+| Mesures justes | Q-04, Q-05, Q-15, P-06 | Fait (ADR-077, profil version 14) |
 | Tests e2e fiables | Q-06, Q-13 | À lancer (seul sur Playwright) |
 | Le jeu ne lâche pas l'enfant | E-01, E-02, E-03 d, E-12, E-23 | À lancer après « mesures justes » (même fichier `GameShell`) |
 | Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | À lancer après « mesures justes » |
@@ -248,3 +248,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-13** — Effacer comme une compétence (ADR-073) : leçon « Réparer un message » à la fin du monde 6, des lignes arrivent avec une faute au bout que l'enfant efface avec Retour arrière avant de continuer, quel que soit le réglage de l'adulte. Textes envoyés au porteur (`docs/relecture-effacement.md`, hors dépôt) ; consigne et ligne du récit à enregistrer sur /dev/voix.
 - **2026-11-14** — Audit complet rendu (quatre rapports, `docs/audit/`) ; le porteur suit les 22 recommandations (ADR-075). Lot 5 de J5 et page « Pour les professionnels » fusionnés (PR 103). Lot « vrais mots » (ADR-074) : plus de suites de lettres au hasard aux leçons 8 à 24, échauffements variés. Leçons L-135 à L-139.
 - **2026-11-14** — « Vrais mots » fusionné (PR 104). Le porteur reçoit « Ton clavier est un peu différent » sur un AZERTY ordinaire : la vérification jugeait la touche annoncée par le navigateur, fausse sous un navigateur qui résiste au pistage ; elle juge maintenant la lettre écrite (ADR-076, L-142).
+- **2026-11-14** — « Mesures justes » (ADR-077) : vitesse comptée depuis l'affichage du groupe, pauses retirées, une erreur par faute en mode Retour arrière, caractères par minute pour l'adulte, profil version 14.
