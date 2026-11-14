@@ -4,8 +4,10 @@
 	import Button from '$lib/ui/components/Button.svelte';
 	import { isOne } from '$lib/ui/plural';
 	import type { AdultRules } from './adult-rules';
+	import { CHARS_PER_WORD } from '$lib/engine/metrics';
+	import { speedRuleChange } from './evolution';
 	import type { Formatters } from './format';
-	import { keyboardSpeed, readHandwritingWords, targetStatus } from './target';
+	import { keyboardSpeed, readHandwritingWords, speedSessions, targetStatus } from './target';
 
 	interface Props {
 		profile: Profile;
@@ -19,13 +21,16 @@
 	let { profile, rules, format, handwriting, onmeasure }: Props = $props();
 
 	const ONE_DECIMAL = 1;
+	const WHOLE = 0;
 
 	let words = $state('');
 	let problem = $state('');
 	let status = $state('');
 
-	const counted = $derived(Math.min(profile.sessions.length, rules.keyboardSpeedSessions));
-	const keyboard = $derived(keyboardSpeed(profile.sessions, rules.keyboardSpeedSessions));
+	const read = $derived(speedSessions(profile.sessions, rules));
+	const counted = $derived(read.length);
+	const keyboard = $derived(keyboardSpeed(read, read.length));
+	const ruleChange = $derived(speedRuleChange(profile.sessions.slice(-rules.sessionsShown)));
 	const standing = $derived(targetStatus(keyboard, handwriting?.wordsPerMinute ?? null));
 
 	async function save(event: SubmitEvent) {
@@ -62,10 +67,14 @@
 			{#if keyboard === null}
 				{m.adult_target_keyboard_none()}
 			{:else if isOne(counted)}
-				{m.adult_target_keyboard_one({ speed: format.number(keyboard, ONE_DECIMAL) })}
+				{m.adult_target_keyboard_one({
+					speed: format.number(keyboard, ONE_DECIMAL),
+					chars: format.number(keyboard * CHARS_PER_WORD, WHOLE)
+				})}
 			{:else}
 				{m.adult_target_keyboard_other({
 					speed: format.number(keyboard, ONE_DECIMAL),
+					chars: format.number(keyboard * CHARS_PER_WORD, WHOLE),
 					count: counted
 				})}
 			{/if}
@@ -75,6 +84,13 @@
 		<p data-target-status="reached">{m.adult_target_reached()}</p>
 	{:else if standing === 'below'}
 		<p data-target-status="below">{m.adult_target_below()}</p>
+	{/if}
+	{#if ruleChange}
+		<p class="note" data-speed-rule-change>
+			{m.adult_speed_rule_change({
+				date: format.sessionDate(ruleChange.finishedAt, ruleChange.utcOffsetMinutes)
+			})}
+		</p>
 	{/if}
 	<p class="note">{m.adult_target_slow_phase()}</p>
 

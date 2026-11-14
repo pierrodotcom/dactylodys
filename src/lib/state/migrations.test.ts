@@ -27,12 +27,14 @@ import {
 	asVersion10,
 	asVersion11,
 	asVersion12,
+	asVersion13,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
 	withKeyboardFade,
 	withRetryPolicy,
 	withSensoryDefaults,
 	withUnknownLatency,
+	withUnmarkedSessions,
 	withYoungerAgeBand
 } from './test-support';
 import type { Profile } from './types';
@@ -246,7 +248,7 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 13,
+			schemaVersion: 14,
 			settings: {
 				...STORED_BY_VERSION_4.settings,
 				errorPolicy: 'retry',
@@ -329,7 +331,7 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 13,
+			schemaVersion: 14,
 			settings: {
 				...STORED_BY_VERSION_4.settings,
 				errorPolicy: 'retry',
@@ -550,7 +552,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion10(profile))));
 				expect(migrated).toEqual(withSensoryDefaults(profile));
-				expect(migrated.schemaVersion).toBe(13);
+				expect(migrated.schemaVersion).toBe(14);
 				expect(migrated.settings.effects).toBe(true);
 				expect(migrated.settings.ambience).toBe('none');
 			})
@@ -562,7 +564,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion11(profile))));
 				expect(migrated).toEqual(withYoungerAgeBand(profile));
-				expect(migrated.schemaVersion).toBe(13);
+				expect(migrated.schemaVersion).toBe(14);
 				expect(migrated.settings.ageBand).toBe('8-9');
 			})
 		);
@@ -573,10 +575,43 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion12(profile))));
 				expect(migrated).toEqual(withEmptyHideout(profile));
-				expect(migrated.schemaVersion).toBe(13);
+				expect(migrated.schemaVersion).toBe(14);
 				expect(migrated.hideout).toEqual({});
 			})
 		);
+	});
+
+	it('keeps the journal of any version 13 profile as it was, no play saying how it was measured', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion13(profile))));
+				expect(migrated).toEqual(withUnmarkedSessions(profile));
+				expect(migrated.schemaVersion).toBe(14);
+				expect(migrated.sessions.every((session) => !Object.hasOwn(session, 'speedRule'))).toBe(
+					true
+				);
+			})
+		);
+	});
+
+	it('keeps the speed of the plays of a version 13 profile, to the last digit', () => {
+		const current = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+		const session = {
+			lessonId: 'fr.lesson.x',
+			gameId: 'rocket',
+			finishedAt: 1_793_800_000_000,
+			utcOffsetMinutes: 60,
+			durationMs: 16_000,
+			totalKeystrokes: 20,
+			correctKeystrokes: 20,
+			errorCount: 0,
+			accuracy: 100,
+			correctCharsPerMinute: 75.123_456_789,
+			stars: 3,
+			passed: true
+		};
+		const stored = { ...asVersion13(current), sessions: [session] };
+		expect(parseProfile(migrateProfile(stored)).sessions).toEqual([session]);
 	});
 
 	it('keeps the hideout of a version 12 record that already holds it', () => {
@@ -591,7 +626,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion11(current);
 		const settings = { ...(stored['settings'] as Json), ageBand: '10-12' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(13);
+		expect(migrated.schemaVersion).toBe(14);
 		expect(migrated.settings.ageBand).toBe('10-12');
 	});
 
@@ -600,7 +635,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion10(current);
 		const settings = { ...(stored['settings'] as Json), effects: false, ambience: 'soft-noise' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(13);
+		expect(migrated.schemaVersion).toBe(14);
 		expect(migrated.settings.effects).toBe(false);
 		expect(migrated.settings.ambience).toBe('soft-noise');
 	});
@@ -610,7 +645,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion9(current);
 		const settings = { ...(stored['settings'] as Json), keyboardFade: false };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(13);
+		expect(migrated.schemaVersion).toBe(14);
 		expect(migrated.settings.keyboardFade).toBe(false);
 	});
 
@@ -619,7 +654,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion8(current);
 		const settings = { ...(stored['settings'] as Json), errorPolicy: 'backspace' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(13);
+		expect(migrated.schemaVersion).toBe(14);
 		expect(migrated.settings.errorPolicy).toBe('backspace');
 	});
 
@@ -642,7 +677,7 @@ describe('migrateProfile', () => {
 			}
 		};
 		const migrated = parseProfile(migrateProfile(stored));
-		expect(migrated.schemaVersion).toBe(13);
+		expect(migrated.schemaVersion).toBe(14);
 		expect(migrated.progress.chars).toEqual({
 			f: {
 				attempts: 50,
@@ -695,7 +730,8 @@ describe('migrateProfile', () => {
 					asVersion9(profile),
 					asVersion10(profile),
 					asVersion11(profile),
-					asVersion12(profile)
+					asVersion12(profile),
+					asVersion13(profile)
 				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);

@@ -159,16 +159,19 @@ export const sessionRecordArb: fc.Arbitrary<SessionRecord> = fc
 		correctShare: fc.double({ min: 0, max: 1, noNaN: true }),
 		correctCharsPerMinute: fc.double({ min: 0, max: 1000, noNaN: true }),
 		stars: starsArb,
-		passed: fc.boolean()
+		passed: fc.boolean(),
+		fromShown: fc.boolean()
 	})
-	.map(({ correctShare, totalKeystrokes, ...rest }) => {
+	.map(({ correctShare, totalKeystrokes, fromShown, ...rest }) => {
 		const correctKeystrokes = Math.floor(correctShare * totalKeystrokes);
 		return {
 			...rest,
 			totalKeystrokes,
 			correctKeystrokes,
 			errorCount: totalKeystrokes - correctKeystrokes,
-			accuracy: totalKeystrokes === 0 ? 100 : (100 * correctKeystrokes) / totalKeystrokes
+			accuracy: totalKeystrokes === 0 ? 100 : (100 * correctKeystrokes) / totalKeystrokes,
+			// The mark of the new measure is there or not, never `undefined`.
+			...(fromShown ? { speedRule: 2 as const } : {})
 		};
 	});
 

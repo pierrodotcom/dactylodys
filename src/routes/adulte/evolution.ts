@@ -1,4 +1,4 @@
-import { CHARS_PER_WORD } from '$lib/engine/metrics';
+import { CHARS_PER_WORD, SPEED_RULE_FROM_SHOWN } from '$lib/engine/metrics';
 import { isLocalDay } from '$lib/state/profile';
 import type { SessionRecord } from '$lib/state/types';
 
@@ -12,6 +12,23 @@ export function wordsPerMinuteOf(session: SessionRecord): number {
 	return session.correctCharsPerMinute / CHARS_PER_WORD;
 }
 
+/**
+ * Whether the speed of a play counts each group from the moment it could be typed, pauses left
+ * out: a play kept before that rule counted from the first keystroke of each group, and is faster.
+ */
+export function isMeasuredFromShown(session: SessionRecord): boolean {
+	return session.speedRule === SPEED_RULE_FROM_SHOWN;
+}
+
+/**
+ * The first play measured with the current rule, when plays measured before it come first: the
+ * moment the speeds stop comparing. `null` when the plays were all measured the same way.
+ */
+export function speedRuleChange(sessions: readonly SessionRecord[]): SessionRecord | null {
+	const first = sessions.findIndex(isMeasuredFromShown);
+	return first > 0 ? (sessions[first] ?? null) : null;
+}
+
 /** One play of the evolution. */
 export interface SessionPoint {
 	/** Rank of the play among those the journal keeps, from 1. */
@@ -21,6 +38,8 @@ export interface SessionPoint {
 	readonly lessonId: string;
 	readonly accuracy: number;
 	readonly wordsPerMinute: number;
+	/** The same speed in correct characters per minute: what was really typed. */
+	readonly charsPerMinute: number;
 }
 
 /** The `count` most recent plays, oldest first. */
@@ -35,7 +54,8 @@ export function sessionPoints(
 		utcOffsetMinutes: session.utcOffsetMinutes,
 		lessonId: session.lessonId,
 		accuracy: session.accuracy,
-		wordsPerMinute: wordsPerMinuteOf(session)
+		wordsPerMinute: wordsPerMinuteOf(session),
+		charsPerMinute: session.correctCharsPerMinute
 	}));
 }
 

@@ -1,9 +1,20 @@
 import { computeAccuracy } from './accuracy';
-import type { CharStats, SessionMetrics, SessionState } from './types';
+import type {
+	CharStats,
+	KeystrokeRecord,
+	MeasureRules,
+	SessionMetrics,
+	SessionPause,
+	SessionState
+} from './types';
 
 const MS_PER_MINUTE = 60_000;
 /** Characters that make one word in a speed in words per minute, as typing tests count it. */
 export const CHARS_PER_WORD = 5;
+/** Marks a time counted from the moment each group could be typed (`SessionMetrics.speedRule`). */
+export const SPEED_RULE_FROM_SHOWN = 2;
+
+export const MEASURE_RULES: MeasureRules = { firstKeyWaitCapMs: 5000 };
 
 interface CharTally {
 	attempts: number;
@@ -22,6 +33,8 @@ interface CharMerge {
 }
 
 export function combineMetrics(list: readonly SessionMetrics[]): SessionMetrics {
+	const fromShown =
+		list.length > 0 && list.every((metrics) => metrics.speedRule === SPEED_RULE_FROM_SHOWN);
 	let elapsedMs = 0;
 	let totalKeystrokes = 0;
 	let correctKeystrokes = 0;
@@ -73,6 +86,7 @@ export function combineMetrics(list: readonly SessionMetrics[]): SessionMetrics 
 
 	return {
 		elapsedMs,
+		...(fromShown ? { speedRule: SPEED_RULE_FROM_SHOWN } : {}),
 		totalKeystrokes,
 		correctKeystrokes,
 		errorCount: totalKeystrokes - correctKeystrokes,
@@ -83,23 +97,85 @@ export function combineMetrics(list: readonly SessionMetrics[]): SessionMetrics 
 	};
 }
 
-export function computeMetrics(state: SessionState, now?: number): SessionMetrics {
-	const { records } = state;
-	const lastRecord = records[records.length - 1];
+function span(from: number, to: number): number {
+	const length = to - from;
+	return Number.isFinite(length) ? Math.max(0, length) : 0;
+}
 
-	let elapsedMs = 0;
-	if (state.startedAt !== null) {
-		const end = state.endedAt ?? now ?? lastRecord?.timestamp ?? state.startedAt;
-		const elapsed = end - state.startedAt;
-		elapsedMs = Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0;
-	}
+/** Time of the pauses that falls between two moments. */
+function pausedBetween(pauses: readonly SessionPause[], from: number, to: number): number {
+	return pauses.reduce(
+		(sum, pause) => sum + span(Math.max(pause.from, from), Math.min(pause.to, to)),
+		0
+	);
+}
+
+/** No hesitation is read into a keystroke that follows a pause: the child was not looking for it. */
+function isAfterPause(
+	pauses: readonly SessionPause[],
+	previous: KeystrokeRecord,
+	record: KeystrokeRecord
+): boolean {
+	return pauses.some((pause) => pause.to >= previous.timestamp && pause.from <= record.timestamp);
+}
+
+/** Where the time of the group stops: its end, else `now`, else its last keystroke; a pause in progress stops it. */
+function endOf(state: SessionState, now: number | undefined): number | undefined {
+	const lastRecord = state.records[state.records.length - 1];
+	const end = state.endedAt ?? now ?? lastRecord?.timestamp ?? state.startedAt ?? state.shownAt;
+	if (end === undefined || state.endedAt !== null || state.pausedAt === undefined) return end;
+	return Math.min(end, state.pausedAt);
+}
+
+/**
+ * Time the group has been typed so far, from its first keystroke to its end, to `now` or to its
+ * last keystroke, pauses left out. The race against the ghost runs on this time alone: nothing
+ * moves while the child reads.
+ */
+export function sessionTypingMs(state: SessionState, now?: number): number {
+	const end = endOf(state, now);
+	if (state.startedAt === null || end === undefined) return 0;
+	const paused = pausedBetween(state.pauses ?? [], state.startedAt, end);
+	return Math.max(0, span(state.startedAt, end) - paused);
+}
+
+/**
+ * Time spent on the group so far: the wait before its first keystroke, from the moment it could
+ * be typed and no longer than `rules.firstKeyWaitCapMs` (nothing when that moment is not known),
+ * then the time it has been typed (`sessionTypingMs`). The pauses are left out, and the time
+ * stands still during the one in progress.
+ */
+export function sessionElapsedMs(
+	state: SessionState,
+	now?: number,
+	rules: MeasureRules = MEASURE_RULES
+): number {
+	const { shownAt } = state;
+	const end = endOf(state, now);
+	if (shownAt === undefined || end === undefined) return sessionTypingMs(state, now);
+	const until = state.startedAt ?? end;
+	const waitMs = Math.min(
+		Math.max(0, span(shownAt, until) - pausedBetween(state.pauses ?? [], shownAt, until)),
+		Math.max(0, rules.firstKeyWaitCapMs)
+	);
+	return waitMs + sessionTypingMs(state, now);
+}
+
+export function computeMetrics(
+	state: SessionState,
+	now?: number,
+	rules: MeasureRules = MEASURE_RULES
+): SessionMetrics {
+	const { records } = state;
+	const pauses = state.pauses ?? [];
+	const elapsedMs = sessionElapsedMs(state, now, rules);
 
 	let totalKeystrokes = 0;
 	let correctKeystrokes = 0;
 	const tallies = new Map<string, CharTally>();
 
 	records.forEach((record, index) => {
-		if (record.kind === 'backspace') {
+		if (record.kind === 'backspace' || record.overMistake) {
 			return;
 		}
 		totalKeystrokes += 1;
@@ -115,7 +191,7 @@ export function computeMetrics(state: SessionState, now?: number): SessionMetric
 		}
 		correctKeystrokes += 1;
 		const previous = records[index - 1];
-		if (previous !== undefined) {
+		if (previous !== undefined && !isAfterPause(pauses, previous, record)) {
 			tally.latencySum += record.timestamp - previous.timestamp;
 			tally.latencyCount += 1;
 		}
@@ -135,6 +211,7 @@ export function computeMetrics(state: SessionState, now?: number): SessionMetric
 
 	return {
 		elapsedMs,
+		...(state.shownAt === undefined ? {} : { speedRule: SPEED_RULE_FROM_SHOWN }),
 		totalKeystrokes,
 		correctKeystrokes,
 		errorCount: totalKeystrokes - correctKeystrokes,

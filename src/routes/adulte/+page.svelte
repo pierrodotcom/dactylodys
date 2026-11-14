@@ -136,6 +136,8 @@
 				errors: m.adult_csv_errors(),
 				accuracy: m.adult_csv_accuracy(),
 				wordsPerMinute: m.adult_csv_speed(),
+				charsPerMinute: m.adult_csv_speed_chars(),
+				readingTimeCounted: m.adult_csv_reading_time(),
 				stars: m.adult_csv_stars(),
 				passed: m.adult_csv_passed()
 			},

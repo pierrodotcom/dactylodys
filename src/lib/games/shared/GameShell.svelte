@@ -103,11 +103,17 @@
 		announce
 	}: Props = $props();
 
+	/** The clock of the keystrokes (`attachKeyboardCapture` reads the same one). */
+	function now(): number {
+		return performance.now();
+	}
+
 	let game = $state.raw<GameState>(
 		untrack(() =>
 			createGame(exercise.groups, settings.errorPolicy, {
 				finale: finale !== undefined,
-				starts: exercise.starts
+				starts: exercise.starts,
+				at: now()
 			})
 		)
 	);
@@ -179,11 +185,16 @@
 	);
 
 	function dispatch(action: GameAction) {
-		const step = reduce(game, action);
+		// Read once: the time of a group, its pauses and the race are counted from the same moment.
+		const at = action.type === 'keystroke' ? action.keystroke.timestamp : now();
+		const timed =
+			action.type === 'advance' || action.type === 'pause' || action.type === 'resume'
+				? { ...action, at }
+				: action;
+		const step = reduce(game, timed);
 		if (step.state === game) return;
 		const groupChanged = step.state.groupIndex !== game.groupIndex;
 		game = step.state;
-		const at = action.type === 'keystroke' ? action.keystroke.timestamp : performance.now();
 		raceClock = followGame(raceClock, step.state, at);
 		raceNow = at;
 		for (const sound of step.sounds) sounds.play(sound);
@@ -221,6 +232,11 @@
 		if (suspended || event.key !== 'Escape' || event.repeat) return;
 		if (paused) void resume();
 		else dispatch({ type: 'pause' });
+	}
+
+	// A hidden page is not being typed on: the game pauses, and waits for the child to resume it.
+	function onVisibilityChange() {
+		if (document.visibilityState === 'hidden') dispatch({ type: 'pause' });
 	}
 
 	function keepFocus(event: MouseEvent) {
@@ -297,6 +313,7 @@
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} onclick={keepFocus} />
+<svelte:document onvisibilitychange={onVisibilityChange} />
 
 <div
 	class="game"

@@ -6,7 +6,7 @@
 	import { niceMax } from '$lib/ui/components/line-chart';
 	import { isOne } from '$lib/ui/plural';
 	import type { AdultRules } from './adult-rules';
-	import { practiceWeeks, sessionPoints } from './evolution';
+	import { practiceWeeks, sessionPoints, speedRuleChange } from './evolution';
 	import type { Formatters } from './format';
 
 	interface Props {
@@ -27,6 +27,8 @@
 	const WHOLE = 0;
 
 	const points = $derived(sessionPoints(profile.sessions, rules.sessionsShown));
+	// Said only while plays measured both ways are on the chart.
+	const ruleChange = $derived(speedRuleChange(profile.sessions.slice(-rules.sessionsShown)));
 	const weeks = $derived(practiceWeeks(profile.practiceDays, today, rules.weeksShown));
 	const totalDays = $derived(weeks.at(-1)?.cumulativeDays ?? 0);
 	const speeds = $derived(points.map((point) => point.wordsPerMinute));
@@ -64,6 +66,13 @@
 					</p>
 				{/if}
 				<p class="note">{m.adult_speed_note()}</p>
+				{#if ruleChange}
+					<p class="note" data-speed-rule-change>
+						{m.adult_speed_rule_change({
+							date: format.sessionDate(ruleChange.finishedAt, ruleChange.utcOffsetMinutes)
+						})}
+					</p>
+				{/if}
 			</figure>
 		</div>
 		<details>
@@ -83,6 +92,7 @@
 							<th scope="col">{m.adult_table_lesson()}</th>
 							<th scope="col">{m.adult_table_accuracy()}</th>
 							<th scope="col">{m.adult_table_speed()}</th>
+							<th scope="col">{m.adult_table_speed_chars()}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -93,6 +103,7 @@
 								<td>{lessonTitle(point.lessonId)}</td>
 								<td>{format.number(point.accuracy, ONE_DECIMAL)}</td>
 								<td>{format.number(point.wordsPerMinute, ONE_DECIMAL)}</td>
+								<td>{format.number(point.charsPerMinute, WHOLE)}</td>
 							</tr>
 						{/each}
 					</tbody>

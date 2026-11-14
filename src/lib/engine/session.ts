@@ -17,7 +17,7 @@ export function createSession(text: string, options: SessionSetup = {}): Session
 	if (target.length === 0) {
 		throw new RangeError('Session text must not be empty');
 	}
-	const { start } = options;
+	const { start, shownAt } = options;
 	if (start !== undefined) checkStart(target, start);
 	return {
 		target,
@@ -27,8 +27,27 @@ export function createSession(text: string, options: SessionSetup = {}): Session
 		endedAt: null,
 		records: [],
 		// Mistakes already written can only be erased: the group asks for Backspace, whatever the setting.
-		options: { errorPolicy: start === undefined ? (options.errorPolicy ?? 'retry') : 'backspace' }
+		options: { errorPolicy: start === undefined ? (options.errorPolicy ?? 'retry') : 'backspace' },
+		...(shownAt === undefined ? {} : { shownAt })
 	};
+}
+
+/**
+ * The group stops being typed at `at` (pause of the game, hidden page): the time until
+ * `resumeSession` is not counted, and no keystroke is taken meanwhile. Nothing to do for a group
+ * already paused or finished.
+ */
+export function pauseSession(state: SessionState, at: number): SessionState {
+	if (state.endedAt !== null || state.pausedAt !== undefined) return state;
+	return { ...state, pausedAt: at };
+}
+
+/** The group is typed again from `at`. Nothing to do for a group that is not paused. */
+export function resumeSession(state: SessionState, at: number): SessionState {
+	const { pausedAt, ...rest } = state;
+	if (pausedAt === undefined) return state;
+	const pause = { from: pausedAt, to: Math.max(pausedAt, at) };
+	return { ...rest, pauses: [...(state.pauses ?? []), pause] };
 }
 
 function checkStart(target: readonly string[], start: SessionStart): void {
@@ -57,7 +76,7 @@ export function isComplete(state: SessionState): boolean {
 }
 
 export function applyKeystroke(state: SessionState, keystroke: NormalizedKeystroke): SessionStep {
-	if (state.endedAt !== null) {
+	if (state.endedAt !== null || state.pausedAt !== undefined) {
 		return ignored(state);
 	}
 	if (keystroke.kind === 'backspace') {
@@ -102,7 +121,9 @@ function applyCharacter(
 		kind: keystroke.kind,
 		correct,
 		code: keystroke.code,
-		timestamp: keystroke.timestamp
+		timestamp: keystroke.timestamp,
+		// One mistake, one error: what is typed before it is erased is written, not counted again.
+		...(waitingForErase ? { overMistake: true as const } : {})
 	};
 	const startedAt = state.startedAt ?? keystroke.timestamp;
 	const records = [...state.records, record];

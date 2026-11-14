@@ -127,6 +127,16 @@ describe('toSessionRecord', () => {
 		});
 	});
 
+	it('marks a play whose time counts each group from the moment it could be typed', () => {
+		const record = toSessionRecord(play({ metrics: { ...METRICS, speedRule: 2 } }));
+		expect(record.speedRule).toBe(2);
+		expect(parseProfile({ ...newProfile(), sessions: [record] }).sessions).toEqual([record]);
+	});
+
+	it('leaves a play measured from the first keystroke of each group without any mark', () => {
+		expect(Object.hasOwn(toSessionRecord(play()), 'speedRule')).toBe(false);
+	});
+
 	it('records a play that was not passed as well', () => {
 		const record = toSessionRecord(play({ evaluation: { stars: 0, unlocksNext: false } }));
 		expect(record.stars).toBe(0);

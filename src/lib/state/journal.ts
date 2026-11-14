@@ -40,7 +40,8 @@ export function toSessionRecord(play: FinishedPlay): SessionRecord {
 			accuracy: metrics.accuracy,
 			correctCharsPerMinute: metrics.correctCharsPerMinute,
 			stars: evaluation.stars,
-			passed: evaluation.unlocksNext
+			passed: evaluation.unlocksNext,
+			...(metrics.speedRule === undefined ? {} : { speedRule: metrics.speedRule })
 		},
 		'session'
 	);

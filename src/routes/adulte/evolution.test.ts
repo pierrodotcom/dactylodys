@@ -1,7 +1,13 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { SessionRecord } from '$lib/state/types';
-import { practiceWeeks, sessionPoints, wordsPerMinuteOf } from './evolution';
+import {
+	isMeasuredFromShown,
+	practiceWeeks,
+	sessionPoints,
+	speedRuleChange,
+	wordsPerMinuteOf
+} from './evolution';
 
 const MS_PER_DAY = 86_400_000;
 const FIRST_DAY = Date.parse('2025-01-01T00:00:00Z') / MS_PER_DAY;
@@ -35,7 +41,45 @@ describe('wordsPerMinuteOf', () => {
 	});
 });
 
+describe('speedRuleChange', () => {
+	const former = (index: number) => session(index);
+	const current = (index: number) => session(index, { speedRule: 2 });
+
+	it('tells the plays whose speed counts the time before the first key of each group', () => {
+		expect(isMeasuredFromShown(current(0))).toBe(true);
+		expect(isMeasuredFromShown(former(0))).toBe(false);
+	});
+
+	it('gives the first play measured the current way when older plays were measured before', () => {
+		const sessions = [former(0), former(1), current(2), current(3)];
+		expect(speedRuleChange(sessions)).toBe(sessions[2]);
+	});
+
+	it('says nothing when every play was measured the same way', () => {
+		expect(speedRuleChange([])).toBeNull();
+		expect(speedRuleChange([former(0), former(1)])).toBeNull();
+		expect(speedRuleChange([current(0), current(1)])).toBeNull();
+	});
+
+	it('finds a change only where a former play comes before a current one', () => {
+		fc.assert(
+			fc.property(fc.array(fc.boolean(), { maxLength: 30 }), (marks) => {
+				const sessions = marks.map((mark, index) => (mark ? current(index) : former(index)));
+				const change = speedRuleChange(sessions);
+				const first = marks.indexOf(true);
+				if (first <= 0) expect(change).toBeNull();
+				else expect(change).toBe(sessions[first]);
+			})
+		);
+	});
+});
+
 describe('sessionPoints', () => {
+	it('gives the speed of a play in words and in characters per minute', () => {
+		const [point] = sessionPoints([session(0, { correctCharsPerMinute: 60 })], 1);
+		expect(point).toMatchObject({ wordsPerMinute: 12, charsPerMinute: 60 });
+	});
+
 	it('keeps the most recent plays, oldest first, with their rank in the journal', () => {
 		const points = sessionPoints(
 			[0, 1, 2, 3, 4].map((index) => session(index)),

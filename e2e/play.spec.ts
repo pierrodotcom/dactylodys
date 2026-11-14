@@ -275,12 +275,15 @@ async function createPlayer(page: Page, name = PLAYER_NAME) {
 	await expect(heading(page, message('play_check_title'))).toBeVisible();
 }
 
-/** `different` presses the keys of an American keyboard, which is what Playwright simulates. */
+/**
+ * Playwright simulates an American keyboard: `same` types the letters the layout expects, whatever
+ * key writes them; `different` presses the physical keys, which write other letters there.
+ */
 async function checkKeyboard(page: Page, kind: 'different' | 'same') {
 	await button(page, message('play_check_continue')).click();
 	for (const key of CHECK_KEYS) {
 		await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
-		await page.keyboard.press(kind === 'same' ? key.code : key.letter);
+		await page.keyboard.press(kind === 'same' ? key.letter : key.code);
 	}
 	const outcome = kind === 'same' ? 'play_check_ok_title' : 'play_check_diff_title';
 	await expect(heading(page, message(outcome))).toBeVisible();
@@ -635,6 +638,61 @@ test.describe('play route', () => {
 		await expect(lessonRow(page, FIRST).getByRole('img', { name: stars(0) })).toBeVisible();
 	});
 
+	test('pauses when the page is hidden in the middle of a word, waits for the child, and counts no time away', async ({
+		page
+	}) => {
+		const AWAY_MS = 10 * 60_000;
+		const setVisibility = (state: 'hidden' | 'visible') =>
+			page.evaluate((value) => {
+				Object.defineProperty(document, 'visibilityState', { value, configurable: true });
+				document.dispatchEvent(new Event('visibilitychange'));
+			}, state);
+		await page.clock.install();
+		const profile = profileAfter(FIRST.id);
+		await reachMapAs(page, profile);
+		await openIntro(page, FIRST);
+		await playButton(page, DRAWING).click();
+		const group = await currentGroup(page);
+		const first = [...group][0] ?? '';
+		await page.keyboard.type(first);
+		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
+
+		await setVisibility('hidden');
+		const dialog = page.getByRole('dialog', { name: message('game_shared_pause_title') });
+		await expect(dialog).toBeVisible();
+		await page.clock.fastForward(AWAY_MS);
+
+		// Back on the page, nothing starts again by itself: the child resumes, here with the keyboard.
+		await setVisibility('visible');
+		await expect(dialog).toBeVisible();
+		await expect(button(page, message('game_shared_resume'))).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(dialog).toHaveCount(0);
+		await expect(page.locator('#game-input')).toBeFocused();
+		await expect(page.locator('.target-text [data-state="done"]')).toHaveCount(1);
+
+		await page.keyboard.type(group.slice(first.length));
+		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+		await page.keyboard.press(SKIP_KEY);
+		const played = await typeToResult(page, { skipDelay: true, start: 1 });
+
+		const journal = async () => {
+			const reading = readProfile(await storedRecord(page, profile));
+			return reading.ok ? reading.profile : undefined;
+		};
+		await expect.poll(async () => (await journal())?.sessions.length).toBe(1);
+		const saved = await journal();
+		const session = saved?.sessions[0];
+		expect(session?.speedRule).toBe(2);
+		expect(session?.durationMs).toBeLessThan(AWAY_MS);
+		// The key typed after the pause would carry the whole time away as a hesitation.
+		const typed = played.typed + toGraphemes(group).length;
+		for (const char of new Set(group)) {
+			const latency = saved?.progress.chars[char]?.recent.at(-1)?.latencyMs ?? 0;
+			expect(latency).toBeLessThan(AWAY_MS / typed);
+		}
+	});
+
 	test('plays its sounds through one audio context from one game to the next', async ({ page }) => {
 		await page.addInitScript(() => {
 			const created: unknown[] = [];
@@ -862,9 +920,7 @@ test.describe('play route', () => {
 		await expect(heading(page, message('play_check_title'))).toBeVisible();
 	});
 
-	test('says the keyboard is ready when the physical keys are the expected ones', async ({
-		page
-	}) => {
+	test('says the keyboard is ready when the keys write the expected letters', async ({ page }) => {
 		await openPlay(page);
 		await createPlayer(page);
 
@@ -1472,7 +1528,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			for (const [index, key] of CHECK_KEYS.entries()) {
 				await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
 				if (index === 0) await expectNoAxeViolation(page);
-				await page.keyboard.press(key.letter);
+				await page.keyboard.press(key.code);
 			}
 			await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
 			await expectNoAxeViolation(page);
