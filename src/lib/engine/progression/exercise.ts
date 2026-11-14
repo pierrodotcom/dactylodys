@@ -1,9 +1,18 @@
 import { toGraphemes } from '../graphemes';
-import { lessonTexts, storyPhrases, textGroups, textOf, usablePhrases, usableWords } from './banks';
+import {
+	lessonTexts,
+	storyPhrases,
+	textGroups,
+	textOf,
+	usablePhraseCuts,
+	usableWordCuts
+} from './banks';
 import { LINE_BREAK, findLesson, freshChars, learnedChars } from './definition';
 import { recentErrorRate } from './progress';
 import { repairStarts } from './repair';
+import { buildPatternSuite } from './suites';
 import type {
+	DrillPatternRules,
 	Exercise,
 	ExerciseContext,
 	ExerciseMix,
@@ -11,11 +20,23 @@ import type {
 	ProgressionDefinition,
 	Rng
 } from './types';
+import {
+	capitalOf,
+	capitalized,
+	completedGraphemes,
+	coverage,
+	isCapital,
+	isLetterOrDigit,
+	pickPracticeWord,
+	weakCharsOf
+} from './word-practice';
 
 const SPACE = ' ';
 const MAX_ATTEMPTS = 64;
 const RELAXED_AFTER_ATTEMPT = 16;
 const MAX_IDENTICAL_IN_A_ROW = 2;
+/** A character is reviewed by words only when two of them hold it: none comes twice in a row. */
+const MIN_REVIEW_WORDS = 2;
 
 type Genre = 'drill' | 'word' | 'phrase';
 
@@ -33,16 +54,23 @@ interface Reserve {
 interface Candidate {
 	readonly text: string;
 	readonly reserve?: Reserve;
+	/** Words of the lesson or of the bank the group is made of, when it is not one of them alone. */
+	readonly madeOf?: readonly string[];
 }
 
 interface Settings {
 	readonly lesson: LessonDefinition;
+	/** New characters a suite may hold: never a capital. */
 	readonly fresh: readonly string[];
+	/** Known characters a suite may hold: never a capital. */
 	readonly known: readonly string[];
 	readonly newCharWeight: number;
 	readonly weakCharBoost: number;
 	readonly errorRate: (char: string) => number;
 	readonly rng: Rng;
+	readonly patterns: DrillPatternRules | undefined;
+	/** A suite holds a letter or a digit as soon as one is known: never marks alone. */
+	readonly wantsLetter: boolean;
 }
 
 export function between(min: number, max: number, rng: Rng): number {
@@ -145,9 +173,31 @@ export function placeForced(
 	return isValidSequence(sequence) ? sequence : undefined;
 }
 
+/**
+ * A suite: one of the regular shapes of the rules when they have some that fit, else characters
+ * drawn one by one. It never holds a capital, and holds a letter or a digit whenever it can.
+ */
 function buildDrill(forced: readonly string[], settings: Settings, relaxed: boolean): Candidate {
-	const { lesson, rng } = settings;
+	const { lesson, rng, patterns } = settings;
+	if (patterns !== undefined && !relaxed) {
+		const text = buildPatternSuite(
+			patterns,
+			{
+				forced,
+				fresh: settings.fresh.filter((char) => !forced.includes(char)),
+				known: settings.known.filter((char) => !forced.includes(char))
+			},
+			{
+				length: lesson.groupLength,
+				newCharWeight: settings.newCharWeight,
+				weightOf: (char) => 1 + settings.weakCharBoost * settings.errorRate(char),
+				rng
+			}
+		);
+		if (text !== undefined) return { text };
+	}
 	const [min, max] = lesson.groupLength;
+	let marksOnly: string | undefined;
 	for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
 		const length = Math.max(between(min, max, rng), forced.length);
 		const natural: string[] = [];
@@ -155,8 +205,11 @@ function buildDrill(forced: readonly string[], settings: Settings, relaxed: bool
 			natural.push(pickChar(natural, length, settings, relaxed));
 		}
 		const sequence = forced.length === 0 ? natural : placeForced(natural, forced, rng);
-		if (sequence !== undefined) return { text: sequence.join('') };
+		if (sequence === undefined) continue;
+		if (!settings.wantsLetter || sequence.some(isLetterOrDigit)) return { text: sequence.join('') };
+		marksOnly ??= sequence.join('');
 	}
+	if (marksOnly !== undefined) return { text: marksOnly };
 	throw new Error(`Lesson ${lesson.id}: cannot place the new characters in a group`);
 }
 
@@ -259,25 +312,33 @@ export function generateExercise(
 	if (lesson === undefined) throw new RangeError(`Unknown lesson: ${lessonId}`);
 
 	const learned = learnedChars(progression, lessonId);
-	const { newCharWeight, weakCharBoost, themeBoost, newCharMinCount } = progression.rules;
+	const known = new Set(learned);
+	const { rules } = progression;
+	const { newCharWeight, weakCharBoost, themeBoost, newCharMinCount, lengthSlack } = rules;
 	const { progress } = context;
 	const errorRate = (char: string): number =>
 		progress === undefined ? 0 : recentErrorRate(progress, char);
 
 	const fresh = freshChars(progression, lessonId);
-	const { lengthSlack } = progression.rules;
+	const suiteFresh = fresh.filter((char) => !isCapital(char));
+	const suiteKnown = learned.filter((char) => !fresh.includes(char) && !isCapital(char));
 	const settings: Settings = {
 		lesson,
-		fresh,
-		known: learned.filter((char) => !fresh.includes(char)),
+		fresh: suiteFresh,
+		known: suiteKnown,
 		newCharWeight,
 		weakCharBoost,
 		errorRate,
-		rng
+		rng,
+		patterns: rules.drillPatterns,
+		wantsLetter: [...suiteFresh, ...suiteKnown].some(isLetterOrDigit)
 	};
 
-	const toItem = (text: string, themes: readonly string[]): Item => {
-		const graphemes = toGraphemes(text);
+	const toItem = (
+		text: string,
+		themes: readonly string[],
+		graphemes: readonly string[] = toGraphemes(text)
+	): Item => {
 		const themeFactor =
 			1 + (context.themeId !== undefined && themes.includes(context.themeId) ? themeBoost : 0);
 		const weakFactor = 1 + weakCharBoost * Math.max(0, ...graphemes.map(errorRate));
@@ -288,18 +349,46 @@ export function generateExercise(
 	const wordItems = new Map<string, Item>();
 	for (const word of lesson.words) wordItems.set(word, toItem(word, []));
 	if (context.words !== undefined) {
-		for (const entry of usableWords(context.words, learned, options)) {
-			wordItems.set(entry.text, toItem(entry.text, entry.themes));
+		const wordOptions = { ...options, maxWordLength: context.maxWordLength };
+		for (const { entry, graphemes } of usableWordCuts(context.words, learned, wordOptions)) {
+			wordItems.set(entry.text, toItem(entry.text, entry.themes, graphemes));
 		}
 	}
-	const phraseItems = (
-		context.phrases === undefined ? [] : usablePhrases(context.phrases, learned, options)
-	).map((entry) => toItem(entry.text, entry.themes));
+	// Once capitals and the mark that ends a sentence are learned, an early phrase gets them.
+	const { phraseEnd } = rules;
+	const completes = phraseEnd !== undefined && known.has(phraseEnd) && learned.some(isCapital);
+	const phraseItems = new Map<string, Item>();
+	if (context.phrases !== undefined) {
+		for (const { entry, graphemes } of usablePhraseCuts(context.phrases, learned, options)) {
+			const typed = completes ? completedGraphemes(graphemes, known, phraseEnd) : graphemes;
+			const text = completes ? typed.join('') : entry.text;
+			if (!phraseItems.has(text)) phraseItems.set(text, toItem(text, entry.themes, typed));
+		}
+	}
 	const words: Reserve = { items: [...wordItems.values()], used: new Set() };
-	const phrases: Reserve = { items: phraseItems, used: new Set() };
+	const phrases: Reserve = { items: [...phraseItems.values()], used: new Set() };
+
+	// With enough words, a mixed group is never a suite: a suite only stays where no word can do.
+	const suiteFree =
+		rules.suiteFreeMinWords !== undefined && words.items.length >= rules.suiteFreeMinWords;
+	const mix: ExerciseMix = !suiteFree
+		? lesson.mix
+		: lesson.mix.words + lesson.mix.phrases > 0
+			? { ...lesson.mix, drills: 0 }
+			: { drills: 0, words: 1, phrases: 0 };
 
 	// A lesson that asks for words gives at least one, even when long phrases would fill it.
 	let owesWord = lesson.mix.words > 0 && words.items.length > 0;
+
+	/** A word or a phrase of at most `room` graphemes; a phrase too long gives way to a word. */
+	const buildFitting = (genre: Genre, room: number): Candidate | undefined => {
+		if (genre === 'drill') return undefined;
+		if (genre === 'word') return buildEntry(words, lesson.newChars, settings, room);
+		return (
+			buildEntry(phrases, fresh, settings, room) ??
+			buildEntry(words, lesson.newChars, settings, room)
+		);
+	};
 
 	const buildMixed = (
 		missing: readonly string[],
@@ -309,20 +398,16 @@ export function generateExercise(
 	): Candidate => {
 		const genre = relaxed
 			? 'drill'
-			: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
+			: chooseGenre(mix, words.items.length > 0, phrases.items.length > 0, rng);
 		const room =
 			lengthSlack === undefined
 				? Number.POSITIVE_INFINITY
 				: Math.max(0, lesson.targetLength + lengthSlack - length);
 		const candidate =
-			(genre === 'drill'
-				? undefined
-				: buildEntry(
-						genre === 'word' ? words : phrases,
-						genre === 'word' ? lesson.newChars : fresh,
-						settings,
-						room
-					)) ?? buildDrill([], settings, relaxed);
+			buildFitting(genre, room) ??
+			// With enough words, even one too long for the room left is better than a suite.
+			(suiteFree && genre !== 'drill' ? buildEntry(words, lesson.newChars, settings) : undefined) ??
+			buildDrill([], settings, relaxed);
 		const present = toGraphemes(candidate.text);
 		const stops =
 			groupIndex + 1 >= lesson.groupCount || length + present.length >= lesson.targetLength;
@@ -341,19 +426,13 @@ export function generateExercise(
 			const relaxed = attempt >= RELAXED_AFTER_ATTEMPT;
 			const genre = relaxed
 				? 'drill'
-				: chooseGenre(lesson.mix, words.items.length > 0, phrases.items.length > 0, rng);
-			const entry =
-				genre === 'drill'
-					? undefined
-					: buildEntry(
-							genre === 'word' ? words : phrases,
-							genre === 'word' ? lesson.newChars : fresh,
-							settings,
-							room
-						);
+				: chooseGenre(mix, words.items.length > 0, phrases.items.length > 0, rng);
 			// A suite is never shorter than the lesson's minimum group length.
 			const candidate =
-				entry ?? (room >= lesson.groupLength[0] ? buildDrill([], settings, relaxed) : undefined);
+				buildFitting(genre, room) ??
+				(!suiteFree && room >= lesson.groupLength[0]
+					? buildDrill([], settings, relaxed)
+					: undefined);
 			if (
 				candidate !== undefined &&
 				candidate.text !== previous &&
@@ -398,9 +477,9 @@ export function generateExercise(
 	const story =
 		text === undefined ? dueStoryPhrase(progression, lessonId, learned, context) : undefined;
 	const ending = text ?? (story === undefined ? undefined : [story]);
+	const endingGraphemes = (ending ?? []).flatMap((group) => toGraphemes(group));
 	// Without a slack, the ending and what comes before it keep to the target length.
-	const endingLength =
-		ending === undefined ? 0 : ending.reduce((sum, group) => sum + toGraphemes(group).length, 0);
+	const endingLength = endingGraphemes.length;
 	const endingRoom =
 		ending === undefined ? 0 : lesson.targetLength + (lengthSlack ?? 0) - endingLength;
 	const groups: string[] = [];
@@ -408,6 +487,8 @@ export function generateExercise(
 	let total = 0;
 	/** Index of the first group of the ending, once it is placed. */
 	let endingFrom: number | undefined;
+	/** Last word of the last group, when that group is made of words. */
+	let lastWord: string | undefined;
 	const record = (group: string) => {
 		groups.push(group);
 		const graphemes = toGraphemes(group);
@@ -415,17 +496,151 @@ export function generateExercise(
 		for (const grapheme of graphemes) asked.set(grapheme, (asked.get(grapheme) ?? 0) + 1);
 	};
 
+	// Short words serve the warm-up of a new character and the review of a weak one.
+	const { wordWarmUp, weakChars: weakRules } = rules;
+	const practicePool =
+		wordWarmUp === undefined
+			? words.items
+			: words.items.filter((item) => item.graphemes.length <= wordWarmUp.maxWordLength);
+	const holders = new Map<string, number>();
+	for (const item of practicePool) {
+		for (const char of new Set(item.graphemes)) holders.set(char, (holders.get(char) ?? 0) + 1);
+	}
+	const reviewed =
+		weakRules === undefined || progress === undefined
+			? []
+			: weakCharsOf(
+					progress,
+					learned.filter((char) => (holders.get(char) ?? 0) >= MIN_REVIEW_WORDS),
+					weakRules
+				);
+	const capitalsWanted = lesson.unlocks.includes('uppercase') ? (rules.uppercaseMinCount ?? 0) : 0;
+	const endingCapitals = endingGraphemes.filter(isCapital).length;
+	const countIn = (list: readonly string[], char: string): number =>
+		list.filter((grapheme) => grapheme === char).length;
+	/** How much of what still lacks a word brings for its length: short and rich words first. */
+	const density = (word: Item, lacking: ReadonlyMap<string, number>): number =>
+		coverage(word, lacking) / Math.max(1, word.graphemes.length);
+	// A warm-up written by hand asks each new character as much as it must (checked by the parser):
+	// nothing is generated after it.
+	const minCount = lesson.warmUp === undefined ? newCharMinCount : 0;
+	// A warm-up made of words is longer than suites: what the story phrase holds counts for it.
+	const countsEnding = wordWarmUp !== undefined && !lesson.newChars.includes(LINE_BREAK);
+	const askedOf = (char: string): number =>
+		(asked.get(char) ?? 0) + (countsEnding ? countIn(endingGraphemes, char) : 0);
+
+	/**
+	 * Warm-up of the new characters still lacking: one word that holds it for each of them (the
+	 * richest for its length first), side by side; a suite for those no word holds.
+	 */
+	const buildWarmUp = (
+		lacking: readonly string[],
+		previous: string | undefined,
+		relaxed: boolean
+	): Candidate => {
+		if (wordWarmUp === undefined || relaxed) return buildDrill(lacking, settings, relaxed);
+		const still = new Map(lacking.map((char) => [char, minCount - askedOf(char)] as const));
+		const picked: Item[] = [];
+		let last = lastWord;
+		for (const char of lacking) {
+			if (picked.some((item) => item.graphemes.includes(char))) continue;
+			if ((holders.get(char) ?? 0) < wordWarmUp.minWords) continue;
+			const item = pickPracticeWord(
+				practicePool,
+				(word) => (word.graphemes.includes(char) ? density(word, still) : 0),
+				{
+					used: new Set([...words.used, ...picked.map((word) => word.text)]),
+					avoid: [last, previous],
+					rng
+				}
+			);
+			if (item === undefined) continue;
+			picked.push(item);
+			last = item.text;
+			for (const grapheme of item.graphemes) {
+				const count = still.get(grapheme);
+				if (count !== undefined) still.set(grapheme, count - 1);
+			}
+		}
+		const rest = lacking.filter((char) => !picked.some((item) => item.graphemes.includes(char)));
+		const pieces = picked.map((item) => item.text);
+		if (rest.length > 0) pieces.push(buildDrill(rest, settings, relaxed).text);
+		if (picked.length === 0 || (pieces.length > 1 && !known.has(SPACE))) {
+			return buildDrill(lacking, settings, relaxed);
+		}
+		return { text: pieces.join(SPACE), madeOf: picked.map((item) => item.text) };
+	};
+
+	/**
+	 * Words for what the exercise still owes once the new characters are warmed up: the weak
+	 * characters of the child, and the capitals of a lesson that unlocks them. They are put side by
+	 * side as much as the groups left require; the ending counts for what it holds.
+	 */
+	const buildReview = (previous: string | undefined): Candidate | undefined => {
+		const slots = lesson.groupCount - groups.length - (ending?.length ?? 0);
+		if (slots < 1 || practicePool.length === 0) return undefined;
+		const needs = new Map<string, number>();
+		if (weakRules !== undefined) {
+			for (const char of reviewed) {
+				const lack = weakRules.minCount - (asked.get(char) ?? 0) - countIn(endingGraphemes, char);
+				if (lack > 0) needs.set(char, lack);
+			}
+		}
+		let capitalsAsked = 0;
+		for (const [char, count] of asked) if (isCapital(char)) capitalsAsked += count;
+		let capitals = Math.max(0, capitalsWanted - capitalsAsked - endingCapitals);
+		const owed = [...needs.values()].reduce((sum, count) => sum + count, 0) + capitals;
+		if (owed === 0) return undefined;
+		const perGroup = known.has(SPACE) ? Math.ceil(owed / slots) : 1;
+		const pieces: string[] = [];
+		const picked: string[] = [];
+		let last = lastWord;
+		while (pieces.length < perGroup && (needs.size > 0 || capitals > 0)) {
+			const item = pickPracticeWord(
+				practicePool,
+				needs.size > 0
+					? (word) => density(word, needs)
+					: (word) => (capitalOf(word.graphemes[0], known) === undefined ? 0 : 1),
+				{ used: new Set([...words.used, ...picked]), avoid: [last, previous], rng }
+			);
+			if (item === undefined) break;
+			const first = item.graphemes[0];
+			const upper =
+				capitals > 0 && (first === undefined || !needs.has(first))
+					? capitalized(item.text, known)
+					: undefined;
+			if (upper !== undefined) capitals -= 1;
+			pieces.push(upper ?? item.text);
+			picked.push(item.text);
+			last = item.text;
+			for (const grapheme of toGraphemes(upper ?? item.text)) {
+				const count = needs.get(grapheme);
+				if (count === undefined) continue;
+				if (count <= 1) needs.delete(grapheme);
+				else needs.set(grapheme, count - 1);
+			}
+		}
+		if (pieces.length === 0) return undefined;
+		// Two words that take turns would give the same group twice: the second one starts it then.
+		const turned =
+			pieces.join(SPACE) === previous ? [...pieces.slice(1), ...pieces.slice(0, 1)] : pieces;
+		const group = turned.join(SPACE);
+		return group === previous ? undefined : { text: group, madeOf: picked };
+	};
+
 	// A warm-up written by hand opens the exercise as it is: it already asks every new character
-	// enough (checked by the parser), so no suite is generated for them.
+	// enough (checked by the parser), so no warm-up is generated for them.
 	for (const group of lesson.warmUp ?? []) record(group);
 
 	while (groups.length < lesson.groupCount) {
-		// Warm-up: suites that hold the new characters open the exercise until each was asked enough.
-		const lacking = lesson.newChars.filter((char) => (asked.get(char) ?? 0) < newCharMinCount);
+		// Warm-up: groups that hold the new characters open the exercise until each was asked enough.
+		const lacking = lesson.newChars.filter((char) => askedOf(char) < minCount);
 		const previous = groups[groups.length - 1];
-		let accepted: Candidate | undefined;
+		let accepted: Candidate | undefined = lacking.length === 0 ? buildReview(previous) : undefined;
 
-		if (lacking.length === 0 && ending !== undefined) {
+		if (accepted !== undefined) {
+			// The review comes right after the warm-up, before anything else.
+		} else if (lacking.length === 0 && ending !== undefined) {
 			// After the warm-up, mixed groups fill the room left before the text or the story phrase,
 			// which ends the exercise whatever its length.
 			if (groups.length + ending.length < lesson.groupCount) {
@@ -446,7 +661,7 @@ export function generateExercise(
 						? buildMixed(missing, groups.length, total, relaxed)
 						: lacking.includes(LINE_BREAK)
 							? buildLine(lacking, relaxed)
-							: buildDrill(lacking, settings, relaxed);
+							: buildWarmUp(lacking, previous, relaxed);
 				if (candidate.text !== previous) accepted = candidate;
 			}
 			if (accepted === undefined) {
@@ -455,7 +670,9 @@ export function generateExercise(
 		}
 
 		accepted.reserve?.used.add(accepted.text);
-		if (accepted.reserve === words) owesWord = false;
+		for (const word of accepted.madeOf ?? []) words.used.add(word);
+		if (accepted.reserve === words || (accepted.madeOf ?? []).length > 0) owesWord = false;
+		lastWord = accepted.madeOf?.[accepted.madeOf.length - 1];
 		record(accepted.text);
 	}
 	if (lesson.repair === undefined) return { lessonId, groups };

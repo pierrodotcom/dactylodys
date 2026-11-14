@@ -3,6 +3,7 @@ import { usableWords } from '../progression/banks';
 import { learnedChars, lessonIds } from '../progression/definition';
 import { between, placeForced } from '../progression/exercise';
 import { isLessonPassed } from '../progression/progress';
+import { buildPatternSuite } from '../progression/suites';
 import type {
 	Exercise,
 	ExerciseContext,
@@ -10,6 +11,7 @@ import type {
 	ProgressionDefinition,
 	Rng
 } from '../progression/types';
+import { isCapital, pickPracticeWord, type PracticeWord } from '../progression/word-practice';
 import type { HelpQuest, HelpQuestRules } from './types';
 
 const SPACE = ' ';
@@ -126,8 +128,9 @@ function lessonsUpTo(progression: ProgressionDefinition, lessonId: string): Less
 }
 
 /**
- * The short exercise of a help quest: groups of words and warm-up suites that bring the key back
- * often, written with the characters the child knows. It stops as soon as `targetLength` is
+ * The short exercise of a help quest, written with the characters the child knows: words that
+ * hold the key, those that hold it most first; without such a word, the groups of the warm-up
+ * written for its lesson that hold it; without any, suites. It stops as soon as `targetLength` is
  * reached, and goes on only while the key was not asked `minCharCount` times yet.
  */
 export function generateHelpExercise(
@@ -152,7 +155,11 @@ export function generateHelpExercise(
 		}
 	}
 	if (context.words !== undefined) {
-		const options = { maxLevel: context.maxLevel, ageBand: context.ageBand };
+		const options = {
+			maxLevel: context.maxLevel,
+			ageBand: context.ageBand,
+			maxWordLength: context.maxWordLength
+		};
 		for (const entry of usableWords(context.words, allowed, options)) {
 			wordSet.add(entry.text);
 		}
@@ -167,6 +174,12 @@ export function generateHelpExercise(
 	const wordPool = isSpace
 		? [...wordSet]
 		: [...wordSet].filter((word) => toGraphemes(word).includes(char));
+	const keyWords: PracticeWord[] = isSpace
+		? []
+		: wordPool.map((text) => ({ text, graphemes: toGraphemes(text), weight: 1 }));
+	// The warm-up written for the lesson of the key shows it where it belongs (`oui, non.`).
+	const written = (home.warmUp ?? []).filter((group) => toGraphemes(group).includes(char));
+	const patterns = progression.rules.drillPatterns;
 	const [minLength, maxLength] = home.groupLength;
 	const shortest = isSpace ? SHORTEST_SPACED_GROUP : 1;
 
@@ -188,25 +201,52 @@ export function generateHelpExercise(
 
 		for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
 			group = '';
-			if (dense) {
+			if (keyWords.length > 0) {
+				group =
+					pickPracticeWord(
+						keyWords,
+						// Short words that hold the key often come first.
+						(word) => countOf(word.graphemes, char) / word.graphemes.length,
+						{ used: usedWords, avoid: [previous], rng }
+					)?.text ?? '';
+			}
+			if (group === '' && written.length > 0) {
+				const next = written[(groups.length + attempt) % written.length] as string;
+				// A single written group alternates with a suite rather than come twice in a row.
+				group = next === previous ? '' : next;
+			}
+			const longest = Math.max(shortest, Math.min(maxLength, Math.max(room, minLength)));
+			if (group === '' && patterns !== undefined && !isSpace) {
+				// A suite with a regular shape, unless the only one that fits was just typed.
+				const shaped = buildPatternSuite(
+					patterns,
+					{ forced: [char], fresh: [], known: allowed.filter((c) => c !== char && !isCapital(c)) },
+					{
+						length: [Math.max(shortest, minLength), longest],
+						newCharWeight: 0,
+						weightOf: () => 1,
+						rng
+					}
+				);
+				group = shaped === undefined || shaped === previous ? '' : shaped;
+			}
+			if (group === '' && dense) {
 				const length = Math.max(shortest, Math.min(Math.max(needed, minLength), maxLength));
 				group = buildDrill(plan, length, Math.min(lacking, capacity(plan, length)));
-			} else if (wordPool.length > 0 && rng() < 0.5) {
+			} else if (group === '' && isSpace && wordPool.length > 0 && rng() < 0.5) {
 				const first = pickWord(wordPool, room, usedWords, rng);
-				if (!isSpace) {
-					group = first ?? '';
-				} else if (first !== undefined) {
-					const second = pickWord(
-						wordPool.filter((word) => word !== first),
-						room,
-						usedWords,
-						rng
-					);
-					group = second === undefined ? '' : `${first}${SPACE}${second}`;
-				}
+				const second =
+					first === undefined
+						? undefined
+						: pickWord(
+								wordPool.filter((word) => word !== first),
+								room,
+								usedWords,
+								rng
+							);
+				group = first === undefined || second === undefined ? '' : `${first}${SPACE}${second}`;
 			}
 			if (group === '') {
-				const longest = Math.max(shortest, Math.min(maxLength, Math.max(room, minLength)));
 				const length = between(Math.max(shortest, minLength), longest, rng);
 				group = buildDrill(plan, length, between(1, capacity(plan, length), rng));
 			}

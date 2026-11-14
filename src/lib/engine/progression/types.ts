@@ -18,8 +18,9 @@ export interface ProgressionRules {
 	/** How much more often a word of the current world's theme is picked; 0 disables it. */
 	readonly themeBoost: number;
 	/**
-	 * Times each new character of a lesson is asked at least in one exercise, by warm-up suites that
-	 * open it; 0 disables it.
+	 * Times each new character of a lesson is asked at least in one exercise, by the warm-up that
+	 * opens it (words that hold it, else suites); 0 disables it. A warm-up written by hand follows
+	 * `writtenWarmUpMinCount` when the rules have one.
 	 */
 	readonly newCharMinCount: number;
 	/**
@@ -56,6 +57,76 @@ export interface ProgressionRules {
 	 * Absent: one line per group.
 	 */
 	readonly textGroupLength?: number;
+	/**
+	 * When the warm-up of a new character is made of words that hold it instead of suites. Absent:
+	 * always suites.
+	 */
+	readonly wordWarmUp?: WordWarmUpRules;
+	/**
+	 * Times a warm-up written by hand (`LessonDefinition.warmUp`) asks each new character at least,
+	 * 1 or more: a mark shown in its place (`oui, non.`) takes more room than in a suite, so fewer
+	 * of them keep the exercise short. Absent: `newCharMinCount`.
+	 */
+	readonly writtenWarmUpMinCount?: number;
+	/**
+	 * How a suite is built when one is needed: regular shapes that can be said aloud, instead of
+	 * characters drawn at random. Absent: drawn at random.
+	 */
+	readonly drillPatterns?: DrillPatternRules;
+	/**
+	 * Words a lesson can use (its own and those of the bank) from which its mixed groups are never
+	 * suites, whatever `mix.drills`: a suite only stays where no word can do. Absent: `mix` decides.
+	 */
+	readonly suiteFreeMinWords?: number;
+	/**
+	 * Capitals an exercise of a lesson that unlocks them holds at least: words are then drawn with
+	 * a capital first letter. Absent or 0: no minimum.
+	 */
+	readonly uppercaseMinCount?: number;
+	/**
+	 * Review of the characters the child gets wrong lately, by words that hold them. Absent: only
+	 * `weakCharBoost` brings them back.
+	 */
+	readonly weakChars?: WeakCharRules;
+	/**
+	 * Mark that ends a sentence: once it and the capitals are learned, a phrase of the bank written
+	 * without them gets its capital first letter (when the capital is learned) and this mark at its
+	 * end. Absent: phrases are typed as written.
+	 */
+	readonly phraseEnd?: string;
+}
+
+/** A warm-up made of words: data, never constants in the code. */
+export interface WordWarmUpRules {
+	/** Words that hold a new character, at least, for its warm-up to be made of them. */
+	readonly minWords: number;
+	/** Most graphemes of a word taken for a warm-up or for the review of a weak character. */
+	readonly maxWordLength: number;
+}
+
+/**
+ * Shapes of a suite. In a shape, `C` and `D` stand for two different consonants, `V` and `W` for
+ * two different vowels, a space for itself; the new characters of the lesson take the places of
+ * their kind first, known characters the others. A group never mixes more than two new characters
+ * with more than two known ones.
+ */
+export interface DrillPatternRules {
+	/** The vowels of the language, accented ones included; every other letter is a consonant. */
+	readonly vowels: readonly string[];
+	/** A shape with a vowel is preferred as soon as one is known: it can be said aloud. */
+	readonly shapes: readonly string[];
+}
+
+/** Which characters are reviewed in every exercise, and how much: data, never constants. */
+export interface WeakCharRules {
+	/** Keystrokes of each weak character an exercise holds at least. */
+	readonly minCount: number;
+	/** Weak characters reviewed in one exercise at most: those with the highest recent error rate. */
+	readonly maxChars: number;
+	/** Recent keystrokes of a character, at least, before it can count as weak. */
+	readonly minAttempts: number;
+	/** Recent error rate (0 to 1) above which a character is weak. */
+	readonly minErrorRate: number;
 }
 
 /** Thresholds of `charMastery`: data, never constants in the code. */
@@ -121,8 +192,10 @@ export interface LessonDefinition {
 	readonly groupLength: readonly [number, number];
 	/**
 	 * Warm-up written by hand, typed as it is, in this order, at the start of every exercise
-	 * instead of generated suites: for keys whose clearest practice is a series (`1 2 3`). It asks
-	 * each new character at least `rules.newCharMinCount` times (checked). Absent: generated.
+	 * instead of a generated one: for keys whose clearest practice is a series (`1 2 3`) or a mark
+	 * in its place (`oui, non.`), and for the capitals a lesson unlocks. It asks each new character
+	 * at least `rules.writtenWarmUpMinCount` times, else `rules.newCharMinCount` (checked), and no
+	 * warm-up is generated after it. Absent: generated.
 	 */
 	readonly warmUp?: readonly string[];
 	/**
@@ -273,6 +346,8 @@ export interface ExerciseContext {
 	readonly progress?: ProgressState;
 	/** Highest word and phrase level allowed; defaults to 3. */
 	readonly maxLevel?: WordLevel;
+	/** Most graphemes of a word of the bank; absent: no limit. */
+	readonly maxWordLength?: number;
 	/** Theme of the current world. */
 	readonly themeId?: string;
 	/** Age group of the child: only the entries of the banks meant for it are used; absent: all. */

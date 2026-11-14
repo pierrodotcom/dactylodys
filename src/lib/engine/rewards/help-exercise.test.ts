@@ -157,18 +157,114 @@ describe('generateHelpExercise', () => {
 		});
 	});
 
-	it('mixes words that hold the key with warm-up suites', () => {
+	it('is made of words that hold the key when there are some, never of suites', () => {
 		const quest = questOf('s');
-		const holding = new Set(['sdf', 'lsk', 'dsl', 'sdl', 'lks', 'fsj']);
-		let withWord = 0;
-		let withSuite = 0;
+		const holding = new Set(['sdf', 'lsk', 'dsl', 'fldsk', 'kfjs', 'sdl', 'lks', 'fsj']);
 		for (const seed of SEEDS) {
 			const { groups } = exerciseOf(quest, seed, { words: BANK });
-			if (groups.some((group) => holding.has(group))) withWord += 1;
-			if (groups.some((group) => !holding.has(group))) withSuite += 1;
+			for (const group of groups) expect(holding.has(group), groups.join(' | ')).toBe(true);
 		}
-		expect(withWord).toBeGreaterThan(SEEDS.length / 2);
-		expect(withSuite).toBe(SEEDS.length);
+	});
+
+	it('takes the words that hold the key most for their length first', () => {
+		const bank: WordBank = {
+			...BANK,
+			words: [word('sls', 1), word('fsdkj', 1), word('sds', 1), word('lkjds', 1)]
+		};
+		for (const seed of SEEDS) {
+			const { groups } = exerciseOf(questOf('s'), seed, { words: bank });
+			expect(['sls', 'sds']).toContain(groups[0]);
+			expect(['sls', 'sds']).toContain(groups[1]);
+		}
+	});
+
+	it('alternates the only word that holds the key with suites', () => {
+		const bare = {
+			...HELP_PROGRESSION,
+			worlds: HELP_PROGRESSION.worlds.map((world) => ({
+				...world,
+				lessons: world.lessons.map((lesson) => ({ ...lesson, words: [] }))
+			}))
+		};
+		const bank: WordBank = { ...BANK, words: [word('sdf', 1)] };
+		for (const seed of SEEDS) {
+			const { groups } = generateHelpExercise(bare, questOf('s'), HELP_RULES, seededRng(seed), {
+				words: bank
+			});
+			groups.forEach((group, i) => {
+				if (i > 0) expect(group).not.toBe(groups[i - 1]);
+				expect(group).toContain('s');
+				expect(group === 'sdf').toBe(i % 2 === 0);
+			});
+			expect(groups.length).toBeGreaterThan(2);
+		}
+	});
+
+	it('falls back to suites with a regular shape when no word holds the key', () => {
+		const patterned = {
+			...HELP_PROGRESSION,
+			rules: {
+				...HELP_PROGRESSION.rules,
+				drillPatterns: { vowels: ['a', 'e'], shapes: ['CD', 'CDC', 'CDCD', 'C D', 'CD C'] }
+			}
+		};
+		for (const seed of SEEDS) {
+			const { groups } = generateHelpExercise(patterned, questOf('f'), HELP_RULES, seededRng(seed));
+			expect(countIn(groups, 'f')).toBeGreaterThanOrEqual(HELP_RULES.minCharCount);
+			for (const group of groups) expect(group).toMatch(/^[fj]{2,4}$/);
+			// The key and the only other one take turns; a shape just typed gives way to another suite.
+			expect(groups[0]).toMatch(/^(fj|fjf|fjfj)$/);
+			expect(groups.filter((group) => /^(fj|fjf|fjfj)$/.test(group)).length).toBeGreaterThan(1);
+			groups.forEach((group, i) => {
+				if (i > 0) expect(group).not.toBe(groups[i - 1]);
+			});
+		}
+	});
+
+	it('shows a mark in its place: the groups of the warm-up written for its lesson', () => {
+		const lessons = HELP_PROGRESSION.worlds.flatMap((world) => world.lessons);
+		const written = {
+			...HELP_PROGRESSION,
+			worlds: HELP_PROGRESSION.worlds.map((world) => ({
+				...world,
+				lessons: world.lessons.map((lesson) =>
+					lesson.id === HELP_LESSON_LATE
+						? { ...lesson, warmUp: ['fs ds', 'jl kl', 'ks fs', 'dl ld'] }
+						: lesson
+				)
+			}))
+		};
+		expect(lessons.some((lesson) => lesson.id === HELP_LESSON_LATE)).toBe(true);
+		for (const seed of SEEDS) {
+			const { groups } = generateHelpExercise(written, questOf('s'), HELP_RULES, seededRng(seed), {
+				words: { ...BANK, words: [] }
+			});
+			// The lesson has words that hold "s": they come first; without them, the written groups.
+			expect(groups.every((group) => ['sdl', 'lks', 'fsj'].includes(group))).toBe(true);
+		}
+		const noWords = {
+			...written,
+			worlds: written.worlds.map((world) => ({
+				...world,
+				lessons: world.lessons.map((lesson) => ({ ...lesson, words: [] }))
+			}))
+		};
+		for (const seed of SEEDS) {
+			const { groups } = generateHelpExercise(noWords, questOf('s'), HELP_RULES, seededRng(seed));
+			expect(countIn(groups, 's')).toBeGreaterThanOrEqual(HELP_RULES.minCharCount);
+			groups.forEach((group, i) => {
+				expect(['fs ds', 'ks fs'], group).toContain(group);
+				if (i > 0) expect(group).not.toBe(groups[i - 1]);
+			});
+		}
+	});
+
+	it('leaves out the words of the bank longer than the context allows', () => {
+		for (const seed of SEEDS) {
+			const { groups } = exerciseOf(questOf('s'), seed, { words: BANK, maxWordLength: 3 });
+			expect(groups).not.toContain('fldsk');
+			expect(groups).not.toContain('kfjs');
+		}
 	});
 
 	it('uses the words of the lessons even without a word bank', () => {

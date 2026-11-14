@@ -8,6 +8,7 @@ import type {
 	WordBank,
 	WordLevel
 } from './types';
+import type { WordLimits } from './word-limits';
 
 /**
  * How many entries of the banks each lesson keeps, at least, for every age group (ADR-057,
@@ -31,6 +32,11 @@ export interface AgeCoverageBanks {
 	readonly phrases?: PhraseBank;
 	readonly texts?: TextBank;
 	readonly maxLevel?: WordLevel;
+	/**
+	 * What a lesson may take from the banks for one age group (`wordLimits`): its level and the
+	 * length of its words. Absent: `maxLevel` for every lesson and every group.
+	 */
+	readonly limits?: (lessonId: string, ageBand: AgeBand) => WordLimits;
 }
 
 /** Entries of the banks a lesson can use for one age group, or for all of them (`ageBand` absent). */
@@ -77,10 +83,18 @@ export function lessonEntryCounts(
 	ageBand?: AgeBand
 ): LessonEntryCounts {
 	const learned = learnedChars(progression, lessonId);
-	const options = { maxLevel: banks.maxLevel, ageBand };
-	const level = banks.maxLevel ?? 3;
+	const limits: { readonly maxLevel?: WordLevel; readonly maxWordLength?: number } =
+		ageBand === undefined || banks.limits === undefined
+			? { maxLevel: banks.maxLevel }
+			: banks.limits(lessonId, ageBand);
+	const options = { maxLevel: limits.maxLevel, ageBand };
+	const level = limits.maxLevel ?? 3;
 	return {
-		words: banks.words === undefined ? 0 : usableWords(banks.words, learned, options).length,
+		words:
+			banks.words === undefined
+				? 0
+				: usableWords(banks.words, learned, { ...options, maxWordLength: limits.maxWordLength })
+						.length,
 		phrases:
 			banks.phrases === undefined ? 0 : usablePhrases(banks.phrases, learned, options).length,
 		storyPhrases:
