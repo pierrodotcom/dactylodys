@@ -220,6 +220,8 @@ export function transition(screen: Screen, event: FlowEvent): Screen {
 					? { ...screen, index: screen.index + 1 }
 					: screen.then;
 			}
+			// No button leads there: the Back button of the browser does (`history.ts`).
+			if (event.type === 'back-to-map') return { name: 'map' };
 			return screen;
 		case 'story-so-far':
 			return event.type === 'back-to-map' ? { name: 'map' } : screen;

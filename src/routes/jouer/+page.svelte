@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { onMount, tick, type Component } from 'svelte';
+	import { onMount, tick, untrack, type Component } from 'svelte';
+	import { beforeNavigate, pushState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import {
 		createAmbiencePlayer,
 		createVoicePlayer,
@@ -39,6 +41,7 @@
 		StarCount,
 		WorldDefinition
 	} from '$lib/engine/progression/types';
+	import { providePauseRequests } from '$lib/games/shared/pause-request';
 	import type { GameDefinition, GameGuide, GameOutcome, GameProps } from '$lib/games/types';
 	import type { LayoutId } from '$lib/keyboard/layout-ids';
 	import type { KeyCode } from '$lib/keyboard/types';
@@ -105,6 +108,7 @@
 	} from './free-practice';
 	import { gameForLesson, gameOptions, selectedGame } from './game-choice';
 	import HelpThanks from './HelpThanks.svelte';
+	import { answerToBrowser, isPlayGuard, needsEntry, PLAY_GUARD, wayBackOf } from './history';
 	import { fadedKeysFor, isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
 	import { findGame } from '$lib/games/registry';
@@ -264,7 +268,101 @@
 	});
 
 	function go(event: FlowEvent) {
-		screen = transition(screen, event);
+		const next = transition(screen, event);
+		if (next === screen) return;
+		screen = next;
+		// Each screen opens at its top, whatever the one before was scrolled to; the map and the
+		// lesson screen then bring the lesson to play and its games into view themselves.
+		window.scrollTo(0, 0);
+		syncHistory();
+	}
+
+	/** The history of the browser is on the entry added for a screen with a way out (`history.ts`). */
+	let guarded = false;
+	/** How to pause the game on screen, handed over by its shell. */
+	let pauseGame: (() => void) | null = null;
+
+	providePauseRequests((pause) => {
+		pauseGame = pause;
+		return () => {
+			if (pauseGame === pause) pauseGame = null;
+		};
+	});
+
+	function syncHistory() {
+		if (!needsEntry(screen, guarded)) return;
+		guarded = true;
+		pushState('', PLAY_GUARD);
+	}
+
+	// The Back and Forward buttons of the browser: the address stays the same, only the entry changes.
+	$effect(() => {
+		const onGuard = isPlayGuard(page.state);
+		untrack(() => {
+			const answer = answerToBrowser(screen, guarded, onGuard);
+			guarded = onGuard;
+			if (answer === 'leave') {
+				leave();
+			} else if (answer === 'exit') {
+				history.back();
+			} else if (answer === 'undo') {
+				guarded = false;
+				history.back();
+			}
+		});
+	});
+
+	// Back by more than one entry would leave the route (a browser skips an entry added without a
+	// gesture of the child, and its history menu reaches any page): the way out of the screen is
+	// taken instead, so that a game is never lost. Leaving the site itself is never held back.
+	beforeNavigate((navigation) => {
+		if (navigation.type !== 'popstate' || navigation.willUnload || navigation.delta >= 0) return;
+		if (navigation.to?.route.id === navigation.from?.route.id) return;
+		if (wayBackOf(screen) === null) return;
+		navigation.cancel();
+		leave();
+	});
+
+	/**
+	 * Back does what the way out at the top of the screen does. In a game it opens the pause: the
+	 * game is not lost, and the child chooses to go on or to quit.
+	 */
+	function leave() {
+		switch (wayBackOf(screen)) {
+			case 'cancel-new-player':
+				go({ type: 'cancel-new-player' });
+				break;
+			case 'change-player':
+				changePlayer();
+				break;
+			case 'close-settings':
+				void closeSettings();
+				break;
+			case 'close-companion':
+				go({ type: 'close-companion' });
+				break;
+			case 'close-hideout':
+				go({ type: 'close-hideout' });
+				break;
+			case 'back-to-map':
+				leaveStoryUntold();
+				go({ type: 'back-to-map' });
+				break;
+			case 'pause-game':
+				pauseGame?.();
+				break;
+			case null:
+				break;
+		}
+		// A screen that stays (a game, now paused) takes its entry of the history again.
+		syncHistory();
+	}
+
+	/** A story left before its end is told again on the way to the next lesson. */
+	function leaveStoryUntold() {
+		if (screen.name !== 'story') return;
+		const left = new Set(screen.moments.map((moment) => moment.art));
+		toldThisVisit = new Set([...toldThisVisit].filter((art) => !left.has(art)));
 	}
 
 	function now(): number {
@@ -535,8 +633,6 @@
 
 	function continueStory() {
 		if (screen.name !== 'story') return;
-		// "Continue" may have scrolled a small screen: the next screen starts from its top.
-		window.scrollTo({ top: 0 });
 		go({ type: 'story-next' });
 	}
 
