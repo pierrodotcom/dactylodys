@@ -60,5 +60,8 @@
 		"typescript-eslint": "8.71.1",
 		"vite": "8.3.4",
 		"vitest": "5.0.3"
+	},
+	"allowScripts": {
+		"lefthook@2.2.1": true
 	}
 }
