@@ -4,7 +4,7 @@ import type { ProgressionRules } from '$lib/engine/progression/types';
 import type { SessionMetrics } from '$lib/engine/types';
 import type { GameOutcome } from '$lib/games/types';
 import { createProfile, parseProfile, withGhost } from '$lib/state/profile';
-import { recordLessonOutcome } from './lesson-outcome';
+import { recordLessonOutcome, starsOrNone } from './lesson-outcome';
 
 const RULES: ProgressionRules = {
 	unlockAccuracy: 80,
@@ -143,5 +143,18 @@ describe('recordLessonOutcome', () => {
 
 		expect(parseProfile(JSON.parse(JSON.stringify(profile)))).toEqual(profile);
 		expect(before).toEqual(snapshot);
+	});
+});
+
+describe('starsOrNone', () => {
+	it('gives the stars of the play, as its recording would', () => {
+		expect(starsOrNone(RULES, outcome(95).metrics)).toBe(2);
+		expect(starsOrNone(RULES, outcome(100).metrics)).toBe(3);
+		expect(starsOrNone(RULES, outcome(60).metrics)).toBe(0);
+	});
+
+	it('gives none, without failing, when the stars cannot be told', () => {
+		const broken = { ...RULES, starThresholds: null } as unknown as ProgressionRules;
+		expect(starsOrNone(broken, outcome(95).metrics)).toBe(0);
 	});
 });

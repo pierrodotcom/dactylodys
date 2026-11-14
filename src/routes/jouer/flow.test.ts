@@ -170,6 +170,37 @@ describe('screen automaton', () => {
 		}
 	});
 
+	it('gives every screen of a player back to the player list once the player is removed', () => {
+		const withPlayer: Screen[] = [
+			{ name: 'map' },
+			{ name: 'keyboard-check' },
+			{ name: 'settings', back: { name: 'game', lessonId: LESSON } },
+			{ name: 'intro', lessonId: LESSON },
+			{ name: 'game', lessonId: LESSON },
+			{ name: 'help-game' },
+			{ name: 'free-game' },
+			{ name: 'result', lessonId: LESSON },
+			{ name: 'story', moments: [LINE], index: 0, then: { name: 'intro', lessonId: LESSON } },
+			{ name: 'story-so-far' },
+			{ name: 'companion', back: { name: 'map' } },
+			{ name: 'hideout' },
+			{ name: 'break' }
+		];
+		for (const screen of withPlayer) {
+			expect(transition(screen, { type: 'player-removed' })).toEqual({ name: 'players' });
+		}
+	});
+
+	it('changes nothing for a removed player on the screens no player is on', () => {
+		for (const screen of [
+			INITIAL_SCREEN,
+			{ name: 'players' },
+			{ name: 'new-player' }
+		] as Screen[]) {
+			expect(transition(screen, { type: 'player-removed' })).toBe(screen);
+		}
+	});
+
 	it('opens the companion from every screen with the bar at the top, and comes back there', () => {
 		const origins: SettingsOrigin[] = [
 			{ name: 'map' },

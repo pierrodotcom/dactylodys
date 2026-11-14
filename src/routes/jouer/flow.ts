@@ -71,6 +71,8 @@ export type FlowEvent =
 	| { readonly type: 'start-help' }
 	| { readonly type: 'open-free' }
 	| { readonly type: 'change-player' }
+	/** The profile on screen was deleted from the adult space, in another page of the app. */
+	| { readonly type: 'player-removed' }
 	| { readonly type: 'open-lesson'; readonly lessonId: string; readonly unlocked: boolean }
 	| { readonly type: 'start' }
 	| { readonly type: 'quit' }
@@ -104,6 +106,9 @@ const CAN_CHANGE_PLAYER: ReadonlySet<Screen['name']> = new Set([
 	'free-intro',
 	'free-done'
 ]);
+
+/** Screens no player is on yet. */
+const WITHOUT_PLAYER: ReadonlySet<Screen['name']> = new Set(['loading', 'players', 'new-player']);
 
 function originOf(screen: Screen): SettingsOrigin | null {
 	switch (screen.name) {
@@ -147,6 +152,11 @@ function openCompanion(screen: Screen): Screen {
 export function transition(screen: Screen, event: FlowEvent): Screen {
 	if (event.type === 'change-player') {
 		return CAN_CHANGE_PLAYER.has(screen.name) ? { name: 'players' } : screen;
+	}
+
+	// Nothing is left to play with: every screen of that player, a game included, gives way.
+	if (event.type === 'player-removed') {
+		return WITHOUT_PLAYER.has(screen.name) ? screen : { name: 'players' };
 	}
 
 	if (event.type === 'open-settings') return openSettings(screen);
