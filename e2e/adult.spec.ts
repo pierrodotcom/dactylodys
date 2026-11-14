@@ -76,6 +76,22 @@ function preparedChild(name: string): Profile {
 	};
 }
 
+/**
+ * A child whose two first plays were measured from the first key of each group, and the three
+ * last ones from the moment each group could be typed: 61 characters per minute at the median.
+ */
+function remeasuredChild(name: string): Profile {
+	const current = [60, 61, 62].map((speed, index): SessionRecord => ({
+		...session(index + 2, 95, speed),
+		speedRule: 2
+	}));
+	return {
+		...preparedChild(name),
+		sessions: [session(0, 80, 75), session(1, 90, 75), ...current],
+		practiceDays: ['2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24']
+	};
+}
+
 /** A child whose acquired keys are all found in 300 ms, but L, found in 900 ms. */
 function hesitantChild(name: string): Profile {
 	const base = advancedProfile({ name, passed: { [FIRST.id]: 2 } });
@@ -295,6 +311,48 @@ test.describe('adult space', () => {
 		);
 	});
 
+	test('gives the speed in characters per minute too, and says since when it counts the reading time', async ({
+		page
+	}) => {
+		const mia = remeasuredChild('Mia');
+		await reachPlayers(page, [lou, mia]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, mia);
+
+		// The first play measured the new way: 2026-10-22 at 17:00 on the device.
+		const change = message('adult_speed_rule_change', {
+			date: new Intl.DateTimeFormat('fr', { dateStyle: 'long', timeZone: 'UTC' }).format(
+				new Date('2026-10-22T17:00:00Z')
+			)
+		});
+		const evolution = page.locator('[data-child-evolution]');
+		await expect(evolution.locator('[data-speed-rule-change]')).toHaveText(change);
+		await expect(evolution).toContainText(message('adult_speed_note'));
+		await evolution.getByText(message('adult_table_show')).first().click();
+		const table = evolution.locator('[data-sessions-table]');
+		await expect(
+			table.getByRole('columnheader', { name: message('adult_table_speed_chars') })
+		).toBeVisible();
+		await expect(table.locator('tbody tr').last().locator('td').last()).toHaveText('62');
+		await expect(table.locator('tbody tr').last().locator('td').nth(3)).toHaveText('12,4');
+
+		// The median reads the three plays measured the new way, not the two faster ones before.
+		const target = page.locator('[data-child-target]');
+		await expect(target.locator('[data-target-keyboard]')).toHaveText(
+			message('adult_target_keyboard_other', { speed: '12,2', chars: 61, count: 3 })
+		);
+		await expect(target.locator('[data-speed-rule-change]')).toHaveText(change);
+
+		// A child whose plays were all measured the same way is told nothing about it.
+		await page.keyboard.press('Escape');
+		await openReport(page, lou);
+		await expect(page.locator('[data-target-keyboard]')).toHaveText(
+			message('adult_target_keyboard_other', { speed: '10', chars: 50, count: 3 })
+		);
+		await expect(page.locator('[data-speed-rule-change]')).toHaveCount(0);
+	});
+
 	test('lists the acquired key the child takes much longer to find than the others', async ({
 		page
 	}) => {
@@ -411,6 +469,9 @@ test.describe('adult space', () => {
 		const lines = bytes.subarray(3).toString('utf8').split('\r\n');
 		const separator = message('adult_csv_separator');
 		expect(lines[0]?.split(separator)[0]).toBe(message('adult_csv_child'));
+		const speedColumn = lines[0]?.split(separator).indexOf(message('adult_csv_speed_chars')) ?? -1;
+		expect(lines[1]?.split(separator)[speedColumn]).toBe('40');
+		expect(lines[0]?.split(separator)).toContain(message('adult_csv_reading_time'));
 		// Ali has no play: the lines are the three plays of Lou, with a decimal comma.
 		expect(lines.slice(1).filter((line) => line !== '')).toHaveLength(lou.sessions.length);
 		expect(lines[1]).toContain(`${lou.name}${separator}2026-10-20${separator}17:00`);
@@ -664,6 +725,22 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await expect(
 				heading(page, message('adult_settings_title', { name: lou.name }))
 			).toBeVisible();
+			await expectNoAxeViolation(page);
+		});
+
+		test('has no axe violation on the report of a child whose speed changed of measure', async ({
+			page
+		}) => {
+			const mia = remeasuredChild('Mia');
+			await reachPlayers(page, [mia]);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, mia);
+			for (const summary of await page.getByText(message('adult_table_show')).all()) {
+				await summary.click();
+			}
+			await expect(page.locator('[data-speed-rule-change]')).toHaveCount(2);
+			await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
 			await expectNoAxeViolation(page);
 		});
 

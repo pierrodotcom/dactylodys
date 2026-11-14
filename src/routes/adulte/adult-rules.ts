@@ -27,6 +27,11 @@ export interface AdultRules {
 	readonly weeksShown: number;
 	/** The speed at the keyboard is the median of the words per minute of these most recent plays. */
 	readonly keyboardSpeedSessions: number;
+	/**
+	 * Plays measured with the current rule (`SessionRecord.speedRule`), at least, for the speed at
+	 * the keyboard to read only those: below, it reads the most recent plays whatever their rule.
+	 */
+	readonly keyboardSpeedMinCurrentRule: number;
 	/** Words written in one minute that the adult may enter for a handwriting speed. */
 	readonly handwritingMinWords: number;
 	readonly handwritingMaxWords: number;
@@ -48,6 +53,7 @@ export const ADULT_RULES: AdultRules = {
 	sessionsShown: 30,
 	weeksShown: 12,
 	keyboardSpeedSessions: 5,
+	keyboardSpeedMinCurrentRule: 3,
 	handwritingMinWords: 1,
 	handwritingMaxWords: 60
 };

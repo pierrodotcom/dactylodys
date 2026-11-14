@@ -1,5 +1,5 @@
 import type { Profile, SessionRecord } from '$lib/state/types';
-import { wordsPerMinuteOf } from './evolution';
+import { isMeasuredFromShown, wordsPerMinuteOf } from './evolution';
 
 /** Tells a spreadsheet that the file is UTF-8 (Excel reads it in another encoding otherwise). */
 export const CSV_BYTE_ORDER_MARK = '\uFEFF';
@@ -37,6 +37,8 @@ export const MEASURE_COLUMNS = [
 	'errors',
 	'accuracy',
 	'wordsPerMinute',
+	'charsPerMinute',
+	'readingTimeCounted',
 	'stars',
 	'passed'
 ] as const;
@@ -101,6 +103,9 @@ function measureRow(name: string, session: SessionRecord, format: CsvFormat): st
 		errors: format.formatNumber(session.errorCount, 0),
 		accuracy: format.formatNumber(session.accuracy, 1),
 		wordsPerMinute: format.formatNumber(wordsPerMinuteOf(session), 1),
+		charsPerMinute: format.formatNumber(session.correctCharsPerMinute, 1),
+		// The two ways of measuring do not compare: a spreadsheet must be able to tell them apart.
+		readingTimeCounted: isMeasuredFromShown(session) ? format.yes : format.no,
 		stars: format.formatNumber(session.stars, 0),
 		passed: session.passed ? format.yes : format.no
 	};
