@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NormalizedKeystroke } from '../../keyboard/types';
-import { typingAnnouncement, type TypingWords } from './announce';
+import { repairToErase, shellAnnouncement, typingAnnouncement, type TypingWords } from './announce';
 import { createGame, reduce, type GameState } from './game-state';
 import { viewOf } from './game-view';
 
@@ -89,5 +89,65 @@ describe('typingAnnouncement', () => {
 		const done = type(createGame(['fj', 'jf'], 'retry'), 'fj');
 		expect(announced(done)).toBe('');
 		expect(announced(reduce(done, { type: 'advance' }).state)).toBe('type jf');
+	});
+});
+
+describe('repairToErase', () => {
+	const spoken = WORDS.spoken;
+
+	it('names the wrong character a group arrives with, as it is said', () => {
+		const begun = createGame(['fj f'], 'retry', { starts: [{ typed: 2, pending: ['k', ' '] }] });
+		expect(repairToErase(viewOf(begun, false), spoken)).toBe('space');
+	});
+
+	it('is silent once the child has pressed a key in the group', () => {
+		const begun = createGame(['fj f'], 'retry', { starts: [{ typed: 2, pending: ['k'] }] });
+		const backspace: NormalizedKeystroke = {
+			kind: 'backspace',
+			char: null,
+			code: 'Backspace',
+			timestamp: 1000,
+			composed: false
+		};
+		const erased = reduce(begun, { type: 'keystroke', keystroke: backspace }).state;
+		expect(repairToErase(viewOf(erased, false), spoken)).toBeNull();
+	});
+
+	it('is silent for a group that arrives empty, for a mistake of the child, and for a reward', () => {
+		expect(repairToErase(viewOf(createGame(['fj'], 'backspace'), false), spoken)).toBeNull();
+		const wrong = type(createGame(['fj'], 'backspace'), 'fx');
+		expect(repairToErase(viewOf(wrong, false), spoken)).toBeNull();
+		const done = type(createGame(['fj', 'jf'], 'retry'), 'fj');
+		expect(repairToErase(viewOf(done, false), spoken)).toBeNull();
+	});
+});
+
+describe('shellAnnouncement', () => {
+	const NOTHING = { away: null, capsLock: null, reminder: null };
+
+	it('says what the game says when nothing else is to be said', () => {
+		expect(shellAnnouncement('type fj', NOTHING)).toBe('type fj');
+		expect(shellAnnouncement('', NOTHING)).toBe('');
+	});
+
+	it('says how to go on, and nothing else, while the keys do not reach the game', () => {
+		const notices = { away: 'press a letter', capsLock: 'caps lock is on', reminder: 'look up' };
+		expect(shellAnnouncement('type fj', notices)).toBe('press a letter');
+	});
+
+	it('adds the Caps Lock help after the expected key, in the same sentence of the same region', () => {
+		expect(shellAnnouncement('expected f', { ...NOTHING, capsLock: 'caps lock is on' })).toBe(
+			'expected f caps lock is on'
+		);
+		expect(shellAnnouncement('', { ...NOTHING, capsLock: 'caps lock is on' })).toBe(
+			'caps lock is on'
+		);
+	});
+
+	it('says the reminder once, after the reward, when no recorded voice says it', () => {
+		expect(shellAnnouncement('well done', { ...NOTHING, reminder: 'look up' })).toBe(
+			'well done look up'
+		);
+		expect(shellAnnouncement('well done', NOTHING)).toBe('well done');
 	});
 });
