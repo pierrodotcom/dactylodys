@@ -749,14 +749,19 @@ test.describe('play route', () => {
 				})
 			);
 		});
-		await expect(page.getByText(message('game_shared_caps_lock'))).toBeVisible();
+		// The paragraph on screen; the announcement of the game says the same help once.
+		const help = page.getByRole('paragraph').filter({ hasText: message('game_shared_caps_lock') });
+		await expect(help).toBeVisible();
+		await expect(page.locator('[data-game-announcement]')).toContainText(
+			message('game_shared_caps_lock')
+		);
 
 		await field.evaluate((element) => {
 			element.dispatchEvent(
 				new KeyboardEvent('keyup', { key: 'CapsLock', code: 'CapsLock', bubbles: true })
 			);
 		});
-		await expect(page.getByText(message('game_shared_caps_lock'))).toHaveCount(0);
+		await expect(help).toHaveCount(0);
 	});
 
 	test('keeps the profile and its stars after a reload, without checking the keyboard again', async ({

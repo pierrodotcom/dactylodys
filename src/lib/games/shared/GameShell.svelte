@@ -171,15 +171,14 @@
 	);
 	const lookReminderText = m.game_shared_look_reminder();
 	// The one live region of the game: its reward, else the text to type or the key expected after a
-	// mistake, then the notices on screen. The reminder is left to the recorded voice when it has it:
-	// each thing is heard once. Empty until the game is on screen: a live region only speaks what
-	// changes after it appeared.
+	// mistake, then the help about Caps Lock. The reminder to look at the screen is left to the
+	// recorded voice: each thing is heard once. Empty until the game is on screen: a live region
+	// only speaks what changes after it appeared.
 	const announcement = $derived(
 		speaking
 			? shellAnnouncement(announce(view) || typingAnnouncement(view, TYPING_WORDS), {
 					away: away ? m.game_shared_keep_typing() : null,
-					capsLock: capsHelp ? m.game_shared_caps_lock() : null,
-					reminder: lookReminder && voice?.has(lookReminderText) !== true ? lookReminderText : null
+					capsLock: capsHelp ? m.game_shared_caps_lock() : null
 				})
 			: ''
 	);

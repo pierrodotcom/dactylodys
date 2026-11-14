@@ -53,17 +53,14 @@ export interface ShellNotices {
 	readonly away: string | null;
 	/** The help about Caps Lock, while it is on screen. */
 	readonly capsLock: string | null;
-	/** The reminder to look at the screen, when no recorded voice says it. */
-	readonly reminder: string | null;
 }
 
 /**
  * Everything the one live region of a game says: what the game or the typing announces, then the
- * notices on screen, each said once. While the keys do not reach the game, only how to go on.
+ * help about Caps Lock, each said once. While the keys do not reach the game, only how to go on.
+ * The reminder to look at the screen is not in it: the recorded voice says it.
  */
 export function shellAnnouncement(base: string, notices: ShellNotices): string {
 	if (notices.away !== null) return notices.away;
-	return [base, notices.capsLock, notices.reminder]
-		.filter((part) => part !== null && part !== '')
-		.join(' ');
+	return [base, notices.capsLock].filter((part) => part !== null && part !== '').join(' ');
 }

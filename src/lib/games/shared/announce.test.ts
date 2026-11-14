@@ -123,7 +123,7 @@ describe('repairToErase', () => {
 });
 
 describe('shellAnnouncement', () => {
-	const NOTHING = { away: null, capsLock: null, reminder: null };
+	const NOTHING = { away: null, capsLock: null };
 
 	it('says what the game says when nothing else is to be said', () => {
 		expect(shellAnnouncement('type fj', NOTHING)).toBe('type fj');
@@ -131,7 +131,7 @@ describe('shellAnnouncement', () => {
 	});
 
 	it('says how to go on, and nothing else, while the keys do not reach the game', () => {
-		const notices = { away: 'press a letter', capsLock: 'caps lock is on', reminder: 'look up' };
+		const notices = { away: 'press a letter', capsLock: 'caps lock is on' };
 		expect(shellAnnouncement('type fj', notices)).toBe('press a letter');
 	});
 
@@ -142,12 +142,5 @@ describe('shellAnnouncement', () => {
 		expect(shellAnnouncement('', { ...NOTHING, capsLock: 'caps lock is on' })).toBe(
 			'caps lock is on'
 		);
-	});
-
-	it('says the reminder once, after the reward, when no recorded voice says it', () => {
-		expect(shellAnnouncement('well done', { ...NOTHING, reminder: 'look up' })).toBe(
-			'well done look up'
-		);
-		expect(shellAnnouncement('well done', NOTHING)).toBe('well done');
 	});
 });
