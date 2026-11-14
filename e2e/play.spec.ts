@@ -13,6 +13,8 @@ import { generateExercise } from '../src/lib/engine/progression/exercise';
 import { recentCharStats } from '../src/lib/engine/progression/progress';
 import { seededRng } from '../src/lib/engine/progression/test-support';
 import type { ExerciseContext, StarCount } from '../src/lib/engine/progression/types';
+import { parseWordLimitRules, wordLimits } from '../src/lib/engine/progression/word-limits';
+import { completePhrase } from '../src/lib/engine/progression/word-practice';
 import { readProfile } from '../src/lib/state/migrations';
 import {
 	localDay,
@@ -216,12 +218,23 @@ function typableEntries(lesson: Lesson) {
 		...usablePhrases(phraseBank, learned, options),
 		...storyPhrases(phraseBank, lesson.id)
 	];
+	// An early phrase is typed with its capital and its full stop once both are learned.
+	const end = progression.rules.phraseEnd;
+	const typed = (text: string) =>
+		end === undefined ? text : completePhrase(text, new Set(learned), end);
 	return {
 		learned: new Set(learned),
 		bankWords: new Set(bankWords),
 		words: new Set([...lesson.words, ...bankWords]),
-		phrases: new Set(phrases.map((entry) => entry.text))
+		phrases: new Set(phrases.flatMap((entry) => [entry.text, typed(entry.text)]))
 	};
+}
+
+/** The banks as the page limits them for this lesson and this child (level, length, age group). */
+function bankLimits(lessonId: string, profile: Profile) {
+	const { ageBand } = profile.settings;
+	const rules = parseWordLimitRules(readJson('content/common/play-rules.json'), 'playRules');
+	return { ...wordLimits(rules, progression, lessonId, ageBand), ageBand };
 }
 
 /**
@@ -1221,7 +1234,7 @@ test.describe('play route', () => {
 				phrases: phraseBank,
 				progress: profile.progress,
 				themeId: worldOf(NEXT_FIRST.id).themeId,
-				maxLevel: playRules.maxWordLevel
+				...bankLimits(NEXT_FIRST.id, profile)
 			},
 			(group) => entries.bankWords.has(group)
 		);
@@ -1274,9 +1287,10 @@ test.describe('play route', () => {
 				phrases: phraseBank,
 				progress: profile.progress,
 				themeId: worldOf(lesson.id).themeId,
-				maxLevel: playRules.maxWordLevel
+				...bankLimits(lesson.id, profile)
 			},
-			(group) => CAPITAL_SENTENCE.test(group)
+			// The warm-up written for the lesson has capitals too: a phrase of the banks is wanted.
+			(group) => CAPITAL_SENTENCE.test(group) && entries.phrases.has(group)
 		);
 		await reachMapAs(page, profile);
 		await openIntro(page, lesson);

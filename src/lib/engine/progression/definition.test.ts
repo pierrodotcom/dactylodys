@@ -315,6 +315,211 @@ describe('parseProgression', () => {
 		expect(findLesson(parsed, 'fr.lesson.c')?.warmUp).toEqual(['d d', 'fd', 'de']);
 	});
 
+	it('accepts groups longer than a suite in a warm-up written by hand: a mark in its place', () => {
+		const parsed = parseProgression(
+			variant((raw) => {
+				raw.rules['newCharMinCount'] = 3;
+				lessonOf(raw, 1, 0)['warmUp'] = ['fe de', 'de fe de', 'fd'];
+			})
+		);
+		expect(findLesson(parsed, 'fr.lesson.c')?.warmUp).toEqual(['fe de', 'de fe de', 'fd']);
+	});
+
+	it('asks a warm-up written by hand its own minimum when the rules have one', () => {
+		const withMinimum = (writtenWarmUpMinCount: number | undefined) =>
+			variant((raw) => {
+				raw.rules['newCharMinCount'] = 4;
+				if (writtenWarmUpMinCount !== undefined) {
+					raw.rules['writtenWarmUpMinCount'] = writtenWarmUpMinCount;
+				}
+				lessonOf(raw, 1, 0)['warmUp'] = ['fe de', 'fd'];
+			});
+		expect(() => parseProgression(withMinimum(undefined))).toThrow(
+			/"d" at least 4 times \(rules\.newCharMinCount\)/
+		);
+		expect(() => parseProgression(withMinimum(3))).toThrow(
+			/"d" at least 3 times \(rules\.writtenWarmUpMinCount\)/
+		);
+		expect(() => parseProgression(withMinimum(2))).not.toThrow();
+	});
+
+	describe('reserve of a warm-up written by hand', () => {
+		const withReserve = (reserve: unknown, change: (raw: Raw) => void = () => {}) =>
+			variant((raw) => {
+				raw.rules['newCharMinCount'] = 2;
+				lessonOf(raw, 1, 0)['warmUp'] = ['fe de', 'fd'];
+				lessonOf(raw, 1, 0)['warmUpReserve'] = reserve;
+				change(raw);
+			});
+
+		it('reads the alternatives of each group and whether the first one stays first', () => {
+			expect(findLesson(parseProgression(BASE), 'fr.lesson.c')?.warmUpReserve).toBeUndefined();
+			const alternatives = [['de fe', 'je de'], ['df']];
+			const parsed = parseProgression(withReserve({ alternatives, keepFirst: true }));
+			expect(findLesson(parsed, 'fr.lesson.c')?.warmUpReserve).toEqual({
+				alternatives,
+				keepFirst: true
+			});
+			const orderOnly = parseProgression(withReserve({}));
+			expect(findLesson(orderOnly, 'fr.lesson.c')?.warmUpReserve).toEqual({});
+			const noFirst = parseProgression(withReserve({ keepFirst: false }));
+			expect(findLesson(noFirst, 'fr.lesson.c')?.warmUpReserve).toEqual({});
+		});
+
+		it.each([
+			['an unknown property', { groups: [] }, /warmUpReserve\.groups: unknown/],
+			['a first place kept that is not yes or no', { keepFirst: 1 }, /keepFirst/],
+			['lists that are not one for each group', { alternatives: [['de fe']] }, /expected 2 lists/],
+			['a group not learned yet', { alternatives: [['ke de'], []] }, /"k" is not learned/],
+			['a group shorter than a group of the lesson', { alternatives: [['d'], []] }, /2 to 20/],
+			['a group written twice', { alternatives: [['fd'], []] }, /duplicate group "fd"/],
+			['the same alternative twice', { alternatives: [['de fe'], ['de fe']] }, /duplicate group/],
+			[
+				'a draw that asks a new character too few times',
+				{ alternatives: [['fe je'], []] },
+				/"d" at least 2 times whatever the draw \(rules\.newCharMinCount\)/
+			]
+		])('rejects %s', (_name, reserve, message) => {
+			expect(() => parseProgression(withReserve(reserve))).toThrow(message);
+		});
+
+		it('rejects a reserve without a warm-up, and a warm-up that writes a group twice', () => {
+			expect(() =>
+				parseProgression(variant((raw) => (lessonOf(raw, 1, 0)['warmUpReserve'] = {})))
+			).toThrow(/only a warm-up written by hand has a reserve/);
+			expect(() =>
+				parseProgression(
+					withReserve({}, (raw) => (lessonOf(raw, 1, 0)['warmUp'] = ['fd', 'fe de', 'fd']))
+				)
+			).toThrow(/"fd" is written twice/);
+		});
+
+		it('follows the minimum of the warm-ups written by hand when the rules have one', () => {
+			const reserve = { alternatives: [['fe je'], []] };
+			const lower = withReserve(reserve, (raw) => (raw.rules['writtenWarmUpMinCount'] = 1));
+			expect(() => parseProgression(lower)).not.toThrow();
+		});
+
+		it('keeps every draw within the slack of the rules around the warm-up as written', () => {
+			const withSlack = (slack: number | undefined, alternative: string) =>
+				withReserve({ alternatives: [[alternative], []] }, (raw) => {
+					if (slack !== undefined) raw.rules['warmUpReserveSlack'] = slack;
+				});
+			expect(() => parseProgression(withSlack(undefined, 'de fe de fe de'))).not.toThrow();
+			expect(() => parseProgression(withSlack(3, 'de fe de'))).not.toThrow();
+			expect(() => parseProgression(withSlack(2, 'de fe de'))).toThrow(
+				/7 to 10 characters, more than 2 away from the 7 written \(rules\.warmUpReserveSlack\)/
+			);
+			expect(() => parseProgression(withSlack(1, 'de'))).toThrow(/4 to 7 characters/);
+			expect(() =>
+				parseProgression(variant((raw) => (raw.rules['warmUpReserveSlack'] = -1)))
+			).toThrow(/warmUpReserveSlack/);
+		});
+
+		it('asks every alternative as many capitals as its group, where capitals are unlocked', () => {
+			const withCapitals = (alternative: string) =>
+				variant((raw) => {
+					lessonOf(raw, 1, 0)['newChars'] = [];
+					lessonOf(raw, 1, 0)['unlocks'] = ['uppercase'];
+					lessonOf(raw, 1, 0)['warmUp'] = ['Fe Je', 'Je'];
+					lessonOf(raw, 1, 0)['warmUpReserve'] = { alternatives: [[alternative], []] };
+				});
+			expect(() => parseProgression(withCapitals('Je Fe'))).not.toThrow();
+			expect(() => parseProgression(withCapitals('Je fe'))).toThrow(
+				/at least as many capitals as "Fe Je"/
+			);
+		});
+	});
+
+	it('accepts a warm-up written by hand on a lesson that unlocks capitals', () => {
+		const withCapitals = (warmUp: string[]) =>
+			variant((raw) => {
+				raw.rules['storyPhraseEvery'] = 2;
+				lessonOf(raw, 1, 0)['newChars'] = [];
+				lessonOf(raw, 1, 0)['unlocks'] = ['uppercase'];
+				lessonOf(raw, 1, 0)['warmUp'] = warmUp;
+			});
+		const parsed = parseProgression(withCapitals(['Fe', 'Je', 'Fe Je']));
+		expect(findLesson(parsed, 'fr.lesson.c')?.warmUp).toEqual(['Fe', 'Je', 'Fe Je']);
+		// Its groups count like those of any warm-up: one is left for the story phrase.
+		expect(() => parseProgression(withCapitals(['Fe', 'Je', 'Fe', 'Je', 'Fe']))).toThrow(
+			/lessons\[0\]\.groupCount: expected more than 5 groups/
+		);
+	});
+
+	it.each([
+		['words for the warm-up', 'wordWarmUp', { minWords: 2, maxWordLength: 6 }],
+		[
+			'words near the best ones for the warm-up',
+			'wordWarmUp',
+			{ minWords: 1, maxWordLength: 7, scoreShare: 0.6 }
+		],
+		['a minimum of its own for a warm-up written by hand', 'writtenWarmUpMinCount', 2],
+		['a slack for the draws of a reserve', 'warmUpReserveSlack', 5],
+		['shapes of suites', 'drillPatterns', { vowels: ['a', 'e'], shapes: ['CV', 'CV DV'] }],
+		['a number of words without suites', 'suiteFreeMinWords', 40],
+		['a minimum of capitals', 'uppercaseMinCount', 10],
+		[
+			'a review of weak characters',
+			'weakChars',
+			{ minCount: 4, maxChars: 2, minAttempts: 5, minErrorRate: 0.2 }
+		],
+		['a mark that ends a sentence', 'phraseEnd', '.']
+	])('reads %s, absent by default', (_name, rule, value) => {
+		expect(parseProgression(BASE).rules).not.toHaveProperty(rule);
+		const parsed = parseProgression(variant((raw) => (raw.rules[rule] = value)));
+		expect(parsed.rules).toHaveProperty(rule, value);
+	});
+
+	it.each([
+		['no word for a warm-up', 'wordWarmUp', { minWords: 0, maxWordLength: 6 }, /minWords/],
+		['words of no length', 'wordWarmUp', { minWords: 1, maxWordLength: 0 }, /maxWordLength/],
+		['an unknown warm-up rule', 'wordWarmUp', { minWords: 1, maxWordLength: 6, x: 1 }, /unknown/],
+		[
+			'a share of the best score that keeps no word',
+			'wordWarmUp',
+			{ minWords: 1, maxWordLength: 6, scoreShare: 0 },
+			/scoreShare/
+		],
+		[
+			'a share of the best score above 1',
+			'wordWarmUp',
+			{ minWords: 1, maxWordLength: 6, scoreShare: 1.5 },
+			/scoreShare/
+		],
+		['a shape with another letter', 'drillPatterns', { vowels: [], shapes: ['CX'] }, /shapes\[0\]/],
+		['a shape with a space at an edge', 'drillPatterns', { vowels: [], shapes: ['C '] }, /shapes/],
+		['the same shape twice', 'drillPatterns', { vowels: [], shapes: ['CD', 'CD'] }, /duplicate/],
+		['no shape', 'drillPatterns', { vowels: ['a'], shapes: [] }, /at least one shape/],
+		['the same vowel twice', 'drillPatterns', { vowels: ['a', 'a'], shapes: ['CV'] }, /duplicate/],
+		['a vowel of two letters', 'drillPatterns', { vowels: ['ae'], shapes: ['CV'] }, /vowels\[0\]/],
+		['a warm-up written by hand that asks nothing', 'writtenWarmUpMinCount', 0, /writtenWarmUp/],
+		['no word without suites', 'suiteFreeMinWords', 0, /suiteFreeMinWords/],
+		['a negative minimum of capitals', 'uppercaseMinCount', -1, /uppercaseMinCount/],
+		[
+			'a review that asks nothing',
+			'weakChars',
+			{ minCount: 0, maxChars: 2, minAttempts: 5, minErrorRate: 0.2 },
+			/minCount/
+		],
+		[
+			'a review of no character',
+			'weakChars',
+			{ minCount: 4, maxChars: 0, minAttempts: 5, minErrorRate: 0.2 },
+			/maxChars/
+		],
+		[
+			'an error rate above 1',
+			'weakChars',
+			{ minCount: 4, maxChars: 2, minAttempts: 5, minErrorRate: 2 },
+			/minErrorRate/
+		],
+		['a space to end a sentence', 'phraseEnd', ' ', /phraseEnd/],
+		['two marks to end a sentence', 'phraseEnd', '..', /phraseEnd/]
+	])('rejects %s', (_name, rule, value, message) => {
+		expect(() => parseProgression(variant((raw) => (raw.rules[rule] = value)))).toThrow(message);
+	});
+
 	it('leaves room for a story phrase after a warm-up written by hand', () => {
 		const withPhrases = (warmUp: string[]) =>
 			variant((raw) => {
@@ -332,8 +537,8 @@ describe('parseProgression', () => {
 		['on a lesson without new characters', [], ['f'], /only a lesson with new characters/],
 		['that is empty', ['d'], [], /expected at least one group/],
 		['with a character not learned yet', ['d'], ['dk'], /warmUp\[0\].*"k" is not learned/],
-		['longer than a group of the lesson', ['d'], ['ddfdd'], /warmUp\[0\].*2 to 4/],
-		['shorter than a group of the lesson', ['d'], ['d', 'dd', 'fd'], /warmUp\[0\].*2 to 4/],
+		['longer than a whole exercise', ['d'], ['ddfdd fddfd dfddf ddfdd'], /warmUp\[0\].*2 to 20/],
+		['shorter than a group of the lesson', ['d'], ['d', 'dd', 'fd'], /warmUp\[0\].*2 to 20/],
 		['with the same group twice in a row', ['d'], ['d d', 'd d', 'df'], /warmUp\[1\].*twice/],
 		['asking a new character too few times', ['d'], ['dd', 'fe'], /"d" at least 3 times/],
 		['with more groups than the lesson', ['d'], ['dd', 'fd', 'dd', 'fd', 'dd', 'fd'], /at most 5/]

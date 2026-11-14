@@ -13,6 +13,7 @@ import {
 import { findLesson, learnedChars, lessonIds, parseProgression } from './definition';
 import { generateExercise } from './exercise';
 import { clone, deepFreeze, loadShippedProgressions, seededRng } from './test-support';
+import { completePhrase } from './word-practice';
 import type {
 	CharSample,
 	Exercise,
@@ -253,13 +254,39 @@ function playableTexts(
 	const learned = learnedChars(progression, lessonId);
 	const options = { maxLevel: context.maxLevel };
 	const words = new Set(findLesson(progression, lessonId)?.words ?? []);
-	if (context.words)
-		for (const w of usableWords(context.words, learned, options)) words.add(w.text);
+	if (context.words) {
+		const wordOptions = { ...options, maxWordLength: context.maxWordLength };
+		for (const w of usableWords(context.words, learned, wordOptions)) words.add(w.text);
+	}
 	const phrases = new Set<string>();
+	const { phraseEnd } = progression.rules;
 	if (context.phrases) {
-		for (const p of usablePhrases(context.phrases, learned, options)) phrases.add(p.text);
+		for (const p of usablePhrases(context.phrases, learned, options)) {
+			phrases.add(
+				phraseEnd === undefined ? p.text : completePhrase(p.text, new Set(learned), phraseEnd)
+			);
+		}
 	}
 	return { words, phrases };
+}
+
+/** A word as an exercise may show it: as written, or with a capital first letter. */
+function isWordOf(words: ReadonlySet<string>, part: string): boolean {
+	const [first = '', ...rest] = toGraphemes(part);
+	return words.has(part) || words.has(`${first.toLowerCase()}${rest.join('')}`);
+}
+
+/** Characters of the groups that open an exercise until every new character was asked enough. */
+function warmUpLength(lessonDefinition: LessonDefinition, groups: readonly string[], min: number) {
+	let length = 0;
+	for (let index = 0; index < groups.length; index++) {
+		const before = groups.slice(0, index);
+		const written = index < (lessonDefinition.warmUp ?? []).length;
+		const lacking = lessonDefinition.newChars.some((char) => countOf(before, char) < min);
+		if (!written && !lacking) break;
+		length += lengthOf(groups[index] as string);
+	}
+	return length;
 }
 
 function countOf(groups: readonly string[], char: string): number {
@@ -278,7 +305,8 @@ function checkExercise(
 	const [min, max] = lessonDefinition.groupLength;
 	expect(exercise.lessonId).toBe(lessonDefinition.id);
 
-	const minimum = progression.rules.newCharMinCount;
+	// A warm-up written by hand holds what it must (the parser checks it): nothing is added to it.
+	const minimum = lessonDefinition.warmUp === undefined ? progression.rules.newCharMinCount : 0;
 	const isComplete = (groups: readonly string[]): boolean =>
 		groups.reduce((sum, group) => sum + lengthOf(group), 0) >= lessonDefinition.targetLength &&
 		lessonDefinition.newChars.every((char) => countOf(groups, char) >= minimum);
@@ -286,7 +314,16 @@ function checkExercise(
 	expect(exercise.groups.length).toBeLessThanOrEqual(lessonDefinition.groupCount);
 	const reachedCount = exercise.groups.length === lessonDefinition.groupCount;
 	expect(reachedCount || isComplete(exercise.groups)).toBe(true);
-	expect(isComplete(exercise.groups.slice(0, -1))).toBe(false);
+	// The review of weak characters may add a group once the length is reached, and a warm-up
+	// written by hand is typed whole.
+	const reviews = progression.rules.weakChars !== undefined && context.progress !== undefined;
+	const written = new Set([
+		...(lessonDefinition.warmUp ?? []),
+		...(lessonDefinition.warmUpReserve?.alternatives ?? []).flat()
+	]);
+	if (!reviews && exercise.groups.length > (lessonDefinition.warmUp ?? []).length) {
+		expect(isComplete(exercise.groups.slice(0, -1))).toBe(false);
+	}
 
 	exercise.groups.forEach((group, index) => {
 		const graphemes = toGraphemes(group);
@@ -295,12 +332,22 @@ function checkExercise(
 		expect(group.startsWith(SPACE)).toBe(false);
 		expect(group.endsWith(SPACE)).toBe(false);
 		expect(group).not.toContain('  ');
-		if (!phrases.has(group)) {
-			if (!words.has(group)) {
+		if (!phrases.has(group) && !written.has(group)) {
+			const parts = group.split(SPACE);
+			if (!parts.some((part) => isWordOf(words, part))) {
+				// A suite keeps to the length of a group of the lesson.
 				expect(graphemes.length).toBeGreaterThanOrEqual(min);
 				expect(graphemes.length).toBeLessThanOrEqual(max);
+			} else {
+				// Words side by side, and at most one suite for a new character no word holds.
+				const others = parts.filter((part) => !isWordOf(words, part));
+				expect(others.join(SPACE).length).toBeLessThanOrEqual(max);
 			}
 			expect(group).not.toMatch(/(.)\1\1/u);
+			// A suite never holds a capital: only words and phrases do.
+			for (const part of parts) {
+				if (!isWordOf(words, part)) expect(part).not.toMatch(/\p{Lu}/u);
+			}
 		}
 		if (index > 0) expect(group).not.toBe(exercise.groups[index - 1]);
 	});
@@ -1006,11 +1053,15 @@ describe('generateExercise', () => {
 	});
 
 	describe('capitals', () => {
-		it('practises the capitals in the lesson that unlocks them', () => {
-			const progression = withRules(SYNTHETIC, { newCharWeight: 1 });
-			for (let seed = 0; seed < 20; seed++) {
-				const exercise = generate(progression, 'fr.lesson.caps', seed);
-				expect(graphemesOfGroups(exercise).every((char) => /[A-Z]/u.test(char))).toBe(true);
+		it('never draws a capital in a suite, even in the lesson that unlocks them', () => {
+			for (const newCharWeight of [0.6, 1]) {
+				const progression = withRules(SYNTHETIC, { newCharWeight });
+				for (const id of ['fr.lesson.caps', 'fr.lesson.long-drills']) {
+					for (let seed = 0; seed < 20; seed++) {
+						const exercise = generate(progression, id, seed);
+						expect(graphemesOfGroups(exercise).some((char) => /\p{Lu}/u.test(char))).toBe(false);
+					}
+				}
 			}
 		});
 
@@ -1021,11 +1072,13 @@ describe('generateExercise', () => {
 			}
 		});
 
-		it('keeps asking for capitals in later lessons, only for letters that are known', () => {
-			const learned = new Set(learnedChars(SYNTHETIC, 'fr.lesson.long-drills'));
+		it('keeps asking for capitals in later lessons, in phrases, only for letters that are known', () => {
+			const learned = new Set(learnedChars(SYNTHETIC, 'fr.lesson.dot'));
 			const seen = new Set<string>();
 			for (let seed = 0; seed < 50; seed++) {
-				for (const char of graphemesOfGroups(generate(SYNTHETIC, 'fr.lesson.long-drills', seed))) {
+				for (const char of graphemesOfGroups(
+					generate(SYNTHETIC, 'fr.lesson.dot', seed, FULL_CONTEXT)
+				)) {
 					expect(learned.has(char)).toBe(true);
 					seen.add(char);
 				}
@@ -1059,9 +1112,9 @@ describe('generateExercise', () => {
 				'sel',
 				'Je lis.',
 				'Elle lie ses skis.',
-				'J.f.',
+				'e.f.',
 				'les',
-				'..E..',
+				'..l..',
 				'ses',
 				'ski'
 			]);
@@ -1300,22 +1353,25 @@ describe('length slack', () => {
 		}
 	});
 
-	it('keeps every shipped exercise within its target plus the slack', () => {
+	it('keeps every shipped exercise within its target plus the slack, its warm-up aside', () => {
 		for (const [progression, lesson, context] of shippedLessons) {
 			const slack = progression.rules.lengthSlack ?? Number.POSITIVE_INFINITY;
 			const limit = lesson.targetLength + Math.max(slack, lesson.groupLength[1]);
 			for (let seed = 0; seed < 10; seed++) {
 				const exercise = generate(progression, lesson.id, seed, context);
 				const total = exercise.groups.reduce((sum, group) => sum + lengthOf(group), 0);
+				// Words that hold a new character are longer than a suite: the warm-up alone may go
+				// past the limit, and nothing is added after it then.
+				const warmUp = warmUpLength(lesson, exercise.groups, progression.rules.newCharMinCount);
 				expect(
 					total,
 					`${lesson.id} seed ${seed}: ${exercise.groups.join(' | ')}`
-				).toBeLessThanOrEqual(limit);
+				).toBeLessThanOrEqual(Math.max(limit, warmUp));
 			}
 		}
 	});
 
-	it('replaces an entry that would run past the slack with a suite, but never drops a word owed', () => {
+	it('replaces an entry that would run past the slack with a shorter one, but never drops a word owed', () => {
 		const slim = withRules(SYNTHETIC, { lengthSlack: 0 });
 		const lesson = findLesson(slim, 'fr.lesson.dot') as LessonDefinition;
 		for (let seed = 0; seed < 30; seed++) {

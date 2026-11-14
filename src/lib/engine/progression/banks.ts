@@ -31,6 +31,8 @@ export interface UsableOptions {
 	readonly maxLevel?: WordLevel;
 	/** Age group of the child: entries meant for other groups only are left out; absent: none. */
 	readonly ageBand?: AgeBand;
+	/** Most graphemes of a word; phrases are not concerned. Absent: no limit. */
+	readonly maxWordLength?: number;
 }
 
 /** Whether an entry is offered to this age group: unmarked entries are offered to every one. */
@@ -282,6 +284,12 @@ export function storyPhrases(bank: PhraseBank, lessonId: string, ageBand?: AgeBa
 	);
 }
 
+/** A usable entry of a bank, with its text already cut into graphemes. */
+export interface Cut<T> {
+	readonly entry: T;
+	readonly graphemes: readonly string[];
+}
+
 /**
  * Cutting a text into graphemes is the slow part of drawing from a bank, and every exercise reads
  * the whole bank: the cut of an entry is kept as long as the entry lives.
@@ -303,15 +311,31 @@ function usable<
 		readonly level: WordLevel;
 		readonly ages?: readonly AgeBand[];
 	}
->(entries: readonly T[], learned: Iterable<string>, options: UsableOptions): T[] {
+>(
+	entries: readonly T[],
+	learned: Iterable<string>,
+	options: UsableOptions,
+	maxLength = Number.POSITIVE_INFINITY
+): Cut<T>[] {
 	const known = new Set(learned);
 	const maxLevel = options.maxLevel ?? DEFAULT_MAX_LEVEL;
-	return entries.filter(
-		(entry) =>
-			entry.level <= maxLevel &&
-			fitsAgeBand(entry, options.ageBand) &&
-			graphemesOf(entry).every((char) => known.has(char))
-	);
+	const kept: Cut<T>[] = [];
+	for (const entry of entries) {
+		if (entry.level > maxLevel || !fitsAgeBand(entry, options.ageBand)) continue;
+		const graphemes = graphemesOf(entry);
+		if (graphemes.length > maxLength || !graphemes.every((char) => known.has(char))) continue;
+		kept.push({ entry, graphemes });
+	}
+	return kept;
+}
+
+/** The usable words with their graphemes: what an exercise needs, cut only once. */
+export function usableWordCuts(
+	bank: WordBank,
+	learned: Iterable<string>,
+	options: UsableOptions = {}
+): Cut<WordEntry>[] {
+	return usable(bank.words, learned, options, options.maxWordLength);
 }
 
 export function usableWords(
@@ -319,7 +343,20 @@ export function usableWords(
 	learned: Iterable<string>,
 	options: UsableOptions = {}
 ): WordEntry[] {
-	return usable(bank.words, learned, options);
+	return usableWordCuts(bank, learned, options).map((cut) => cut.entry);
+}
+
+/** The usable phrases with their graphemes; story phrases are left out (`usablePhrases`). */
+export function usablePhraseCuts(
+	bank: PhraseBank,
+	learned: Iterable<string>,
+	options: UsableOptions = {}
+): Cut<PhraseEntry>[] {
+	return usable(
+		bank.phrases.filter((phrase) => phrase.lessonId === undefined),
+		learned,
+		options
+	);
 }
 
 /** Story phrases are left out: they belong to their lesson (`storyPhrases`). */
@@ -328,11 +365,7 @@ export function usablePhrases(
 	learned: Iterable<string>,
 	options: UsableOptions = {}
 ): PhraseEntry[] {
-	return usable(
-		bank.phrases.filter((phrase) => phrase.lessonId === undefined),
-		learned,
-		options
-	);
+	return usablePhraseCuts(bank, learned, options).map((cut) => cut.entry);
 }
 
 const MIN_TEXT_LINES = 2;
