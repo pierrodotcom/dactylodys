@@ -31,7 +31,8 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Bilan en étapes, « Qui joue ? », réglages | E-04, E-17, E-18, E-16, E-19 | À faire |
 | Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24, P-07, P-09 | À faire |
 | Rappel « regarde l'écran » | P-20, I-4 ; le compter en caractères (il ne s'affiche plus aux leçons de 3 ou 4 groupes, ADR-074) | À faire, avec la campagne de voix |
-| Vérification du clavier, Mac | Q-03, Q-09, Q-17, Q-31 | À faire |
+| Vérification du clavier, Mac | Q-03 (jugement sur la lettre écrite : fait, ADR-076), touche fausse déduite du caractère, troisième message et « Réessayer », Q-09, Q-17, Q-31 | À faire |
+| Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18 | En cours (branche `feat/reglages-ranges`) |
 | Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | À faire (migration des progrès) |
 | Textes et typographie | C-01 à C-07, C-10, C-11, C-16, C-17, E-09, E-13 | À faire, avant la campagne de voix |
 | Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27 | À faire |
@@ -246,3 +247,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-14** — Lot 5 de J5 et page « Pour les professionnels » fusionnés ensemble : pages « Pour les adultes », « Accessibilité », « Confidentialité » et « Pour les professionnels », liées depuis l'accueil et l'espace adulte ; contact par le formulaire GitHub en attendant une adresse. Audit complet lancé (quatre audits, rapports dans `docs/audit/`, hors dépôt).
 - **2026-11-13** — Effacer comme une compétence (ADR-073) : leçon « Réparer un message » à la fin du monde 6, des lignes arrivent avec une faute au bout que l'enfant efface avec Retour arrière avant de continuer, quel que soit le réglage de l'adulte. Textes envoyés au porteur (`docs/relecture-effacement.md`, hors dépôt) ; consigne et ligne du récit à enregistrer sur /dev/voix.
 - **2026-11-14** — Audit complet rendu (quatre rapports, `docs/audit/`) ; le porteur suit les 22 recommandations (ADR-075). Lot 5 de J5 et page « Pour les professionnels » fusionnés (PR 103). Lot « vrais mots » (ADR-074) : plus de suites de lettres au hasard aux leçons 8 à 24, échauffements variés. Leçons L-135 à L-139.
+- **2026-11-14** — « Vrais mots » fusionné (PR 104). Le porteur reçoit « Ton clavier est un peu différent » sur un AZERTY ordinaire : la vérification jugeait la touche annoncée par le navigateur, fausse sous un navigateur qui résiste au pistage ; elle juge maintenant la lettre écrite (ADR-076, L-142).

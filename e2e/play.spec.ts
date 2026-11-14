@@ -275,12 +275,15 @@ async function createPlayer(page: Page, name = PLAYER_NAME) {
 	await expect(heading(page, message('play_check_title'))).toBeVisible();
 }
 
-/** `different` presses the keys of an American keyboard, which is what Playwright simulates. */
+/**
+ * Playwright simulates an American keyboard: `same` types the letters the layout expects, whatever
+ * key writes them; `different` presses the physical keys, which write other letters there.
+ */
 async function checkKeyboard(page: Page, kind: 'different' | 'same') {
 	await button(page, message('play_check_continue')).click();
 	for (const key of CHECK_KEYS) {
 		await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
-		await page.keyboard.press(kind === 'same' ? key.code : key.letter);
+		await page.keyboard.press(kind === 'same' ? key.letter : key.code);
 	}
 	const outcome = kind === 'same' ? 'play_check_ok_title' : 'play_check_diff_title';
 	await expect(heading(page, message(outcome))).toBeVisible();
@@ -917,9 +920,7 @@ test.describe('play route', () => {
 		await expect(heading(page, message('play_check_title'))).toBeVisible();
 	});
 
-	test('says the keyboard is ready when the physical keys are the expected ones', async ({
-		page
-	}) => {
+	test('says the keyboard is ready when the keys write the expected letters', async ({ page }) => {
 		await openPlay(page);
 		await createPlayer(page);
 
@@ -1527,7 +1528,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			for (const [index, key] of CHECK_KEYS.entries()) {
 				await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
 				if (index === 0) await expectNoAxeViolation(page);
-				await page.keyboard.press(key.letter);
+				await page.keyboard.press(key.code);
 			}
 			await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
 			await expectNoAxeViolation(page);
