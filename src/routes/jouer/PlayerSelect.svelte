@@ -123,6 +123,12 @@
 		list-style: none;
 	}
 
+	/* A long nickname without a space is cut rather than wider than the page (320 pixels). */
+	.list li {
+		max-inline-size: 100%;
+		overflow-wrap: anywhere;
+	}
+
 	.unreadable {
 		display: grid;
 		gap: var(--dd-space-sm);

@@ -73,6 +73,7 @@
 			autocomplete="off"
 			autocapitalize="off"
 			spellcheck="false"
+			maxlength={MAX_NAME_LENGTH}
 			bind:value={name}
 			aria-invalid={error === null ? undefined : 'true'}
 			aria-describedby={error === null ? HINT_ID : `${HINT_ID} ${ERROR_ID}`}

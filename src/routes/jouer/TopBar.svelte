@@ -62,8 +62,11 @@
 	}
 
 	.player {
+		min-inline-size: 0;
 		font-size: var(--dd-font-size-lg);
 		font-weight: var(--dd-font-weight-bold);
+		/* A long nickname without a space is cut rather than wider than the page (320 pixels). */
+		overflow-wrap: anywhere;
 	}
 
 	.actions {
