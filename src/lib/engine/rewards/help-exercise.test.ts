@@ -249,6 +249,7 @@ describe('generateHelpExercise', () => {
 				lessons: world.lessons.map((lesson) => ({ ...lesson, words: [] }))
 			}))
 		};
+		const firsts = new Set<string>();
 		for (const seed of SEEDS) {
 			const { groups } = generateHelpExercise(noWords, questOf('s'), HELP_RULES, seededRng(seed));
 			expect(countIn(groups, 's')).toBeGreaterThanOrEqual(HELP_RULES.minCharCount);
@@ -256,7 +257,40 @@ describe('generateHelpExercise', () => {
 				expect(['fs ds', 'ks fs'], group).toContain(group);
 				if (i > 0) expect(group).not.toBe(groups[i - 1]);
 			});
+			firsts.add(groups[0] as string);
 		}
+		// Two quests on the same key do not always start with the same written group.
+		expect(firsts.size).toBe(2);
+	});
+
+	it('takes the written groups of the reserve of the lesson too', () => {
+		const reserved = {
+			...HELP_PROGRESSION,
+			worlds: HELP_PROGRESSION.worlds.map((world) => ({
+				...world,
+				lessons: world.lessons.map((lesson) =>
+					lesson.id === HELP_LESSON_LATE
+						? {
+								...lesson,
+								words: [],
+								warmUp: ['fs ds', 'jl kl'],
+								warmUpReserve: { alternatives: [['sd sf', 'js ks'], ['lk lj']] }
+							}
+						: lesson
+				)
+			}))
+		};
+		const seen = new Set<string>();
+		for (const seed of SEEDS) {
+			const { groups } = generateHelpExercise(reserved, questOf('s'), HELP_RULES, seededRng(seed));
+			expect(countIn(groups, 's')).toBeGreaterThanOrEqual(HELP_RULES.minCharCount);
+			groups.forEach((group, i) => {
+				expect(['fs ds', 'sd sf', 'js ks']).toContain(group);
+				if (i > 0) expect(group).not.toBe(groups[i - 1]);
+				seen.add(group);
+			});
+		}
+		expect(seen.size).toBe(3);
 	});
 
 	it('leaves out the words of the bank longer than the context allows', () => {

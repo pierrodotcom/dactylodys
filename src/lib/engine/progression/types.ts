@@ -69,6 +69,12 @@ export interface ProgressionRules {
 	 */
 	readonly writtenWarmUpMinCount?: number;
 	/**
+	 * Characters by which the warm-up drawn from a reserve (`LessonDefinition.warmUpReserve`) may
+	 * be longer or shorter than the warm-up as written: an exercise keeps its length whatever the
+	 * draw (checked). Absent: no limit.
+	 */
+	readonly warmUpReserveSlack?: number;
+	/**
 	 * How a suite is built when one is needed: regular shapes that can be said aloud, instead of
 	 * characters drawn at random. Absent: drawn at random.
 	 */
@@ -102,6 +108,30 @@ export interface WordWarmUpRules {
 	readonly minWords: number;
 	/** Most graphemes of a word taken for a warm-up or for the review of a weak character. */
 	readonly maxWordLength: number;
+	/**
+	 * Share (above 0, up to 1) of the best score a word must reach to be drawn for a warm-up: the
+	 * score is what the word brings of the keystrokes still lacking, for its length. Under 1, two
+	 * exercises seldom open with the same words. Absent or 1: only the best words.
+	 */
+	readonly scoreShare?: number;
+}
+
+/**
+ * How the warm-up written by hand varies from one exercise to the next (same number of groups,
+ * same guarantees): data, never constants in the code.
+ */
+export interface WarmUpReserve {
+	/**
+	 * For each group of `warmUp`, in the same order, the groups that can take its place: an
+	 * exercise draws one group for each place, the written one or one of these. An empty list
+	 * leaves a group as written. Absent: every group is typed as written.
+	 */
+	readonly alternatives?: readonly (readonly string[])[];
+	/**
+	 * The first place always opens the exercise; the other ones come in a drawn order. Absent or
+	 * false: every place comes in a drawn order.
+	 */
+	readonly keepFirst?: boolean;
 }
 
 /**
@@ -198,6 +228,12 @@ export interface LessonDefinition {
 	 * warm-up is generated after it. Absent: generated.
 	 */
 	readonly warmUp?: readonly string[];
+	/**
+	 * A reserve for the warm-up written by hand: with it, an exercise no longer opens with the
+	 * same groups in the same order each time. It still asks each new character as often as a
+	 * written warm-up must, whatever the draw (checked). Absent: `warmUp` is typed as written.
+	 */
+	readonly warmUpReserve?: WarmUpReserve;
 	/**
 	 * A lesson of repairs (ADR-057, proposal 10): its groups arrive begun, with one or more wrong
 	 * characters after the right ones, to erase with Backspace. Absent: every group starts empty.

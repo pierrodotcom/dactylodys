@@ -178,7 +178,12 @@ export function generateHelpExercise(
 		? []
 		: wordPool.map((text) => ({ text, graphemes: toGraphemes(text), weight: 1 }));
 	// The warm-up written for the lesson of the key shows it where it belongs (`oui, non.`).
-	const written = (home.warmUp ?? []).filter((group) => toGraphemes(group).includes(char));
+	const written = [
+		...(home.warmUp ?? []),
+		...(home.warmUpReserve?.alternatives ?? []).flat()
+	].filter((group) => toGraphemes(group).includes(char));
+	// Two quests on the same key do not start with the same written group.
+	const writtenFrom = written.length > 1 ? between(0, written.length - 1, rng) : 0;
 	const patterns = progression.rules.drillPatterns;
 	const [minLength, maxLength] = home.groupLength;
 	const shortest = isSpace ? SHORTEST_SPACED_GROUP : 1;
@@ -211,7 +216,7 @@ export function generateHelpExercise(
 					)?.text ?? '';
 			}
 			if (group === '' && written.length > 0) {
-				const next = written[(groups.length + attempt) % written.length] as string;
+				const next = written[(writtenFrom + groups.length + attempt) % written.length] as string;
 				// A single written group alternates with a suite rather than come twice in a row.
 				group = next === previous ? '' : next;
 			}

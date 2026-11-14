@@ -91,6 +91,44 @@ describe('pickPracticeWord', () => {
 		expect(heavy).toBeGreaterThan(85);
 	});
 
+	it('draws among the words near the best score when a share of it is enough', () => {
+		const picks = (scoreShare: number | undefined) => {
+			const seen = new Set<string>();
+			for (let seed = 0; seed < 80; seed++) {
+				const picked = pickPracticeWord(POOL, byB, { ...options(seed), scoreShare });
+				seen.add(picked?.text as string);
+			}
+			return [...seen].sort();
+		};
+		// « bébé » holds two b, the other words one: half of the best score.
+		expect(picks(undefined)).toEqual(['bébé']);
+		expect(picks(1)).toEqual(['bébé']);
+		expect(picks(0.6)).toEqual(['bébé']);
+		expect(picks(0.5)).toEqual(['bavard', 'bol', 'bébé']);
+	});
+
+	it('takes a word of the level asked first, or one without level, among those it can draw', () => {
+		const pool = [
+			{ ...word('bol'), level: 1 },
+			{ ...word('bal'), level: 2 },
+			{ ...word('bus'), level: 2 },
+			word('bip')
+		];
+		const picks = (level: number | undefined) => {
+			const seen = new Set<string>();
+			for (let seed = 0; seed < 80; seed++) {
+				seen.add(pickPracticeWord(pool, byB, { ...options(seed), level })?.text as string);
+			}
+			return [...seen].sort();
+		};
+		expect(picks(undefined)).toEqual(['bal', 'bip', 'bol', 'bus']);
+		expect(picks(2)).toEqual(['bal', 'bip', 'bus']);
+		expect(picks(1)).toEqual(['bip', 'bol']);
+		// No word of that level: the one without level, else any of them rather than none.
+		expect(picks(3)).toEqual(['bip']);
+		expect(pickPracticeWord(pool.slice(0, 3), byB, { ...options(1), level: 3 })).toBeDefined();
+	});
+
 	it('gives nothing when no word scores', () => {
 		expect(pickPracticeWord(POOL, () => 0, options(1))).toBeUndefined();
 		expect(pickPracticeWord([], byB, options(1))).toBeUndefined();

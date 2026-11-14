@@ -18,7 +18,8 @@ import type {
 	ExerciseMix,
 	LessonDefinition,
 	ProgressionDefinition,
-	Rng
+	Rng,
+	WordLevel
 } from './types';
 import {
 	capitalOf,
@@ -44,6 +45,8 @@ interface Item {
 	readonly text: string;
 	readonly graphemes: readonly string[];
 	readonly weight: number;
+	/** Level of a word of the bank; absent for a phrase or a word picked by hand. */
+	readonly level?: WordLevel;
 }
 
 interface Reserve {
@@ -302,6 +305,27 @@ function dueText(
 	return text === undefined ? undefined : textGroups(text, progression.rules.textGroupLength);
 }
 
+/**
+ * The warm-up written by hand for one exercise: as written, or, with a reserve, one group drawn
+ * for each place (the written one or one of its alternatives), the places in a drawn order (the
+ * first one stays first when the reserve says so).
+ */
+export function drawWarmUp(lesson: LessonDefinition, rng: Rng): readonly string[] {
+	const written = lesson.warmUp ?? [];
+	const reserve = lesson.warmUpReserve;
+	if (reserve === undefined) return written;
+	const drawn = written.map((group, place) => {
+		const options = [group, ...(reserve.alternatives?.[place] ?? [])];
+		return options.length === 1 ? group : (options[between(0, options.length - 1, rng)] as string);
+	});
+	const fixed = reserve.keepFirst === true ? 1 : 0;
+	for (let i = drawn.length - 1; i > fixed; i--) {
+		const j = between(fixed, i, rng);
+		[drawn[i], drawn[j]] = [drawn[j] as string, drawn[i] as string];
+	}
+	return drawn;
+}
+
 export function generateExercise(
 	progression: ProgressionDefinition,
 	lessonId: string,
@@ -351,7 +375,8 @@ export function generateExercise(
 	if (context.words !== undefined) {
 		const wordOptions = { ...options, maxWordLength: context.maxWordLength };
 		for (const { entry, graphemes } of usableWordCuts(context.words, learned, wordOptions)) {
-			wordItems.set(entry.text, toItem(entry.text, entry.themes, graphemes));
+			const item = toItem(entry.text, entry.themes, graphemes);
+			wordItems.set(entry.text, { ...item, level: entry.level });
 		}
 	}
 	// Once capitals and the mark that ends a sentence are learned, an early phrase gets them.
@@ -541,7 +566,6 @@ export function generateExercise(
 		if (wordWarmUp === undefined || relaxed) return buildDrill(lacking, settings, relaxed);
 		const still = new Map(lacking.map((char) => [char, minCount - askedOf(char)] as const));
 		const picked: Item[] = [];
-		let last = lastWord;
 		for (const char of lacking) {
 			if (picked.some((item) => item.graphemes.includes(char))) continue;
 			if ((holders.get(char) ?? 0) < wordWarmUp.minWords) continue;
@@ -550,18 +574,31 @@ export function generateExercise(
 				(word) => (word.graphemes.includes(char) ? density(word, still) : 0),
 				{
 					used: new Set([...words.used, ...picked.map((word) => word.text)]),
-					avoid: [last, previous],
-					rng
+					// A word alone never follows itself; side by side, the order below sees to it.
+					avoid: [
+						picked.length === 0 ? lastWord : undefined,
+						previous,
+						...picked.map((word) => word.text)
+					],
+					rng,
+					scoreShare: wordWarmUp.scoreShare,
+					// Two words side by side are of the same level when they can be.
+					level: picked[0]?.level
 				}
 			);
 			if (item === undefined) continue;
 			picked.push(item);
-			last = item.text;
 			for (const grapheme of item.graphemes) {
 				const count = still.get(grapheme);
 				if (count !== undefined) still.set(grapheme, count - 1);
 			}
 		}
+		// Words side by side come in a drawn order, the last word of the group before never first.
+		for (let i = picked.length - 1; i > 0; i--) {
+			const j = between(0, i, rng);
+			[picked[i], picked[j]] = [picked[j] as Item, picked[i] as Item];
+		}
+		if (picked.length > 1 && picked[0]?.text === lastWord) picked.push(picked.shift() as Item);
 		const rest = lacking.filter((char) => !picked.some((item) => item.graphemes.includes(char)));
 		const pieces = picked.map((item) => item.text);
 		if (rest.length > 0) pieces.push(buildDrill(rest, settings, relaxed).text);
@@ -628,9 +665,9 @@ export function generateExercise(
 		return group === previous ? undefined : { text: group, madeOf: picked };
 	};
 
-	// A warm-up written by hand opens the exercise as it is: it already asks every new character
-	// enough (checked by the parser), so no warm-up is generated for them.
-	for (const group of lesson.warmUp ?? []) record(group);
+	// A warm-up written by hand opens the exercise, as it is or drawn from its reserve: it already
+	// asks every new character enough (checked by the parser), so none is generated for them.
+	for (const group of drawWarmUp(lesson, rng)) record(group);
 
 	while (groups.length < lesson.groupCount) {
 		// Warm-up: groups that hold the new characters open the exercise until each was asked enough.

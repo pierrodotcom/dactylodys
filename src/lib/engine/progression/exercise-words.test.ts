@@ -201,8 +201,9 @@ describe('warm-up made of words', () => {
 	it('takes the words that hold the new characters most for their length first', () => {
 		const richest = ['le', 'de', 'je', 'elle', 'elfe', 'file'];
 		for (const seed of RUNS) {
+			// Two words side by side come in a drawn order: the richest one is one of them.
 			const first = generate(WORDY, 'ei', seed).groups[0] as string;
-			expect(richest).toContain(first.split(SPACE)[0]);
+			expect(first.split(SPACE).some((part) => richest.includes(part))).toBe(true);
 		}
 	});
 

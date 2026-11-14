@@ -10,6 +10,8 @@ export interface PracticeWord {
 	readonly text: string;
 	readonly graphemes: readonly string[];
 	readonly weight: number;
+	/** Level of a word of the bank; absent for a word picked by hand for its lesson. */
+	readonly level?: number;
 }
 
 export function isCapital(char: string): boolean {
@@ -37,18 +39,28 @@ export interface PracticePick {
 	/** Texts never taken: the word or the group just before, so that none comes twice in a row. */
 	readonly avoid: readonly (string | undefined)[];
 	readonly rng: Rng;
+	/**
+	 * Share (above 0, up to 1) of the best score a word must reach to be drawn: under 1, the draw
+	 * is wider than the best words alone. Absent: 1.
+	 */
+	readonly scoreShare?: number;
+	/**
+	 * Level of the word this one goes with: a word of the same level, or without any, is taken
+	 * first among those that can be drawn. Absent: any level.
+	 */
+	readonly level?: number;
 }
 
 /**
- * The word that scores best, among those that score at all: one not typed yet first, then the
- * highest score, then by chance, a short word more often than a long one. Nothing when no word
- * scores.
+ * A word among those that score best, or near the best with `scoreShare`: one not typed yet
+ * first, of the level asked if any, then by chance, a short word more often than a long one.
+ * Nothing when no word scores.
  */
-export function pickPracticeWord(
-	pool: readonly PracticeWord[],
-	score: (word: PracticeWord) => number,
-	{ used, avoid, rng }: PracticePick
-): PracticeWord | undefined {
+export function pickPracticeWord<T extends PracticeWord>(
+	pool: readonly T[],
+	score: (word: T) => number,
+	{ used, avoid, rng, scoreShare = 1, level }: PracticePick
+): T | undefined {
 	const scored = pool
 		.filter((word) => !avoid.includes(word.text))
 		.map((word) => ({ word, score: score(word) }))
@@ -57,7 +69,9 @@ export function pickPracticeWord(
 	const unused = scored.filter((entry) => !used.has(entry.word.text));
 	const fresh = unused.length > 0 ? unused : scored;
 	const best = Math.max(...fresh.map((entry) => entry.score));
-	const finalists = fresh.filter((entry) => entry.score === best).map((entry) => entry.word);
+	const near = fresh.filter((entry) => entry.score >= best * scoreShare).map((entry) => entry.word);
+	const alike = near.filter((word) => word.level === undefined || word.level === level);
+	const finalists = level !== undefined && alike.length > 0 ? alike : near;
 	const weights = finalists.map((word) => word.weight / Math.max(1, word.graphemes.length));
 	const total = weights.reduce((sum, weight) => sum + weight, 0);
 	let remaining = rng() * total;

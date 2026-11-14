@@ -317,7 +317,10 @@ function checkExercise(
 	// The review of weak characters may add a group once the length is reached, and a warm-up
 	// written by hand is typed whole.
 	const reviews = progression.rules.weakChars !== undefined && context.progress !== undefined;
-	const written = new Set(lessonDefinition.warmUp ?? []);
+	const written = new Set([
+		...(lessonDefinition.warmUp ?? []),
+		...(lessonDefinition.warmUpReserve?.alternatives ?? []).flat()
+	]);
 	if (!reviews && exercise.groups.length > (lessonDefinition.warmUp ?? []).length) {
 		expect(isComplete(exercise.groups.slice(0, -1))).toBe(false);
 	}
