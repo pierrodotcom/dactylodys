@@ -181,6 +181,25 @@ test('puts the way out of the adult space at the top of each of its screens', as
 	await expectWayOutAtTop(page, message('adult_sheet_back', { name: child.name }));
 });
 
+test('puts the way out of the pages for adults at the top of the page', async ({ page }) => {
+	for (const key of [
+		'info_link_adults',
+		'info_link_professionals',
+		'info_link_privacy',
+		'info_link_accessibility'
+	]) {
+		await openPage(page, '/');
+		await page
+			.locator('footer')
+			.getByRole('link', { name: message(key), exact: true })
+			.click();
+		await expect(heading(page, message(key))).toBeVisible();
+		await expectWayOutAtTop(page, message('info_back_home'));
+		await button(page, message('info_back_home')).click();
+		await expect(heading(page, message('app_name'))).toBeVisible();
+	}
+});
+
 test('keeps the race choice in view with the games, and the race above the game', async ({
 	page
 }) => {
@@ -254,7 +273,8 @@ for (const worldIndex of [1, 3]) {
 	});
 }
 
-// The second lesson of the kitchen proposes the tower, whose text zone is the narrowest.
+// The fifth lesson of the kitchen proposes the tower, whose text zone is the narrowest, and its
+// game always has more groups than the reminder waits for (it never shows after the last one).
 test('does not move the keyboard when the reminder to look at the screen shows', async ({
 	page
 }) => {
@@ -267,7 +287,7 @@ test('does not move the keyboard when the reminder to look at the screen shows',
 		});
 	});
 	const lessons = progressionWorlds.flatMap((world) => world.lessons);
-	const kitchen = progressionWorlds[1]?.lessons[1] as Lesson;
+	const kitchen = progressionWorlds[1]?.lessons[4] as Lesson;
 	const before = lessons.slice(
 		0,
 		lessons.findIndex((lesson) => lesson.id === kitchen.id)

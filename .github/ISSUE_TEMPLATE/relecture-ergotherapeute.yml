@@ -1,0 +1,51 @@
+name: Relecture par un ou une ergothérapeute
+description: Donner votre avis de professionnel sur le jeu, à partir des questions de la fiche « Pour les professionnels ».
+title: '[Relecture ergothérapeute] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre ce temps. Répondez seulement aux questions qui vous parlent : toutes sont facultatives.
+
+        **Ce ticket est public : n'y écrivez rien qui permette de reconnaître un enfant.**
+  - type: input
+    id: practice
+    attributes:
+      label: Votre pratique
+      description: Par exemple « ergothérapeute en libéral » ou « en service d'éducation spécialisée ». Facultatif.
+  - type: textarea
+    id: order
+    attributes:
+      label: "L'ordre des touches (F et J, puis les voyelles tôt, les accents fréquents au milieu du parcours) vous paraît-il adapté ?"
+  - type: textarea
+    id: fingering
+    attributes:
+      label: 'Le doigté : faut-il proposer un doigté à quatre ou six doigts ? Pour quels enfants, avec quelle répartition des touches ?'
+  - type: textarea
+    id: duration
+    attributes:
+      label: 'La durée : une pause proposée après 4 parties ou 12 minutes convient-elle aux enfants que vous suivez ?'
+  - type: textarea
+    id: threshold
+    attributes:
+      label: 'Les seuils : une leçon se réussit à 80 % de frappes justes. Est-ce trop exigeant, ou pas assez ?'
+  - type: textarea
+    id: fade
+    attributes:
+      label: "Le clavier à l'écran : la lettre d'une touche s'efface après 20 frappes récentes avec au plus 10 % d'erreurs. Est-ce trop tôt, ou trop tard ?"
+  - type: textarea
+    id: measures
+    attributes:
+      label: 'Le bilan : quelles mesures vous seraient utiles pour suivre un enfant ? Lesquelles sont inutiles ?'
+  - type: textarea
+    id: practice-needs
+    attributes:
+      label: "En cabinet ou en classe : que manque-t-il pour l'utiliser avec les enfants que vous suivez ?"
+  - type: textarea
+    id: wording
+    attributes:
+      label: 'Les mots : une consigne du jeu ou une phrase de cette fiche est-elle à reprendre ?'
+  - type: textarea
+    id: other
+    attributes:
+      label: Autre chose à nous dire ?

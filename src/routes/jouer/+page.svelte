@@ -15,6 +15,7 @@
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import { keyNeighbors } from '$lib/engine/progression/repair';
+	import { wordLimits } from '$lib/engine/progression/word-limits';
 	import { generateFreeExercise } from '$lib/engine/free-practice/exercise';
 	import type { RaceWinner } from '$lib/engine/ghost/race';
 	import type { GhostRun } from '$lib/engine/ghost/types';
@@ -647,7 +648,7 @@
 			...banks,
 			progress: profile.progress,
 			themeId: world.themeId,
-			maxLevel: PLAY_RULES.maxWordLevel,
+			...wordLimits(PLAY_RULES, progression, lessonId, profile.settings.ageBand),
 			ageBand: profile.settings.ageBand,
 			neighbors
 		});
@@ -731,7 +732,7 @@
 				...banks,
 				progress: profile.progress,
 				themeId: world.themeId,
-				maxLevel: PLAY_RULES.maxWordLevel,
+				...wordLimits(PLAY_RULES, progression, quest.lessonId, profile.settings.ageBand),
 				ageBand: profile.settings.ageBand
 			});
 		} catch {
@@ -961,6 +962,7 @@
 		{#if lesson && world}
 			<LessonIntro
 				{lesson}
+				fresh={freshChars(progression, lessonId)}
 				number={lessonIds(progression).indexOf(lessonId) + 1}
 				{assets}
 				games={gameOptions(world)}

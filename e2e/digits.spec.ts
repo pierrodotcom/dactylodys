@@ -169,6 +169,13 @@ async function playToResult(page: Page, lesson: Lesson, modifier: 'shift' | 'alt
 	return typed;
 }
 
+/** The warm-up written for the lesson opens the exercise: its first group first, the others in a drawn order. */
+function expectWarmUp(typed: readonly string[], lesson: Lesson) {
+	const warmUp = lesson.warmUp ?? [];
+	expect(typed[0]).toBe(warmUp[0]);
+	expect([...typed.slice(0, warmUp.length)].sort()).toEqual([...warmUp].sort());
+}
+
 test.beforeEach(async ({ page }) => {
 	await shortenRewards(page);
 });
@@ -181,7 +188,7 @@ test.describe('the digits and @', () => {
 		const typed = await playToResult(page, DIGITS_LESSON, 'shift');
 
 		await expect(resultButton(page)).toBeVisible();
-		expect(typed.slice(0, DIGITS_LESSON.warmUp?.length)).toEqual(DIGITS_LESSON.warmUp);
+		expectWarmUp(typed, DIGITS_LESSON);
 		const first = texts.texts.find((entry) => entry.lessonId === DIGITS_LESSON.id);
 		expect(first).toBeDefined();
 		if (first) expect(typed.join('').endsWith(textOf(first))).toBe(true);
@@ -194,7 +201,7 @@ test.describe('the digits and @', () => {
 		const typed = await playToResult(page, AT_LESSON, 'altgr');
 
 		await expect(resultButton(page)).toBeVisible();
-		expect(typed.slice(0, AT_LESSON.warmUp?.length)).toEqual(AT_LESSON.warmUp);
+		expectWarmUp(typed, AT_LESSON);
 		expect(typed.join('')).toMatch(/[a-z]+@exemple\.(org|com)/);
 	});
 
