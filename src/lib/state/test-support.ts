@@ -1,5 +1,5 @@
 import type { ProgressState } from '../engine/progression/types';
-import type { Profile } from './types';
+import type { Profile, SessionRecord } from './types';
 
 /** The progress as versions 1 and 2 stored it: lifetime totals only for each character. */
 function progressBeforeVersion3(progress: ProgressState): Record<string, unknown> {
@@ -178,6 +178,21 @@ export function withKeyboardFade(profile: Profile): Profile {
 /** What a profile becomes once migrated from version 8 or older: Backspace off, as before. */
 export function withRetryPolicy(profile: Profile): Profile {
 	return withKeyboardFade({ ...profile, settings: { ...profile.settings, errorPolicy: 'retry' } });
+}
+
+/** What a profile becomes once migrated from version 13 or older: no play says how it was measured. */
+export function withUnmarkedSessions(profile: Profile): Profile {
+	const sessions = profile.sessions.map((session) => {
+		const unmarked: Partial<Record<keyof SessionRecord, unknown>> = { ...session };
+		delete unmarked.speedRule;
+		return unmarked as SessionRecord;
+	});
+	return { ...profile, sessions };
+}
+
+/** The record version 13 of the app stored: the same profile, no play saying how it was measured. */
+export function asVersion13(profile: Profile): Record<string, unknown> {
+	return { ...withUnmarkedSessions(profile), schemaVersion: 13 };
 }
 
 /** The record version 12 of the app stored: the same profile without the hideout. */

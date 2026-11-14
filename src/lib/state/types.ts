@@ -83,6 +83,12 @@ export interface SessionRecord {
 	readonly stars: StarCount;
 	/** The play opened the next lesson. */
 	readonly passed: boolean;
+	/**
+	 * 2 (version 14) when the time and the speed count each group from the moment it could be
+	 * typed, pauses left out (`SessionMetrics.speedRule`). Absent for a play measured before, from
+	 * the first to the last keystroke of each group: its speed is higher and does not compare.
+	 */
+	readonly speedRule?: 2;
 }
 
 /** A handwriting speed measured by the adult (one minute of copying). */
@@ -93,7 +99,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 13;
+	readonly schemaVersion: 14;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

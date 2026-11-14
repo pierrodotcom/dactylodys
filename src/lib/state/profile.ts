@@ -66,7 +66,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 13;
+export const PROFILE_SCHEMA_VERSION = 14;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -113,6 +113,9 @@ const SESSION_KEYS = [
 	'stars',
 	'passed'
 ] as const satisfies readonly (keyof SessionRecord)[];
+/** Written only for a play measured with the rule it names: absent, never `undefined`. */
+const SESSION_SPEED_RULE_KEY = 'speedRule' satisfies keyof SessionRecord;
+const SESSION_SPEED_RULE = 2 satisfies SessionRecord['speedRule'];
 const HANDWRITING_KEYS = [
 	'measuredAt',
 	'wordsPerMinute'
@@ -540,7 +543,11 @@ function expectArray(value: unknown, path: string): readonly unknown[] {
 /** Strict, like `parseProfile`: one finished play as the profile keeps it. */
 export function parseSessionRecord(data: unknown, path: string): SessionRecord {
 	const record = expectRecord(data, path);
-	expectExactKeys(record, SESSION_KEYS, path);
+	const marked = Object.hasOwn(record, SESSION_SPEED_RULE_KEY);
+	expectExactKeys(record, marked ? [...SESSION_KEYS, SESSION_SPEED_RULE_KEY] : SESSION_KEYS, path);
+	if (marked && record[SESSION_SPEED_RULE_KEY] !== SESSION_SPEED_RULE) {
+		fail(`${path}.${SESSION_SPEED_RULE_KEY}`, `expected ${SESSION_SPEED_RULE} or nothing`);
+	}
 	const finishedAt = record['finishedAt'];
 	if (!isTimestamp(finishedAt)) fail(`${path}.finishedAt`, 'expected a timestamp');
 	const utcOffsetMinutes = record['utcOffsetMinutes'];
@@ -574,7 +581,8 @@ export function parseSessionRecord(data: unknown, path: string): SessionRecord {
 			Number.MAX_VALUE
 		),
 		stars,
-		passed: expectBoolean(record['passed'], `${path}.passed`)
+		passed: expectBoolean(record['passed'], `${path}.passed`),
+		...(marked ? { speedRule: SESSION_SPEED_RULE } : {})
 	};
 }
 
