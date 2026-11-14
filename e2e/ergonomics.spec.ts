@@ -181,6 +181,25 @@ test('puts the way out of the adult space at the top of each of its screens', as
 	await expectWayOutAtTop(page, message('adult_sheet_back', { name: child.name }));
 });
 
+test('puts the way out of the pages for adults at the top of the page', async ({ page }) => {
+	for (const key of [
+		'info_link_adults',
+		'info_link_professionals',
+		'info_link_privacy',
+		'info_link_accessibility'
+	]) {
+		await openPage(page, '/');
+		await page
+			.locator('footer')
+			.getByRole('link', { name: message(key), exact: true })
+			.click();
+		await expect(heading(page, message(key))).toBeVisible();
+		await expectWayOutAtTop(page, message('info_back_home'));
+		await button(page, message('info_back_home')).click();
+		await expect(heading(page, message('app_name'))).toBeVisible();
+	}
+});
+
 test('keeps the race choice in view with the games, and the race above the game', async ({
 	page
 }) => {
