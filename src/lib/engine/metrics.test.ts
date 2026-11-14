@@ -1,8 +1,14 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { NormalizedKeystroke } from '../keyboard/types';
-import { combineMetrics, computeMetrics } from './metrics';
-import { applyKeystroke, createSession } from './session';
+import {
+	combineMetrics,
+	computeMetrics,
+	MEASURE_RULES,
+	sessionElapsedMs,
+	sessionTypingMs
+} from './metrics';
+import { applyKeystroke, createSession, pauseSession, resumeSession } from './session';
 import type { CharStats, ErrorPolicy, SessionMetrics, SessionState } from './types';
 
 function char(value: string, timestamp: number): NormalizedKeystroke {
@@ -209,6 +215,218 @@ describe('computeMetrics properties', () => {
 				}
 			)
 		);
+	});
+});
+
+describe('time counted from the moment a group can be typed', () => {
+	const shown = (text: string, shownAt: number, errorPolicy: ErrorPolicy = 'retry') =>
+		createSession(text, { errorPolicy, shownAt });
+	const typeAll = (state: SessionState, keystrokes: readonly NormalizedKeystroke[]) =>
+		keystrokes.reduce((current, keystroke) => applyKeystroke(current, keystroke).state, state);
+
+	it('counts the wait before the first keystroke of the group', () => {
+		const state = typeAll(shown('ab', 1000), [char('a', 2000), char('b', 3000)]);
+		const metrics = computeMetrics(state);
+		expect(metrics.elapsedMs).toBe(2000);
+		expect(metrics.correctCharsPerMinute).toBe(60);
+		expect(metrics.speedRule).toBe(2);
+	});
+
+	it('gives a group of one character a duration and a speed', () => {
+		const metrics = computeMetrics(typeAll(shown('f', 0), [char('f', 1000)]));
+		expect(metrics.elapsedMs).toBe(1000);
+		expect(metrics.correctCharsPerMinute).toBe(60);
+	});
+
+	it('caps the wait before the first keystroke: a child who looked away is not typing', () => {
+		const cap = MEASURE_RULES.firstKeyWaitCapMs;
+		expect(cap).toBe(5000);
+		const state = typeAll(shown('ab', 0), [char('a', 60_000), char('b', 61_000)]);
+		expect(computeMetrics(state).elapsedMs).toBe(cap + 1000);
+		expect(computeMetrics(state, undefined, { firstKeyWaitCapMs: 2000 }).elapsedMs).toBe(3000);
+	});
+
+	it('does not cap the time between two keystrokes of the group', () => {
+		const state = typeAll(shown('ab', 0), [char('a', 1000), char('b', 31_000)]);
+		expect(computeMetrics(state).elapsedMs).toBe(31_000);
+	});
+
+	it('counts the wait of a group that arrives begun from the moment it is shown, capped too', () => {
+		const begun = (shownAt: number) =>
+			createSession('bonjour', { shownAt, start: { typed: 3, pending: ['k'] } });
+		const keys = [backspace(11_000), char('j', 12_000), char('o', 13_000)];
+		const rest = [char('u', 14_000), char('r', 15_000)];
+		expect(computeMetrics(typeAll(begun(10_000), [...keys, ...rest])).elapsedMs).toBe(5000);
+		expect(computeMetrics(typeAll(begun(0), [...keys, ...rest])).elapsedMs).toBe(9000);
+	});
+
+	it('keeps the former measure, from the first keystroke, without the moment the group was shown', () => {
+		const metrics = computeMetrics(play('ab', 'retry', [char('a', 2000), char('b', 3000)]));
+		expect(metrics.elapsedMs).toBe(1000);
+		expect(metrics.speedRule).toBeUndefined();
+	});
+
+	it('counts the wait of a group not begun yet up to now, within the cap', () => {
+		expect(sessionElapsedMs(shown('ab', 1000), 1800)).toBe(800);
+		expect(sessionElapsedMs(shown('ab', 1000), 60_000)).toBe(5000);
+		expect(sessionElapsedMs(shown('ab', 1000))).toBe(0);
+		expect(sessionElapsedMs(shown('ab', 1000), 500)).toBe(0);
+	});
+
+	it('gives apart the time the group was typed, without the wait nor the pauses', () => {
+		let state = typeAll(shown('abc', 0), [char('a', 3000), char('b', 3400)]);
+		expect(sessionTypingMs(shown('abc', 0), 2000)).toBe(0);
+		expect(sessionTypingMs(state, 3900)).toBe(900);
+		state = resumeSession(pauseSession(state, 4000), 64_000);
+		expect(sessionTypingMs(typeAll(state, [char('c', 64_500)]))).toBe(1500);
+		expect(sessionElapsedMs(typeAll(state, [char('c', 64_500)]))).toBe(4500);
+	});
+
+	it('still has no hesitation time for the first keystroke of a group', () => {
+		const state = typeAll(shown('ab', 0), [char('a', 3000), char('b', 3400)]);
+		expect(computeMetrics(state).perChar).toEqual({
+			a: { attempts: 1, errors: 0, meanLatencyMs: null },
+			b: { attempts: 1, errors: 0, meanLatencyMs: 400 }
+		});
+	});
+
+	it('takes the time of a pause out of the group', () => {
+		let state = typeAll(shown('abc', 0), [char('a', 1000), char('b', 2000)]);
+		state = resumeSession(pauseSession(state, 2500), 122_500);
+		state = typeAll(state, [char('c', 123_000)]);
+		expect(computeMetrics(state).elapsedMs).toBe(3000);
+	});
+
+	it('takes a pause before the first keystroke out of the wait', () => {
+		let state = resumeSession(pauseSession(shown('ab', 0), 400), 100_400);
+		state = typeAll(state, [char('a', 101_000), char('b', 102_000)]);
+		expect(computeMetrics(state).elapsedMs).toBe(2000);
+	});
+
+	it('stops the time of a group while it is paused', () => {
+		const state = pauseSession(typeAll(shown('abc', 0), [char('a', 1000)]), 1500);
+		expect(sessionElapsedMs(state, 90_000)).toBe(1500);
+		expect(computeMetrics(state, 90_000).elapsedMs).toBe(1500);
+	});
+
+	it('counts no hesitation for the first keystroke after a pause', () => {
+		let state = typeAll(shown('abca', 0), [char('a', 1000), char('b', 2000)]);
+		state = resumeSession(pauseSession(state, 3000), 123_000);
+		state = typeAll(state, [char('c', 124_000), char('a', 124_600)]);
+		expect(computeMetrics(state).perChar).toEqual({
+			a: { attempts: 2, errors: 0, meanLatencyMs: 600 },
+			b: { attempts: 1, errors: 0, meanLatencyMs: 1000 },
+			c: { attempts: 1, errors: 0, meanLatencyMs: null }
+		});
+	});
+
+	it('takes the pauses out of a session without the moment it was shown too', () => {
+		let state = play('abc', 'retry', [char('a', 1000), char('b', 2000)]);
+		state = resumeSession(pauseSession(state, 2000), 50_000);
+		state = typeAll(state, [char('c', 51_000)]);
+		expect(computeMetrics(state).elapsedMs).toBe(2000);
+	});
+
+	it('gives the real speed within 1 % for regular keystrokes, whatever the groups', () => {
+		fc.assert(
+			fc.property(
+				fc.array(fc.integer({ min: 1, max: 40 }), { minLength: 1, maxLength: 12 }),
+				fc.integer({ min: 80, max: MEASURE_RULES.firstKeyWaitCapMs }),
+				fc.integer({ min: 0, max: 20_000 }),
+				(lengths, keyMs, betweenMs) => {
+					let clock = 0;
+					const all = lengths.map((length) => {
+						let state = shown('a'.repeat(length), clock);
+						for (let index = 0; index < length; index++) {
+							clock += keyMs;
+							state = applyKeystroke(state, char('a', clock)).state;
+						}
+						clock += betweenMs;
+						return computeMetrics(state);
+					});
+					const combined = combineMetrics(all);
+					const real = 60_000 / keyMs;
+					expect(Math.abs(combined.correctCharsPerMinute - real) / real).toBeLessThan(0.01);
+					expect(all.every((metrics) => metrics.elapsedMs > 0)).toBe(true);
+					expect(combined.speedRule).toBe(2);
+				}
+			)
+		);
+	});
+
+	it('never counts more than the time between the moment a group is shown and its end', () => {
+		const steps = fc.array(
+			fc.record({
+				action: fc.constantFrom('key', 'key', 'key', 'wrong', 'pause', 'resume'),
+				delta: fc.integer({ min: 0, max: 200_000 })
+			}),
+			{ maxLength: 60 }
+		);
+		fc.assert(
+			fc.property(steps, fc.integer({ min: 0, max: 10_000 }), (items, shownAt) => {
+				let clock = shownAt;
+				let state = shown('abcabcabcabc', shownAt);
+				let pausedAt: number | null = null;
+				let paused = 0;
+				for (const item of items) {
+					clock += item.delta;
+					if (item.action === 'pause') {
+						if (pausedAt !== null || state.endedAt !== null) continue;
+						pausedAt = clock;
+						state = pauseSession(state, clock);
+					} else if (item.action === 'resume') {
+						if (pausedAt === null) continue;
+						paused += clock - pausedAt;
+						pausedAt = null;
+						state = resumeSession(state, clock);
+					} else if (pausedAt === null) {
+						const typed = item.action === 'wrong' ? 'x' : (state.target[state.position] ?? 'a');
+						state = applyKeystroke(state, char(typed, clock)).state;
+					}
+				}
+				const end = state.endedAt ?? pausedAt ?? clock;
+				const { elapsedMs } = computeMetrics(state, clock);
+				expect(elapsedMs).toBeGreaterThanOrEqual(0);
+				expect(elapsedMs).toBeLessThanOrEqual(end - shownAt - paused);
+			})
+		);
+	});
+
+	it('marks a whole exercise as measured the new way only when every group is', () => {
+		const next = computeMetrics(typeAll(shown('a', 0), [char('a', 500)]));
+		const former = computeMetrics(play('ab', 'retry', [char('a', 0), char('b', 500)]));
+		expect(combineMetrics([next, next]).speedRule).toBe(2);
+		expect(combineMetrics([next, former]).speedRule).toBeUndefined();
+		expect(combineMetrics([]).speedRule).toBeUndefined();
+	});
+});
+
+describe('one mistake, one error (backspace policy)', () => {
+	it('counts one error for the keys typed after a mistake that is not erased yet', () => {
+		const wrong = ['x', 'h', 'a', 't'].map((value, index) => char(value, (index + 1) * 500));
+		const erased = [2500, 3000, 3500, 4000].map(backspace);
+		const right = ['c', 'h', 'a', 't'].map((value, index) => char(value, 4500 + index * 500));
+		const metrics = computeMetrics(play('chat', 'backspace', [...wrong, ...erased, ...right]));
+		expect(metrics).toMatchObject({ totalKeystrokes: 5, correctKeystrokes: 4, errorCount: 1 });
+		expect(metrics.accuracy).toBe(80);
+		expect(metrics.perChar).toEqual({
+			c: { attempts: 2, errors: 1, meanLatencyMs: 500 },
+			h: { attempts: 1, errors: 0, meanLatencyMs: 500 },
+			a: { attempts: 1, errors: 0, meanLatencyMs: 500 },
+			t: { attempts: 1, errors: 0, meanLatencyMs: 500 }
+		});
+	});
+
+	it('counts each mistake once when two mistakes follow one another', () => {
+		const keys = [char('x', 0), backspace(100), char('y', 200), backspace(300), char('a', 400)];
+		const metrics = computeMetrics(play('a', 'backspace', keys));
+		expect(metrics).toMatchObject({ totalKeystrokes: 3, correctKeystrokes: 1, errorCount: 2 });
+	});
+
+	it('still counts every wrong key when the game waits for the right one', () => {
+		const keys = [char('x', 0), char('h', 100), char('a', 200), char('c', 300)];
+		const metrics = computeMetrics(play('ch', 'retry', keys));
+		expect(metrics).toMatchObject({ totalKeystrokes: 4, correctKeystrokes: 1, errorCount: 3 });
 	});
 });
 

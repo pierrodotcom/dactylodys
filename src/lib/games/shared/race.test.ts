@@ -1,6 +1,7 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { NormalizedKeystroke } from '../../keyboard/types';
-import { createGame, reduce, type GameAction, type GameState } from './game-state';
+import { createGame, exerciseOutcome, reduce, type GameAction, type GameState } from './game-state';
 import {
 	STOPPED_CLOCK,
 	clockMs,
@@ -69,6 +70,44 @@ describe('race clock', () => {
 		race = act(race, { type: 'pause' }, 100);
 		race = act(race, { type: 'resume' }, 200);
 		expect(clockMs(race.clock, 900)).toBe(0);
+	});
+});
+
+describe('the race and the pace kept for the next one', () => {
+	it('ends the race on the time the pace of the play is recorded with, pauses and waits or not', () => {
+		const steps = fc.array(
+			fc.record({
+				delta: fc.integer({ min: 0, max: 20_000 }),
+				pause: fc.option(fc.integer({ min: 0, max: 200_000 }), { nil: null }),
+				wrong: fc.boolean()
+			}),
+			{ minLength: 6, maxLength: 6 }
+		);
+		fc.assert(
+			fc.property(steps, (items) => {
+				const groups = ['ab', 'c', 'abc'];
+				let at = 0;
+				let race: Race = { game: createGame(groups, 'retry', { at }), clock: STOPPED_CLOCK };
+				for (const [index, value] of [...groups.join('')].entries()) {
+					const item = items[index] ?? { delta: 0, pause: null, wrong: false };
+					at += item.delta;
+					if (item.pause !== null) {
+						race = act(race, { type: 'pause', at }, at);
+						at += item.pause;
+						race = act(race, { type: 'resume', at }, at);
+					}
+					if (item.wrong) race = act(race, char('x', at), at);
+					race = act(race, char(value, at), at);
+					if (race.game.phase === 'celebrating') {
+						at += item.delta;
+						race = act(race, { type: 'advance', at }, at);
+					}
+				}
+				const { pace } = exerciseOutcome(race.game);
+				expect(race.game.phase).toBe('complete');
+				expect(pace.at(-1)?.activeMs).toBe(clockMs(race.clock, at + 5000));
+			})
+		);
 	});
 });
 
