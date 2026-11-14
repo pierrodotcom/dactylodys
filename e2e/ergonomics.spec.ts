@@ -273,7 +273,8 @@ for (const worldIndex of [1, 3]) {
 	});
 }
 
-// The second lesson of the kitchen proposes the tower, whose text zone is the narrowest.
+// The fifth lesson of the kitchen proposes the tower, whose text zone is the narrowest, and its
+// game always has more groups than the reminder waits for (it never shows after the last one).
 test('does not move the keyboard when the reminder to look at the screen shows', async ({
 	page
 }) => {
@@ -286,7 +287,7 @@ test('does not move the keyboard when the reminder to look at the screen shows',
 		});
 	});
 	const lessons = progressionWorlds.flatMap((world) => world.lessons);
-	const kitchen = progressionWorlds[1]?.lessons[1] as Lesson;
+	const kitchen = progressionWorlds[1]?.lessons[4] as Lesson;
 	const before = lessons.slice(
 		0,
 		lessons.findIndex((lesson) => lesson.id === kitchen.id)
