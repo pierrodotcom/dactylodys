@@ -97,13 +97,18 @@ interface Sorted {
 	readonly suites: readonly string[];
 }
 
+/** Every group the warm-up written for a lesson can hold: those written and their alternatives. */
+function writtenOf(lesson: LessonDefinition): string[] {
+	return [...(lesson.warmUp ?? []), ...(lesson.warmUpReserve?.alternatives ?? []).flat()];
+}
+
 function sort(lesson: LessonDefinition, ageBand: AgeBand, exercise: Exercise): Sorted {
 	const usable = wordsOf(lesson, ageBand);
 	const isWord = (part: string) => usable.has(part) || usable.has(lower(part));
 	const learned = new Set(learnedChars(progression, lesson.id));
 	const limits = wordLimits(PLAY_RULES, progression, lesson.id, ageBand);
 	const whole = new Set<string>([
-		...(lesson.warmUp ?? []),
+		...writtenOf(lesson),
 		...storyPhrases(phrases, lesson.id, ageBand).map((phrase) => phrase.text),
 		...lessonTexts(texts, lesson.id, ageBand).flatMap((entry) =>
 			textGroups(entry, rules.textGroupLength)
@@ -276,7 +281,7 @@ describe('what the child types, over the shipped content', () => {
 				const { groups } = generateExercise(progression, lesson.id, seededRng(seed), context);
 				for (const group of groups) {
 					const isSentence = group.split(SPACE).length >= 3 && !story.has(group);
-					if (!isSentence || (lesson.warmUp ?? []).includes(group)) continue;
+					if (!isSentence || writtenOf(lesson).includes(group)) continue;
 					expect(group, groups.join(' | ')).toMatch(/[.!?"]$/u);
 					expect(group, groups.join(' | ')).not.toMatch(/^[a-z]/u);
 				}

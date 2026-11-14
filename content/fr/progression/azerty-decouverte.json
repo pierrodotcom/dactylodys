@@ -28,9 +28,11 @@
 		},
 		"wordWarmUp": {
 			"minWords": 1,
-			"maxWordLength": 7
+			"maxWordLength": 7,
+			"scoreShare": 0.6
 		},
 		"writtenWarmUpMinCount": 2,
+		"warmUpReserveSlack": 5,
 		"drillPatterns": {
 			"vowels": [
 				"a",
@@ -470,7 +472,15 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["Le La", "Il Un", "Tu Te", "De Sa"]
+					"warmUp": ["Le La", "Il Un", "Tu Te", "De Sa"],
+					"warmUpReserve": {
+						"alternatives": [
+							["La Le", "Je Lu", "Lu Je"],
+							["Un Il", "On Ou", "Ni Mi"],
+							["Te Tu", "Ta Va", "Et En"],
+							["Sa De", "Ce Se", "Du Au"]
+						]
+					}
 				},
 				{
 					"id": "fr.lesson.virgule-point",
@@ -487,7 +497,14 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["Oui, non.", "Do, ré ; mi.", "Ici ; là."]
+					"warmUp": ["Oui, non.", "Do, ré ; mi.", "Ici ; là."],
+					"warmUpReserve": {
+						"alternatives": [
+							["Non, oui.", "Toi, moi.", "Moi, toi."],
+							["Mi, ré ; do.", "La, si ; do."],
+							["Là ; ici.", "Lui ; elle."]
+						]
+					}
 				}
 			]
 		},
@@ -512,7 +529,14 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["Qui ? Moi !", "\"Oui !\"", "\"Non ?\""]
+					"warmUp": ["Qui ? Moi !", "\"Oui !\"", "\"Non ?\""],
+					"warmUpReserve": {
+						"alternatives": [
+							["Moi ? Toi !", "Toi ? Elle !", "Où ? Ici !"],
+							["\"Bravo !\"", "\"Zut !\"", "\"Chut !\""],
+							["\"Vrai ?\"", "\"Lui ?\"", "\"Quoi ?\""]
+						]
+					}
 				},
 				{
 					"id": "fr.lesson.tiret-deux-points",
@@ -529,7 +553,13 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["Tic-tac : midi", "Vas-y : file"]
+					"warmUp": ["Tic-tac : midi", "Vas-y : file"],
+					"warmUpReserve": {
+						"alternatives": [
+							["Toc-toc : entre", "Ping-pong : dix"],
+							["Dis-moi : oui", "Vas-y : cours", "Dis-moi : non"]
+						]
+					}
 				},
 				{
 					"id": "fr.lesson.chapeau-circonflexe",
@@ -546,7 +576,14 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["même âge", "âne têtu", "pâte prête"]
+					"warmUp": ["même âge", "âne têtu", "pâte prête"],
+					"warmUpReserve": {
+						"alternatives": [
+							["bête âgée", "tête pâle"],
+							["âne prêt", "rêve d'âne"],
+							["pâte à crêpe", "pâté de fête"]
+						]
+					}
 				},
 				{
 					"id": "fr.lesson.casque-circonflexe",
@@ -563,7 +600,13 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["île tôt sûr", "gîte côte mûr"]
+					"warmUp": ["île tôt sûr", "gîte côte mûr"],
+					"warmUpReserve": {
+						"alternatives": [
+							["tôt sûr île", "dîner tôt sûr"],
+							["mûr côte gîte", "boîte pôle goût", "huître rôti dû"]
+						]
+					}
 				},
 				{
 					"id": "fr.lesson.trema",
@@ -580,7 +623,13 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["caïman en canoë", "ouïe aiguë"]
+					"warmUp": ["caïman en canoë", "ouïe aiguë"],
+					"warmUpReserve": {
+						"alternatives": [
+							["maïs en canoë", "canoë du caïman", "naïf en canoë"],
+							["aïe, voix aiguë", "voix aiguë, aïe"]
+						]
+					}
 				}
 			]
 		},
@@ -701,7 +750,8 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["12345", "54321", "123 45", "543 21", "12 345"]
+					"warmUp": ["12345", "54321", "123 45", "543 21", "12 345"],
+					"warmUpReserve": { "keepFirst": true }
 				},
 				{
 					"id": "fr.lesson.train-huit-heures",
@@ -718,7 +768,8 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["67890", "09876", "678 90", "098 76", "67 890"]
+					"warmUp": ["67890", "09876", "678 90", "098 76", "67 890"],
+					"warmUpReserve": { "keepFirst": true }
 				},
 				{
 					"id": "fr.lesson.adresse-du-dino",
@@ -735,7 +786,8 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["@ @ @", "moi@", "toi@", "nous@"]
+					"warmUp": ["@ @ @", "moi@", "toi@", "nous@"],
+					"warmUpReserve": { "keepFirst": true }
 				},
 				{
 					"id": "fr.lesson.reparer-message",

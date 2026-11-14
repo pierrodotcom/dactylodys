@@ -22,6 +22,11 @@ function typedText(progression: ProgressionDefinition, lesson: LessonDefinition)
 	return [...learnedChars(progression, lesson.id), ...lesson.words];
 }
 
+/** Every group a warm-up written by hand can be made of: those written and their alternatives. */
+function reserveOf(lesson: LessonDefinition): string[] {
+	return [...(lesson.warmUp ?? []), ...(lesson.warmUpReserve?.alternatives ?? []).flat()];
+}
+
 const FILES = listProgressionFiles();
 
 describe('progression files', () => {
@@ -147,9 +152,12 @@ describe('azerty-decouverte', () => {
 			// A key fades once acquired as the report of the adult space says it.
 			keyboardFade: ADULT_RULES.mastery,
 			// Real words as early as possible (audit of pedagogy, P-04, P-05, P-08, P-22).
-			wordWarmUp: { minWords: 1, maxWordLength: 7 },
+			// Words near the best ones: two exercises seldom open with the same words.
+			wordWarmUp: { minWords: 1, maxWordLength: 7, scoreShare: 0.6 },
 			// A mark in its place takes more room than in a suite (see the report of the lot).
 			writtenWarmUpMinCount: 2,
+			// A warm-up drawn from its reserve keeps the length of the one written.
+			warmUpReserveSlack: 5,
 			drillPatterns: progression.rules.drillPatterns,
 			suiteFreeMinWords: 60,
 			uppercaseMinCount: 10,
@@ -293,7 +301,7 @@ describe('azerty-decouverte', () => {
 			'ëï'
 		]);
 		for (const lesson of written) {
-			for (const group of lesson.warmUp ?? []) {
+			for (const group of reserveOf(lesson)) {
 				// A mark or an accent always comes with a word: never a group of marks alone.
 				expect(group, lesson.id).toMatch(/\p{L}{2}|\p{L} ?[,;]/u);
 				// French typography: a space before ; : ? and !, none before a comma or a full stop.
@@ -318,6 +326,51 @@ describe('azerty-decouverte', () => {
 		expect(firstLeft).toBeGreaterThan(0);
 		expect(hands.slice(0, firstLeft).every((hand) => hand === 'right')).toBe(true);
 		expect(hands.slice(firstLeft).every((hand) => hand === 'left')).toBe(true);
+	});
+
+	it('keeps a reserve for every warm-up written by hand, so that no exercise opens like the last', () => {
+		const written = lessons.filter((lesson) => lesson.warmUp !== undefined);
+		for (const lesson of written) {
+			expect(lesson.warmUpReserve, lesson.id).toBeDefined();
+			const digits = lesson.newChars.some((char) => /[0-9@]/.test(char));
+			if (digits) {
+				// The series already validated stay the same; only the order after the first changes.
+				expect(lesson.warmUpReserve).toEqual({ keepFirst: true });
+				continue;
+			}
+			expect(lesson.warmUpReserve?.keepFirst).toBeUndefined();
+			const alternatives = lesson.warmUpReserve?.alternatives ?? [];
+			expect(alternatives).toHaveLength(lesson.warmUp?.length ?? 0);
+			for (const list of alternatives) expect(list.length, lesson.id).toBeGreaterThanOrEqual(2);
+			const minimum = lesson.unlocks.includes('uppercase') ? 10 : 6;
+			expect(reserveOf(lesson).length, lesson.id).toBeGreaterThanOrEqual(minimum);
+			// No capital with an accent: it cannot be typed on every keyboard.
+			for (const group of reserveOf(lesson)) expect(group).not.toMatch(/[À-ÖØ-Þ]/u);
+		}
+	});
+
+	it('gives each pair of capitals alternatives under the same hand: any draw trains both hands', () => {
+		const lesson = lessons.find((candidate) => candidate.unlocks.includes('uppercase'));
+		const rightHand = 'YUIOPHJKLMN';
+		const handOf = (group: string) => {
+			const hands = new Set(
+				group.split(' ').map((word) => (rightHand.includes(word.charAt(0)) ? 'right' : 'left'))
+			);
+			return hands.size === 1 ? [...hands][0] : 'both';
+		};
+		const places = (lesson?.warmUp ?? []).map((group, place) => [
+			group,
+			...(lesson?.warmUpReserve?.alternatives?.[place] ?? [])
+		]);
+		for (const options of places) {
+			for (const group of options) {
+				expect(group).toMatch(/^[A-Z][a-z] [A-Z][a-z]$/);
+				expect(handOf(group), group).toBe(handOf(options[0] as string));
+			}
+		}
+		expect(new Set(places.map((options) => handOf(options[0] as string)))).toEqual(
+			new Set(['right', 'left'])
+		);
 	});
 
 	it('keeps the identifiers of the lessons that already existed', () => {
