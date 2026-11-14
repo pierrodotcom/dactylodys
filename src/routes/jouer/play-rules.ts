@@ -1,15 +1,16 @@
-import type { WordLevel } from '$lib/engine/progression/types';
+import { parseWordLimitRules, type WordLimitRules } from '$lib/engine/progression/word-limits';
 import type { KeyCode } from '$lib/keyboard/types';
 import rulesData from '../../../content/common/play-rules.json';
 
-/** Rules of play that are not about learning: data, never constants in the code. */
-export interface PlayRules {
+/**
+ * Rules of play that are not about learning: data, never constants in the code. The level and the
+ * length of the words (`maxWordLevel`, `wordLevels`, `shortWords`) are read by `wordLimits`.
+ */
+export interface PlayRules extends WordLimitRules {
 	/** Cumulated play time after which a break is suggested. */
 	readonly breakAfterMinutes: number;
 	/** Finished exercises since the page was opened after which a break is suggested; 0: never. */
 	readonly breakAfterExercises: number;
-	/** Highest level of the words and phrases of the banks that an exercise may use. */
-	readonly maxWordLevel: WordLevel;
 	/** Longest wait for the banks when a game starts; after that the child plays without them. */
 	readonly bankLoadTimeoutMs: number;
 	/**
@@ -30,7 +31,6 @@ export interface PlayRules {
 }
 
 const KEY_CODE_PATTERN = /^[A-Z][A-Za-z0-9]*$/;
-const WORD_LEVELS: readonly WordLevel[] = [1, 2, 3];
 
 function fail(path: string, message: string): never {
 	throw new Error(`${path}: ${message}`);
@@ -49,6 +49,8 @@ export function parsePlayRules(data: unknown): PlayRules {
 				'breakAfterMinutes',
 				'breakAfterExercises',
 				'maxWordLevel',
+				'wordLevels',
+				'shortWords',
 				'bankLoadTimeoutMs',
 				'ghostPaceFactor',
 				'lookReminderEveryGroups',
@@ -74,10 +76,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 		fail('playRules.breakAfterExercises', 'expected an integer of at least 0');
 	}
 
-	const maxWordLevel = WORD_LEVELS.find((level) => level === data['maxWordLevel']);
-	if (maxWordLevel === undefined) {
-		fail('playRules.maxWordLevel', `expected one of ${WORD_LEVELS.join(', ')}`);
-	}
+	const wordLimitRules = parseWordLimitRules(data, 'playRules');
 
 	const bankLoadTimeoutMs = data['bankLoadTimeoutMs'];
 	if (
@@ -122,7 +121,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 	return {
 		breakAfterMinutes: minutes,
 		breakAfterExercises,
-		maxWordLevel,
+		...wordLimitRules,
 		bankLoadTimeoutMs,
 		ghostPaceFactor,
 		lookReminderEveryGroups,

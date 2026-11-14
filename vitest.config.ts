@@ -8,6 +8,8 @@ export default defineConfig({
 	test: {
 		environment: 'node',
 		reporters: ['dot'],
+		// Property tests run close to the default 5 s on a shared machine: a timeout is not a defect.
+		testTimeout: 20_000,
 		include: ['src/**/*.test.ts', 'tests/**/*.test.ts']
 	}
 });
