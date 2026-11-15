@@ -196,6 +196,26 @@ export function normalizeName(name: string): string | null {
 	return valid ? text : null;
 }
 
+/*
+ * Case and accents apart, as the children see them on the player screen: « Zoé » and « zoe »
+ * cannot be told apart there. A space, a digit or a sign still makes two nicknames different.
+ */
+const NICKNAME_COLLATOR = new Intl.Collator(undefined, { sensitivity: 'base' });
+
+function spacedOnce(name: string): string {
+	return name.normalize('NFC').trim().replace(/\s+/gu, ' ');
+}
+
+/** Whether two children of one device would take these nicknames for the same one. */
+export function sameNickname(one: string, other: string): boolean {
+	return NICKNAME_COLLATOR.compare(spacedOnce(one), spacedOnce(other)) === 0;
+}
+
+/** The nickname of `names` that is the same as `name` (`sameNickname`), as it is written there. */
+export function findNickname(name: string, names: readonly string[]): string | null {
+	return names.find((other) => sameNickname(name, other)) ?? null;
+}
+
 function cleanName(name: string): string {
 	const text = normalizeName(name);
 	if (text === null) {

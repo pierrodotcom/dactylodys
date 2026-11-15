@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
 	forgetLastPlayerId,
 	LAST_PLAYER_KEY,
+	lastPlayerFirst,
 	readLastPlayerId,
+	returningPlayer,
 	writeLastPlayerId,
 	type StorageProvider
 } from './last-player';
@@ -82,5 +84,54 @@ describe('last player memory', () => {
 		expect(readLastPlayerId(failing)).toBeNull();
 		expect(() => writeLastPlayerId('p-1', failing)).not.toThrow();
 		expect(() => forgetLastPlayerId(failing)).not.toThrow();
+	});
+});
+
+const LOU = { id: 'p-lou', name: 'Lou' };
+const ALI = { id: 'p-ali', name: 'Ali' };
+const ZOE = { id: 'p-zoe', name: 'Zoé' };
+
+describe('returning player', () => {
+	it('brings the only player of the device straight back to the game', () => {
+		expect(returningPlayer([LOU], LOU.id)).toEqual({ last: LOU, resume: true, gone: false });
+	});
+
+	it('asks who plays as soon as the device has several players', () => {
+		expect(returningPlayer([LOU, ALI], ALI.id)).toEqual({ last: ALI, resume: false, gone: false });
+		expect(returningPlayer([LOU, ALI, ZOE], LOU.id).resume).toBe(false);
+	});
+
+	it('asks who plays when nobody is remembered, even with one player', () => {
+		expect(returningPlayer([LOU], null)).toEqual({ last: null, resume: false, gone: false });
+		expect(returningPlayer([], null)).toEqual({ last: null, resume: false, gone: false });
+	});
+
+	it('says the remembered player is gone when the device no longer has it', () => {
+		expect(returningPlayer([LOU], 'p-deleted')).toEqual({ last: null, resume: false, gone: true });
+		expect(returningPlayer([], LOU.id)).toEqual({ last: null, resume: false, gone: true });
+	});
+});
+
+describe('order of the players', () => {
+	it('puts the last player first and keeps the others in their order', () => {
+		expect(lastPlayerFirst([LOU, ALI, ZOE], ZOE.id)).toEqual([ZOE, LOU, ALI]);
+		expect(lastPlayerFirst([LOU, ALI, ZOE], ALI.id)).toEqual([ALI, LOU, ZOE]);
+	});
+
+	it('changes nothing when the last player is already first', () => {
+		expect(lastPlayerFirst([LOU, ALI], LOU.id)).toEqual([LOU, ALI]);
+	});
+
+	it('keeps the order of the device when nobody is remembered or the player is gone', () => {
+		const players = [LOU, ALI];
+
+		expect(lastPlayerFirst(players, null)).toBe(players);
+		expect(lastPlayerFirst(players, 'p-deleted')).toBe(players);
+	});
+
+	it('never loses nor repeats a player', () => {
+		const ordered = lastPlayerFirst([LOU, ALI, ZOE], ALI.id);
+
+		expect([...ordered].sort((a, b) => a.id.localeCompare(b.id))).toEqual([ALI, LOU, ZOE]);
 	});
 });

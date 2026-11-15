@@ -29,7 +29,7 @@ Ouvre le jeu dans Chrome ou Firefox. Ne regarde pas l'écran : écoute.
 
 6. **Sur la carte, appuie sur la flèche du bas.** → Tu dois entendre « La carte des mondes », puis le nom de chaque leçon et son état, par exemple « Verrouillée ».
 
-7. **Avec Maj + Tab, va sur « Réglages » et appuie sur Entrée.** → Tu dois entendre « Réglages, titre ». Avec Tab, va sur « Taille du texte à taper » et appuie sur la flèche de droite. Tu dois entendre « Grande », puis « C'est enregistré ». Appuie sur Échap pour revenir à la carte.
+7. **Avec Maj + Tab, va sur « Réglages » et appuie sur Entrée.** → Tu dois entendre « Réglages, titre ». Avec Tab, va sur « Taille » et appuie sur la flèche de droite. Tu dois entendre « Grande », puis « C'est enregistré ». Appuie sur Échap pour revenir à la carte.
 
 8. **Avec Tab, va sur la leçon 1 et appuie sur Entrée.** → Une histoire peut s'afficher : appuie sur Entrée sur « Continuer ». Tu dois entendre le titre de la leçon, puis « Jouer à… » sur le bouton d'un jeu. Appuie sur Entrée.
 

@@ -61,8 +61,18 @@
 			<li>{m.a11y_setting_motion({ label: m.settings_motion_label() })}</li>
 			<li>{m.a11y_setting_effects({ label: m.settings_effects_label() })}</li>
 			<li>{m.a11y_setting_ambience({ label: m.settings_ambience_label() })}</li>
-			<li>{m.a11y_setting_scale({ label: m.settings_scale_label() })}</li>
-			<li>{m.a11y_setting_spacing({ label: m.settings_spacing_label() })}</li>
+			<li>
+				{m.a11y_setting_scale({
+					label: m.settings_scale_label(),
+					family: m.settings_family_text()
+				})}
+			</li>
+			<li>
+				{m.a11y_setting_spacing({
+					label: m.settings_spacing_label(),
+					family: m.settings_family_text()
+				})}
+			</li>
 			<li>{m.a11y_setting_keyboard({ label: m.settings_keyboard_label() })}</li>
 			<li>{m.a11y_setting_hand({ label: m.settings_hand_label() })}</li>
 			<li>{m.a11y_setting_age({ label: m.settings_age_label() })}</li>

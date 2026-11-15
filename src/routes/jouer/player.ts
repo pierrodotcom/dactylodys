@@ -1,6 +1,6 @@
 import { AGE_BANDS } from '$lib/engine/progression/banks';
 import type { LayoutPlatform } from '$lib/keyboard/types';
-import { normalizeName } from '$lib/state/profile';
+import { findNickname, normalizeName } from '$lib/state/profile';
 import type { AgeBand } from '$lib/state/types';
 
 /** The answer of a child who does not know their age group (or would rather not say). */
@@ -16,15 +16,22 @@ export function ageBandOfAnswer(answer: string): AgeBand | null {
 
 export type NameCheck =
 	| { readonly ok: true; readonly name: string }
-	| { readonly ok: false; readonly reason: 'empty' | 'invalid' };
+	| { readonly ok: false; readonly reason: 'empty' | 'invalid' }
+	/** Another player of the device bears it already (`existing`, as it is written). */
+	| { readonly ok: false; readonly reason: 'taken'; readonly existing: string };
 
 const APPLE_PLATFORM_PATTERN = /Mac|iPhone|iPad|iPod/;
 
-/** Tells the child what is wrong with a nickname, without creating a profile: same rule as `createProfile`. */
-export function checkPlayerName(raw: string): NameCheck {
+/**
+ * Tells the child what is wrong with a nickname, without creating a profile: same rule as
+ * `createProfile`, and none of the nicknames `taken` by the other players of the device.
+ */
+export function checkPlayerName(raw: string, taken: readonly string[] = []): NameCheck {
 	if (raw.normalize('NFC').trim() === '') return { ok: false, reason: 'empty' };
 	const name = normalizeName(raw);
-	return name === null ? { ok: false, reason: 'invalid' } : { ok: true, name };
+	if (name === null) return { ok: false, reason: 'invalid' };
+	const existing = findNickname(name, taken);
+	return existing === null ? { ok: true, name } : { ok: false, reason: 'taken', existing };
 }
 
 export function platformFromUserAgent(userAgent: string): LayoutPlatform {

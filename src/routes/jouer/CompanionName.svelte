@@ -37,7 +37,7 @@
 	function give(raw: string) {
 		const check = checkPlayerName(raw);
 		if (!check.ok) {
-			error = check.reason;
+			error = check.reason === 'empty' ? 'empty' : 'invalid';
 			return;
 		}
 		error = null;

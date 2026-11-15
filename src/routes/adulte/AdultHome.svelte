@@ -6,6 +6,7 @@
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import BackupLoad from './BackupLoad.svelte';
 	import CodeSettings from './CodeSettings.svelte';
+	import { duplicateNicknames } from './copy-name';
 	import type { Formatters } from './format';
 	import InstallSection from './InstallSection.svelte';
 
@@ -46,6 +47,9 @@
 		onimport,
 		onleave
 	}: Props = $props();
+
+	/** Nicknames borne by several profiles (made before they had to differ, or loaded). */
+	const sameNames = $derived(duplicateNicknames(profiles));
 </script>
 
 <ScreenFrame title={m.adult_title()} back={{ label: m.adult_back_to_players(), onclick: onleave }}>
@@ -60,6 +64,11 @@
 				<p>{m.adult_children_empty()}</p>
 			{:else}
 				<p>{m.adult_children_hint()}</p>
+				{#each sameNames as name (name)}
+					<p class="same-name" data-same-name>
+						{m.adult_children_same_name({ name, section: m.adult_identity_title() })}
+					</p>
+				{/each}
 				<ul class="children" aria-labelledby="children-title">
 					{#each profiles as profile (profile.id)}
 						<li>
@@ -121,6 +130,10 @@
 </ScreenFrame>
 
 <style>
+	.same-name {
+		font-weight: var(--dd-font-weight-bold);
+	}
+
 	.home {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);

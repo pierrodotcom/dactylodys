@@ -10,55 +10,134 @@
 		options: readonly Option[];
 		value: string;
 		onchange: (value: string) => void;
+		/**
+		 * `row`: the name on the left and the choices on the right, for a list of settings whose
+		 * choices all start on the same vertical; on a narrow screen the choices go under the name.
+		 */
+		layout?: 'stacked' | 'row';
+		/** The choices in the middle of the whole width, on a screen where everything is centred. */
+		centered?: boolean;
+		/** A word of explanation under the choices, read with the group. */
+		hint?: string;
 	}
 
-	let { legend, name, options, value, onchange }: Props = $props();
+	let {
+		legend,
+		name,
+		options,
+		value,
+		onchange,
+		layout = 'stacked',
+		centered = false,
+		hint
+	}: Props = $props();
+
+	const legendId = $derived(`${name}-legend`);
+	const hintId = $derived(`${name}-hint`);
 </script>
 
-<fieldset>
-	<legend>{legend}</legend>
-	<div class="options">
-		{#each options as option (option.value)}
-			<label class="choice" data-checked={value === option.value || undefined}>
-				<input
-					type="radio"
-					{name}
-					value={option.value}
-					checked={value === option.value}
-					onchange={() => onchange(option.value)}
-				/>
-				{#if value === option.value}
-					<svg class="check" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-						<path d="M4 12.5L9.5 18L20 6.5" />
-					</svg>
-				{/if}
-				<span>{option.label}</span>
-			</label>
-		{/each}
+<!--
+	A group named by its legend, as a fieldset would be: a fieldset cannot put its legend
+	beside its content, which the `row` layout needs.
+-->
+<div
+	class="group"
+	role="group"
+	aria-labelledby={legendId}
+	aria-describedby={hint ? hintId : undefined}
+	data-layout={layout}
+	data-centered={centered || undefined}
+>
+	<div class="legend" id={legendId}>{legend}</div>
+	<div class="body" data-choices>
+		<div class="options">
+			{#each options as option (option.value)}
+				<label class="choice" data-checked={value === option.value || undefined}>
+					<input
+						type="radio"
+						{name}
+						value={option.value}
+						checked={value === option.value}
+						onchange={() => onchange(option.value)}
+					/>
+					{#if value === option.value}
+						<svg class="check" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+							<path d="M4 12.5L9.5 18L20 6.5" />
+						</svg>
+					{/if}
+					<span>{option.label}</span>
+				</label>
+			{/each}
+		</div>
+		{#if hint}<p class="hint" id={hintId}>{hint}</p>{/if}
 	</div>
-</fieldset>
+</div>
 
 <style>
-	fieldset {
+	.group {
+		display: grid;
+		gap: var(--dd-space-md);
+		min-inline-size: 0;
+	}
+
+	.legend {
+		font-size: var(--dd-font-size-lg);
+		font-weight: var(--dd-font-weight-bold);
+		line-height: var(--dd-line-height-tight);
+	}
+
+	.body {
 		display: grid;
 		gap: var(--dd-space-sm);
 		min-inline-size: 0;
-		margin: 0;
-		padding: 0;
-		border: 0;
-	}
-
-	legend {
-		margin-block-end: var(--dd-space-sm);
-		padding: 0;
-		font-size: var(--dd-font-size-lg);
-		font-weight: var(--dd-font-weight-bold);
 	}
 
 	.options {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--dd-space-sm);
+	}
+
+	.hint {
+		color: var(--dd-color-text-secondary);
+	}
+
+	.group[data-centered] {
+		inline-size: 100%;
+		justify-items: center;
+		text-align: center;
+	}
+
+	.group[data-centered] .options {
+		justify-content: center;
+	}
+
+	/*
+	 * A line of a list of settings. The name keeps one width and the choices one least width:
+	 * every line of the list folds at the same width of the page, and the choices of all the lines
+	 * start on the same vertical, beside the name or under it.
+	 */
+	.group[data-layout='row'] {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--dd-space-xs) var(--dd-space-lg);
+		text-align: start;
+	}
+
+	/* With a word of explanation under the choices, the name stays level with the choices. */
+	.group[data-layout='row']:has(.hint) {
+		align-items: baseline;
+	}
+
+	.group[data-layout='row'] .legend {
+		flex: 0 1 var(--dd-size-setting-name);
+		min-inline-size: 0;
+		font-size: var(--dd-font-size-base);
+	}
+
+	.group[data-layout='row'] .body {
+		flex: 1 1 var(--dd-size-setting-choices-min);
 	}
 
 	.choice {
@@ -86,11 +165,28 @@
 		background-color: var(--dd-color-surface-sunken);
 	}
 
+	/*
+	 * The chosen one: a check mark and a thick frame, on the same background as the others. A
+	 * filled shape is a button that does something (ADR-075). The padding gives back what the
+	 * frame takes: choosing does not move the neighbours more than the check mark does.
+	 */
 	.choice[data-checked] {
+		padding: calc(var(--dd-space-sm) + var(--dd-border-width-thick) - var(--dd-border-width-target))
+			calc(var(--dd-space-lg) + var(--dd-border-width-thick) - var(--dd-border-width-target));
+		border-width: var(--dd-border-width-target);
 		border-color: var(--dd-color-accent-base);
-		background-color: var(--dd-color-accent-base);
-		color: var(--dd-color-text-on-accent);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	/* Narrower choices in a line of settings: three of them fit beside the name. */
+	.group[data-layout='row'] .choice {
+		padding-inline: var(--dd-space-sm);
+	}
+
+	.group[data-layout='row'] .choice[data-checked] {
+		padding-inline: calc(
+			var(--dd-space-sm) + var(--dd-border-width-thick) - var(--dd-border-width-target)
+		);
 	}
 
 	.choice:has(input:focus-visible) {
@@ -112,6 +208,7 @@
 		flex: none;
 		inline-size: var(--dd-font-size-base);
 		block-size: var(--dd-font-size-base);
+		color: var(--dd-color-accent-base);
 	}
 
 	.check path {
