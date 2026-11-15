@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
-	import type { KeyPress } from '$lib/keyboard/types';
+	import type { Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
@@ -9,11 +9,12 @@
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
 	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
+	import { revealBelow } from '$lib/ui/focus';
 	import { isOne } from '$lib/ui/plural';
 	import type { KeyboardAssets } from './assets';
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
-	import { introKeys } from './intro-keys';
+	import { headingCount, introLines, introShown, type IntroLine } from './intro-keys';
 	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
@@ -49,6 +50,21 @@
 		onback: () => void;
 	}
 
+	const HAND_NAMES: Readonly<Record<Hand, () => string>> = {
+		left: m.play_intro_hand_left,
+		right: m.play_intro_hand_right
+	};
+	const HAND_LINES: Readonly<
+		Record<ModifierLevel, (inputs: { keys: string; hand: string }) => string>
+	> = {
+		base: m.play_intro_hand_keys,
+		shift: m.play_intro_hand_keys_shift,
+		altgr: m.play_intro_hand_keys_altgr,
+		shiftAltgr: m.play_intro_hand_keys_shift_altgr
+	};
+	/** Between the characters of one line: they are read one by one, like the keys. */
+	const KEY_SEPARATOR = ' ';
+
 	let {
 		lesson,
 		fresh,
@@ -68,6 +84,7 @@
 	}: Props = $props();
 
 	let race = $state(false);
+	let instruction: HTMLElement | undefined = $state();
 
 	// The child does not read: the instruction is said once as the lesson opens.
 	$effect(() => {
@@ -77,15 +94,30 @@
 		return () => speaker.stop();
 	});
 
-	// A lesson of capitals has no new key: it shows the gesture, Shift and a letter, for each hand.
-	const presses = $derived(introKeys(lesson, fresh, assets.charIndex, assets.fingering));
+	// The new keys, else what the data of the lesson says it works (capitals, Backspace), else none.
+	const shown = $derived(introShown(lesson, fresh, assets.charIndex, assets.fingering));
+	const presses = $derived(shown?.keys ?? []);
 	const marked = $derived(presses.flatMap((entry) => entry.codes));
+	const lines = $derived(introLines(presses, assets.fingering));
+	const heading = $derived.by(() => {
+		if (shown === null) return '';
+		const one = isOne(headingCount(lesson, shown));
+		if (shown.kind === 'new') return one ? m.play_intro_keys_one() : m.play_intro_keys_other();
+		return one ? m.play_intro_practice_one() : m.play_intro_practice_other();
+	});
 	const noTarget: KeyPress | null = null;
 	const hands = $derived(
-		guide === 'none'
+		guide === 'none' || presses.length === 0
 			? null
 			: { presses: presses.map((entry) => entry.press), trigger: lesson.id, repeat: true }
 	);
+
+	function handLine(line: Extract<IntroLine, { kind: 'hand' }>): string {
+		return HAND_LINES[line.level]({
+			keys: line.chars.join(KEY_SEPARATOR),
+			hand: HAND_NAMES[line.hand]()
+		});
+	}
 </script>
 
 <ScreenFrame
@@ -94,64 +126,99 @@
 	wide
 	back={{ label: m.play_intro_back(), onclick: onback }}
 >
-	<!-- Number, prize and Listen share one line: the pictures of the games stay in view on a laptop. -->
-	<div class="head">
-		<p class="number">
-			{number === null ? m.play_lesson_detour() : m.play_lesson_number({ number })}
-		</p>
-		<ListenButton text={lesson.intro} player={voice} />
-		{#if prize}
-			<div class="prize" data-prize={prize.id}>
-				<div class="prize-picture" aria-hidden="true">
-					<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
+	<!--
+		One column, tight: the instruction, the keys and the games hold together on a laptop screen;
+		the screen opens on them, the instruction first (the bar of the player stays above).
+	-->
+	<div class="lesson">
+		<div class="head">
+			<p class="number">
+				{number === null ? m.play_lesson_detour() : m.play_lesson_number({ number })}
+			</p>
+			<ListenButton text={lesson.intro} player={voice} />
+			{#if prize}
+				<div class="prize" data-prize={prize.id}>
+					<div class="prize-picture" aria-hidden="true">
+						<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
+					</div>
+					<p>{m.play_reward_prize({ title: prize.title })}</p>
 				</div>
-				<p>{m.play_reward_prize({ title: prize.title })}</p>
-			</div>
+			{/if}
+		</div>
+		<p class="intro" bind:this={instruction}>{lesson.intro}</p>
+
+		{#if shown}
+			<section class="keys" aria-labelledby="intro-keys-heading" data-intro-keys={shown.kind}>
+				<h2 id="intro-keys-heading">{heading}</h2>
+				<!-- The fingers beside the keyboard, and the sentence of the world under them. -->
+				<div class="keys-row">
+					<div class="board">
+						<KeyboardView
+							layout={assets.layout}
+							geometry={assets.geometry}
+							fingering={assets.fingering}
+							target={noTarget}
+							wrongCode={null}
+							showFingers={true}
+							{marked}
+							{hands}
+							{still}
+						/>
+					</div>
+					<div class="beside">
+						<ul class="hints">
+							{#each lines as line, index (index)}
+								<li>
+									{#if line.kind === 'key'}
+										<FingerHint
+											target={line.key.press}
+											layout={assets.layout}
+											fingering={assets.fingering}
+										/>
+									{:else}
+										<p class="finger-hint" data-hand-line={line.hand}>{handLine(line)}</p>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+						{#if erasingNew}
+							<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
+						{/if}
+					</div>
+				</div>
+			</section>
+		{:else if erasingNew}
+			<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
+			<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
 		{/if}
+
+		<div class="choice" {@attach revealBelow(() => instruction)}>
+			<GamePicker
+				{games}
+				proposed={gameId}
+				reveal={null}
+				onplay={(id) => onplay(id, canRace && race)}
+			/>
+
+			{#if canRace}
+				<RaceChoice checked={race} onchange={(value) => (race = value)} />
+			{/if}
+
+			{#if loadFailed}
+				<p class="problem" role="alert">{m.play_game_load_error()}</p>
+			{/if}
+		</div>
 	</div>
-	<p class="intro">{lesson.intro}</p>
-
-	<section class="keys" aria-labelledby="intro-keys-heading">
-		<h2 id="intro-keys-heading">
-			{isOne(presses.length) ? m.play_intro_keys_one() : m.play_intro_keys_other()}
-		</h2>
-		<KeyboardView
-			layout={assets.layout}
-			geometry={assets.geometry}
-			fingering={assets.fingering}
-			target={noTarget}
-			wrongCode={null}
-			showFingers={true}
-			{marked}
-			{hands}
-			{still}
-		/>
-		<ul class="hints">
-			{#each presses as entry (entry.char)}
-				<li>
-					<FingerHint target={entry.press} layout={assets.layout} fingering={assets.fingering} />
-				</li>
-			{/each}
-		</ul>
-	</section>
-
-	<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
-	{#if erasingNew}
-		<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
-	{/if}
-
-	<GamePicker {games} proposed={gameId} onplay={(id) => onplay(id, canRace && race)} />
-
-	{#if canRace}
-		<RaceChoice checked={race} onchange={(value) => (race = value)} />
-	{/if}
-
-	{#if loadFailed}
-		<p class="problem" role="alert">{m.play_game_load_error()}</p>
-	{/if}
 </ScreenFrame>
 
 <style>
+	.lesson {
+		display: grid;
+		gap: var(--dd-space-md);
+		justify-items: center;
+		inline-size: 100%;
+	}
+
 	.head {
 		display: flex;
 		flex-wrap: wrap;
@@ -207,14 +274,51 @@
 		color: var(--dd-color-text-secondary);
 	}
 
-	.hints {
+	/* The keyboard and, beside it, how to press the keys; one under the other on a narrow page. */
+	.keys-row {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		justify-content: center;
-		gap: var(--dd-space-xs) var(--dd-space-xl);
+		gap: var(--dd-space-md) var(--dd-space-xl);
+		inline-size: 100%;
+	}
+
+	.board {
+		flex: 2 1 var(--dd-size-text-zone-min);
+		min-inline-size: 0;
+	}
+
+	.beside {
+		display: grid;
+		flex: 1 1 var(--dd-size-text-zone-side-min);
+		gap: var(--dd-space-md);
+		justify-items: center;
+	}
+
+	.hints {
+		display: grid;
+		gap: var(--dd-space-xs);
+		justify-items: center;
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		text-align: center;
+	}
+
+	/* Several keys of one hand: written like the hint of a single key. */
+	.finger-hint {
+		color: var(--dd-color-text-primary);
+		font-size: var(--dd-font-size-xl);
+		font-weight: var(--dd-font-weight-bold);
+		line-height: var(--dd-line-height-tight);
+	}
+
+	.choice {
+		display: grid;
+		gap: var(--dd-space-md);
+		justify-items: center;
+		inline-size: 100%;
 	}
 
 	.problem {

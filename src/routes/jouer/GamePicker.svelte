@@ -1,7 +1,8 @@
 <script lang="ts">
+	import type { Attachment } from 'svelte/attachments';
 	import GamePicture from '$lib/games/GamePicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
-	import { centerInView, focusOnMount } from '$lib/ui/focus';
+	import { focusOnMount, revealInView } from '$lib/ui/focus';
 	import type { GameOption } from './game-choice';
 
 	interface Props {
@@ -10,9 +11,14 @@
 		/** The game proposed for this lesson: first, bigger, and focused. */
 		proposed: string;
 		onplay: (gameId: string) => void;
+		/**
+		 * How the games come into view as the screen opens; `null` when the screen brings them in
+		 * itself. By default, only when they are not in view already.
+		 */
+		reveal?: Attachment<HTMLElement> | null;
 	}
 
-	let { games, proposed, onplay }: Props = $props();
+	let { games, proposed, onplay, reveal = revealInView }: Props = $props();
 
 	const ordered = $derived([
 		...games.filter((game) => game.value === proposed),
@@ -25,7 +31,7 @@
 	class="games"
 	aria-label={m.play_game_choice_legend()}
 	data-many={games.length > 2 || undefined}
-	{@attach centerInView}
+	{@attach reveal ?? undefined}
 >
 	{#each ordered as game (game.value)}
 		{@const isProposed = game.value === proposed}
@@ -129,11 +135,18 @@
 		font-size: var(--dd-font-size-xl);
 	}
 
-	/* Three games or more: the other titles go on two lines, so that all the games stay on one row. */
-	.games[data-many] .game:not([data-proposed]) .title {
+	/*
+	 * Three games or more: the titles go on two lines (three for the others), so that all the games
+	 * stay on one row, even with a long title proposed (world 6).
+	 */
+	.games[data-many] .title {
 		max-inline-size: var(--dd-size-game-title-small-max);
 		line-height: var(--dd-line-height-tight);
 		text-wrap: balance;
+	}
+
+	.games[data-many] .game[data-proposed] .title {
+		max-inline-size: var(--dd-size-game-title-proposed-max);
 	}
 
 	@keyframes bob {

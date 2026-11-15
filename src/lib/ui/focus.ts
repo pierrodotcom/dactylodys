@@ -31,7 +31,37 @@ export const focusableWhileScrolling: Attachment<HTMLElement> = (node) => {
 	return () => watcher.disconnect();
 };
 
-/** Scrolls the element to the middle of the page, e.g. the lesson to play on a long map. */
-export const centerInView: Attachment<HTMLElement> = (node) => {
-	node.scrollIntoView({ block: 'center' });
+/** Room kept at the top of the page for a bar that stays there (the scroll padding of the page). */
+function topClearance(): number {
+	const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBlockStart);
+	return Number.isFinite(padding) ? padding : 0;
+}
+
+/** The element is whole on the screen, below the bar that stays at the top of the page. */
+export function isInView(element: Element): boolean {
+	const box = element.getBoundingClientRect();
+	return box.top >= topClearance() && box.bottom <= window.innerHeight;
+}
+
+/**
+ * Brings the element to the middle of the page only when it is not in view already, e.g. the lesson
+ * to play on a long map: a page that shows it opens at its top, its bar in view.
+ */
+export const revealInView: Attachment<HTMLElement> = (node) => {
+	if (!isInView(node)) node.scrollIntoView({ block: 'center' });
 };
+
+/**
+ * Scrolls the page the least that shows the element whole, without taking `keep` out of view
+ * above it: an instruction is never scrolled away to show the choices that follow it.
+ */
+export function revealBelow(keep: () => Element | null | undefined): Attachment<HTMLElement> {
+	return (node) => {
+		const below = node.getBoundingClientRect().bottom - window.innerHeight;
+		if (below <= 0) return;
+		const anchor = keep()?.getBoundingClientRect();
+		const room = anchor === undefined ? below : anchor.top - topClearance();
+		const by = Math.min(below, room);
+		if (by > 0) window.scrollBy({ top: by, behavior: 'instant' });
+	};
+}

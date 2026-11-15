@@ -146,6 +146,30 @@
 		list[next]?.focus();
 	}
 
+	/** The cabin stays at the top while the page scrolls only if it leaves most of the screen free. */
+	const STICKY_SHARE_MAX = 0.5;
+
+	let sceneSticky = $state(false);
+
+	/**
+	 * The cabin stays in view while the child goes down the list, as long as it takes less than half
+	 * the height of the screen; taller (a zoomed page), it scrolls with the page, so that it never
+	 * covers the places and the objects (E-08).
+	 */
+	const stickWhenShort: Attachment<HTMLElement> = (node) => {
+		const check = () => {
+			sceneSticky = node.offsetHeight < window.innerHeight * STICKY_SHARE_MAX;
+		};
+		check();
+		const watcher = new ResizeObserver(check);
+		watcher.observe(node);
+		window.addEventListener('resize', check);
+		return () => {
+			watcher.disconnect();
+			window.removeEventListener('resize', check);
+		};
+	};
+
 	/** Escape in the list of objects goes back to the places, before it would leave the screen. */
 	const escapeToPlaces: Attachment<HTMLElement> = (node) => {
 		const leave = (event: KeyboardEvent) => {
@@ -164,7 +188,12 @@
 	back={{ label: m.play_hideout_back(), onclick: onback }}
 >
 	<div class="room">
-		<div class="scene" data-hideout-scene>
+		<div
+			class="scene"
+			data-hideout-scene
+			data-sticky={sceneSticky || undefined}
+			{@attach stickWhenShort}
+		>
 			<HideoutScene {objects} marked={chosen ?? pointed} still={(chosen ?? pointed) !== null} />
 		</div>
 
@@ -287,13 +316,14 @@
 		inline-size: 100%;
 	}
 
-	/* The cabin stays in view while the child goes down the list of what to set down (ADR-046). */
+	/*
+	 * The cabin stays in view while the child goes down the list of what to set down (ADR-046); it
+	 * is never taller than half the screen (`hideout-fit`), so the list keeps the rest.
+	 */
 	.scene {
-		position: sticky;
-		inset-block-start: 0;
 		z-index: var(--dd-z-index-sticky);
 		flex: 2 1 var(--dd-size-text-zone-min);
-		max-inline-size: var(--dd-size-hideout);
+		max-inline-size: var(--dd-size-hideout-fit);
 		overflow: hidden;
 		border-width: var(--dd-border-width-thick);
 		border-style: solid;
@@ -301,6 +331,11 @@
 		border-radius: var(--dd-radius-lg);
 		background-color: var(--dd-color-surface-base);
 		box-shadow: var(--dd-shadow-md);
+	}
+
+	.scene[data-sticky] {
+		position: sticky;
+		inset-block-start: 0;
 	}
 
 	.side {

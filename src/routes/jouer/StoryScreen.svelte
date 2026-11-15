@@ -33,7 +33,9 @@
 
 <ScreenFrame title={worldTitle} focusHeading={false}>
 	<figure class="moment" data-story-moment={moment.kind} data-art={moment.art}>
-		<StoryPicture art={moment.art} />
+		<div class="picture">
+			<StoryPicture art={moment.art} />
+		</div>
 		<figcaption>
 			<ListenButton text={moment.text} player={voice} />
 			<p class="text">{moment.text}</p>
@@ -56,6 +58,14 @@
 		justify-items: center;
 		inline-size: 100%;
 		margin: 0;
+	}
+
+	/* The picture follows the height of the screen: Continue stays in view on a laptop (E-03 e). */
+	.picture {
+		display: grid;
+		justify-items: center;
+		inline-size: var(--dd-size-story-picture-fit);
+		max-inline-size: 100%;
 	}
 
 	figcaption {
