@@ -6,7 +6,15 @@ import {
 	type Locator,
 	type Page
 } from '@playwright/test';
-import { loadMessages, openPage, readJson, shortenRewards, throughStory } from './support';
+import {
+	answerCheckKey,
+	keyboardCheckKeys,
+	loadMessages,
+	openPage,
+	readJson,
+	shortenRewards,
+	throughStory
+} from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
@@ -37,12 +45,7 @@ const progression = readJson<{ worlds: { lessons: { id: string; title: string }[
 	'content/fr/progression/azerty-decouverte.json'
 );
 const FIRST = progression.worlds[0]?.lessons[0] as { id: string; title: string };
-const keyboardCheckCodes = readJson<{ keyboardCheckCodes: string[] }>(
-	'content/common/play-rules.json'
-).keyboardCheckCodes;
-const azerty = readJson<{ keys: Record<string, { base?: string }> }>(
-	'layouts/fr-fr-azerty-pc.json'
-);
+const CHECK_KEYS = keyboardCheckKeys();
 const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
 	'content/fr/adult/gate-numbers.json'
 ).numbers;
@@ -129,12 +132,9 @@ test.describe('offline', () => {
 		await page.getByLabel(message('play_new_label')).fill(PLAYER_NAME);
 		await button(page, message('play_new_submit')).click();
 		await button(page, message('play_check_continue')).click();
-		for (const code of keyboardCheckCodes) {
-			const letter = azerty.keys[code]?.base ?? '';
-			await expect(
-				heading(page, message('play_check_prompt', { key: letter.toLocaleUpperCase('fr') }))
-			).toBeVisible();
-			await page.keyboard.press(letter);
+		for (const key of CHECK_KEYS) {
+			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+			await answerCheckKey(page, key, 'same');
 		}
 		await button(page, message('play_check_continue')).click();
 		await expect(heading(page, message('play_map_title'))).toBeVisible();

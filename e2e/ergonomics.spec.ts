@@ -3,7 +3,9 @@ import type { StarCount } from '../src/lib/engine/progression/types';
 import { withAdultWords, withGhost } from '../src/lib/state/profile';
 import {
 	advancedProfile,
+	answerCheckKey,
 	installProfile,
+	keyboardCheckKeys,
 	loadMessages,
 	openPage,
 	readJson,
@@ -37,20 +39,7 @@ const REMINDER_EVERY = readJson<{ lookReminderEveryGroups: number }>(
 	'content/common/play-rules.json'
 ).lookReminderEveryGroups;
 
-const AZERTY_KEYS = readJson<{ keys: Record<string, { base?: string }> }>(
-	'layouts/fr-fr-azerty-pc.json'
-).keys;
-
-/**
- * The keys of the keyboard check, with the letter an AZERTY keyboard writes on each: the check
- * judges the letter written, and Playwright simulates an American keyboard.
- */
-const CHECK_KEYS = readJson<{ keyboardCheckCodes: string[] }>(
-	'content/common/play-rules.json'
-).keyboardCheckCodes.map((code) => {
-	const letter = AZERTY_KEYS[code]?.base ?? '';
-	return { letter, label: letter.toLocaleUpperCase('fr') };
-});
+const CHECK_KEYS = keyboardCheckKeys();
 
 function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
@@ -123,7 +112,7 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await expectWayOutAtTop(page, message('play_intro_back'));
 });
 
-test('gives the keyboard check a way out at the top of its three steps, and Escape takes it', async ({
+test('gives the keyboard check a way out at the top of its steps and of its two results, and Escape takes it', async ({
 	page
 }) => {
 	const wayOut = message('play_change_player');
@@ -139,7 +128,30 @@ test('gives the keyboard check a way out at the top of its three steps, and Esca
 	await button(page, message('play_check_continue')).click();
 	await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
 	await expectWayOutAtTop(page, wayOut);
-	for (const key of CHECK_KEYS) await page.keyboard.press(key.letter);
+
+	// The keys write other letters, twice: the result asks for an adult and still fits the screen.
+	for (const attempt of [1, 2]) {
+		for (const key of CHECK_KEYS) {
+			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+			await answerCheckKey(page, key, 'different');
+		}
+		await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
+		await expectWayOutAtTop(page, wayOut);
+		await expect(page.getByText(message('play_check_diff_adult'))).toHaveCount(attempt - 1);
+		await expect(button(page, message('play_check_play_anyway'))).toBeInViewport({ ratio: 1 });
+		await expect(page.getByText(message('play_check_play_anyway_note'))).toBeInViewport({
+			ratio: 1
+		});
+		expect(await page.evaluate(() => scrollY)).toBe(0);
+		await button(page, message('play_check_retry')).click();
+	}
+
+	for (const key of CHECK_KEYS) {
+		await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+		await expectWayOutAtTop(page, wayOut);
+		await expect(button(page, message('play_check_not_found'))).toBeInViewport({ ratio: 1 });
+		await answerCheckKey(page, key, 'same');
+	}
 
 	await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
 	await expectWayOutAtTop(page, wayOut);
