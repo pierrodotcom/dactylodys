@@ -150,7 +150,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 14,
+			schemaVersion: 15,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -168,6 +168,7 @@ describe('createProfile', () => {
 			handwritingSamples: [],
 			adultWords: [],
 			openedWorldIds: [],
+			keptOpenLessonIds: [],
 			hideout: {}
 		});
 	});
@@ -469,8 +470,16 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 13, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 15, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 14, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 16, /schemaVersion/],
+		[
+			'lessons kept open that are not a list',
+			['keptOpenLessonIds'],
+			'fr.lesson.a',
+			/keptOpenLessonIds/
+		],
+		['a lesson kept open twice', ['keptOpenLessonIds'], ['a', 'a'], /keptOpenLessonIds/],
+		['missing lessons kept open', ['keptOpenLessonIds'], REMOVE, /keptOpenLessonIds/],
 		['a missing id', ['id'], REMOVE, /profile\.id/],
 		['an empty id', ['id'], '', /profile\.id/],
 		['a numeric id', ['id'], 4, /profile\.id/],

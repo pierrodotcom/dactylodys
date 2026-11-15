@@ -221,7 +221,8 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 			practiceDays: practiceDaysArb,
 			handwritingSamples: fc.array(handwritingSampleArb, { maxLength: 3 }),
 			adultWords: fc.array(identifierArb, { maxLength: 4 }),
-			openedWorldIds: fc.uniqueArray(identifierArb, { maxLength: 3 })
+			openedWorldIds: fc.uniqueArray(identifierArb, { maxLength: 3 }),
+			keptOpenLessonIds: fc.uniqueArray(identifierArb, { maxLength: 3 })
 		}),
 		hideout: fc.dictionary(fc.string({ maxLength: 12 }), identifierArb, { maxKeys: 4 })
 	})

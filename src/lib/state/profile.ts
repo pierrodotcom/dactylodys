@@ -66,7 +66,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 14;
+export const PROFILE_SCHEMA_VERSION = 15;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -97,6 +97,7 @@ const PROFILE_KEYS = [
 	'handwritingSamples',
 	'adultWords',
 	'openedWorldIds',
+	'keptOpenLessonIds',
 	'hideout'
 ] as const satisfies readonly (keyof Profile)[];
 const SESSION_KEYS = [
@@ -219,6 +220,7 @@ export function createProfile(input: NewProfileInput): Profile {
 		handwritingSamples: [],
 		adultWords: [],
 		openedWorldIds: [],
+		keptOpenLessonIds: [],
 		hideout: {}
 	};
 }
@@ -674,6 +676,10 @@ export function parseProfile(data: unknown): Profile {
 			expectIdentifier(raw, `profile.adultWords[${index}]`)
 		),
 		openedWorldIds: parseUniqueIdentifiers(root['openedWorldIds'], 'profile.openedWorldIds'),
+		keptOpenLessonIds: parseUniqueIdentifiers(
+			root['keptOpenLessonIds'],
+			'profile.keptOpenLessonIds'
+		),
 		hideout: parseRecordOf(root['hideout'], 'profile.hideout', expectIdentifier)
 	};
 }

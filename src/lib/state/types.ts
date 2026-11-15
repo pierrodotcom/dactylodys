@@ -99,7 +99,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 14;
+	readonly schemaVersion: 15;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;
@@ -145,6 +145,12 @@ export interface Profile {
 	readonly adultWords: readonly string[];
 	/** Worlds the adult opened ahead of the progress, each once. */
 	readonly openedWorldIds: readonly string[];
+	/**
+	 * Lessons that stay open whatever the order of the lessons (version 15, ADR-075): those that
+	 * were open and not passed yet when the order changed, each once. Nothing the child could play
+	 * is ever closed again; a profile created since has none.
+	 */
+	readonly keptOpenLessonIds: readonly string[];
 	/**
 	 * What the child put in its hideout (version 13): the reward identifier set down in each place,
 	 * by place identifier. Read through the catalogue: what is unknown, not owned or not allowed

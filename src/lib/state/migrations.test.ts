@@ -28,6 +28,7 @@ import {
 	asVersion11,
 	asVersion12,
 	asVersion13,
+	asVersion14,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
 	withKeyboardFade,
@@ -248,7 +249,8 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 14,
+			schemaVersion: 15,
+			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
 				errorPolicy: 'retry',
@@ -331,7 +333,8 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 14,
+			schemaVersion: 15,
+			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
 				errorPolicy: 'retry',
@@ -355,6 +358,7 @@ describe('migrateProfile', () => {
 		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
 		const withoutHideout: Record<string, unknown> = { ...profileOfVersion4 };
 		delete withoutHideout['hideout'];
+		delete withoutHideout['keptOpenLessonIds'];
 		expect(asVersion7(profileOfVersion4)).toEqual({
 			...withoutHideout,
 			settings: STORED_BY_VERSION_4.settings,
@@ -405,7 +409,8 @@ describe('migrateProfile', () => {
 					earnedRewardIds: [],
 					helpQuest: null,
 					...EMPTY_JOURNAL,
-					hideout: {}
+					hideout: {},
+					keptOpenLessonIds: []
 				});
 				for (const [char, stats] of Object.entries(migrated.progress.chars)) {
 					expect(stats.recent.length).toBeLessThanOrEqual(1);
@@ -439,7 +444,8 @@ describe('migrateProfile', () => {
 					earnedRewardIds: [],
 					helpQuest: null,
 					...EMPTY_JOURNAL,
-					hideout: {}
+					hideout: {},
+					keptOpenLessonIds: []
 				});
 			})
 		);
@@ -454,7 +460,8 @@ describe('migrateProfile', () => {
 					earnedRewardIds: [],
 					helpQuest: null,
 					...EMPTY_JOURNAL,
-					hideout: {}
+					hideout: {},
+					keptOpenLessonIds: []
 				});
 			})
 		);
@@ -552,7 +559,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion10(profile))));
 				expect(migrated).toEqual(withSensoryDefaults(profile));
-				expect(migrated.schemaVersion).toBe(14);
+				expect(migrated.schemaVersion).toBe(15);
 				expect(migrated.settings.effects).toBe(true);
 				expect(migrated.settings.ambience).toBe('none');
 			})
@@ -564,7 +571,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion11(profile))));
 				expect(migrated).toEqual(withYoungerAgeBand(profile));
-				expect(migrated.schemaVersion).toBe(14);
+				expect(migrated.schemaVersion).toBe(15);
 				expect(migrated.settings.ageBand).toBe('8-9');
 			})
 		);
@@ -575,7 +582,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion12(profile))));
 				expect(migrated).toEqual(withEmptyHideout(profile));
-				expect(migrated.schemaVersion).toBe(14);
+				expect(migrated.schemaVersion).toBe(15);
 				expect(migrated.hideout).toEqual({});
 			})
 		);
@@ -586,7 +593,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion13(profile))));
 				expect(migrated).toEqual(withUnmarkedSessions(profile));
-				expect(migrated.schemaVersion).toBe(14);
+				expect(migrated.schemaVersion).toBe(15);
 				expect(migrated.sessions.every((session) => !Object.hasOwn(session, 'speedRule'))).toBe(
 					true
 				);
@@ -626,7 +633,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion11(current);
 		const settings = { ...(stored['settings'] as Json), ageBand: '10-12' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(14);
+		expect(migrated.schemaVersion).toBe(15);
 		expect(migrated.settings.ageBand).toBe('10-12');
 	});
 
@@ -635,7 +642,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion10(current);
 		const settings = { ...(stored['settings'] as Json), effects: false, ambience: 'soft-noise' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(14);
+		expect(migrated.schemaVersion).toBe(15);
 		expect(migrated.settings.effects).toBe(false);
 		expect(migrated.settings.ambience).toBe('soft-noise');
 	});
@@ -645,7 +652,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion9(current);
 		const settings = { ...(stored['settings'] as Json), keyboardFade: false };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(14);
+		expect(migrated.schemaVersion).toBe(15);
 		expect(migrated.settings.keyboardFade).toBe(false);
 	});
 
@@ -654,7 +661,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion8(current);
 		const settings = { ...(stored['settings'] as Json), errorPolicy: 'backspace' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(14);
+		expect(migrated.schemaVersion).toBe(15);
 		expect(migrated.settings.errorPolicy).toBe('backspace');
 	});
 
@@ -677,7 +684,7 @@ describe('migrateProfile', () => {
 			}
 		};
 		const migrated = parseProfile(migrateProfile(stored));
-		expect(migrated.schemaVersion).toBe(14);
+		expect(migrated.schemaVersion).toBe(15);
 		expect(migrated.progress.chars).toEqual({
 			f: {
 				attempts: 50,
@@ -731,7 +738,8 @@ describe('migrateProfile', () => {
 					asVersion10(profile),
 					asVersion11(profile),
 					asVersion12(profile),
-					asVersion13(profile)
+					asVersion13(profile),
+					asVersion14(profile)
 				]) {
 					const once = migrateProfile(toJson(stored));
 					expect(migrateProfile(once)).toEqual(once);
@@ -902,6 +910,116 @@ describe('readProfile', () => {
 		fc.assert(
 			fc.property(fc.anything(), (data) => {
 				expect(readProfile(data).ok).toBe(false);
+			})
+		);
+	});
+});
+
+describe('version 15: the lessons changed order (ADR-075)', () => {
+	const base = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+	const played = (bestAccuracy: number) => ({
+		bestAccuracy,
+		stars: 1,
+		attempts: 2,
+		lastPlayedAt: 7
+	});
+
+	/** A record of version 14 that played these lessons, with the best accuracy of each. */
+	function storedWith(lessons: Record<string, number>): Json {
+		const progress = {
+			lessons: Object.fromEntries(
+				Object.entries(lessons).map(([id, accuracy]) => [id, played(accuracy)])
+			),
+			chars: {}
+		};
+		return { ...asVersion14(base), progress };
+	}
+
+	it('keeps no lesson open for a child who passed none', () => {
+		const migrated = parseProfile(migrateProfile(asVersion14(base)));
+		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.keptOpenLessonIds).toEqual([]);
+		expect(parseProfile(migrateProfile(storedWith({}))).keptOpenLessonIds).toEqual([]);
+	});
+
+	it('keeps open the lesson that followed the last passed one in the order of version 14', () => {
+		// After « é ' » came « g h »: capitals and the full stop now stand between them.
+		const stored = storedWith({ 'fr.lesson.epices-accent-apostrophe': 92 });
+		expect(parseProfile(migrateProfile(stored)).keptOpenLessonIds).toEqual([
+			'fr.lesson.girafe-g-h'
+		]);
+		// After the comma came « ? ! »: the lessons of the zoo now stand between them.
+		const further = storedWith({ 'fr.lesson.virgule-point': 85 });
+		expect(parseProfile(migrateProfile(further)).keptOpenLessonIds).toEqual([
+			'fr.lesson.klaxon-question-exclamation'
+		]);
+	});
+
+	it('keeps open every lesson that followed a passed one, in the order of version 14', () => {
+		const stored = storedWith({
+			'fr.lesson.oeufs-f-j': 100,
+			'fr.lesson.zebre-z-w': 81,
+			'fr.lesson.lune-accents-graves': 60,
+			'fr.lesson.trema': 99
+		});
+		expect(parseProfile(migrateProfile(stored)).keptOpenLessonIds).toEqual([
+			'fr.lesson.saut-espace',
+			'fr.lesson.lune-accents-graves',
+			'fr.lesson.liste-pique-nique'
+		]);
+	});
+
+	it('counts a lesson as passed from 80 on, as version 14 did, and not below', () => {
+		const at = (accuracy: number) =>
+			parseProfile(migrateProfile(storedWith({ 'fr.lesson.oeufs-f-j': accuracy })))
+				.keptOpenLessonIds;
+		expect(at(79.99)).toEqual([]);
+		expect(at(80)).toEqual(['fr.lesson.saut-espace']);
+		expect(at(80 - 1e-12)).toEqual(['fr.lesson.saut-espace']);
+	});
+
+	it('keeps nothing open after the last lesson, nor for lessons it does not know', () => {
+		const stored = storedWith({ 'fr.lesson.reparer-message': 100, 'fr.lesson.unknown': 100 });
+		expect(parseProfile(migrateProfile(stored)).keptOpenLessonIds).toEqual([]);
+	});
+
+	it('touches neither the lessons, nor the stars, nor the rewards', () => {
+		const earned = ['fr.reward.chili-nose', 'fr.reward.crown'];
+		const stored: Json = {
+			...storedWith({ 'fr.lesson.epices-accent-apostrophe': 92, 'fr.lesson.girafe-g-h': 40 }),
+			earnedRewardIds: earned
+		};
+		const migrated = parseProfile(migrateProfile(stored));
+		expect(migrated.progress).toEqual(stored['progress']);
+		expect(migrated.earnedRewardIds).toEqual(earned);
+		expect(migrated).toEqual({
+			...base,
+			progress: stored['progress'],
+			earnedRewardIds: earned,
+			keptOpenLessonIds: ['fr.lesson.girafe-g-h']
+		});
+	});
+
+	it('keeps the lessons kept open of a record that already holds them', () => {
+		const stored = {
+			...storedWith({ 'fr.lesson.oeufs-f-j': 100 }),
+			keptOpenLessonIds: ['fr.lesson.x']
+		};
+		expect(parseProfile(migrateProfile(stored)).keptOpenLessonIds).toEqual(['fr.lesson.x']);
+	});
+
+	it('passes on damaged lessons for the parser to refuse', () => {
+		for (const lessons of [null, 3, { 'fr.lesson.oeufs-f-j': 'passed' }]) {
+			const stored = { ...asVersion14(base), progress: { lessons, chars: {} } };
+			expect(readProfile(stored).ok).toBe(false);
+		}
+	});
+
+	it('changes nothing but the lessons kept open of any version 14 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion14(profile))));
+				expect(migrated).toEqual({ ...profile, keptOpenLessonIds: [] });
 			})
 		);
 	});

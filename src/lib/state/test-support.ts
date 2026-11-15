@@ -152,9 +152,24 @@ export const EMPTY_JOURNAL = {
 	openedWorldIds: []
 } as const satisfies Partial<Profile>;
 
+/**
+ * What a profile becomes once migrated from version 14 or older, when it passed no lesson of the
+ * order of version 14: no lesson is kept open.
+ */
+export function withNothingKeptOpen(profile: Profile): Profile {
+	return { ...profile, keptOpenLessonIds: [] };
+}
+
+/** The record version 14 of the app stored: the same profile without the lessons kept open. */
+export function asVersion14(profile: Profile): Record<string, unknown> {
+	const stored: Record<string, unknown> = { ...profile, schemaVersion: 14 };
+	delete stored['keptOpenLessonIds'];
+	return stored;
+}
+
 /** What a profile becomes once migrated from version 12 or older: an empty hideout. */
 export function withEmptyHideout(profile: Profile): Profile {
-	return { ...profile, hideout: {} };
+	return withNothingKeptOpen({ ...profile, hideout: {} });
 }
 
 /** What a profile becomes once migrated from version 11 or older: the words of the 8-9 year olds. */
@@ -187,17 +202,17 @@ export function withUnmarkedSessions(profile: Profile): Profile {
 		delete unmarked.speedRule;
 		return unmarked as SessionRecord;
 	});
-	return { ...profile, sessions };
+	return withNothingKeptOpen({ ...profile, sessions });
 }
 
 /** The record version 13 of the app stored: the same profile, no play saying how it was measured. */
 export function asVersion13(profile: Profile): Record<string, unknown> {
-	return { ...withUnmarkedSessions(profile), schemaVersion: 13 };
+	return { ...asVersion14(withUnmarkedSessions(profile)), schemaVersion: 13 };
 }
 
 /** The record version 12 of the app stored: the same profile without the hideout. */
 export function asVersion12(profile: Profile): Record<string, unknown> {
-	const stored: Record<string, unknown> = { ...profile, schemaVersion: 12 };
+	const stored: Record<string, unknown> = { ...asVersion14(profile), schemaVersion: 12 };
 	delete stored['hideout'];
 	return stored;
 }
