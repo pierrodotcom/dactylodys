@@ -10,7 +10,7 @@ import {
 	usablePhrases,
 	usableWords
 } from './banks';
-import { findLesson, learnedChars, lessonIds, parseProgression } from './definition';
+import { findLesson, learnedChars, LINE_BREAK, lessonIds, parseProgression } from './definition';
 import { generateExercise } from './exercise';
 import { clone, deepFreeze, loadShippedProgressions, seededRng } from './test-support';
 import { completePhrase } from './word-practice';
@@ -218,6 +218,14 @@ function withRules(
 	rules: Partial<ProgressionDefinition['rules']>
 ): ProgressionDefinition {
 	return { ...progression, rules: { ...progression.rules, ...rules } };
+}
+
+/**
+ * What the lesson itself gives, without the whole phrase an exercise gets on top of it once
+ * phrases can be whole (F1, `rules.wholePhraseMinCount`): the bounds of the lesson hold there.
+ */
+function lessonOnly(progression: ProgressionDefinition): ProgressionDefinition {
+	return withRules(progression, { wholePhraseMinCount: 0 });
 }
 
 function allLessons(): (readonly [ProgressionDefinition, LessonDefinition, ExerciseContext])[] {
@@ -1226,7 +1234,7 @@ describe('generateExercise', () => {
 			(_id, progression, lessonDefinition, context) => {
 				fc.assert(
 					fc.property(SEEDS, fc.integer({ min: 1, max: 8 }), (seed, newCharMinCount) => {
-						const configured = withRules(progression, { newCharMinCount });
+						const configured = lessonOnly(withRules(progression, { newCharMinCount }));
 						const exercise = generate(configured, lessonDefinition.id, seed, context);
 						checkExercise(configured, lessonDefinition, exercise, context);
 						checkExercise(
@@ -1251,16 +1259,17 @@ describe('generateExercise', () => {
 			(_id, progression, lessonDefinition, context) => {
 				fc.assert(
 					fc.property(SEEDS, (seed) => {
+						const lesson = lessonOnly(progression);
 						checkExercise(
 							progression,
 							lessonDefinition,
-							generate(progression, lessonDefinition.id, seed, context),
+							generate(lesson, lessonDefinition.id, seed, context),
 							context
 						);
 						checkExercise(
 							progression,
 							lessonDefinition,
-							generate(progression, lessonDefinition.id, seed),
+							generate(lesson, lessonDefinition.id, seed),
 							{}
 						);
 					}),
@@ -1305,7 +1314,7 @@ describe('generateExercise', () => {
 						checkExercise(
 							progression,
 							lessonDefinition,
-							generate(progression, lessonDefinition.id, seed, configured),
+							generate(lessonOnly(progression), lessonDefinition.id, seed, configured),
 							configured
 						);
 					}),
@@ -1342,6 +1351,53 @@ describe('generateExercise', () => {
 	});
 });
 
+describe('a whole phrase on top of the lesson (F1)', () => {
+	/** A whole phrase: several words, a capital first, a mark that ends a sentence last. */
+	const isWholePhrase = (group: string) =>
+		/^\p{Lu}/u.test(group) &&
+		group.includes(SPACE) &&
+		!group.endsWith(LINE_BREAK) &&
+		!/[\p{L}\p{N}]$/u.test(group);
+	const shippedLessons = allLessons().filter(([progression]) =>
+		SHIPPED.some((shipped) => shipped.progression === progression)
+	);
+
+	it.each(
+		shippedLessons.map(([progression, l, context]) => [l.id, progression, l, context] as const)
+	)(
+		'%s: only adds whole phrases to what the lesson gives, before what ends it',
+		(_id, progression, lessonDefinition, context) => {
+			const most = progression.rules.wholePhraseMinCount ?? 0;
+			const learned = new Set(learnedChars(progression, lessonDefinition.id));
+			fc.assert(
+				fc.property(SEEDS, (seed) => {
+					const lesson = generate(lessonOnly(progression), lessonDefinition.id, seed, context);
+					const { groups } = generate(progression, lessonDefinition.id, seed, context);
+					const added: string[] = [];
+					let next = 0;
+					for (const group of groups) {
+						if (group === lesson.groups[next]) next += 1;
+						else added.push(group);
+					}
+					const told = groups.join(' | ');
+					expect(next, told).toBe(lesson.groups.length);
+					expect(added.length, told).toBeLessThanOrEqual(most);
+					for (const group of added) {
+						expect(isWholePhrase(group), told).toBe(true);
+						for (const char of toGraphemes(group)) expect(learned.has(char), told).toBe(true);
+					}
+					// Nothing is added where the lesson already gives a whole phrase.
+					if (lesson.groups.some(isWholePhrase)) expect(added, told).toEqual([]);
+					expect(groups.length).toBeLessThanOrEqual(
+						Math.max(lesson.groups.length, progression.rules.maxGroupCount ?? 0)
+					);
+				}),
+				{ numRuns: 20 }
+			);
+		}
+	);
+});
+
 describe('length slack', () => {
 	const shippedLessons = allLessons().filter(([progression]) =>
 		SHIPPED.some((shipped) => shipped.progression === progression)
@@ -1358,7 +1414,7 @@ describe('length slack', () => {
 			const slack = progression.rules.lengthSlack ?? Number.POSITIVE_INFINITY;
 			const limit = lesson.targetLength + Math.max(slack, lesson.groupLength[1]);
 			for (let seed = 0; seed < 10; seed++) {
-				const exercise = generate(progression, lesson.id, seed, context);
+				const exercise = generate(lessonOnly(progression), lesson.id, seed, context);
 				const total = exercise.groups.reduce((sum, group) => sum + lengthOf(group), 0);
 				// Words that hold a new character are longer than a suite: the warm-up alone may go
 				// past the limit, and nothing is added after it then.
