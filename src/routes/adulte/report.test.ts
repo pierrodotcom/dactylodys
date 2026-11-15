@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { isDetour, parseProgression } from '$lib/engine/progression/definition';
-import type { CharSample, ProgressState } from '$lib/engine/progression/types';
+import type { CharSample, LessonProgress, ProgressState } from '$lib/engine/progression/types';
 import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
 import { createProfile } from '$lib/state/profile';
 import { ADULT_RULES } from './adult-rules';
@@ -77,7 +77,7 @@ describe('worldSummaries', () => {
 		const onTheWay = world.lessons.filter((lesson) => !isDetour(lesson));
 		const [detour] = world.lessons.filter(isDetour);
 		if (!detour) throw new Error('no detour');
-		const passed = { bestAccuracy: 100, stars: 3, attempts: 1, lastPlayedAt: 1 };
+		const passed: LessonProgress = { bestAccuracy: 100, stars: 3, attempts: 1, lastPlayedAt: 1 };
 		const wayDone = Object.fromEntries(onTheWay.map((lesson) => [lesson.id, passed]));
 		const summaryOf = (lessons: ProgressState['lessons']) =>
 			worldSummaries(progression, { lessons, chars: {} }).find(
