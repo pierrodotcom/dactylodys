@@ -36,6 +36,8 @@ paths:
 6. Chaque écran testé de bout en bout l'est aussi **au clavier seul** et avec animations réduites.
 7. Un test qui échoue en CI n'est jamais relancé « pour voir » : on cherche la cause ; un test instable est un bogue.
 8. Nommer un test par le comportement attendu, en anglais : `it('keeps accuracy at 100 when no error is made')`.
+9. Playwright sert un site **construit**, pas les sources : celui de `npm run build:e2e` (toutes les pages `/dev`, ADR-078) ; `e2e/published.spec.ts` regarde le site publié de `npm run build`. Après tout changement de `src/`, reconstruire avant de lancer une spec (L-141). Deux suites lancées en même temps prennent chacune leur port (`E2E_PORT`).
+10. `vitest` ne contrôle pas les types : `npm run check` avant tout commit de `src/` (L-147).
 
 ## Avant de rendre un lot
 
