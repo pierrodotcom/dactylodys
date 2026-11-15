@@ -8,6 +8,13 @@ import { parseWorktreeList, unlockCommand } from '../../tools/lib/worktrees.js';
 const TOOL = resolve('tools/clean-worktrees.js');
 /** Each step runs a dozen git commands, slow on a busy Windows machine. */
 const SLOW = 120_000;
+/**
+ * Run from a git hook (the tests run before each push), a command inherits `GIT_DIR` and its
+ * kin, and would act on the real repository instead of the temporary one: none is passed on.
+ */
+const ENV_WITHOUT_GIT = Object.fromEntries(
+	Object.entries(process.env).filter(([name]) => !name.toUpperCase().startsWith('GIT_'))
+);
 
 describe('parseWorktreeList', () => {
 	it('reads the path, head, branch and lock of each working copy', () => {
@@ -53,6 +60,7 @@ describe('clean-worktrees, on a temporary repository', () => {
 	function git(args: string[], cwd = repo): string {
 		return execFileSync('git', ['-c', 'commit.gpgsign=false', ...args], {
 			cwd,
+			env: ENV_WITHOUT_GIT,
 			encoding: 'utf8',
 			stdio: ['ignore', 'pipe', 'pipe']
 		}).trim();
@@ -61,6 +69,7 @@ describe('clean-worktrees, on a temporary repository', () => {
 	function clean(args: string[] = [], cwd = repo): string {
 		return execFileSync(process.execPath, [TOOL, ...args], {
 			cwd,
+			env: ENV_WITHOUT_GIT,
 			encoding: 'utf8',
 			stdio: ['ignore', 'pipe', 'pipe']
 		});
