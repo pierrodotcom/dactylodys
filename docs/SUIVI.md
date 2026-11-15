@@ -26,7 +26,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Mesures justes | Q-04, Q-05, Q-15, P-06 | Fait (ADR-077, profil version 14) |
 | Tests e2e fiables | Q-06, Q-13 | À lancer (seul sur Playwright) |
 | Le jeu ne lâche pas l'enfant | E-01, E-02, E-03 d, E-12, E-23 | Fait (ADR-079) |
-| Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | À lancer après « mesures justes » |
+| Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | Fait (ADR-080) |
 | Tout tient à l'écran | E-03, E-05, E-08, E-10, E-20 | À faire |
 | Bilan en étapes, « Qui joue ? », réglages | E-04, E-17, E-18, E-16, E-19 | À faire |
 | Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24, P-07, P-09 | À faire |
@@ -251,3 +251,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-14** — « Mesures justes » (ADR-077) : vitesse comptée depuis l'affichage du groupe, pauses retirées, une erreur par faute en mode Retour arrière, caractères par minute pour l'adulte, profil version 14.
 - **2026-11-14** — « Crédits et hors-ligne » (ADR-078) : page Crédits et licences, pages d'essai internes retirées du site publié (12,25 → 4,91 Mo), politique de sécurité de contenu, tests unitaires avant chaque publication.
 - **2026-11-15** — En ligne : vérification du clavier sur la lettre écrite (PR 105), mesures justes (PR 106), crédits et site allégé (PR 107). « Le jeu ne lâche pas l'enfant » (ADR-079) : Tab, Précédent du navigateur, haut de page, annonce unique, sortie de la vérification du clavier. Leçons L-148 à L-151.
+- **2026-11-15** — « Les données de l'enfant ne se perdent pas » (ADR-080) : deux onglets sans perte, stockage gardé demandé au navigateur, renommer et supprimer un profil depuis l'espace adulte, pseudo long, sauvegarde trop grosse refusée. Leçons L-152, L-153.

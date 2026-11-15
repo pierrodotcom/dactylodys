@@ -190,6 +190,8 @@
 		gap: var(--dd-space-xl);
 		justify-self: stretch;
 		text-align: start;
+		/* A long nickname without a space is cut rather than wider than the page (320 pixels). */
+		overflow-wrap: anywhere;
 	}
 
 	.header {

@@ -1,5 +1,28 @@
 import type { ProgressState } from '../engine/progression/types';
+import type { NoticeChannelFactory } from './profile-notices';
 import type { Profile, SessionRecord } from './types';
+
+/**
+ * Pages of the same device for a test: what one posts on a channel of the hub reaches all the
+ * others at once, never itself, as a `BroadcastChannel` does.
+ */
+export function createNoticeHub(): NoticeChannelFactory {
+	const handlers = new Map<object, (message: unknown) => void>();
+	return () => {
+		const page = {};
+		return {
+			post: (message) => {
+				for (const [other, handler] of handlers) if (other !== page) handler(message);
+			},
+			receive: (handler) => {
+				handlers.set(page, handler);
+			},
+			close: () => {
+				handlers.delete(page);
+			}
+		};
+	};
+}
 
 /** The progress as versions 1 and 2 stored it: lifetime totals only for each character. */
 function progressBeforeVersion3(progress: ProgressState): Record<string, unknown> {

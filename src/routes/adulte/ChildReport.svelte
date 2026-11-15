@@ -8,6 +8,7 @@
 	import type { FreePracticeRules } from '../jouer/free-practice';
 	import type { AdultRules } from './adult-rules';
 	import ChildEvolution from './ChildEvolution.svelte';
+	import ChildIdentity from './ChildIdentity.svelte';
 	import ChildKeyboard from './ChildKeyboard.svelte';
 	import ChildLessons from './ChildLessons.svelte';
 	import ChildTarget from './ChildTarget.svelte';
@@ -35,6 +36,10 @@
 		onsheet: () => void;
 		onmeasures: () => void;
 		onbackup: () => void;
+		/** Keeps a new nickname; `false` when the device refused it. */
+		onrename: (name: string) => Promise<boolean>;
+		/** Opens the confirmation of the deletion of the profile. */
+		ondelete: () => void;
 		onback: () => void;
 	}
 
@@ -54,6 +59,8 @@
 		onsheet,
 		onmeasures,
 		onbackup,
+		onrename,
+		ondelete,
 		onback
 	}: Props = $props();
 
@@ -122,6 +129,7 @@
 			</div>
 			<p role="status">{fileStatus}</p>
 		</section>
+		<ChildIdentity {profile} {onrename} {ondelete} />
 	</div>
 </ScreenFrame>
 
@@ -138,6 +146,15 @@
 		gap: var(--dd-space-md);
 		justify-items: start;
 		text-align: start;
+	}
+
+	/*
+	 * A long nickname without a space is cut rather than wider than the page (320 pixels), in every
+	 * sentence and every button of the report that names the child.
+	 */
+	.report :global(p),
+	.report :global(button) {
+		overflow-wrap: anywhere;
 	}
 
 	h2 {

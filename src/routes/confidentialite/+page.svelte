@@ -38,6 +38,7 @@
 
 	<section aria-labelledby="privacy-erase">
 		<h2 id="privacy-erase">{m.privacy_erase_title()}</h2>
+		<p>{m.privacy_erase_one()}</p>
 		<p>{m.privacy_erase_how()}</p>
 		<p>{m.privacy_erase_backup_first()}</p>
 		<p>{m.privacy_private_browsing()}</p>

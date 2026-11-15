@@ -8,7 +8,19 @@
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { BACKUP_FILE_EXTENSION, backupFileName, exportBackup } from '$lib/state/backup';
 	import { utcOffsetAt } from '$lib/state/journal';
-	import { localDay, updateSettings, withAdultWords, withOpenedWorld } from '$lib/state/profile';
+	import {
+		localDay,
+		renameProfile,
+		updateSettings,
+		withAdultWords,
+		withOpenedWorld
+	} from '$lib/state/profile';
+	import {
+		createProfileNotices,
+		withNotices,
+		type ProfileNotices
+	} from '$lib/state/profile-notices';
+	import { readStorageProtection, requestStorageProtection } from '$lib/state/storage-persistence';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { downloadTextFile } from '$lib/ui/download';
@@ -16,7 +28,7 @@
 	import { adultSpace } from '$lib/ui/info-pages';
 	import { progressionFor } from '../jouer/content';
 	import { FREE_PRACTICE_RULES } from '../jouer/free-practice';
-	import { forgetLastPlayerId } from '../jouer/last-player';
+	import { forgetLastPlayerId, readLastPlayerId } from '../jouer/last-player';
 	import { PLAY_RULES } from '../jouer/play-rules';
 	import SettingsPanel from '../jouer/SettingsPanel.svelte';
 	import AdultGate from './AdultGate.svelte';
@@ -28,6 +40,7 @@
 		writeLastBackupAt,
 		type StoredCode
 	} from './adult-storage';
+	import ChildRemoval from './ChildRemoval.svelte';
 	import ChildReport from './ChildReport.svelte';
 	import { gateNumbersFor } from './content';
 	import { CSV_FILE_EXTENSION, measuresCsv, type CsvFormat } from './csv';
@@ -44,7 +57,9 @@
 		/** The settings of one child, the same screen as in the game. */
 		| { readonly name: 'settings'; readonly id: string }
 		/** The session sheet of one child, to print. */
-		| { readonly name: 'sheet'; readonly id: string };
+		| { readonly name: 'sheet'; readonly id: string }
+		/** The confirmation asked before the profile of one child is deleted. */
+		| { readonly name: 'removal'; readonly id: string };
 
 	const JSON_TYPE = 'application/json';
 	const CSV_TYPE = 'text/csv;charset=utf-8';
@@ -56,11 +71,16 @@
 
 	let view = $state.raw<View>({ name: 'loading' });
 	let store: ProfileStore = createMemoryProfileStore();
+	/** What the other pages of the app say of the profiles (a game going on in another tab). */
+	let notices: ProfileNotices | null = null;
 	let profiles = $state.raw<readonly Profile[]>([]);
 	let memoryOnly = $state(false);
 	let code = $state.raw<StoredCode>({ status: 'none' });
 	let lastBackupAt = $state<number | null>(null);
 	let fileStatus = $state('');
+	let childrenStatus = $state('');
+	/** Whether the browser promised to keep the data of the site; `null` while it is not known. */
+	let storageProtected = $state<boolean | null>(null);
 	let today = $state('');
 	let settingsSave = $state<'idle' | 'saved' | 'error'>('idle');
 
@@ -78,22 +98,44 @@
 		today = localDay(now, utcOffsetAt(now));
 		// Back from a page for adults opened from here: the gate was passed already (`adultSpace`).
 		view = adultSpace.isOpen() ? { name: 'home' } : { name: 'gate' };
-		store = createIndexedDbProfileStore();
+		notices = createProfileNotices();
+		notices.listen(() => void readAgain());
+		store = withNotices(createIndexedDbProfileStore(), notices);
 		try {
 			profiles = await store.list();
 		} catch {
 			store = createMemoryProfileStore();
 			memoryOnly = true;
 		}
+		storageProtected = (await readStorageProtection()) === 'protected';
 	});
+
+	onMount(() => () => notices?.close());
+
+	/** Another page of the app changed the profiles (a lesson played in another tab): read them again. */
+	async function readAgain() {
+		try {
+			profiles = await store.list();
+		} catch {
+			// The list stays as it was read last.
+		}
+	}
 
 	beforeNavigate(({ to, willUnload }) => {
 		if (!willUnload) adultSpace.follow(to?.route.id ?? null);
 	});
 
+	/**
+	 * An adult is here: the browser is asked again to keep the data, in case it would now. Nothing
+	 * waits for its answer, and a refusal changes nothing on screen.
+	 */
 	function enter() {
 		adultSpace.open();
 		void show({ name: 'home' });
+		if (memoryOnly || storageProtected === true) return;
+		void requestStorageProtection().then((protection) => {
+			if (protection === 'protected') storageProtected = true;
+		});
 	}
 
 	/** Back on the player screen, nobody chosen: the last player is not opened again on its own. */
@@ -104,6 +146,7 @@
 
 	async function show(next: View) {
 		fileStatus = '';
+		childrenStatus = '';
 		settingsSave = 'idle';
 		view = next;
 		await tick();
@@ -193,33 +236,73 @@
 		if (download(name, text, JSON_TYPE) && writeLastBackupAt(now)) lastBackupAt = now;
 	}
 
-	/** Kept in memory first, then stored: `false` when the device refused one of them. */
-	async function saveProfiles(saved: readonly Profile[]): Promise<boolean> {
-		const ids = new Set(saved.map((profile) => profile.id));
-		profiles = [...profiles.filter((profile) => !ids.has(profile.id)), ...saved];
+	/** The profiles of a backup file, stored all or none: `false` when the device refused them. */
+	async function importProfiles(saved: readonly Profile[]): Promise<boolean> {
 		try {
-			for (const profile of saved) await store.save(profile);
-			return true;
+			await store.saveAll(saved);
 		} catch {
 			return false;
 		}
+		const ids = new Set(saved.map((profile) => profile.id));
+		profiles = [...profiles.filter((profile) => !ids.has(profile.id)), ...saved];
+		return true;
+	}
+
+	/**
+	 * Stores one change of a profile, made from the profile as the device holds it now, never from
+	 * the copy shown here: a lesson played meanwhile in another tab is not written over. `false`
+	 * when the device refused, or when the profile is no longer there.
+	 */
+	async function change(child: Profile, apply: (current: Profile) => Profile): Promise<boolean> {
+		let stored: Profile | null;
+		try {
+			stored = await store.update(child.id, apply);
+		} catch {
+			return false;
+		}
+		if (stored === null) return false;
+		const kept = stored;
+		profiles = profiles.map((profile) => (profile.id === kept.id ? kept : profile));
+		return true;
 	}
 
 	async function openWorld(child: Profile, worldId: string): Promise<boolean> {
-		return saveProfiles([withOpenedWorld(child, worldId)]);
+		return change(child, (current) => withOpenedWorld(current, worldId));
 	}
 
 	async function saveWords(child: Profile, words: readonly string[]): Promise<boolean> {
-		return saveProfiles([withAdultWords(child, words)]);
+		return change(child, (current) => withAdultWords(current, words));
 	}
 
 	async function changeSettings(child: Profile, patch: Partial<Settings>) {
-		settingsSave = (await saveProfiles([updateSettings(child, patch)])) ? 'saved' : 'error';
+		const saved = await change(child, (current) => updateSettings(current, patch));
+		settingsSave = saved ? 'saved' : 'error';
 	}
 
 	async function measure(child: Profile, wordsPerMinute: number): Promise<boolean> {
-		const next = withHandwritingSample(child, { measuredAt: Date.now(), wordsPerMinute });
-		return saveProfiles([next]);
+		const sample = { measuredAt: Date.now(), wordsPerMinute };
+		return change(child, (current) => withHandwritingSample(current, sample));
+	}
+
+	async function rename(child: Profile, name: string): Promise<boolean> {
+		return change(child, (current) => renameProfile(current, name));
+	}
+
+	/** Deletes the profile and its journal for good, after the confirmation of the adult. */
+	async function remove(child: Profile): Promise<boolean> {
+		try {
+			await store.remove(child.id);
+		} catch {
+			return false;
+		}
+		// The game does not open again on a player who is no longer there.
+		if (readLastPlayerId() === child.id) forgetLastPlayerId();
+		profiles = profiles.filter((profile) => profile.id !== child.id);
+		await show({ name: 'home' });
+		childrenStatus = isElidedBefore(child.name)
+			? m.adult_delete_done_elided({ name: child.name })
+			: m.adult_delete_done({ name: child.name });
+		return true;
 	}
 </script>
 
@@ -257,7 +340,18 @@
 			onsheet={() => show({ name: 'sheet', id: child.id })}
 			onmeasures={() => downloadMeasures(child)}
 			onbackup={() => downloadBackup(child)}
+			onrename={(name) => rename(child, name)}
+			ondelete={() => show({ name: 'removal', id: child.id })}
 			onback={() => show({ name: 'home' })}
+		/>
+	{:else if view.name === 'removal' && shown}
+		{@const child = shown}
+		<ChildRemoval
+			profile={child}
+			{fileStatus}
+			onbackup={() => downloadBackup(child)}
+			onconfirm={() => remove(child)}
+			oncancel={() => show({ name: 'child', id: child.id })}
 		/>
 	{:else if view.name === 'sheet' && shown}
 		{@const child = shown}
@@ -293,17 +387,29 @@
 			codeLength={ADULT_RULES.codeLength}
 			{format}
 			{lastBackupAt}
+			{storageProtected}
+			maxBackupFileBytes={ADULT_RULES.maxBackupFileBytes}
 			{fileStatus}
+			{childrenStatus}
 			onopen={(child) => show({ name: 'child', id: child.id })}
 			onmeasures={() => downloadMeasures(null)}
 			onbackup={() => downloadBackup(null)}
-			onimport={saveProfiles}
+			onimport={importProfiles}
 			onleave={leave}
 		/>
 	{/if}
 </main>
 
 <style>
+	/*
+	 * The title and the way out name the child: a long nickname without a space is cut rather than
+	 * wider than the page (320 pixels).
+	 */
+	main :global(h1),
+	main :global([data-screen-back] button) {
+		overflow-wrap: anywhere;
+	}
+
 	.loading {
 		padding: var(--dd-space-xl);
 		text-align: center;
