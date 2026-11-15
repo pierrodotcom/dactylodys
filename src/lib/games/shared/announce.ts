@@ -24,10 +24,9 @@ export interface TypingWords {
  */
 export function typingAnnouncement(view: GameView, words: TypingWords): string {
 	if (view.phase !== 'typing') return '';
+	const repair = repairToErase(view, words.spoken);
+	if (repair !== null && words.repair) return words.repair(view.group.join(''), repair);
 	const toErase = view.pending.at(-1);
-	if (toErase !== undefined && view.untouched && words.repair) {
-		return words.repair(view.group.join(''), words.spoken(toErase));
-	}
 	if (toErase !== undefined) return words.erase(words.spoken(toErase));
 	if (view.errorIndex !== null) {
 		const expected = view.group[view.errorIndex];
@@ -36,4 +35,32 @@ export function typingAnnouncement(view: GameView, words: TypingWords): string {
 	if (view.position > 0) return '';
 	const text = view.group.length === 1 ? words.spoken(view.group[0] ?? '') : view.group.join('');
 	return words.group(text);
+}
+
+/**
+ * The wrong character to erase first in a group that arrives begun (lesson of repairs), as it is
+ * said; `null` for any other group, and as soon as the child has pressed a key in it.
+ */
+export function repairToErase(view: GameView, spoken: (grapheme: string) => string): string | null {
+	const toErase = view.pending.at(-1);
+	if (view.phase !== 'typing' || !view.untouched || toErase === undefined) return null;
+	return spoken(toErase);
+}
+
+/** What the shell of a game adds to the announcement of the game; `null` for nothing. */
+export interface ShellNotices {
+	/** The keys no longer reach the game: how to go on. */
+	readonly away: string | null;
+	/** The help about Caps Lock, while it is on screen. */
+	readonly capsLock: string | null;
+}
+
+/**
+ * Everything the one live region of a game says: what the game or the typing announces, then the
+ * help about Caps Lock, each said once. While the keys do not reach the game, only how to go on.
+ * The reminder to look at the screen is not in it: the recorded voice says it.
+ */
+export function shellAnnouncement(base: string, notices: ShellNotices): string {
+	if (notices.away !== null) return notices.away;
+	return [base, notices.capsLock].filter((part) => part !== null && part !== '').join(' ');
 }

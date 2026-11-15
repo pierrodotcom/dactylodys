@@ -37,6 +37,21 @@ const REMINDER_EVERY = readJson<{ lookReminderEveryGroups: number }>(
 	'content/common/play-rules.json'
 ).lookReminderEveryGroups;
 
+const AZERTY_KEYS = readJson<{ keys: Record<string, { base?: string }> }>(
+	'layouts/fr-fr-azerty-pc.json'
+).keys;
+
+/**
+ * The keys of the keyboard check, with the letter an AZERTY keyboard writes on each: the check
+ * judges the letter written, and Playwright simulates an American keyboard.
+ */
+const CHECK_KEYS = readJson<{ keyboardCheckCodes: string[] }>(
+	'content/common/play-rules.json'
+).keyboardCheckCodes.map((code) => {
+	const letter = AZERTY_KEYS[code]?.base ?? '';
+	return { letter, label: letter.toLocaleUpperCase('fr') };
+});
+
 function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
 }
@@ -106,6 +121,37 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await page.getByRole('button', { name: FIRST.title }).click();
 	await throughStory(page, heading(page, FIRST.title));
 	await expectWayOutAtTop(page, message('play_intro_back'));
+});
+
+test('gives the keyboard check a way out at the top of its three steps, and Escape takes it', async ({
+	page
+}) => {
+	const wayOut = message('play_change_player');
+	const firstKey = CHECK_KEYS[0]?.label ?? '';
+	await openPage(page, '/jouer');
+	await button(page, message('play_new_player')).click();
+	await page.getByLabel(message('play_new_label')).fill('Lou');
+	await button(page, message('play_new_submit')).click();
+
+	await expect(heading(page, message('play_check_title'))).toBeVisible();
+	await expectWayOutAtTop(page, wayOut);
+
+	await button(page, message('play_check_continue')).click();
+	await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
+	await expectWayOutAtTop(page, wayOut);
+	for (const key of CHECK_KEYS) await page.keyboard.press(key.letter);
+
+	await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
+	await expectWayOutAtTop(page, wayOut);
+	await page.keyboard.press('Escape');
+	await expect(heading(page, message('play_players_title'))).toBeVisible();
+
+	// The keyboard was not checked to the end: it is asked again, and Escape leaves the keys too.
+	await page.getByRole('button', { name: 'Lou' }).click();
+	await button(page, message('play_check_continue')).click();
+	await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(heading(page, message('play_players_title'))).toBeVisible();
 });
 
 test('keeps the hideout in view while the child goes down the objects to set down', async ({

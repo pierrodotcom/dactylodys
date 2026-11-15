@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RawInputEvent } from '$lib/keyboard/types';
-	import { attachKeyboardCapture, CAPTURE_FIELD_ATTRIBUTES } from './capture';
+	import { attachKeyboardCapture, CAPTURE_FIELD_ATTRIBUTES, copyKeyboardEvent } from './capture';
 
 	interface Props {
 		id: string;
@@ -18,6 +18,15 @@
 	}
 
 	export function focus() {
+		field?.focus();
+	}
+
+	/**
+	 * A key pressed while the focus was elsewhere on the page: the field reports its `keydown` and
+	 * takes the focus, so that the browser writes the character in it. The key is typed, not lost.
+	 */
+	export function take(event: KeyboardEvent) {
+		onevent(copyKeyboardEvent('keydown', event, performance.now()));
 		field?.focus();
 	}
 </script>

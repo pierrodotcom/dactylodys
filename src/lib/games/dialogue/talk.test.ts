@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest';
 import type { NormalizedKeystroke } from '../../keyboard/types';
 import { createGame, reduce, type GameState } from '../shared/game-state';
 import { viewOf, type GameView } from '../shared/game-view';
-import { answerSoFar, hostFace, questionOf, reactionOf, type Reaction } from './talk';
+import {
+	answerSoFar,
+	hostFace,
+	questionAnnouncement,
+	questionOf,
+	reactionOf,
+	type QuestionWords,
+	type Reaction
+} from './talk';
 
 const QUESTIONS = ['q1', 'q2', 'q3'];
 const REACTIONS: readonly Reaction[] = [
@@ -101,5 +109,31 @@ describe('answerSoFar', () => {
 	it('says the whole group once it is typed, spaces included', () => {
 		expect(answerSoFar(viewAfter('fj'))).toBe('fj');
 		expect(answerSoFar(viewAfter('sl fj', 0, ['sl fj']))).toBe('sl fj');
+	});
+});
+
+describe('questionAnnouncement', () => {
+	const WORDS: QuestionWords = {
+		question: (question, text) => `${question} type ${text}`,
+		repair: (question, text, char) => `${question} type ${text}, erase ${char}`,
+		spoken: (grapheme) => (grapheme === ' ' ? 'space' : grapheme)
+	};
+
+	it('says the question and the answer to type, the moment the question appears', () => {
+		expect(questionAnnouncement(viewAfter(''), 'q1', WORDS)).toBe('q1 type fj');
+		expect(questionAnnouncement(viewAfter('', 0, [' ']), 'q1', WORDS)).toBe('q1 type space');
+	});
+
+	it('also says what to erase when the answer arrives begun with a mistake', () => {
+		const begun = createGame(['sl fj'], 'retry', { starts: [{ typed: 3, pending: ['d', ' '] }] });
+		expect(questionAnnouncement(viewOf(begun, false), 'q1', WORDS)).toBe(
+			'q1 type sl fj, erase space'
+		);
+	});
+
+	it('says the question once: nothing after the first key, nor during the reward', () => {
+		expect(questionAnnouncement(viewAfter('f'), 'q1', WORDS)).toBe('');
+		expect(questionAnnouncement(viewAfter('fx'), 'q1', WORDS)).toBe('');
+		expect(questionAnnouncement(viewAfter('fj'), 'q1', WORDS)).toBe('');
 	});
 });
