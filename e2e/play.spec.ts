@@ -19,7 +19,6 @@ import { readProfile } from '../src/lib/state/migrations';
 import {
 	localDay,
 	MAX_NAME_LENGTH,
-	MIN_NAME_LENGTH,
 	PROFILE_SCHEMA_VERSION,
 	withProgress
 } from '../src/lib/state/profile';
@@ -911,13 +910,9 @@ test.describe('play route', () => {
 		await expect(page.getByRole('alert')).toHaveText(message('play_new_error_empty'));
 		await expect(input).toHaveAttribute('aria-invalid', 'true');
 
+		// The field stops at the longest nickname: one letter too many is not written.
 		await input.fill('a'.repeat(MAX_NAME_LENGTH + 1));
-		await button(page, message('play_new_submit')).click();
-		await expect(page.getByRole('alert')).toHaveText(
-			message('play_new_error_invalid', { min: MIN_NAME_LENGTH, max: MAX_NAME_LENGTH })
-		);
-
-		await input.fill('a'.repeat(MAX_NAME_LENGTH));
+		await expect(input).toHaveValue('a'.repeat(MAX_NAME_LENGTH));
 		await button(page, message('play_new_submit')).click();
 		await expect(heading(page, message('play_check_title'))).toBeVisible();
 	});

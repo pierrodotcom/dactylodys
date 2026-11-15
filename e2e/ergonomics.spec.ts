@@ -221,6 +221,11 @@ test('puts the way out of the adult space at the top of each of its screens', as
 	await page.locator('[data-child-sheet]').click();
 	await expect(heading(page, message('adult_sheet_title', { name: child.name }))).toBeVisible();
 	await expectWayOutAtTop(page, message('adult_sheet_back', { name: child.name }));
+
+	await page.keyboard.press('Escape');
+	await page.locator('[data-child-delete]').click();
+	await expect(heading(page, message('adult_delete_title', { name: child.name }))).toBeVisible();
+	await expectWayOutAtTop(page, message('adult_delete_cancel'));
 });
 
 test('puts the way out of the pages for adults at the top of the page', async ({ page }) => {
