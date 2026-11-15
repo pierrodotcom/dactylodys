@@ -61,10 +61,11 @@ const playRules = readJson<{ keyboardCheckCodes: string[] }>('content/common/pla
 const azerty = readJson<{ keys: Record<string, { base?: string }> }>(
 	'layouts/fr-fr-azerty-pc.json'
 );
-const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => ({
-	code,
-	label: (azerty.keys[code]?.base ?? '').toLocaleUpperCase('fr')
-}));
+/** The check judges the letter written, and Playwright simulates an American keyboard. */
+const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => {
+	const letter = azerty.keys[code]?.base ?? '';
+	return { letter, label: letter.toLocaleUpperCase('fr') };
+});
 const GROUP_LABEL = templateRegex('ui_target_text_label');
 const GROUP_DONE = templateRegex('ui_target_text_done');
 const GROUP_ERASE = templateRegex('ui_target_text_erase');
@@ -310,7 +311,7 @@ test.describe('Tab during a game', () => {
 			await expect(page.locator('#keyboard-check-input')).toBeFocused();
 			await page.keyboard.press(leaveField[index % leaveField.length] ?? 'Tab');
 			await expect(wayOut).toBeFocused();
-			await page.keyboard.press(key.code);
+			await page.keyboard.press(key.letter);
 		}
 
 		await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
@@ -495,7 +496,7 @@ test.describe('keeps playing, accessibility', () => {
 		).toBeVisible();
 		await expectNoAxeViolation(page);
 
-		for (const key of CHECK_KEYS) await page.keyboard.press(key.code);
+		for (const key of CHECK_KEYS) await page.keyboard.press(key.letter);
 		await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
 		await expectNoAxeViolation(page);
 	});

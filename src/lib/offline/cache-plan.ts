@@ -23,8 +23,16 @@ export interface SiteFiles {
 }
 
 /**
- * What the first visit keeps for later: the whole game, once each, home page included. Only paths of
- * the site itself, so that nothing from another origin is ever stored.
+ * The trial pages of `/dev` are tools for adults who test the game: the ones that are published
+ * open with a connection, and no child downloads them for playing offline (ADR-075).
+ */
+export function isTrialPage(url: string, base: string): boolean {
+	return url === `${base}/dev` || url.startsWith(`${base}/dev/`);
+}
+
+/**
+ * What the first visit keeps for later: the whole game, once each, home page included, without the
+ * trial pages. Only paths of the site itself, so that nothing from another origin is ever stored.
  *
  * `required`: pages, scripts and styles, without which the game cannot start; the version is not
  * installed if one is missing. `optional`: the files of `static/` (voices, icons): one that is not
@@ -33,7 +41,8 @@ export interface SiteFiles {
 export function precacheUrls({ build, files, prerendered, base }: SiteFiles) {
 	const ownPaths = (urls: readonly string[]) =>
 		urls.filter((url) => url.startsWith('/') && !url.startsWith('//'));
-	const required = [...new Set(ownPaths([`${base}/`, ...prerendered, ...build]))];
+	const pages = prerendered.filter((url) => !isTrialPage(url, base));
+	const required = [...new Set(ownPaths([`${base}/`, ...pages, ...build]))];
 	const optional = [...new Set(ownPaths(files))].filter((url) => !required.includes(url));
 	return { required, optional };
 }

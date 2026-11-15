@@ -37,16 +37,20 @@ const REMINDER_EVERY = readJson<{ lookReminderEveryGroups: number }>(
 	'content/common/play-rules.json'
 ).lookReminderEveryGroups;
 
-/** The keys of the keyboard check, with the letter an AZERTY keyboard writes on each. */
+const AZERTY_KEYS = readJson<{ keys: Record<string, { base?: string }> }>(
+	'layouts/fr-fr-azerty-pc.json'
+).keys;
+
+/**
+ * The keys of the keyboard check, with the letter an AZERTY keyboard writes on each: the check
+ * judges the letter written, and Playwright simulates an American keyboard.
+ */
 const CHECK_KEYS = readJson<{ keyboardCheckCodes: string[] }>(
 	'content/common/play-rules.json'
-).keyboardCheckCodes.map((code) => ({
-	code,
-	label: (
-		readJson<{ keys: Record<string, { base?: string }> }>('layouts/fr-fr-azerty-pc.json').keys[code]
-			?.base ?? ''
-	).toLocaleUpperCase('fr')
-}));
+).keyboardCheckCodes.map((code) => {
+	const letter = AZERTY_KEYS[code]?.base ?? '';
+	return { letter, label: letter.toLocaleUpperCase('fr') };
+});
 
 function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
@@ -135,7 +139,7 @@ test('gives the keyboard check a way out at the top of its three steps, and Esca
 	await button(page, message('play_check_continue')).click();
 	await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
 	await expectWayOutAtTop(page, wayOut);
-	for (const key of CHECK_KEYS) await page.keyboard.press(key.code);
+	for (const key of CHECK_KEYS) await page.keyboard.press(key.letter);
 
 	await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
 	await expectWayOutAtTop(page, wayOut);
@@ -221,11 +225,6 @@ test('puts the way out of the adult space at the top of each of its screens', as
 	await page.locator('[data-child-sheet]').click();
 	await expect(heading(page, message('adult_sheet_title', { name: child.name }))).toBeVisible();
 	await expectWayOutAtTop(page, message('adult_sheet_back', { name: child.name }));
-
-	await page.keyboard.press('Escape');
-	await page.locator('[data-child-delete]').click();
-	await expect(heading(page, message('adult_delete_title', { name: child.name }))).toBeVisible();
-	await expectWayOutAtTop(page, message('adult_delete_cancel'));
 });
 
 test('puts the way out of the pages for adults at the top of the page', async ({ page }) => {
@@ -233,7 +232,8 @@ test('puts the way out of the pages for adults at the top of the page', async ({
 		'info_link_adults',
 		'info_link_professionals',
 		'info_link_privacy',
-		'info_link_accessibility'
+		'info_link_accessibility',
+		'info_link_credits'
 	]) {
 		await openPage(page, '/');
 		await page

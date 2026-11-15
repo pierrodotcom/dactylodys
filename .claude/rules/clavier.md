@@ -20,6 +20,7 @@ paths:
 - Aucun événement de composition. Chaque caractère produit arrive par `beforeinput` + `input` (`insertText`).
 - Touche morte `^`/`¨` : `keydown` avec `key: "Dead"`, rien d'inséré ; la frappe suivante porte le caractère composé dans `key` et dans `data`. Touche morte + Espace insère le signe seul (l'espace est consommé).
 - **Chrome annonce une fausse touche pour une touche morte AltGr** : AltGr+2 (tilde mort) donne `key: "é"` au lieu de `Dead`, sans insertion. Firefox annonce `Dead`. D'où la règle 1 : `key` ne sert jamais à déduire un caractère.
+- **Un navigateur qui résiste au pistage** (LibreWolf, Tor, Firefox avec `privacy.resistFingerprinting`) annonce `code` comme sur un clavier américain, d'après le caractère écrit : le A d'un AZERTY y est `KeyA`. `code` n'y dit donc rien de la touche physique (constaté par le porteur le 2026-11-14, ADR-076).
 - Les utilisateurs tapent les chiffres au pavé numérique (`Numpad0`…) et les majuscules avec Verr. Maj : le caractère reste juste, mais la touche physique n'est pas celle que montre l'aide visuelle.
 
 ## Règles

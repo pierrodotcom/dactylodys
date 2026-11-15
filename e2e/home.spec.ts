@@ -59,7 +59,8 @@ test.describe('home page', () => {
 			'/pour-les-adultes',
 			'/pour-les-professionnels',
 			'/confidentialite',
-			'/accessibilite'
+			'/accessibilite',
+			'/credits'
 		]);
 		expect(paths.filter((path) => path.startsWith('/dev'))).toEqual([]);
 	});

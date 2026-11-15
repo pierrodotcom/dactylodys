@@ -8,7 +8,9 @@ const STEPS = [
 	{ name: 'check', command: 'npm run -s --ignore-scripts check' },
 	{ name: 'lint', command: 'npm run -s --ignore-scripts lint' },
 	{ name: 'test', command: 'npm run -s test', summary: /Tests\s+\d+ passed/ },
+	// The published site first, in `build/`; then the same with every trial page, which the tests run on.
 	{ name: 'build', command: 'npm run -s --ignore-scripts build' },
+	{ name: 'build:e2e', command: 'npm run -s build:e2e' },
 	{ name: 'e2e', command: 'npx --no-install playwright test', summary: /\d+ passed/ }
 ];
 

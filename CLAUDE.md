@@ -33,7 +33,7 @@ Références : synthèse de recherche `reports/Dactylo ludique TDAH dysgraphie.m
 | Tests | Vitest + fast-check · rejeu de traces clavier · Playwright (Chromium, Firefox, WebKit) + axe |
 | Qualité | ESLint + typescript-eslint + eslint-plugin-svelte · Prettier · Stylelint (valeurs strictes) · lefthook · commitlint |
 | CI / hébergement | GitHub Actions · GitHub Pages (Cloudflare Pages en repli) |
-| Licences | Code AGPL-3.0-or-later · contenus et visuels CC BY-SA 4.0 · dispositions clavier CC0 |
+| Licences | Code AGPL-3.0-or-later · contenus et visuels CC BY-SA 4.0 · dispositions clavier : données dérivées du CLDR (licence Unicode) |
 
 **Ne jamais installer `latest`** : SvelteKit 3, TypeScript 7 et adapter-static 4 sont exclus (ADR-005) ; toute installation précise la version. **L'outillage est plus récent que les connaissances des modèles.** Avant d'utiliser une API de Svelte, SvelteKit, Vite, Vitest ou ESLint, lire la documentation de la **version installée** (`node_modules/<paquet>/` ou site officiel), pas sa mémoire.
 
@@ -49,7 +49,7 @@ Références : synthèse de recherche `reports/Dactylo ludique TDAH dysgraphie.m
 | `npm run test:e2e` | Playwright sur 3 moteurs + axe |
 | `npm run verify` | **Tout ce qui précède** — obligatoire avant tout commit |
 | `npm run clean:worktrees` | Liste les copies de travail d'agents devenues inutiles ; `-- --apply` les retire |
-| `npm run build` | Build statique |
+| `npm run build` | Build statique publié, sans les pages d'essai internes ; `npm run build:e2e` construit à part le site des tests (ADR-078) |
 
 Les scripts utilisent des rapporteurs silencieux : seuls les échecs s'affichent.
 
