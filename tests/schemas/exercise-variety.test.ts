@@ -176,12 +176,12 @@ describe('warm-ups made of words', () => {
 			'qm',
 			'cp',
 			"é'",
+			'èà',
+			'çù',
 			'gh',
 			'vb',
 			'yx',
 			'zw',
-			'èà',
-			'çù',
 			'\n'
 		]);
 	});

@@ -4,6 +4,7 @@ import { toGraphemes } from '../../src/lib/engine/graphemes';
 import {
 	learnedChars,
 	lessonIds,
+	lessonNumber,
 	parseProgression
 } from '../../src/lib/engine/progression/definition';
 import { listProgressionFiles } from '../../src/lib/engine/progression/test-support';
@@ -195,8 +196,8 @@ describe('azerty-decouverte', () => {
 		).toEqual([
 			['fr.world.dinosaures', 'dinos', ['hatching', 'drawing', 'dialogue']],
 			['fr.world.cuisine', 'cuisine', ['recipe', 'tower', 'river']],
-			['fr.world.animaux', 'animaux', ['drawing', 'tower', 'dialogue']],
 			['fr.world.espace', 'espace', ['rocket', 'tower', 'river']],
+			['fr.world.animaux', 'animaux', ['drawing', 'tower', 'dialogue']],
 			['fr.world.vehicules', 'vehicules', ['train', 'rocket', 'dialogue']],
 			['fr.world.poste', 'general', ['dialogue', 'drawing', 'train']]
 		]);
@@ -214,13 +215,15 @@ describe('azerty-decouverte', () => {
 				['c', 'p'],
 				['é', "'"]
 			],
+			// Capitals, the comma and the full stop right after é and the apostrophe (ADR-075): real
+			// sentences come before the last letters.
+			[['è', 'à'], ['ç', 'ù'], [], [',', '.', ';']],
 			[
 				['g', 'h'],
 				['v', 'b'],
 				['y', 'x'],
 				['z', 'w']
 			],
-			[['è', 'à'], ['ç', 'ù'], [], [',', '.', ';']],
 			[
 				['?', '!', '"'],
 				['-', ':'],
@@ -258,6 +261,39 @@ describe('azerty-decouverte', () => {
 		expect(circumflexes[1]?.title).not.toBe(circumflexes[0]?.title);
 		const ids = lessons.map((lesson) => lesson.id);
 		expect(ids.indexOf('fr.lesson.trema')).toBe(ids.indexOf(circumflexes[1]?.id ?? '') + 1);
+	});
+
+	it('types a whole sentence, capital and full stop, from the fifteenth lesson on (ADR-075)', () => {
+		const ids = lessons.map((lesson) => lesson.id);
+		const first = ids.findIndex((id) => {
+			const learned = learnedChars(progression, id);
+			return learned.includes('.') && learned.includes(',') && learned.includes('L');
+		});
+		expect(first + 1).toBe(15);
+		expect(ids[first]).toBe('fr.lesson.virgule-point');
+		expect(ids[first - 1]).toBe('fr.lesson.grandes-majuscules');
+		// The lessons that moved kept their identifier, their world and their title.
+		const stars = progression.worlds.find((world) => world.id === 'fr.world.espace');
+		expect(stars?.lessons.map((lesson) => lesson.title)).toEqual([
+			'Le café de la Lune',
+			'La comète pressée',
+			'Les géantes de la galaxie',
+			'Pause sur la planète Virgule'
+		]);
+	});
+
+	it('makes detours of the two lessons of rare accents, last of their world (ADR-075)', () => {
+		const detours = lessons.filter((lesson) => lesson.optional === true);
+		expect(detours.map((lesson) => lesson.newChars.join(''))).toEqual(['îôû', 'ëï']);
+		const world = progression.worlds.find((candidate) => candidate.id === 'fr.world.vehicules');
+		expect(world?.lessons.slice(-2)).toEqual(detours);
+		// Nothing on the way counts on them: neither a key, nor a capital, nor the hand guide.
+		for (const lesson of lessons.filter((candidate) => candidate.optional !== true)) {
+			const learned = learnedChars(progression, lesson.id);
+			for (const char of 'îôûëï') expect(learned, lesson.id).not.toContain(char);
+		}
+		expect(lessonNumber(progression, 'fr.lesson.liste-pique-nique')).toBe(23);
+		expect(lessonNumber(progression, lessons.at(-1)?.id ?? '')).toBe(32);
 	});
 
 	it('introduces at most three characters in one lesson, or the five digits of one hand', () => {
@@ -411,7 +447,8 @@ describe('azerty-decouverte', () => {
 		}
 		for (const lesson of lessons.slice(4, 6)) expect(lesson.mix.phrases).toBe(0);
 		for (const lesson of lessons.slice(6, 11)) expect(lesson.mix.phrases).toBeGreaterThan(0);
-		for (const world of progression.worlds.slice(3)) {
+		// From the world of capitals and full stops on, mostly sentences.
+		for (const world of progression.worlds.slice(2)) {
 			for (const lesson of world.lessons) {
 				expect(lesson.mix.phrases).toBeGreaterThan(lesson.mix.drills + lesson.mix.words);
 			}
@@ -425,9 +462,11 @@ describe('azerty-decouverte', () => {
 			'ru',
 			'qm',
 			"é'",
-			'zw',
 			'èà',
-			'çù'
+			'çù',
+			'gh',
+			'vb',
+			'zw'
 		]);
 		// After the first words, a word picked by hand always holds a new key of its lesson.
 		for (const lesson of picked.slice(2)) {
@@ -440,7 +479,10 @@ describe('azerty-decouverte', () => {
 		}
 		const apostrophes = lessons[10]?.words ?? [];
 		expect(apostrophes.filter((word) => word.includes("'")).length).toBeGreaterThanOrEqual(5);
-		expect(lessons[16]?.words).toContain('où');
+		expect(lessons[12]?.words).toContain('où');
+		// A word picked for à or ç that needs g or v waits for the lesson of that letter.
+		expect(lessons[15]?.words).toEqual(['garçon', 'glaçon']);
+		expect(lessons[16]?.words).toEqual(['voilà']);
 		for (const lesson of lessons.slice(4, 6)) {
 			expect(lesson.words.length).toBeGreaterThanOrEqual(15);
 		}
