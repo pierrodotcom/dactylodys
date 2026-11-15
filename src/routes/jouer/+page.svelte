@@ -131,7 +131,12 @@
 	import { SCENE_SCHEDULE } from './scenes';
 	import { findGame } from '$lib/games/registry';
 	import KeyboardCheck from './KeyboardCheck.svelte';
-	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
+	import {
+		forgetLastPlayerId,
+		readLastPlayerId,
+		returningPlayer,
+		writeLastPlayerId
+	} from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
 	import { recordLessonOutcome, starsOrNone } from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
@@ -202,6 +207,8 @@
 	let pendingWrites = 0;
 	let startedWrites = 0;
 	let profiles = $state.raw<readonly Profile[]>([]);
+	/** The player who played last on this device: offered first when the game asks who plays. */
+	let lastPlayerId = $state<string | null>(null);
 	let profile = $state.raw<Profile | null>(null);
 	let assets = $state.raw<KeyboardAssets | null>(null);
 	// The keys next to each key of the layout of the child: where a lesson of repairs takes its mistakes.
@@ -451,14 +458,10 @@
 	});
 
 	async function resumeLastPlayer(): Promise<boolean> {
-		const lastId = readLastPlayerId();
-		if (lastId === null) return false;
-		const last = profiles.find((item) => item.id === lastId);
-		if (!last) {
-			forgetLastPlayerId();
-			return false;
-		}
-		return enter(last);
+		const { last, resume, gone } = returningPlayer(profiles, readLastPlayerId());
+		if (gone) forgetLastPlayerId();
+		lastPlayerId = last?.id ?? null;
+		return last !== null && resume ? enter(last) : false;
 	}
 
 	$effect(() => {
@@ -570,6 +573,7 @@
 		}
 		profile = withEarnedSoFar(chosen);
 		writeLastPlayerId(chosen.id);
+		lastPlayerId = chosen.id;
 		go({ type: 'player-chosen', calibrated: chosen.calibrated });
 		return true;
 	}
@@ -1210,6 +1214,7 @@
 	{:else if screen.name === 'players'}
 		<PlayerSelect
 			{profiles}
+			{lastPlayerId}
 			{memoryOnly}
 			{loadFailed}
 			onchoose={enter}
@@ -1219,7 +1224,11 @@
 			onforget={forgetUnreadable}
 		/>
 	{:else if screen.name === 'new-player'}
-		<NewPlayer oncreate={createPlayer} onback={() => go({ type: 'cancel-new-player' })} />
+		<NewPlayer
+			oncreate={createPlayer}
+			onback={() => go({ type: 'cancel-new-player' })}
+			takenNames={profiles.map((profile) => profile.name)}
+		/>
 	{:else if !profile || !assets || !progression}
 		<p class="loading" role="alert">{m.play_error_content()}</p>
 	{:else if screen.name === 'keyboard-check'}

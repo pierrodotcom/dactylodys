@@ -85,16 +85,21 @@
 		busy = true;
 		const imported = applyImport(ready, chosen, () => crypto.randomUUID());
 		const saved = nameCopies(imported, profiles, copyName);
+		// A profile loaded as it is whose nickname another one bore: the adult is told its new one.
+		const renamed = saved.flatMap((profile, index) => {
+			const entry = imported[index];
+			return entry && entry.copyOf === null && entry.profile.name !== profile.name
+				? [m.adult_import_renamed({ name: entry.profile.name, copy: profile.name })]
+				: [];
+		});
 		const ok = await onsave(saved);
 		busy = false;
 		plan = null;
+		const done = isOne(saved.length)
+			? m.adult_import_done_one({ count: saved.length })
+			: m.adult_import_done_other({ count: saved.length });
 		result = ok
-			? {
-					text: isOne(saved.length)
-						? m.adult_import_done_one({ count: saved.length })
-						: m.adult_import_done_other({ count: saved.length }),
-					ok: true
-				}
+			? { text: [done, ...renamed].join(' '), ok: true }
 			: { text: m.adult_import_failed(), ok: false };
 	}
 

@@ -803,7 +803,7 @@ test.describe('play route', () => {
 		await expect(page.getByRole('button', { name: SECOND.title })).toBeVisible();
 	});
 
-	test('resumes the last player on the map after a reload, and still lets another one in', async ({
+	test('asks who plays after a reload once the device has two players, the last one first', async ({
 		page
 	}) => {
 		await reachMap(page);
@@ -812,18 +812,22 @@ test.describe('play route', () => {
 		await page.getByLabel(message('play_new_label')).fill('Zoé');
 		await button(page, message('play_new_submit')).click();
 		await checkKeyboard(page, 'same');
+		const players = page
+			.getByRole('list', { name: message('play_players_list_label') })
+			.getByRole('button');
 
 		await reloadPage(page);
 
-		await expect(page.getByText(message('play_map_greeting', { name: 'Zoé' }))).toBeVisible();
-		await button(page, message('play_change_player')).click();
+		// Two children share the device: nobody lands on the map of the other (ADR-075).
 		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await expect(players).toHaveText(['Zoé', PLAYER_NAME]);
 		await page.getByRole('button', { name: PLAYER_NAME }).click();
 		await expect(page.getByText(message('play_map_greeting', { name: PLAYER_NAME }))).toBeVisible();
 
 		await reloadPage(page);
 
-		await expect(page.getByText(message('play_map_greeting', { name: PLAYER_NAME }))).toBeVisible();
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		await expect(players).toHaveText([PLAYER_NAME, 'Zoé']);
 	});
 
 	test('resumes on the keyboard check when the last player has not done it', async ({ page }) => {

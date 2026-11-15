@@ -2430,8 +2430,17 @@
 		"panel-max": {
 			"$value": "32rem"
 		},
-		"settings-column": {
-			"$value": "22rem"
+		"setting-name": {
+			"$description": "The name of a setting, beside its choices: the same width on every line.",
+			"$value": "17rem"
+		},
+		"setting-choices-min": {
+			"$description": "Least room for the choices beside the name of a setting; with less, they go under it.",
+			"$value": "26rem"
+		},
+		"setting-gap": {
+			"$description": "Between two settings of a list: more than between a name and its choices under it, less than between two families.",
+			"$value": "{dimension.12}"
 		},
 		"bubble-tail": {
 			"$value": "{dimension.16}"
@@ -2861,6 +2870,10 @@
 		},
 		"notice": {
 			"$value": "{duration.1600}"
+		},
+		"busy-notice": {
+			"$description": "A wait that lasts longer than this is told to the child.",
+			"$value": "{duration.1000}"
 		},
 		"trick": {
 			"$value": "{duration.1000}"

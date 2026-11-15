@@ -28,12 +28,12 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Le jeu ne lâche pas l'enfant | E-01, E-02, E-03 d, E-12, E-23 | Fait (ADR-079) |
 | Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | Fait (ADR-080) |
 | Tout tient à l'écran | E-03, E-05, E-08, E-10, E-20 | À faire |
-| Bilan en étapes, « Qui joue ? », réglages | E-04, E-17, E-18, E-16, E-19 | À faire |
+| Bilan en étapes | E-04, E-19 | À faire (« Qui joue ? » et réglages : faits, ADR-083) |
 | Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24, P-07, P-09 | À faire |
 | Rappel « regarde l'écran » | P-20, I-4 ; le compter en caractères (il ne s'affiche plus aux leçons de 3 ou 4 groupes, ADR-074) | À faire, avec la campagne de voix |
 | Vérification du clavier, Mac | Q-03, touche fausse déduite du caractère, « Réessayer », Q-09, Q-17, Q-31 | Fait (ADR-076, ADR-082) ; reste : essais sur un vrai Mac (Q7), phrase « pas encore vérifié sur un vrai Mac » près du choix du clavier (avec les réglages rangés) |
-| Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18 | En cours (branche `feat/reglages-ranges`) |
-| Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | Ordre des leçons : fait (ADR-081, profil version 15). Restent : révision de fin de monde, durée des parties et phrase entière à chaque partie des leçons 16 à 19, Retour arrière d'office au monde 6 (choix 3, 4, 5), P-11 ; P-18 et P-14 avec la campagne de voix |
+| Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18, pseudo unique (demande du 2026-11-15) | Fait (ADR-083) |
+| Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | Ordre des leçons : fait (ADR-081, profil version 15). Durée des parties, phrase entière, Retour arrière selon le monde : fait (ADR-084, profil version 16). Restent : grand tour de fin de monde (choix 3), P-11 (lot « bilan en étapes ») ; P-18 et P-14 avec la campagne de voix |
 | Textes et typographie | C-01 à C-07, C-10, C-11, C-16, C-17, E-09, E-13 | À faire, avant la campagne de voix |
 | Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27, E-13, E-14 | Fait (ADR-078) ; reste Q-07 a-b-c (mise à jour du cache), trois règles typées dans `state/`, jetons inutilisés |
 | Espace adulte | E-14, E-15, P-17, P-21 | À faire |
@@ -254,3 +254,5 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-15** — « Les données de l'enfant ne se perdent pas » (ADR-080) : deux onglets sans perte, stockage gardé demandé au navigateur, renommer et supprimer un profil depuis l'espace adulte, pseudo long, sauvegarde trop grosse refusée. Leçons L-152, L-153.
 - **2026-11-15** — « Ordre des leçons » (ADR-081, profil version 15) : les étoiles avant le zoo, première phrase entière à la leçon 15 au lieu de 19, « î ô û » et « ë ï » facultatives, progrès gardés pour les enfants en route. Leçons L-154, L-155.
 - **2026-11-15** — Lot clavier (ADR-082) : touche fausse déduite de la lettre écrite (juste sous LibreWolf), vérification du clavier à quatre touches dont « é », « Réessayer » et « Jouer quand même », espace insécable acceptée, normaliseur, trace réelle exigée. Leçons L-156, L-157.
+- **2026-11-15** — Réglages rangés (ADR-083) : cinq familles alignées, noms courts, réglages du clavier chez l'adulte, « Qui joue ? » à plusieurs, un pseudo par enfant (création, changement, sauvegarde rechargée). Leçon L-158.
+- **2026-11-15** — Des parties qui durent (ADR-084) : la partie s'allonge avec l'allure de l'enfant (par groupes entiers, au plus 150 caractères), une phrase entière à chaque partie dès la leçon du point, « Durée d'une séance » réglée par l'adulte (pause au temps de frappe réelle), Retour arrière « Selon le monde » (le monde 6 fait effacer). Profil version 16. Les 33 phrases du nouvel ordre des leçons sont relues par le porteur. Leçons L-159 à L-161.

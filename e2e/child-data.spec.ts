@@ -716,3 +716,38 @@ for (const colorScheme of COLOR_SCHEMES) {
 		});
 	});
 }
+
+test.describe('two children, one nickname', () => {
+	test('refuses to rename a child with the nickname of another child of the device', async ({
+		page
+	}) => {
+		const lou = advancedProfile({ name: 'Lou', passed: { [FIRST.id]: 2 } });
+		const zoe = advancedProfile({ name: 'Zoé', passed: {} });
+		await reachPlayers(page, [lou, zoe]);
+		await openAdultHome(page);
+		await openReport(page, lou);
+		const identity = page.locator('[data-child-identity]');
+		await identity.locator('[data-child-name]').fill('zoe');
+		await identity.locator('[data-child-rename]').click();
+		await expect(identity.getByRole('alert')).toHaveText(
+			message('adult_rename_error_taken', { name: zoe.name })
+		);
+		expect((await storedRecord(page, lou))?.['name']).toBe(lou.name);
+	});
+
+	test('tells the adult which nickname several profiles bear, and where to change it', async ({
+		page
+	}) => {
+		const first = advancedProfile({ name: 'Lou', passed: {} });
+		const second = advancedProfile({ name: 'lou', passed: {} });
+		await reachPlayers(page, [first, second]);
+		await openAdultHome(page);
+		const said = page.locator('[data-same-name]');
+		await expect(said).toHaveCount(1);
+		// Either nickname may come first in the list of the children.
+		const either = [first.name, second.name].map((name) =>
+			message('adult_children_same_name', { name, section: message('adult_identity_title') })
+		);
+		expect(either).toContain((await said.textContent())?.trim());
+	});
+});
