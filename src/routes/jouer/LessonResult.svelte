@@ -79,6 +79,8 @@
 
 	function goOn() {
 		step = Math.min(position + 1, steps.length - 1);
+		// Each step opens at its top, like a screen of its own, whatever the one before was scrolled to.
+		window.scrollTo(0, 0);
 	}
 
 	function later() {
