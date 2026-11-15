@@ -6,6 +6,7 @@
 	import Button from '$lib/ui/components/Button.svelte';
 	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
+	import { readDurationToken } from '$lib/ui/motion';
 	import { ageBandOfAnswer, checkPlayerName, UNKNOWN_AGE, type AgeAnswer } from './player';
 
 	interface Props {
@@ -22,6 +23,7 @@
 	const INPUT_ID = 'player-name';
 	const ERROR_ID = 'player-name-error';
 	const HINT_ID = 'player-name-hint';
+	const BUSY_NOTICE_TOKEN = '--dd-duration-busy-notice';
 
 	const AGE_LABELS: Readonly<Record<AgeBand, () => string>> = {
 		'8-9': m.play_new_age_8_9,
@@ -36,6 +38,8 @@
 	let age = $state<AgeAnswer>(UNKNOWN_AGE);
 	let error = $state<'empty' | 'invalid' | 'save' | null>(null);
 	let busy = $state(false);
+	/** The creation lasts: said under the button. */
+	let slow = $state(false);
 
 	const message = $derived(
 		error === 'empty'
@@ -57,7 +61,11 @@
 		}
 		error = null;
 		busy = true;
+		// On a slow device the button stays grey for seconds: past a moment, the child is told why.
+		const notice = setTimeout(() => (slow = true), readDurationToken(BUSY_NOTICE_TOKEN));
 		const created = await oncreate(check.name, ageBandOfAnswer(age));
+		clearTimeout(notice);
+		slow = false;
 		busy = false;
 		if (!created) error = 'save';
 	}
@@ -81,6 +89,7 @@
 		<p id={ERROR_ID} class="error" role="alert">{message}</p>
 		<div class="age" data-new-player-age>
 			<ChoiceGroup
+				centered
 				legend={m.play_new_age_legend()}
 				name="new-player-age"
 				options={AGE_OPTIONS}
@@ -91,6 +100,8 @@
 		<div class="actions">
 			<Button type="submit" disabled={busy}>{m.play_new_submit()}</Button>
 		</div>
+		<!-- Always there, so that a screen reader hears the message when it comes. -->
+		<p class="busy" role="status" data-new-player-busy>{slow ? m.play_new_busy() : ''}</p>
 	</form>
 </ScreenFrame>
 
@@ -142,13 +153,9 @@
 		inline-size: 100%;
 	}
 
-	.age :global(fieldset) {
-		inline-size: 100%;
-		justify-items: center;
-	}
-
-	.age :global(.options) {
-		justify-content: center;
+	.busy {
+		color: var(--dd-color-text-secondary);
+		font-weight: var(--dd-font-weight-bold);
 	}
 
 	.actions {
