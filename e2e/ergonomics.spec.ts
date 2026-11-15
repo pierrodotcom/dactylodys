@@ -552,12 +552,22 @@ async function expectInSight(page: Page, element: Locator, what: string) {
 	expect(box.right, `${what}: right`).toBeLessThanOrEqual(box.screenWidth + SUBPIXEL);
 }
 
+/** The bar of the player is whole at the top of the screen, as the page is scrolled now. */
+async function expectBarAtTop(page: Page) {
+	const bar = await page.locator('[data-top-bar]').evaluate((node) => {
+		const box = node.getBoundingClientRect();
+		return { top: box.top, bottom: box.bottom, screenHeight: innerHeight };
+	});
+	expect(Math.abs(bar.top), 'the bar is at the top of the screen').toBeLessThanOrEqual(SUBPIXEL);
+	expect(bar.bottom, 'the bar leaves most of the screen').toBeLessThan(bar.screenHeight / 2);
+}
+
 /** The page opens at its top, or its bar stays in view at the top of the screen. */
 async function expectOpenAtTop(page: Page) {
 	const scrolled = await page.evaluate(() => Math.round(scrollY));
 	if (scrolled === 0) return;
-	await expectInSight(page, page.locator('[data-top-bar]'), 'bar of the player');
-	expect(await barBottom(page), 'the bar stays at the top').toBeGreaterThan(0);
+	await expectBarAtTop(page);
+	expect(await barBottom(page), 'the bar stays while the page scrolls').toBeGreaterThan(0);
 }
 
 /** Nothing to scroll: the whole page holds on the screen. */
@@ -664,6 +674,8 @@ test.describe('on the screens children play on', () => {
 	);
 
 	test.beforeEach(async ({ page }) => {
+		// Whole journeys, from the players to a game: on a busy computer they take their time.
+		test.slow();
 		await shortenRewards(page);
 	});
 
@@ -691,15 +703,16 @@ test.describe('on the screens children play on', () => {
 				});
 			}
 
+			// The train, in the lesson of the digits: its written warm-up leaves room for the most
+			// groups (the phrases of the circuit fill the play in 11 groups at most).
 			for (const [gameId, lesson] of [
 				['tower', KITCHEN],
 				['river', KITCHEN],
-				['train', CIRCUIT]
+				['train', DIGITS]
 			] as const) {
 				test(`keeps a play of the most groups of ${gameId} on the screen, race included`, async ({
 					page
 				}) => {
-					test.slow();
 					await reachMapAs(page, fastChildThrough(lesson));
 					await startLongestPlay(page, lesson, gameId);
 					await expectInSight(page, page.locator('[data-ghost-track]'), 'race');
@@ -779,9 +792,8 @@ test.describe('on the screens children play on', () => {
 					await reachMapAs(page, profile);
 					await settle(page);
 					await expectOpenAtTop(page);
+					await expectBarAtTop(page);
 					const bar = page.locator('[data-top-bar]');
-					await expectInSight(page, bar, 'bar of the player');
-					await expectInSight(page, bar.locator('.line'), 'one line of the bar');
 					const lineHeight = await bar.locator('.line').evaluate((line) => line.clientHeight);
 					const buttonHeight = await button(page, message('play_settings_open')).evaluate(
 						(node) => (node as HTMLElement).offsetHeight
@@ -792,7 +804,7 @@ test.describe('on the screens children play on', () => {
 					// Down the map, the bar stays at the top.
 					await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 					await settle(page);
-					await expectInSight(page, bar, 'bar of the player at the bottom of the map');
+					await expectBarAtTop(page);
 				});
 			}
 		});
@@ -810,7 +822,6 @@ test.describe('on the screens children play on', () => {
 	test('names the keys a lesson works, and leaves the keyboard out when none is said', async ({
 		page
 	}) => {
-		test.slow();
 		await page.setViewportSize(SCREENS.laptop);
 		const keysHeading = page.locator('#intro-keys-heading');
 		for (const [lesson, title] of [
@@ -843,7 +854,6 @@ test.describe('on the screens children play on', () => {
 	test('keeps the line being typed in view in a long text, without sliding in calm motion', async ({
 		page
 	}) => {
-		test.slow();
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.setViewportSize(SCREENS['short laptop']);
 		await reachMapAs(page, childBefore(firstOfEachWorld[4] as Lesson));
@@ -921,7 +931,7 @@ test.describe('on the screens children play on', () => {
 		);
 		expect(lines, 'two lines at most').toBeLessThan(buttonHeight * 3);
 		await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-		await expectInSight(page, bar, 'bar at the bottom of the map');
+		await expectBarAtTop(page);
 	});
 
 	test('lets a place of the hideout be reached and chosen at 200 % zoom', async ({ page }) => {
@@ -964,7 +974,6 @@ test.describe('on the screens children play on', () => {
 	test('has no axe violation on the map, the lesson screen and a game of a short laptop', async ({
 		page
 	}) => {
-		test.slow();
 		await page.setViewportSize(SCREENS['short laptop']);
 		const lesson = firstOfEachWorld[5] as Lesson;
 		await reachMapAs(page, childBefore(lesson));
