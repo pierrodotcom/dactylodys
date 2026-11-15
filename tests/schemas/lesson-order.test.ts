@@ -1,12 +1,22 @@
 import { readFileSync } from 'node:fs';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { toGraphemes } from '../../src/lib/engine/graphemes';
+import {
+	parsePhraseBank,
+	parseTextBank,
+	parseWordBank
+} from '../../src/lib/engine/progression/banks';
 import {
 	isDetour,
+	learnedChars,
 	lessonIds,
 	lessonNumber,
-	parseProgression
+	parseProgression,
+	reachableChars
 } from '../../src/lib/engine/progression/definition';
+import { generateExercise } from '../../src/lib/engine/progression/exercise';
+import { seededRng } from '../../src/lib/engine/progression/test-support';
 import { isLessonPassed, isLessonUnlocked } from '../../src/lib/engine/progression/progress';
 import type {
 	LessonDefinition,
@@ -40,6 +50,10 @@ function readJson(path: string): unknown {
 const progression = parseProgression(readJson('content/fr/progression/azerty-decouverte.json'));
 const catalogue = parseRewardCatalogue(readJson('content/fr/rewards/azerty-decouverte.json'));
 const story = parseStory(readJson('content/fr/story/azerty-decouverte.json'));
+const words = parseWordBank(readJson('content/fr/words/base.json'));
+const phrases = parsePhraseBank(readJson('content/fr/phrases/base.json'));
+const texts = parseTextBank(readJson('content/fr/texts/base.json'));
+const SEEDS = 20;
 const lessons = progression.worlds.flatMap((world) => world.lessons);
 const way = lessons.filter((lesson) => !isDetour(lesson));
 
@@ -372,5 +386,51 @@ describe('the detours of the rare accents', () => {
 				reward.id
 			).toEqual([]);
 		}
+	});
+});
+
+describe('what the detours bring, in the lessons after them', () => {
+	const rare = lessons.filter(isDetour).flatMap((lesson) => lesson.newChars);
+	const after = lessons.slice(lessons.findLastIndex(isDetour) + 1);
+	const passed = { bestAccuracy: 90, stars: 2 as const, attempts: 1, lastPlayedAt: 1 };
+	const withDetours: ProgressState = {
+		lessons: Object.fromEntries(lessons.filter(isDetour).map((lesson) => [lesson.id, passed])),
+		chars: {}
+	};
+	const typedIn = (lesson: LessonDefinition, progress: ProgressState, seed: number) => {
+		const world = progression.worlds.find((item) => item.lessons.includes(lesson));
+		const context = { words, phrases, texts, progress, themeId: world?.themeId };
+		const exercise = generateExercise(progression, lesson.id, seededRng(seed), context);
+		return toGraphemes(exercise.groups.join(''));
+	};
+
+	it.each(after.map((lesson) => [lesson.id, lesson] as const))(
+		`%s never asks a rare accent of a child who took no detour, over ${SEEDS} seeds`,
+		(_id, lesson) => {
+			const known = new Set(learnedChars(progression, lesson.id));
+			for (let seed = 1; seed <= SEEDS; seed++) {
+				const typed = typedIn(lesson, { lessons: {}, chars: {} }, seed);
+				expect(typed.filter((char) => !known.has(char))).toEqual([]);
+				expect(typed.filter((char) => rare.includes(char))).toEqual([]);
+			}
+		}
+	);
+
+	it.each(after.map((lesson) => [lesson.id, lesson] as const))(
+		`%s keeps to what the child who passed the detours knows, over ${SEEDS} seeds`,
+		(_id, lesson) => {
+			const known = new Set(reachableChars(progression, lesson.id));
+			for (let seed = 1; seed <= SEEDS; seed++) {
+				const typed = typedIn(lesson, withDetours, seed);
+				expect(typed.filter((char) => !known.has(char))).toEqual([]);
+			}
+		}
+	);
+
+	it('gives the rare accents back to the child who learned them: they are typed again', () => {
+		const typed = after.flatMap((lesson) =>
+			Array.from({ length: SEEDS }, (_, seed) => typedIn(lesson, withDetours, seed + 1)).flat()
+		);
+		expect(typed.some((char) => rare.includes(char))).toBe(true);
 	});
 });
