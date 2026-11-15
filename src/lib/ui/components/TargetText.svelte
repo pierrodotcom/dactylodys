@@ -12,12 +12,21 @@
 		 * character goes, struck by a wavy line and framed, not by their colour alone.
 		 */
 		pending?: readonly string[];
+		/**
+		 * At most this many lines in view (1 or 2): a long text never pushes the game off the screen;
+		 * the line being typed is the first one in view, the next one below it. Absent: every line.
+		 */
+		lines?: 1 | 2;
+		/** Calm motion: the text goes from one line to the next without sliding. */
+		still?: boolean;
 	}
 
 	const SPACE = ' ';
 	const LINE_BREAK = '\n';
 
-	let { graphemes, position, errorIndex, pending = [] }: Props = $props();
+	let { graphemes, position, errorIndex, pending = [], lines, still = false }: Props = $props();
+
+	let view: HTMLElement | undefined = $state();
 
 	function shownGlyph(grapheme: string): string {
 		if (grapheme === SPACE) return m.ui_target_space_symbol();
@@ -44,11 +53,27 @@
 		if (index < position) return 'done';
 		return index === position && pending.length === 0 ? 'current' : 'next';
 	}
+
+	// The line where the child types comes first in view, the next one below it; the browser stops
+	// at the last lines. Once everything is typed, the text stays where it is.
+	$effect(() => {
+		void position;
+		void pending.length;
+		void graphemes;
+		if (lines === undefined || !view) return;
+		const box = view;
+		const here = box.querySelector<HTMLElement>('[data-state="wrong"], [data-state="current"]');
+		const line = here?.closest<HTMLElement>('.unit');
+		if (!line) return;
+		const top = line.offsetTop - parseFloat(getComputedStyle(line).marginBlockStart);
+		if (Math.abs(box.scrollTop - top) < 1) return;
+		box.scrollTo({ top, behavior: still ? 'auto' : 'smooth' });
+	});
 </script>
 
 <div class="target-text">
 	<p class="dd-visually-hidden">{alternative}</p>
-	<div class="text" aria-hidden="true">
+	<div class="text" aria-hidden="true" data-lines={lines} bind:this={view}>
 		{#each units as unit (unit[0]?.cells[0]?.index)}
 			<span class="unit">
 				{#each unit as group (group.cells[0]?.index)}
@@ -82,22 +107,47 @@
 		position: relative;
 	}
 
+	/* The lines are spaced by the margins of their units: a line break adds no room of its own. */
 	.text {
+		position: relative;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		column-gap: var(--dd-typing-letter-spacing-current);
-		row-gap: var(--dd-space-sm);
 		font-family: var(--dd-font-family-base);
 		font-size: var(--dd-typing-size-current);
 		font-weight: var(--dd-font-weight-medium);
 		line-height: var(--dd-line-height-tight);
 	}
 
+	/*
+	 * One line: a cell (its letter, padding and frame) and the margins of its unit. The room on the
+	 * sides keeps a letter that shakes after a mistake inside the window.
+	 */
+	.text[data-lines] {
+		overflow: hidden;
+		padding-inline: var(--dd-space-xs);
+	}
+
+	.text[data-lines='1'] {
+		max-block-size: calc(
+			var(--dd-typing-size-current) * var(--dd-line-height-tight) + var(--dd-space-xs) * 4 +
+				var(--dd-border-width-thick) * 2
+		);
+	}
+
+	.text[data-lines='2'] {
+		max-block-size: calc(
+			var(--dd-typing-size-current) * var(--dd-line-height-tight) * 2 + var(--dd-space-xs) * 8 +
+				var(--dd-border-width-thick) * 4
+		);
+	}
+
 	.unit {
 		display: inline-flex;
 		align-items: center;
 		column-gap: var(--dd-typing-letter-spacing-current);
+		margin-block: var(--dd-space-xs);
 	}
 
 	.word {

@@ -2309,6 +2309,10 @@
 		"page-wide": {
 			"$value": "64rem"
 		},
+		"page-game": {
+			"$description": "Width of a game: the wide page on a laptop, more of a large screen so that its scene can grow (E-20).",
+			"$value": "clamp({size.page-wide}, 70vw, 84rem)"
+		},
 		"control-min": {
 			"$value": "16rem"
 		},
@@ -2339,6 +2343,16 @@
 		"egg": {
 			"$value": "11rem"
 		},
+		"egg-min": {
+			"$value": "7rem"
+		},
+		"egg-grow-max": {
+			"$value": "14rem"
+		},
+		"egg-fit": {
+			"$description": "Width of the big egg after the height of the screen: smaller on a short laptop (the game, its text and its keyboard take about 23rem besides the egg, whose height is 1.25 times its width), never above `egg` up to 720 pixels, larger on a tall screen (E-03, E-20).",
+			"$value": "min({size.egg-grow-max}, clamp({size.egg-min}, calc(100dvh * 0.8 - 23rem), max({size.egg}, calc(100dvh * 0.6 - 24rem))))"
+		},
 		"egg-mini": {
 			"$value": "2.25rem"
 		},
@@ -2350,6 +2364,17 @@
 		},
 		"scene-max": {
 			"$value": "26rem"
+		},
+		"scene-min": {
+			"$description": "Narrowest scene of a game beside its text: below it, the text goes under the scene.",
+			"$value": "16rem"
+		},
+		"scene-grow-max": {
+			"$value": "36rem"
+		},
+		"scene-fit": {
+			"$description": "Widest scene of a game beside its text, after the height of the screen: the scenes are at most 1.85 times as wide as tall, and the rest of the game takes about 23rem; `scene-max` from 600 to 770 pixels, larger on a tall screen (E-03, E-20).",
+			"$value": "min({size.scene-grow-max}, clamp({size.scene-min}, calc((100dvh - 23rem) * 1.75), max({size.scene-max}, calc((100dvh - 34rem) * 1.85))))"
 		},
 		"dialogue-character": {
 			"$value": "6.5rem"
@@ -2367,13 +2392,17 @@
 			"$value": "100%"
 		},
 		"scene-stacked-min": {
-			"$value": "10rem"
+			"$value": "9rem"
 		},
 		"scene-stacked-max": {
 			"$value": "27rem"
 		},
 		"story-picture": {
 			"$value": "30rem"
+		},
+		"story-picture-fit": {
+			"$description": "The picture of a moment of the story, after the height of the screen: its title, its text and Continue take about 29rem, the picture is 1.6 times as wide as tall (E-03 e).",
+			"$value": "min({size.story-picture}, calc((100dvh - 29rem) * 1.6))"
 		},
 		"story-picture-small": {
 			"$value": "14rem"
@@ -2421,6 +2450,14 @@
 			"$description": "Width of the title of a game not proposed, when a world offers three games or more.",
 			"$value": "11rem"
 		},
+		"game-title-proposed-max": {
+			"$description": "Width of the title of the game proposed, when a world offers three games or more: the three games stay on one row.",
+			"$value": "15rem"
+		},
+		"top-bar-name-min": {
+			"$description": "Narrowest room for the nickname in the bar of the player: below it, the buttons keep only their pictures.",
+			"$value": "6rem"
+		},
 		"key-unit-compact": {
 			"$value": "2.5rem"
 		},
@@ -2459,6 +2496,10 @@
 		"hideout": {
 			"$description": "Widest drawing of the hideout, beside the choices on a wide page.",
 			"$value": "40rem"
+		},
+		"hideout-fit": {
+			"$description": "The drawing of the hideout (1.75 times as wide as tall) takes less than half the height of the screen: it can stay in view while the child goes down the list (E-08).",
+			"$value": "min({size.hideout}, calc(48dvh * 1.75))"
 		},
 		"hideout-panel": {
 			"$description": "The column of the places and the objects, beside the hideout.",
