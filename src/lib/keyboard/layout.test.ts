@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { buildCharIndex, findUnproducible, parseLayout } from './layout';
+import { buildCharIndex, findUnproducible, keyCodeForChar, parseLayout } from './layout';
 import { LAYOUT_IDS } from './layout-ids';
 import { loadLayout } from './registry';
 import type { KeySequence, LayoutDefinition } from './types';
@@ -188,6 +188,47 @@ describe('buildCharIndex', () => {
 	});
 });
 
+describe('keyCodeForChar', () => {
+	const index = buildCharIndex(parseLayout(makeLayout()));
+
+	it('gives the key that writes a letter', () => {
+		expect(keyCodeForChar(index, 'a')).toBe('KeyA');
+		expect(keyCodeForChar(index, ' ')).toBe('Space');
+	});
+
+	it('gives the key of the letter for a capital, written with Shift', () => {
+		expect(keyCodeForChar(index, 'A')).toBe('KeyA');
+	});
+
+	it('gives the key of a character written with AltGr', () => {
+		expect(keyCodeForChar(index, '~')).toBe('Digit1');
+	});
+
+	it('gives the key pressed after the dead key for a composed character', () => {
+		expect(keyCodeForChar(index, 'ê')).toBe('KeyE');
+		expect(keyCodeForChar(index, 'Ê')).toBe('KeyE');
+	});
+
+	it('looks the character up in its NFC form', () => {
+		expect(keyCodeForChar(index, 'e\u0302')).toBe('KeyE');
+	});
+
+	// Caps Lock writes capitals no key of the layout writes with Shift.
+	it('gives the key of the small letter for a capital the layout does not write', () => {
+		const accents = buildCharIndex(
+			parseLayout(makeLayout({ keys: { Digit2: { base: 'é', shift: '2' } }, deadKeys: {} }))
+		);
+
+		expect(keyCodeForChar(accents, 'É')).toBe('Digit2');
+	});
+
+	it('gives no key for a character the layout does not write', () => {
+		expect(keyCodeForChar(index, 'ß')).toBeNull();
+		expect(keyCodeForChar(index, '')).toBeNull();
+		expect(keyCodeForChar(new Map(), 'a')).toBeNull();
+	});
+});
+
 describe('findUnproducible', () => {
 	const index = buildCharIndex(parseLayout(makeLayout()));
 
@@ -233,6 +274,21 @@ describe('shipped layouts', () => {
 						expect(sequence.length).toBeLessThanOrEqual(2);
 						expect(replay(layout, sequence)?.normalize('NFC')).toBe(char);
 					}
+				})
+			);
+		}
+	);
+
+	it.each(layouts.map((layout) => [layout.id, layout] as const))(
+		'finds for any character of %s a key that takes part in writing it',
+		(_id, layout) => {
+			const index = buildCharIndex(layout);
+			fc.assert(
+				fc.property(fc.constantFrom(...index.keys()), (char) => {
+					const code = keyCodeForChar(index, char);
+					const lastKeys = (index.get(char) ?? []).map((sequence) => sequence.at(-1)?.code);
+					expect(code).not.toBeNull();
+					expect(lastKeys).toContain(code);
 				})
 			);
 		}

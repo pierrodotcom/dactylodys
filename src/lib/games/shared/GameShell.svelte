@@ -117,7 +117,8 @@
 			createGame(exercise.groups, settings.errorPolicy, {
 				finale: finale !== undefined,
 				starts: exercise.starts,
-				at: now()
+				at: now(),
+				charIndex
 			})
 		)
 	);

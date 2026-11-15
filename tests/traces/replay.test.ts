@@ -5,7 +5,7 @@ import { computeMetrics } from '$lib/engine/metrics';
 import { applyKeystroke, createSession, pauseSession, resumeSession } from '$lib/engine/session';
 import type { SessionEvent, SessionState } from '$lib/engine/types';
 import { createInputNormalizer } from '$lib/keyboard/input-adapter';
-import { LAYOUT_IDS } from '$lib/keyboard/layout-ids';
+import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
 import { parseTraceFile, replayTrace } from '$lib/keyboard/trace';
 import type { KeyboardTrace, NormalizedKeystroke } from '$lib/keyboard/types';
 
@@ -21,10 +21,54 @@ function traceFiles(directory: string): string[] {
 
 const files = traceFiles(TRACES_DIR).map((path) => path.replaceAll('\\', '/'));
 
+/**
+ * Layouts offered to the children with no trace recorded on real hardware yet (rule 5 of
+ * `.claude/rules/clavier.md`): a hand-written trace only says what we believe a browser does.
+ * Each exception is dated and says what it waits for; it goes away with the first real trace.
+ */
+const NOT_RECORDED_ON_HARDWARE: Readonly<
+	Partial<Record<LayoutId, { readonly since: string; readonly waitingFor: string }>>
+> = {
+	'fr-fr-azerty-mac': {
+		since: '2026-11-15',
+		waitingFor: 'testers with a Mac: question Q7 of docs/SUIVI.md'
+	}
+};
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function hasRecordedTrace(layoutId: string): boolean {
+	return files
+		.filter((file) => dirname(file) === `${TRACES_DIR}/${layoutId}`)
+		.flatMap((file) => parseTraceFile(JSON.parse(readFileSync(file, 'utf8'))))
+		.some((trace) => !trace.synthetic);
+}
+
 describe('trace files', () => {
 	it('exist for every known layout', () => {
 		for (const layoutId of LAYOUT_IDS) {
 			expect(files.some((file) => dirname(file) === `${TRACES_DIR}/${layoutId}`)).toBe(true);
+		}
+	});
+
+	it.each(LAYOUT_IDS.filter((layoutId) => !(layoutId in NOT_RECORDED_ON_HARDWARE)))(
+		'include a trace recorded on real hardware for %s',
+		(layoutId) => {
+			expect(hasRecordedTrace(layoutId)).toBe(true);
+		}
+	);
+
+	it('lists only known layouts as exceptions, each dated, with what it waits for', () => {
+		for (const [layoutId, exception] of Object.entries(NOT_RECORDED_ON_HARDWARE)) {
+			expect(LAYOUT_IDS as readonly string[]).toContain(layoutId);
+			expect(exception.since).toMatch(ISO_DATE);
+			expect(Number.isNaN(Date.parse(exception.since))).toBe(false);
+			expect(exception.waitingFor.trim()).not.toBe('');
+		}
+	});
+
+	it('drops an exception as soon as its layout has a trace recorded on real hardware', () => {
+		for (const layoutId of Object.keys(NOT_RECORDED_ON_HARDWARE)) {
+			expect(hasRecordedTrace(layoutId)).toBe(false);
 		}
 	});
 

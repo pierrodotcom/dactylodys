@@ -2,6 +2,7 @@ import type {
 	CharIndex,
 	DeadKeyDefinition,
 	KeyboardGeometry,
+	KeyCode,
 	KeyLevels,
 	KeyOutput,
 	KeyPress,
@@ -229,6 +230,17 @@ export function buildCharIndex(layout: LayoutDefinition): CharIndex {
 	}
 
 	return index;
+}
+
+/**
+ * The key that writes a character: the last press of the first way the layout produces it, so the
+ * letter typed after a dead key. A capital that the layout writes with no key of its own (Caps
+ * Lock) is found on the key of its small letter. `null` when no key writes the character.
+ */
+export function keyCodeForChar(index: CharIndex, char: string): KeyCode | null {
+	const typed = char.normalize('NFC');
+	const sequence = index.get(typed)?.[0] ?? index.get(typed.toLowerCase())?.[0];
+	return sequence?.at(-1)?.code ?? null;
 }
 
 export function findUnproducible(index: CharIndex, text: string): string[] {

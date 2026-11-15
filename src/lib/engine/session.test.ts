@@ -216,8 +216,9 @@ describe.each(POLICIES)('applyKeystroke with the %s policy', (errorPolicy) => {
 		expect(step.events[0]?.type).toBe('error');
 	});
 
-	it('does not treat a non-breaking space as a plain space', () => {
-		expect(applyKeystroke(start(' '), char('\u00A0', 1)).events[0]?.type).toBe('error');
+	// Option + Space on a Mac: see `typed-equivalents`.
+	it('takes a non-breaking space for a plain space, never the other way round', () => {
+		expect(applyKeystroke(start(' '), char('\u00A0', 1)).events[0]?.type).toBe('correct');
 		expect(applyKeystroke(start('\u00A0'), char(' ', 1)).events[0]?.type).toBe('error');
 	});
 

@@ -114,6 +114,56 @@ export function loadMessages() {
 	return { message, plural, templateRegex, numbered };
 }
 
+/** A key the keyboard check asks for, as the AZERTY layout of the tests writes it. */
+export interface CheckKey {
+	/** Physical key of the layout. */
+	readonly code: string;
+	/** Character an AZERTY keyboard writes on it. */
+	readonly letter: string;
+	/** What the child reads: the capital of a letter key, the character itself for another key. */
+	readonly label: string;
+	/** Whether the simulated American keyboard has a key that writes the character. */
+	readonly pressable: boolean;
+}
+
+const AMERICAN_LETTER = /^[a-z]$/;
+
+/** The keys of the keyboard check (`keyboardCheckCodes`), in the order they are asked for. */
+export function keyboardCheckKeys(): CheckKey[] {
+	const { keyboardCheckCodes } = readJson<{ keyboardCheckCodes: string[] }>(
+		'content/common/play-rules.json'
+	);
+	const { keys } = readJson<{ keys: Record<string, { base?: string; shift?: string }> }>(
+		'layouts/fr-fr-azerty-pc.json'
+	);
+	return keyboardCheckCodes.map((code) => {
+		const letter = keys[code]?.base ?? '';
+		const capital = letter.toLocaleUpperCase('fr');
+		return {
+			code,
+			letter,
+			label: keys[code]?.shift === capital ? capital : letter,
+			pressable: AMERICAN_LETTER.test(letter)
+		};
+	});
+}
+
+/**
+ * Answers one step of the keyboard check. The check judges the character written, and Playwright
+ * simulates an American keyboard: `same` writes the character the layout expects, whatever key
+ * writes it (as text when no American key does); `different` presses the physical key of the
+ * layout, which writes another character there.
+ */
+export async function answerCheckKey(
+	page: Page,
+	key: CheckKey,
+	kind: 'same' | 'different'
+): Promise<void> {
+	if (kind === 'different') await page.keyboard.press(key.code);
+	else if (key.pressable) await page.keyboard.press(key.letter);
+	else await page.keyboard.insertText(key.letter);
+}
+
 /** Pathnames of every link of the page. */
 export function linkedPaths(page: Page): Promise<string[]> {
 	return page

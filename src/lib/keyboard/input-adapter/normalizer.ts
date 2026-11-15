@@ -12,11 +12,16 @@ interface KeyContext {
 	readonly timestamp: number;
 }
 
+interface ExpectedInput {
+	readonly inputType: string;
+	readonly data: string;
+}
+
 interface State {
 	/** Last non-modifier key held down, until its keyup. */
 	lastKeydown: KeyContext | null;
-	/** `beforeinput` already handled: the matching `input` describes the same edit. */
-	expectedInputType: string | null;
+	/** `beforeinput` already handled: the `input` of the same kind and text describes the same edit. */
+	expectedInput: ExpectedInput | null;
 	/** Backspace or Enter already emitted from `keydown`; their input events are duplicates. */
 	handledKey: 'backspace' | 'enter' | null;
 	/** Auto-repeat or shortcut: the input events of this stroke are not typing. */
@@ -25,20 +30,17 @@ interface State {
 	inComposition: boolean;
 	/** Text just emitted at `compositionend`; browsers repeat it in a later input event. */
 	recentCommit: string | null;
-	/** Characters were emitted with no keydown (Safari fires `keydown` after the input). */
-	orphan: boolean;
 }
 
 function initialState(): State {
 	return {
 		lastKeydown: null,
-		expectedInputType: null,
+		expectedInput: null,
 		handledKey: null,
 		skipInputs: false,
 		deadPending: false,
 		inComposition: false,
-		recentCommit: null,
-		orphan: false
+		recentCommit: null
 	};
 }
 
@@ -52,7 +54,6 @@ function emitChars(
 	const chars = toTypedGraphemes(text);
 	if (chars.length === 0) return [];
 	state.deadPending = false;
-	state.orphan = context === null;
 	return chars.map((char) => ({
 		kind: 'char',
 		char,
@@ -69,7 +70,6 @@ function emitKey(
 ): NormalizedKeystroke[] {
 	const context = state.lastKeydown;
 	state.deadPending = false;
-	state.orphan = context === null;
 	return [
 		{
 			kind,
@@ -86,10 +86,9 @@ function onKeydown(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 	if (keyClass === 'modifier') return [];
 
 	const out: NormalizedKeystroke[] = [];
-	state.orphan = false;
 	state.skipInputs = false;
 	state.handledKey = null;
-	state.expectedInputType = null;
+	state.expectedInput = null;
 	state.recentCommit = null;
 
 	if (isShortcut(event)) {
@@ -153,7 +152,7 @@ function onKeyup(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 		state.lastKeydown = null;
 		state.skipInputs = false;
 		state.handledKey = null;
-		state.expectedInputType = null;
+		state.expectedInput = null;
 		state.recentCommit = null;
 	}
 	return [];
@@ -173,17 +172,19 @@ function onInput(
 	phase: 'beforeinput' | 'input'
 ): NormalizedKeystroke[] {
 	const inputType = event.inputType ?? '';
+	const data = event.data ?? '';
 
-	if (phase === 'input' && state.expectedInputType === inputType) {
-		state.expectedInputType = null;
-		return [];
-	}
+	// An edit that was cancelled leaves its `beforeinput` alone: only the `input` of the same edit
+	// is a duplicate, never the next one, which writes something else.
+	const expected = state.expectedInput;
+	state.expectedInput = null;
+	if (phase === 'input' && expected?.inputType === inputType && expected.data === data) return [];
 	const handledType =
 		inputType === INSERT_TEXT ||
 		inputType === INSERT_FROM_COMPOSITION ||
 		inputType === DELETE_BACKWARD ||
 		LINE_BREAKS.has(inputType);
-	state.expectedInputType = phase === 'beforeinput' && handledType ? inputType : null;
+	if (phase === 'beforeinput' && handledType) state.expectedInput = { inputType, data };
 
 	if (state.skipInputs) return [];
 
@@ -204,13 +205,13 @@ function onInput(
 function onCompositionStart(state: State): NormalizedKeystroke[] {
 	state.inComposition = true;
 	state.recentCommit = null;
-	state.expectedInputType = null;
+	state.expectedInput = null;
 	return [];
 }
 
 function onCompositionEnd(state: State, event: RawInputEvent): NormalizedKeystroke[] {
 	state.inComposition = false;
-	state.expectedInputType = null;
+	state.expectedInput = null;
 	const data = event.data ?? '';
 	const out = emitChars(state, data, true, event.timestamp);
 	state.deadPending = false;

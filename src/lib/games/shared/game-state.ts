@@ -3,7 +3,8 @@ import { pacePoints } from '../../engine/ghost/ghost';
 import { combineMetrics, computeMetrics, sessionTypingMs } from '../../engine/metrics';
 import { applyKeystroke, createSession, pauseSession, resumeSession } from '../../engine/session';
 import type { ErrorPolicy, SessionMetrics, SessionStart, SessionState } from '../../engine/types';
-import type { KeyCode, NormalizedKeystroke } from '../../keyboard/types';
+import { keyCodeForChar } from '../../keyboard/layout';
+import type { CharIndex, KeyCode, NormalizedKeystroke } from '../../keyboard/types';
 import type { GameOutcome } from '../types';
 
 const LINE_BREAK = '\n';
@@ -49,7 +50,17 @@ export interface GameState {
 	 * the `backspace` policy it stays set once the wrong characters are erased, until the right key.
 	 */
 	readonly errorIndex: number | null;
-	/** Physical key of the last mistake, shown on the keyboard until the next good key. */
+	/**
+	 * What the keys of the layout write, to find the key of a mistake; `null` when the game was
+	 * given none: no key is shown then.
+	 */
+	readonly charIndex: CharIndex | null;
+	/**
+	 * Key of the last mistake, shown on the keyboard until the next good key: the one that writes
+	 * the wrong character on the layout, `null` when none does. Never the physical key the browser
+	 * reports (`NormalizedKeystroke.code`): it is not the real one in a browser that resists
+	 * fingerprinting.
+	 */
 	readonly wrongCode: KeyCode | null;
 	readonly mood: GameMood;
 	/**
@@ -89,6 +100,8 @@ export interface GameOptions {
 	readonly starts?: readonly (SessionStart | null)[];
 	/** Moment the first group can be typed, on the clock of the keystrokes (see `GameAction`). */
 	readonly at?: number;
+	/** What the keys of the layout write: the key of a mistake is found in it (`wrongCode`). */
+	readonly charIndex?: CharIndex;
 }
 
 function sessionOf(
@@ -122,6 +135,7 @@ export function createGame(
 		settled: false,
 		paused: false,
 		errorIndex: null,
+		charIndex: options.charIndex ?? null,
 		wrongCode: null,
 		mood: 'idle',
 		missedChars: []
@@ -177,7 +191,7 @@ function type(state: GameState, keystroke: NormalizedKeystroke): GameStep {
 			next = {
 				...next,
 				errorIndex: step.state.position,
-				wrongCode: keystroke.code,
+				wrongCode: next.charIndex === null ? null : keyCodeForChar(next.charIndex, event.typed),
 				mood: 'oops',
 				missedChars: next.missedChars.includes(event.expected)
 					? next.missedChars

@@ -31,7 +31,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Bilan en étapes, « Qui joue ? », réglages | E-04, E-17, E-18, E-16, E-19 | À faire |
 | Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24, P-07, P-09 | À faire |
 | Rappel « regarde l'écran » | P-20, I-4 ; le compter en caractères (il ne s'affiche plus aux leçons de 3 ou 4 groupes, ADR-074) | À faire, avec la campagne de voix |
-| Vérification du clavier, Mac | Q-03 (jugement sur la lettre écrite : fait, ADR-076), touche fausse déduite du caractère, troisième message et « Réessayer », Q-09, Q-17, Q-31 | À faire |
+| Vérification du clavier, Mac | Q-03, touche fausse déduite du caractère, « Réessayer », Q-09, Q-17, Q-31 | Fait (ADR-076, ADR-082) ; reste : essais sur un vrai Mac (Q7), phrase « pas encore vérifié sur un vrai Mac » près du choix du clavier (avec les réglages rangés) |
 | Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18 | En cours (branche `feat/reglages-ranges`) |
 | Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | Ordre des leçons : fait (ADR-081, profil version 15). Restent : révision de fin de monde, durée des parties et phrase entière à chaque partie des leçons 16 à 19, Retour arrière d'office au monde 6 (choix 3, 4, 5), P-11 ; P-18 et P-14 avec la campagne de voix |
 | Textes et typographie | C-01 à C-07, C-10, C-11, C-16, C-17, E-09, E-13 | À faire, avant la campagne de voix |
@@ -253,3 +253,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-15** — En ligne : vérification du clavier sur la lettre écrite (PR 105), mesures justes (PR 106), crédits et site allégé (PR 107). « Le jeu ne lâche pas l'enfant » (ADR-079) : Tab, Précédent du navigateur, haut de page, annonce unique, sortie de la vérification du clavier. Leçons L-148 à L-151.
 - **2026-11-15** — « Les données de l'enfant ne se perdent pas » (ADR-080) : deux onglets sans perte, stockage gardé demandé au navigateur, renommer et supprimer un profil depuis l'espace adulte, pseudo long, sauvegarde trop grosse refusée. Leçons L-152, L-153.
 - **2026-11-15** — « Ordre des leçons » (ADR-081, profil version 15) : les étoiles avant le zoo, première phrase entière à la leçon 15 au lieu de 19, « î ô û » et « ë ï » facultatives, progrès gardés pour les enfants en route. Leçons L-154, L-155.
+- **2026-11-15** — Lot clavier (ADR-082) : touche fausse déduite de la lettre écrite (juste sous LibreWolf), vérification du clavier à quatre touches dont « é », « Réessayer » et « Jouer quand même », espace insécable acceptée, normaliseur, trace réelle exigée. Leçons L-156, L-157.

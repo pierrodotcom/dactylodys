@@ -154,4 +154,38 @@ describe('input normalizer properties', () => {
 			})
 		);
 	});
+
+	// An on-screen keyboard or a dictation: no key resets the state between two edits.
+	it('loses no edit written with no key, whether its beforeinput or its input is missing', () => {
+		const edit = fc.record({
+			char: fc.constantFrom('a', 'b', 'é', ' '),
+			events: fc.constantFrom<'both' | 'beforeinput' | 'input'>('both', 'beforeinput', 'input')
+		});
+		fc.assert(
+			fc.property(fc.array(edit, { maxLength: 20 }), (edits) => {
+				const events = edits.flatMap(({ char, events: shape }, index): RawInputEvent[] => {
+					const t = index * 100;
+					const before: RawInputEvent[] =
+						shape === 'input'
+							? []
+							: [{ type: 'beforeinput', timestamp: t, inputType: 'insertText', data: char }];
+					const after: RawInputEvent[] =
+						shape === 'beforeinput'
+							? []
+							: [{ type: 'input', timestamp: t + 1, inputType: 'insertText', data: char }];
+					return [...before, ...after];
+				});
+				// The only edit that cannot be told apart: an input alone that carries the very text of
+				// the beforeinput left alone just before it reads as the second event of that edit.
+				const expected = edits.flatMap(({ char, events: shape }, index) => {
+					const previous = edits[index - 1];
+					const readsAsDuplicate =
+						shape === 'input' && previous?.events === 'beforeinput' && previous.char === char;
+					return readsAsDuplicate ? [] : [char];
+				});
+
+				expect(run(events).map((keystroke) => keystroke.char)).toEqual(expected);
+			})
+		);
+	});
 });
