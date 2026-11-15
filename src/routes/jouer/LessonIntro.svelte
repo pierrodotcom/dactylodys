@@ -20,7 +20,8 @@
 		lesson: LessonDefinition;
 		/** What the lesson brings: its new characters, and the capitals it unlocks. */
 		fresh: readonly string[];
-		number: number;
+		/** The number the child reads; `null` for a detour, which has none. */
+		number: number | null;
 		assets: KeyboardAssets;
 		/** The games of the world; each one starts the lesson. */
 		games: readonly GameOption[];
@@ -89,7 +90,9 @@
 >
 	<!-- Number, prize and Listen share one line: the pictures of the games stay in view on a laptop. -->
 	<div class="head">
-		<p class="number">{m.play_lesson_number({ number })}</p>
+		<p class="number">
+			{number === null ? m.play_lesson_detour() : m.play_lesson_number({ number })}
+		</p>
 		<ListenButton text={lesson.intro} player={voice} />
 		{#if prize}
 			<div class="prize" data-prize={prize.id}>
