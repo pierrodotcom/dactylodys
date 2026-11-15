@@ -200,6 +200,47 @@ describe('a keydown alone never produces a character', () => {
 	});
 });
 
+// An on-screen keyboard or a dictation writes with no key: nothing resets the state between edits.
+describe('edits with no key', () => {
+	it('takes an input that carries another text than the beforeinput whose edit never came', () => {
+		const c = clock();
+		const result = run([c.beforeinput('insertText', 'a'), c.input('insertText', 'b')]);
+
+		expect(chars(result)).toBe('ab');
+	});
+
+	it('still takes one character for a beforeinput and the input of the same edit', () => {
+		const c = clock();
+		const result = run([
+			c.beforeinput('insertText', 'a'),
+			c.input('insertText', 'a'),
+			c.beforeinput('insertText', 'a'),
+			c.input('insertText', 'a')
+		]);
+
+		expect(chars(result)).toBe('aa');
+	});
+
+	it('still takes one Backspace and one Enter for the two events of their edit', () => {
+		const c = clock();
+		const result = run([
+			c.beforeinput('deleteContentBackward'),
+			c.input('deleteContentBackward'),
+			c.beforeinput('insertLineBreak'),
+			c.input('insertLineBreak')
+		]);
+
+		expect(result.map((k) => k.kind)).toEqual(['backspace', 'enter']);
+	});
+
+	it('takes an input of another kind than the beforeinput whose edit never came', () => {
+		const c = clock();
+		const result = run([c.beforeinput('insertText', 'a'), c.input('deleteContentBackward')]);
+
+		expect(result.map((k) => k.kind)).toEqual(['char', 'backspace']);
+	});
+});
+
 describe('dead keys without composition events (Windows)', () => {
 	it('emits nothing for the dead key alone', () => {
 		const c = clock();

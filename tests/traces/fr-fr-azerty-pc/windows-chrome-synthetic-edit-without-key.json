@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"layoutId": "fr-fr-azerty-pc",
+	"expectedText": "abb",
+	"environment": {
+		"browser": "Chrome",
+		"browserVersion": "synthetic",
+		"os": "Windows",
+		"osVersion": "synthetic",
+		"userAgent": "synthetic",
+		"keyboard": "synthetic, not recorded on hardware: text written with no key, as an on-screen keyboard does",
+		"recordedAt": "2026-11-15"
+	},
+	"synthetic": true,
+	"events": [
+		{ "type": "beforeinput", "timestamp": 100, "inputType": "insertText", "data": "a" },
+		{ "type": "input", "timestamp": 400, "inputType": "insertText", "data": "b" },
+		{ "type": "beforeinput", "timestamp": 700, "inputType": "insertText", "data": "b" },
+		{ "type": "input", "timestamp": 701, "inputType": "insertText", "data": "b" }
+	]
+}
