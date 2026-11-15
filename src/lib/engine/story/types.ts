@@ -30,7 +30,7 @@ export interface StoryWorld {
 	/** Told when the child enters the world. */
 	readonly opening: string;
 	readonly openingArt: string;
-	/** Told once every lesson of the world is passed. */
+	/** Told once every lesson of the world is passed, its detours left out. */
 	readonly ending: string;
 	readonly endingArt: string;
 	readonly lessons: readonly StoryLessonLine[];

@@ -348,78 +348,6 @@
 			]
 		},
 		{
-			"id": "fr.world.animaux",
-			"title": "Le zoo des drôles d'animaux",
-			"themeId": "animaux",
-			"gameIds": ["drawing", "tower", "dialogue"],
-			"lessons": [
-				{
-					"id": "fr.lesson.girafe-g-h",
-					"title": "La girafe au long cou",
-					"intro": "Étire ton index gauche vers G et ton index droit vers H, au milieu du clavier.",
-					"newChars": ["g", "h"],
-					"words": [],
-					"mix": {
-						"drills": 1,
-						"words": 3,
-						"phrases": 2
-					},
-					"unlocks": [],
-					"groupCount": 8,
-					"targetLength": 35,
-					"groupLength": [4, 6]
-				},
-				{
-					"id": "fr.lesson.vache-v-b",
-					"title": "Le bal de la vache",
-					"intro": "Ton index gauche descend sur V et B, juste au-dessus de la grande barre.",
-					"newChars": ["v", "b"],
-					"words": [],
-					"mix": {
-						"drills": 1,
-						"words": 3,
-						"phrases": 2
-					},
-					"unlocks": [],
-					"groupCount": 8,
-					"targetLength": 35,
-					"groupLength": [4, 6]
-				},
-				{
-					"id": "fr.lesson.yak-y-x",
-					"title": "Le yak mystère",
-					"intro": "Ton index droit monte sur Y et ton annulaire gauche descend sur X.",
-					"newChars": ["y", "x"],
-					"words": [],
-					"mix": {
-						"drills": 1,
-						"words": 3,
-						"phrases": 2
-					},
-					"unlocks": [],
-					"groupCount": 8,
-					"targetLength": 35,
-					"groupLength": [4, 6]
-				},
-				{
-					"id": "fr.lesson.zebre-z-w",
-					"title": "Le zèbre à rayures",
-					"intro": "Ton annulaire gauche monte sur Z et ton auriculaire gauche descend sur W.",
-					"newChars": ["z", "w"],
-					"words": ["kiwi", "clown", "wapiti", "zoo", "zéro", "onze"],
-					"mix": {
-						"drills": 1,
-						"words": 3,
-						"phrases": 2
-					},
-					"unlocks": [],
-					"groupCount": 8,
-					"targetLength": 35,
-					"groupLength": [4, 6]
-				}
-			]
-		},
-		{
 			"id": "fr.world.espace",
 			"title": "Cap sur les étoiles",
 			"themeId": "espace",
@@ -430,7 +358,7 @@
 					"title": "Le café de la Lune",
 					"intro": "Sur la rangée des chiffres, ton index droit tape È et ton auriculaire droit tape À.",
 					"newChars": ["è", "à"],
-					"words": ["à", "là", "déjà", "voilà"],
+					"words": ["à", "là", "déjà"],
 					"mix": {
 						"drills": 1,
 						"words": 2,
@@ -446,7 +374,7 @@
 					"title": "La comète pressée",
 					"intro": "Monte ton annulaire droit sur Ç, et ton auriculaire droit tape Ù, à droite de M.",
 					"newChars": ["ç", "ù"],
-					"words": ["où", "ça", "reçu", "déçu", "garçon", "glaçon", "maçon"],
+					"words": ["où", "ça", "reçu", "déçu", "maçon", "leçon", "façon", "français"],
 					"mix": {
 						"drills": 1,
 						"words": 2,
@@ -477,7 +405,7 @@
 						"alternatives": [
 							["La Le", "Je Lu", "Lu Je"],
 							["Un Il", "On Ou", "Ni Mi"],
-							["Te Tu", "Ta Va", "Et En"],
+							["Te Tu", "Te Ta", "Et En"],
 							["Sa De", "Ce Se", "Du Au"]
 						]
 					}
@@ -505,6 +433,78 @@
 							["Là ; ici.", "Lui ; elle."]
 						]
 					}
+				}
+			]
+		},
+		{
+			"id": "fr.world.animaux",
+			"title": "Le zoo des drôles d'animaux",
+			"themeId": "animaux",
+			"gameIds": ["drawing", "tower", "dialogue"],
+			"lessons": [
+				{
+					"id": "fr.lesson.girafe-g-h",
+					"title": "La girafe au long cou",
+					"intro": "Étire ton index gauche vers G et ton index droit vers H, au milieu du clavier.",
+					"newChars": ["g", "h"],
+					"words": ["garçon", "glaçon"],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.vache-v-b",
+					"title": "Le bal de la vache",
+					"intro": "Ton index gauche descend sur V et B, juste au-dessus de la grande barre.",
+					"newChars": ["v", "b"],
+					"words": ["voilà"],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.yak-y-x",
+					"title": "Le yak mystère",
+					"intro": "Ton index droit monte sur Y et ton annulaire gauche descend sur X.",
+					"newChars": ["y", "x"],
+					"words": [],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.zebre-z-w",
+					"title": "Le zèbre à rayures",
+					"intro": "Ton annulaire gauche monte sur Z et ton auriculaire gauche descend sur W.",
+					"newChars": ["z", "w"],
+					"words": ["kiwi", "clown", "wapiti", "zoo", "zéro", "onze"],
+					"mix": {
+						"drills": 1,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6]
 				}
 			]
 		},
@@ -606,7 +606,8 @@
 							["tôt sûr île", "dîner tôt sûr"],
 							["mûr côte gîte", "boîte pôle goût", "huître rôti dû"]
 						]
-					}
+					},
+					"optional": true
 				},
 				{
 					"id": "fr.lesson.trema",
@@ -629,7 +630,8 @@
 							["maïs en canoë", "canoë du caïman", "naïf en canoë"],
 							["aïe, voix aiguë", "voix aiguë, aïe"]
 						]
-					}
+					},
+					"optional": true
 				}
 			]
 		},
@@ -751,7 +753,9 @@
 					"targetLength": 35,
 					"groupLength": [4, 6],
 					"warmUp": ["12345", "54321", "123 45", "543 21", "12 345"],
-					"warmUpReserve": { "keepFirst": true }
+					"warmUpReserve": {
+						"keepFirst": true
+					}
 				},
 				{
 					"id": "fr.lesson.train-huit-heures",
@@ -769,7 +773,9 @@
 					"targetLength": 35,
 					"groupLength": [4, 6],
 					"warmUp": ["67890", "09876", "678 90", "098 76", "67 890"],
-					"warmUpReserve": { "keepFirst": true }
+					"warmUpReserve": {
+						"keepFirst": true
+					}
 				},
 				{
 					"id": "fr.lesson.adresse-du-dino",
@@ -787,7 +793,9 @@
 					"targetLength": 35,
 					"groupLength": [4, 6],
 					"warmUp": ["@ @ @", "moi@", "toi@", "nous@"],
-					"warmUpReserve": { "keepFirst": true }
+					"warmUpReserve": {
+						"keepFirst": true
+					}
 				},
 				{
 					"id": "fr.lesson.reparer-message",

@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { emptyProgress } from '../progression/progress';
-import type { ProgressState, StarCount } from '../progression/types';
+import type { ProgressionDefinition, ProgressState, StarCount } from '../progression/types';
 import { parseRewardCatalogue } from './catalogue';
 import { newlyUnlocked, rewardsOfLesson, unlockedRewards } from './unlock';
 import {
@@ -369,5 +369,46 @@ describe('properties', () => {
 				expect([...first]).toEqual([...second]);
 			})
 		);
+	});
+});
+
+describe('a world that ends with a detour', () => {
+	/** The second lesson of the first world is a detour: nothing waits for it. */
+	const withDetour: ProgressionDefinition = {
+		...PROGRESSION,
+		worlds: PROGRESSION.worlds.map((world) =>
+			world.id !== WORLD_ONE
+				? world
+				: {
+						...world,
+						lessons: world.lessons.map((lesson) =>
+							lesson.id === LESSON_B ? { ...lesson, optional: true as const } : lesson
+						)
+					}
+		)
+	};
+	const catalogue = catalogueOf(
+		['passed', { kind: 'world-passed', worldId: WORLD_ONE }],
+		['stars', { kind: 'world-stars', worldId: WORLD_ONE, stars: 3 }],
+		['detour', { kind: 'lesson-passed', lessonId: LESSON_B }]
+	);
+	const ids = (progress: ProgressState) => [...unlockedRewards(catalogue, withDetour, progress)];
+
+	it('gives what the world gives once its lessons on the way are passed, without the detour', () => {
+		expect(ids(emptyProgress())).toEqual([]);
+		const way = playLesson(emptyProgress(), LESSON_A, 100);
+		expect(ids(way)).toEqual(['fr.reward.passed', 'fr.reward.stars']);
+		// The same progress in a world whose two lessons are on the way gives nothing yet.
+		expect([...unlockedRewards(catalogue, PROGRESSION, way)]).toEqual([]);
+	});
+
+	it('is not held back by a detour played badly', () => {
+		const progress = playLesson(playLesson(emptyProgress(), LESSON_A, 100), LESSON_B, 20);
+		expect(ids(progress)).toEqual(['fr.reward.passed', 'fr.reward.stars']);
+	});
+
+	it('still rewards the detour itself, for the child who passes it', () => {
+		const progress = playLesson(playLesson(emptyProgress(), LESSON_A, 100), LESSON_B, 85);
+		expect(ids(progress)).toEqual(['fr.reward.passed', 'fr.reward.stars', 'fr.reward.detour']);
 	});
 });

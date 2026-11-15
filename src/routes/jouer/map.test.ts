@@ -12,6 +12,7 @@ import type { SessionMetrics } from '$lib/engine/types';
 import {
 	companionSpot,
 	focusLessonId,
+	followingLessonId,
 	isOpenOnMap,
 	layoutMap,
 	lessonStars,
@@ -240,8 +241,194 @@ describe('layoutMap', () => {
 });
 
 describe('focusLessonId', () => {
-	it('is the last open lesson', () => {
+	it('is the lesson to play: the open one that is not passed yet', () => {
 		expect(focusLessonId(MANY_WORLDS, passed(4), [])).toBe('xx.lesson.3a');
+	});
+});
+
+/** The same lessons passed, whatever the order they were passed in. */
+function passedLessons(...ids: string[]): ProgressState {
+	return ids.reduce(
+		(progress, id) =>
+			applyLessonResult(
+				progress,
+				{
+					lessonId: id,
+					metrics: metrics(100),
+					evaluation: { stars: 3, unlocksNext: true },
+					completedAt: 1
+				},
+				MANY_WORLDS.rules
+			),
+		emptyProgress()
+	);
+}
+
+describe('a child who passed lessons in another order (ADR-075)', () => {
+	// The first world, then the first lesson of the third: the second world came after it then.
+	const progress = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a');
+
+	it('finds every lesson up to the furthest passed one open, and what was passed done', () => {
+		const layout = layoutMap(MANY_WORLDS, progress, []);
+		expect(layout.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.status))).toEqual([
+			'done',
+			'done',
+			'current',
+			'current',
+			'done',
+			'current'
+		]);
+		expect(layout.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.stars))).toEqual([
+			3, 3, 0, 0, 3, 0
+		]);
+	});
+
+	it('is led to the first lesson on the way not passed yet, not to the furthest one', () => {
+		const layout = layoutMap(MANY_WORLDS, progress, []);
+		expect(layout.focusId).toBe('xx.lesson.2a');
+		expect(layout.worlds.map((world) => world.current)).toEqual([false, true, false]);
+	});
+
+	it('goes on from a world the adult opened ahead, while it has a lesson to play', () => {
+		expect(focusLessonId(MANY_WORLDS, progress, ['xx.world.3'])).toBe('xx.lesson.3b');
+		const done = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a', 'xx.lesson.3b');
+		expect(focusLessonId(MANY_WORLDS, done, ['xx.world.3'])).toBe('xx.lesson.2a');
+	});
+
+	it('keeps open a lesson kept open by the profile, without being led there', () => {
+		const kept = ['xx.lesson.2a'];
+		const fresh = passedLessons('xx.lesson.1a');
+		expect(lessonStatus(MANY_WORLDS, fresh, 'xx.lesson.2a', [])).toBe('locked');
+		expect(lessonStatus(MANY_WORLDS, fresh, 'xx.lesson.2a', [], kept)).toBe('current');
+		expect(lessonStatus(MANY_WORLDS, fresh, 'xx.lesson.2b', [], kept)).toBe('locked');
+		const layout = layoutMap(MANY_WORLDS, fresh, [], kept);
+		expect(layout.focusId).toBe('xx.lesson.1b');
+		expect(isOpenOnMap(layout, 'xx.lesson.2a')).toBe(true);
+		expect(focusLessonId(MANY_WORLDS, fresh, [], kept)).toBe('xx.lesson.1b');
+	});
+});
+
+describe('followingLessonId', () => {
+	it('is the lesson after this one for a child who follows the way', () => {
+		expect(followingLessonId(MANY_WORLDS, passed(3), 'xx.lesson.2a', [])).toBe('xx.lesson.2b');
+		// Playing an old lesson again leads to the one after it, passed or not.
+		expect(followingLessonId(MANY_WORLDS, passed(4), 'xx.lesson.1a', [])).toBe('xx.lesson.1b');
+		expect(followingLessonId(MANY_WORLDS, passed(6), 'xx.lesson.3b', [])).toBeNull();
+		expect(followingLessonId(MANY_WORLDS, passed(6), 'xx.lesson.unknown', [])).toBeNull();
+	});
+
+	it('leads to the closed lesson after this one when this one is not passed: nothing opens', () => {
+		expect(followingLessonId(MANY_WORLDS, passed(2), 'xx.lesson.2a', [])).toBe('xx.lesson.2b');
+	});
+
+	it('does not send a child on while a lesson that now comes before waits to be played', () => {
+		// The first world and the whole third: the second world came after it when they were passed.
+		const progress = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a');
+		const further = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a', 'xx.lesson.3b');
+		// From a lesson further on, to the first one that waits; then from one to the next.
+		expect(followingLessonId(MANY_WORLDS, progress, 'xx.lesson.3a', [])).toBe('xx.lesson.2a');
+		const caughtUp = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a', 'xx.lesson.2a');
+		expect(followingLessonId(MANY_WORLDS, caughtUp, 'xx.lesson.2a', [])).toBe('xx.lesson.2b');
+		// After the last lesson nothing follows, whatever waits.
+		expect(followingLessonId(MANY_WORLDS, further, 'xx.lesson.3b', [])).toBeNull();
+	});
+
+	it('goes on in a world the adult opened ahead, whatever waits before it', () => {
+		const progress = passedLessons('xx.lesson.1a', 'xx.lesson.3a');
+		expect(followingLessonId(MANY_WORLDS, progress, 'xx.lesson.3a', ['xx.world.3'])).toBe(
+			'xx.lesson.3b'
+		);
+		expect(followingLessonId(MANY_WORLDS, progress, 'xx.lesson.3a', [])).toBe('xx.lesson.1b');
+	});
+});
+
+describe('detours on the map', () => {
+	/** The second world ends with two detours: x, then y. */
+	const WITH_DETOURS: ProgressionDefinition = {
+		...MANY_WORLDS,
+		worlds: MANY_WORLDS.worlds.map((world, index) =>
+			index !== 1
+				? world
+				: {
+						...world,
+						lessons: [
+							...world.lessons,
+							{ ...lessonOf('xx.lesson.2x'), optional: true as const },
+							{ ...lessonOf('xx.lesson.2y'), optional: true as const }
+						]
+					}
+		)
+	};
+	const flat = (layout: WorldMapLayout) => layout.worlds.flatMap((world) => world.lessons);
+
+	it('gives a detour no number, and misses none along the way', () => {
+		const layout = layoutMap(WITH_DETOURS, emptyProgress(), []);
+		expect(flat(layout).map((lesson) => lesson.number)).toEqual([1, 2, 3, 4, null, null, 5, 6]);
+		expect(flat(layout).map((lesson) => lesson.detour)).toEqual([
+			false,
+			false,
+			false,
+			false,
+			true,
+			true,
+			false,
+			false
+		]);
+		expect(flat(layout).map((lesson) => lesson.side)).toEqual([0, 1, 0, 1, 0, 1, 0, 1]);
+	});
+
+	it('opens the next world and the first detour together, and proposes the world', () => {
+		const layout = layoutMap(WITH_DETOURS, passed(4), []);
+		expect(flat(layout).map((lesson) => lesson.status)).toEqual([
+			'done',
+			'done',
+			'done',
+			'done',
+			'current',
+			'locked',
+			'current',
+			'locked'
+		]);
+		expect(layout.focusId).toBe('xx.lesson.3a');
+		expect(layout.worlds.map((world) => world.current)).toEqual([false, false, true]);
+	});
+
+	it('walks through the detours with the arrows, like any open lesson', () => {
+		const layout = layoutMap(WITH_DETOURS, passed(4), []);
+		expect(moveOnMap(layout, 'xx.lesson.2b', 'next')).toBe('xx.lesson.2x');
+		expect(moveOnMap(layout, 'xx.lesson.2x', 'next')).toBe('xx.lesson.3a');
+		expect(moveOnMap(layout, 'xx.lesson.3a', 'previous')).toBe('xx.lesson.2x');
+	});
+
+	it('never proposes a detour, even once the whole way is passed', () => {
+		const wayDone = passedLessons(...MANY_IDS);
+		const layout = layoutMap(WITH_DETOURS, wayDone, []);
+		expect(layout.focusId).toBe('xx.lesson.3b');
+		expect(lessonStatus(WITH_DETOURS, wayDone, 'xx.lesson.2x', [])).toBe('current');
+	});
+
+	it('leads from a lesson on the way to the next one on the way, and through the detours in order', () => {
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2b')).toBe('xx.lesson.3a');
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2x')).toBe('xx.lesson.2y');
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2y')).toBe('xx.lesson.3a');
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.3b')).toBeNull();
+	});
+
+	it('never holds the child in a detour: the way goes on while the next detour is closed', () => {
+		const closed = (id: string) => id !== 'xx.lesson.2y';
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2x', closed)).toBe('xx.lesson.3a');
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2x', () => true)).toBe('xx.lesson.2y');
+		// What is open changes nothing on the way, nor after the last detour.
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2b', () => false)).toBe('xx.lesson.3a');
+		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2y', () => false)).toBe('xx.lesson.3a');
+	});
+
+	it('offers the way after a detour that is not passed, and the next detour after a passed one', () => {
+		const wayDone = passedLessons(...MANY_IDS.slice(0, 4));
+		expect(followingLessonId(WITH_DETOURS, wayDone, 'xx.lesson.2x', [])).toBe('xx.lesson.3a');
+		const first = passedLessons(...MANY_IDS.slice(0, 4), 'xx.lesson.2x');
+		expect(followingLessonId(WITH_DETOURS, first, 'xx.lesson.2x', [])).toBe('xx.lesson.2y');
+		expect(followingLessonId(WITH_DETOURS, wayDone, 'xx.lesson.2b', [])).toBe('xx.lesson.3a');
 	});
 });
 
@@ -289,7 +476,15 @@ function mapOf(statuses: readonly (readonly LessonStatus[])[]): WorldMapLayout {
 			current: false,
 			lessons: world.map((status) => {
 				number += 1;
-				return { id: `l${number}`, title: `Lesson ${number}`, number, status, stars: 0, side: 0 };
+				return {
+					id: `l${number}`,
+					title: `Lesson ${number}`,
+					number,
+					detour: false,
+					status,
+					stars: 0,
+					side: 0
+				};
 			})
 		}))
 	};

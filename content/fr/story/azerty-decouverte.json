@@ -78,39 +78,10 @@
 			]
 		},
 		{
-			"worldId": "fr.world.animaux",
-			"opening": "Au zoo, les animaux regardent les visiteurs. Aujourd'hui, c'est ton dino.",
-			"openingArt": "zoo-opening",
-			"ending": "Page trois du carnet : les animaux ont signé. Direction les étoiles.",
-			"endingArt": "zoo-ending",
-			"lessons": [
-				{
-					"lessonId": "fr.lesson.girafe-g-h",
-					"line": "La girafe voit tout de là-haut, même ce que tu tapes.",
-					"art": "zoo-giraffe"
-				},
-				{
-					"lessonId": "fr.lesson.vache-v-b",
-					"line": "La vache ouvre le bal. Personne n'ose danser à côté.",
-					"art": "zoo-cow"
-				},
-				{
-					"lessonId": "fr.lesson.yak-y-x",
-					"line": "Le yak cache quelque chose dans sa laine. Ton dino enquête.",
-					"art": "zoo-yak"
-				},
-				{
-					"lessonId": "fr.lesson.zebre-z-w",
-					"line": "Le zèbre compte ses rayures. Il en trouve une de trop.",
-					"art": "zoo-zebra"
-				}
-			]
-		},
-		{
 			"worldId": "fr.world.espace",
 			"opening": "Trois, deux, un… Ton dino décolle, son carnet bien serré.",
 			"openingArt": "space-opening",
-			"ending": "Page quatre : la Terre vue d'en haut. Prochain arrêt, le circuit.",
+			"ending": "Page trois : la Terre vue d'en haut. Prochain arrêt, le zoo.",
 			"endingArt": "space-ending",
 			"lessons": [
 				{
@@ -132,6 +103,35 @@
 					"lessonId": "fr.lesson.virgule-point",
 					"line": "Sur la planète Virgule, tout le monde fait une petite pause.",
 					"art": "space-comma"
+				}
+			]
+		},
+		{
+			"worldId": "fr.world.animaux",
+			"opening": "Au zoo, les animaux regardent les visiteurs. Aujourd'hui, c'est ton dino.",
+			"openingArt": "zoo-opening",
+			"ending": "Page quatre du carnet : les animaux ont signé. Direction le circuit.",
+			"endingArt": "zoo-ending",
+			"lessons": [
+				{
+					"lessonId": "fr.lesson.girafe-g-h",
+					"line": "La girafe voit tout de là-haut, même ce que tu tapes.",
+					"art": "zoo-giraffe"
+				},
+				{
+					"lessonId": "fr.lesson.vache-v-b",
+					"line": "La vache ouvre le bal. Personne n'ose danser à côté.",
+					"art": "zoo-cow"
+				},
+				{
+					"lessonId": "fr.lesson.yak-y-x",
+					"line": "Le yak cache quelque chose dans sa laine. Ton dino enquête.",
+					"art": "zoo-yak"
+				},
+				{
+					"lessonId": "fr.lesson.zebre-z-w",
+					"line": "Le zèbre compte ses rayures. Il en trouve une de trop.",
+					"art": "zoo-zebra"
 				}
 			]
 		},

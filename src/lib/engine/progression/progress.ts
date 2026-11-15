@@ -1,8 +1,9 @@
 import type { SessionMetrics } from '../types';
-import { lessonIds } from './definition';
+import { isDetour, learnedChars } from './definition';
 import type {
 	CharProgress,
 	CharSample,
+	LessonDefinition,
 	LessonEvaluation,
 	LessonProgress,
 	LessonResult,
@@ -145,26 +146,58 @@ export function isLessonPassed(
 }
 
 /**
- * The first lesson is always open; another one opens once the lesson before is passed. A world
- * that the adult opened ahead (`openedWorldIds`) has its first lesson open, and only that one: the
- * lessons after it follow the usual rule. Identifiers of no world of the progression are ignored.
+ * The first lesson is always open. A lesson on the way opens once the lesson on the way before it
+ * is passed: a detour (`LessonDefinition.optional`) never holds the way. A detour opens once the
+ * lesson just before it is passed. A lesson passed further on opens the whole way up to it: nothing
+ * is to play again to go on, whatever order the lessons were in when the child passed them.
+ *
+ * A world that the adult opened ahead (`openedWorldIds`) has its first lesson open, and only that
+ * one; `keptOpenLessonIds` are the lessons that were open when the order of the lessons changed
+ * (`Profile.keptOpenLessonIds`): they stay open. Identifiers the progression does not have are
+ * ignored.
  */
 export function isLessonUnlocked(
 	progression: ProgressionDefinition,
 	progress: ProgressState,
 	lessonId: string,
-	openedWorldIds: readonly string[] = []
+	openedWorldIds: readonly string[] = [],
+	keptOpenLessonIds: readonly string[] = []
 ): boolean {
-	const ids = lessonIds(progression);
-	const index = ids.indexOf(lessonId);
+	const lessons = progression.worlds.flatMap((world) => world.lessons);
+	const index = lessons.findIndex((lesson) => lesson.id === lessonId);
 	if (index < 0) return false;
 	if (index === 0) return true;
 	if (opensWorld(progression, lessonId, openedWorldIds)) return true;
-	// A lesson passed once stays open, even when new lessons are later inserted before it.
-	return (
-		isLessonPassed(progression.rules, progress, ids[index - 1] as string) ||
-		isLessonPassed(progression.rules, progress, lessonId)
-	);
+	if (keptOpenLessonIds.includes(lessonId)) return true;
+	const passed = (lesson: LessonDefinition | undefined) =>
+		lesson !== undefined && isLessonPassed(progression.rules, progress, lesson.id);
+	if (passed(lessons[index - 1])) return true;
+	// The lesson itself, or one further on: a lesson passed once stays open, and so does the way to it.
+	if (lessons.slice(index).some(passed)) return true;
+	if (isDetour(lessons[index] as LessonDefinition)) return false;
+	return passed(lessons.slice(0, index).findLast((lesson) => !isDetour(lesson)));
+}
+
+/**
+ * What the detours before this lesson brought to this child: the characters of those the child
+ * passed, in the order of the progression, that `learnedChars` does not already hold. An exercise
+ * of the lesson may ask them of this child, and of no other.
+ */
+export function detourChars(
+	progression: ProgressionDefinition,
+	progress: ProgressState,
+	lessonId: string
+): string[] {
+	const known = new Set(learnedChars(progression, lessonId));
+	const chars: string[] = [];
+	for (const world of progression.worlds) {
+		for (const lesson of world.lessons) {
+			if (lesson.id === lessonId) return chars;
+			if (!isDetour(lesson) || !isLessonPassed(progression.rules, progress, lesson.id)) continue;
+			chars.push(...lesson.newChars.filter((char) => !known.has(char)));
+		}
+	}
+	return chars;
 }
 
 /** Whether the lesson is the first one of a world the adult opened. */

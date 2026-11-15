@@ -15,10 +15,15 @@ const MIN_PHRASES_PER_EARLY_TIER = 10;
 const MIN_ACCENT_PHRASES = 15;
 const MIN_FULL_ALPHABET_PHRASES = 15;
 const MIN_CAPITAL_PHRASES = 30;
+const MIN_EARLY_SENTENCES = 20;
+const MIN_EARLY_SENTENCES_PER_MARK = 6;
 const MIN_CIRCUMFLEX_PHRASES = 10;
 const PHRASE_WORDS = { min: 3, max: 8 };
 
-/** Learning order of the French progression (ADR-018); each step adds these characters. */
+/**
+ * Learning order of the French progression (ADR-018, then ADR-075: capitals, the comma and the
+ * full stop before the last letters); each step adds these characters.
+ */
 const STEPS: readonly (readonly string[])[] = [
 	['f', 'j'],
 	[' '],
@@ -31,14 +36,14 @@ const STEPS: readonly (readonly string[])[] = [
 	['q', 'm'],
 	['c', 'p'],
 	['é', "'"],
-	['g', 'h'],
-	['v', 'b'],
-	['y', 'x'],
-	['z', 'w'],
 	['è', 'à'],
 	['ç', 'ù'],
 	[],
 	[',', '.', ';'],
+	['g', 'h'],
+	['v', 'b'],
+	['y', 'x'],
+	['z', 'w'],
 	['?', '!', '"'],
 	['-', ':'],
 	['ê', 'â'],
@@ -61,7 +66,10 @@ const STEPS: readonly (readonly string[])[] = [
 const STEP = {
 	restRowVowels: 5,
 	earlyLetters: 7,
-	capitalsAndPunctuation: 17,
+	accents: 10,
+	capitals: 13,
+	fullStop: 14,
+	lastLetter: 18,
 	lastPunctuation: 20,
 	lastAccent: 23
 } as const;
@@ -75,7 +83,7 @@ function tierOf(text: string): number {
 		if (char >= 'A' && char <= 'Z') {
 			const lowerStep = STEP_OF.get(char.toLowerCase());
 			if (lowerStep === undefined) return -1;
-			tier = Math.max(tier, STEP.capitalsAndPunctuation, lowerStep);
+			tier = Math.max(tier, STEP.capitals, lowerStep);
 			continue;
 		}
 		const step = STEP_OF.get(char);
@@ -83,6 +91,11 @@ function tierOf(text: string): number {
 		tier = Math.max(tier, step);
 	}
 	return tier;
+}
+
+/** Small letters, accents and apostrophes only: neither a capital nor a mark of punctuation. */
+function isPlain(text: string): boolean {
+	return /^[\p{Ll}' ]+$/u.test(text);
 }
 
 function readJson(path: string): unknown {
@@ -175,14 +188,14 @@ describe(PHRASES_FILE, () => {
 		}
 	});
 
-	it('starts with a capital and ends with . ? or !, closing quote allowed, once it can', () => {
+	it('is a whole sentence, capital first and . ? or ! last, as soon as it has a capital or a mark', () => {
 		for (const { phrase, tier } of withTier) {
-			if (tier < STEP.capitalsAndPunctuation) continue;
+			// Written all in small letters, without a mark: the exercise gives it its capital and
+			// its full stop once the child knows them (`rules.phraseEnd`, exercise-content).
+			if (isPlain(phrase.text)) continue;
 			expect(phrase.text, phrase.text).toMatch(/^[A-Z]/);
 			// The capitals come one lesson before the full stop: a phrase of that lesson has none.
-			if (tier > STEP.capitalsAndPunctuation) {
-				expect(phrase.text, phrase.text).toMatch(/[.?!]"?$/);
-			}
+			if (tier > STEP.capitals) expect(phrase.text, phrase.text).toMatch(/[.?!]"?$/);
 		}
 	});
 
@@ -203,21 +216,33 @@ describe(PHRASES_FILE, () => {
 	);
 
 	it('has phrases that need é and the apostrophe', () => {
-		expect(count((tier) => tier === 10)).toBeGreaterThanOrEqual(MIN_ACCENT_PHRASES);
+		expect(count((tier) => tier === STEP.accents)).toBeGreaterThanOrEqual(MIN_ACCENT_PHRASES);
 	});
 
-	it('has phrases that need the complete lowercase alphabet', () => {
-		expect(count((tier) => tier >= 11 && tier <= 16)).toBeGreaterThanOrEqual(
-			MIN_FULL_ALPHABET_PHRASES
+	it('has phrases in small letters that need the letters and accents that come after é', () => {
+		expect(
+			count((tier, text) => tier > STEP.accents && tier <= STEP.lastLetter && isPlain(text))
+		).toBeGreaterThanOrEqual(MIN_FULL_ALPHABET_PHRASES);
+	});
+
+	it('has whole sentences to type before g h v b y x z w, with a comma and with a semicolon', () => {
+		const early = withTier.filter(
+			({ phrase, tier }) =>
+				phrase.lessonId === undefined && tier === STEP.fullStop && /^[A-Z].*\.$/.test(phrase.text)
 		);
+		expect(early.length).toBeGreaterThanOrEqual(MIN_EARLY_SENTENCES);
+		for (const mark of [',', ';']) {
+			expect(
+				early.filter(({ phrase }) => phrase.text.includes(mark)).length,
+				mark
+			).toBeGreaterThanOrEqual(MIN_EARLY_SENTENCES_PER_MARK);
+		}
 	});
 
 	it('has phrases with a capital and final punctuation', () => {
 		const total = count(
 			(tier, text) =>
-				tier >= STEP.capitalsAndPunctuation &&
-				tier <= STEP.lastPunctuation &&
-				/^[A-Z].*[.?!]$/.test(text)
+				tier >= STEP.capitals && tier <= STEP.lastPunctuation && /^[A-Z].*[.?!]$/.test(text)
 		);
 		expect(total).toBeGreaterThanOrEqual(MIN_CAPITAL_PHRASES);
 	});

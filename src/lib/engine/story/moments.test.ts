@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { emptyProgress } from '../progression/progress';
-import type { ProgressState } from '../progression/types';
+import type { ProgressionDefinition, ProgressState } from '../progression/types';
 import { storyAfterLesson, storyBeforeLesson, storySoFar } from './moments';
 import { FAILING, LESSON_IDS, PASSING, PROGRESSION, STORY, play } from './test-support';
 import type { StoryDefinition, StoryMoment, StoryWorld } from './types';
@@ -389,5 +389,61 @@ describe('storySoFar', () => {
 				}
 			)
 		);
+	});
+});
+
+describe('a world that ends with a detour', () => {
+	/** Lesson b, the last of the first world, is a detour: the world ends without it. */
+	const withDetour: ProgressionDefinition = {
+		...PROGRESSION,
+		worlds: PROGRESSION.worlds.map((world) =>
+			world.id !== ONE
+				? world
+				: {
+						...world,
+						lessons: world.lessons.map((lesson) =>
+							lesson.id === B ? { ...lesson, optional: true as const } : lesson
+						)
+					}
+		)
+	};
+
+	it('tells the ending of the world once its lessons on the way are passed', () => {
+		const before = emptyProgress();
+		const after = play(before, A, PASSING);
+		expect(storyAfterLesson(STORY, withDetour, before, after, A)).toEqual([LINE_A, ENDING_ONE]);
+		// Both lessons on the way: the same play ends nothing yet.
+		expect(storyAfterLesson(STORY, PROGRESSION, before, after, A)).toEqual([LINE_A]);
+	});
+
+	it('tells the line of the detour when it is passed, and the ending only once', () => {
+		const way = play(emptyProgress(), A, PASSING);
+		const both = play(way, B, PASSING);
+		expect(storyAfterLesson(STORY, withDetour, way, both, B)).toEqual([LINE_B]);
+		expect(storyAfterLesson(STORY, withDetour, way, play(way, B, FAILING), B)).toEqual([]);
+	});
+
+	it('still ends the world for a child who passes the detour first', () => {
+		const detour = play(emptyProgress(), B, PASSING);
+		expect(storyAfterLesson(STORY, withDetour, emptyProgress(), detour, B)).toEqual([LINE_B]);
+		expect(storyAfterLesson(STORY, withDetour, detour, play(detour, A, PASSING), A)).toEqual([
+			LINE_A,
+			ENDING_ONE
+		]);
+	});
+
+	it('keeps the ending in the notebook with or without the line of the detour', () => {
+		const way = play(emptyProgress(), A, PASSING);
+		expect(storySoFar(STORY, withDetour, way)).toEqual([OPENING_ONE, LINE_A, ENDING_ONE]);
+		expect(storySoFar(STORY, withDetour, play(way, B, PASSING))).toEqual([
+			OPENING_ONE,
+			LINE_A,
+			LINE_B,
+			ENDING_ONE
+		]);
+		expect(storySoFar(STORY, withDetour, play(emptyProgress(), B, PASSING))).toEqual([
+			OPENING_ONE,
+			LINE_B
+		]);
 	});
 });

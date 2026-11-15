@@ -33,7 +33,12 @@ export function freePracticeWorld(
 	progression: ProgressionDefinition,
 	profile: Profile
 ): WorldDefinition | undefined {
-	const focus = focusLessonId(progression, profile.progress, profile.openedWorldIds);
+	const focus = focusLessonId(
+		progression,
+		profile.progress,
+		profile.openedWorldIds,
+		profile.keptOpenLessonIds
+	);
 	return focus === null ? undefined : worldOfLesson(progression, focus);
 }
 

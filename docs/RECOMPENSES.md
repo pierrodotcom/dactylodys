@@ -11,6 +11,8 @@ Règles communes, déjà décidées (ADR-022, 027) :
 
 Le compagnon est le petit dinosaure à plaques du bilan.
 
+> **Depuis l'ADR-075 (nouvel ordre des leçons).** Le monde « Cap sur les étoiles » (objets 33 à 36) se joue avant « Le zoo des drôles d'animaux » (objets 29 à 32) ; les numéros ci-dessous restent ceux de la proposition d'origine. *Le casque du copilote* (40) et *Le camion aux deux yeux* (41) sont des leçons facultatives (« Pour aller plus loin ») : leurs objets se gagnent toujours en les réussissant, mais le tour (46) et la médaille (51) des bolides ne les demandent plus, et le trophée des accents (56) ne demande plus « î ô û ë ï ».
+
 ## A. Le nom du compagnon
 
 L'enfant tape le nom qu'il veut (comme un pseudo) ; quelques idées sont proposées en boutons :

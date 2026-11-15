@@ -7,6 +7,7 @@ import {
 	almostNextStar,
 	applyCharResults,
 	applyLessonResult,
+	detourChars,
 	emptyProgress,
 	evaluateLesson,
 	isLessonPassed,
@@ -754,7 +755,7 @@ describe('isLessonPassed', () => {
 		);
 	});
 
-	it('is what opens the following lesson, and keeps open a lesson passed before', () => {
+	it('is what opens the following lesson, and keeps open the way up to a passed lesson', () => {
 		const ids = ['fr.lesson.a', 'fr.lesson.b', 'fr.lesson.c'];
 		const played = fc.record({
 			lessonIndex: fc.integer({ min: 0, max: 2 }),
@@ -767,9 +768,10 @@ describe('isLessonPassed', () => {
 					progress = applyResult(progress, resultOf(ids[lessonIndex] as string, accuracy));
 				}
 				ids.slice(1).forEach((id, index) => {
+					const fromHere = ids.slice(index + 1);
 					expect(isLessonUnlocked(PROGRESSION, progress, id)).toBe(
 						isLessonPassed(PROGRESSION.rules, progress, ids[index] as string) ||
-							isLessonPassed(PROGRESSION.rules, progress, id)
+							fromHere.some((later) => isLessonPassed(PROGRESSION.rules, progress, later))
 					);
 				});
 			})
@@ -819,8 +821,14 @@ describe('isLessonUnlocked', () => {
 		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c')).toBe(false);
 	});
 
-	it('does not open a lesson because a later one was played', () => {
+	it('opens the way up to a lesson passed further on: nothing is to play again to go on', () => {
+		// A profile that passed lesson c when it came before lesson b (ADR-075).
 		const progress = applyResult(emptyProgress(), resultOf('fr.lesson.c', 100));
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.b')).toBe(true);
+	});
+
+	it('does not open a lesson because a later one was only played, below the unlock accuracy', () => {
+		const progress = applyResult(emptyProgress(), resultOf('fr.lesson.c', 79));
 		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.b')).toBe(false);
 	});
 
@@ -897,6 +905,143 @@ describe('isLessonUnlocked with worlds opened by the adult', () => {
 				}
 			)
 		);
+	});
+});
+
+describe('isLessonUnlocked with lessons kept open', () => {
+	it('keeps open a lesson that was open when the order changed, and no other', () => {
+		const progress = emptyProgress();
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.c', [], ['fr.lesson.c'])).toBe(true);
+		expect(isLessonUnlocked(PROGRESSION, progress, 'fr.lesson.b', [], ['fr.lesson.c'])).toBe(false);
+	});
+
+	it('ignores a lesson the progression does not have', () => {
+		expect(
+			isLessonUnlocked(PROGRESSION, emptyProgress(), 'fr.lesson.zzz', [], ['fr.lesson.zzz'])
+		).toBe(false);
+	});
+
+	it('only ever opens more', () => {
+		const ids = ['fr.lesson.a', 'fr.lesson.b', 'fr.lesson.c'];
+		const played = fc.record({
+			lessonIndex: fc.integer({ min: 0, max: 2 }),
+			accuracy: fc.double({ min: 0, max: 100, noNaN: true })
+		});
+		fc.assert(
+			fc.property(
+				fc.array(played, { maxLength: 6 }),
+				fc.subarray([...ids, 'fr.lesson.unknown']),
+				(plays, kept) => {
+					let progress = emptyProgress();
+					for (const { lessonIndex, accuracy } of plays) {
+						progress = applyResult(progress, resultOf(ids[lessonIndex] as string, accuracy));
+					}
+					for (const id of ids) {
+						const plain = isLessonUnlocked(PROGRESSION, progress, id);
+						expect(isLessonUnlocked(PROGRESSION, progress, id, [], kept)).toBe(
+							plain || kept.includes(id)
+						);
+					}
+				}
+			)
+		);
+	});
+});
+
+/**
+ * a, b on the way, then two detours x and y, then c on the way in a second world: the shape of the
+ * lessons of rare accents (ADR-075).
+ */
+function withDetours(): ProgressionDefinition {
+	const [one, two] = PROGRESSION.worlds;
+	const model = one?.lessons[0];
+	if (!one || !two || !model) throw new Error('two worlds expected');
+	const detour = (id: string, char: string) => ({
+		...model,
+		id,
+		title: id,
+		newChars: [char],
+		optional: true as const
+	});
+	return {
+		...PROGRESSION,
+		worlds: [
+			{ ...one, lessons: [...one.lessons, detour('fr.lesson.x', 'î'), detour('fr.lesson.y', 'ï')] },
+			two
+		]
+	};
+}
+
+describe('isLessonUnlocked with detours', () => {
+	const progression = withDetours();
+	const passing = (...ids: string[]) =>
+		ids.reduce((progress, id) => applyResult(progress, resultOf(id, 90)), emptyProgress());
+
+	it('opens the lesson on the way after a detour without the detour', () => {
+		const progress = passing('fr.lesson.a', 'fr.lesson.b');
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.c')).toBe(true);
+	});
+
+	it('opens a detour once the lesson just before it is passed, one detour after the other', () => {
+		expect(isLessonUnlocked(progression, passing('fr.lesson.a'), 'fr.lesson.x')).toBe(false);
+		const onTheWay = passing('fr.lesson.a', 'fr.lesson.b');
+		expect(isLessonUnlocked(progression, onTheWay, 'fr.lesson.x')).toBe(true);
+		expect(isLessonUnlocked(progression, onTheWay, 'fr.lesson.y')).toBe(false);
+		const first = passing('fr.lesson.a', 'fr.lesson.b', 'fr.lesson.x');
+		expect(isLessonUnlocked(progression, first, 'fr.lesson.y')).toBe(true);
+	});
+
+	it('opens the way up to a passed detour, and the lesson just after it', () => {
+		const progress = passing('fr.lesson.y');
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.x')).toBe(true);
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.b')).toBe(true);
+		expect(isLessonUnlocked(progression, progress, 'fr.lesson.c')).toBe(true);
+	});
+
+	it('always leaves a lesson on the way to play until they are all passed, whatever was passed', () => {
+		const lessons = progression.worlds.flatMap((world) => world.lessons);
+		fc.assert(
+			fc.property(fc.subarray(lessons.map((lesson) => lesson.id)), (passed) => {
+				const progress = passing(...passed);
+				const way = lessons.filter((lesson) => lesson.optional !== true);
+				const left = way.filter(
+					(lesson) => !isLessonPassed(progression.rules, progress, lesson.id)
+				);
+				if (left.length === 0) return;
+				expect(left.some((lesson) => isLessonUnlocked(progression, progress, lesson.id))).toBe(
+					true
+				);
+			})
+		);
+	});
+});
+
+describe('detourChars', () => {
+	const progression = withDetours();
+	const passing = (...ids: string[]) =>
+		ids.reduce((progress, id) => applyResult(progress, resultOf(id, 90)), emptyProgress());
+
+	it('gives nothing to a child who took no detour', () => {
+		expect(detourChars(progression, passing('fr.lesson.a', 'fr.lesson.b'), 'fr.lesson.c')).toEqual(
+			[]
+		);
+	});
+
+	it('gives the characters of the detours passed before the lesson, in their order', () => {
+		const both = passing('fr.lesson.y', 'fr.lesson.x');
+		expect(detourChars(progression, both, 'fr.lesson.c')).toEqual(['î', 'ï']);
+		expect(detourChars(progression, passing('fr.lesson.y'), 'fr.lesson.c')).toEqual(['ï']);
+	});
+
+	it('leaves out a detour only played below the unlock accuracy', () => {
+		const progress = applyResult(emptyProgress(), resultOf('fr.lesson.x', 50));
+		expect(detourChars(progression, progress, 'fr.lesson.c')).toEqual([]);
+	});
+
+	it('gives nothing in a lesson before the detour, nor in a detour, which knows them already', () => {
+		const both = passing('fr.lesson.x', 'fr.lesson.y');
+		expect(detourChars(progression, both, 'fr.lesson.b')).toEqual([]);
+		expect(detourChars(progression, both, 'fr.lesson.y')).toEqual([]);
 	});
 });
 

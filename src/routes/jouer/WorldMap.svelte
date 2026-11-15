@@ -47,7 +47,9 @@
 		hero?.focus();
 	}
 
-	const layout = $derived(layoutMap(progression, profile.progress, profile.openedWorldIds));
+	const layout = $derived(
+		layoutMap(progression, profile.progress, profile.openedWorldIds, profile.keptOpenLessonIds)
+	);
 	/** The map scrolls to the bubble rather than to the lesson, so that the child sees the request. */
 	const asking = $derived(helpKey !== null && !helpLater);
 
@@ -181,6 +183,7 @@
 								class="stop"
 								data-status={lesson.status}
 								data-side={lesson.side}
+								data-detour={lesson.detour || undefined}
 								data-companion={lesson.id === companionId || undefined}
 								{@attach lesson.id === layout.focusId && !asking ? centerInView : undefined}
 							>
@@ -191,7 +194,7 @@
 											<rect x="4.5" y="11" width="15" height="10" rx="2" />
 										</svg>
 										<span class="info">
-											<span class="number">{m.play_lesson_number({ number: lesson.number })}</span>
+											{@render label(lesson)}
 											<span class="name">{lesson.title}</span>
 											<span class="state">{m.play_lesson_locked()}</span>
 										</span>
@@ -207,10 +210,16 @@
 										onkeydown={(event) => walkFrom(event, lesson.id)}
 									>
 										<span class="info">
-											<span class="number">{m.play_lesson_number({ number: lesson.number })}</span>
+											{@render label(lesson)}
 											<span class="name">{lesson.title}</span>
 											<span class="state">
-												{lesson.status === 'done' ? m.play_lesson_done() : m.play_lesson_current()}
+												{#if lesson.status === 'done'}
+													{m.play_lesson_done()}
+												{:else if lesson.detour}
+													{m.play_lesson_detour_open()}
+												{:else}
+													{m.play_lesson_current()}
+												{/if}
 											</span>
 										</span>
 										<Stars count={lesson.stars} />
@@ -239,6 +248,15 @@
 		<Button onclick={onchangeplayer}>{m.play_change_player()}</Button>
 	</ScreenFrame>
 {/if}
+
+<!-- A detour has no number: it is not a step of the way, and no number is missing after it. -->
+{#snippet label(lesson: MapLesson)}
+	<span class="number">
+		{lesson.number === null
+			? m.play_lesson_detour()
+			: m.play_lesson_number({ number: lesson.number })}
+	</span>
+{/snippet}
 
 {#snippet arrow(direction: 'up' | 'down')}
 	<svg class="arrow" data-arrow={direction} viewBox="0 0 24 24" focusable="false">
@@ -485,6 +503,18 @@
 		font-size: var(--dd-font-size-lg);
 	}
 
+	/* A detour to play is offered, never asked: it does not stand out like the lesson to play. */
+	.stop[data-detour][data-status='current'] .node {
+		border-color: var(--dd-color-border-strong);
+		border-width: var(--dd-border-width-thick);
+		box-shadow: none;
+		font-size: var(--dd-font-size-base);
+	}
+
+	.stop[data-detour] .node {
+		border-style: dotted;
+	}
+
 	.stop[data-status='locked'] .node {
 		border-style: dashed;
 		background-color: var(--dd-color-surface-sunken);
@@ -513,6 +543,11 @@
 	.stop[data-status='current'] .state {
 		color: var(--dd-color-accent-base);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.stop[data-detour][data-status='current'] .state {
+		color: var(--dd-color-text-secondary);
+		font-weight: var(--dd-font-weight-regular);
 	}
 
 	.lock {

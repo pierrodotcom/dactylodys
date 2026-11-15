@@ -292,7 +292,7 @@ test('keeps the race choice in view with the games, and the race above the game'
 });
 
 // The kitchen and space offer three games since the river came (ADR-057): the same room is needed.
-for (const worldIndex of [1, 3]) {
+for (const worldIndex of [1, 2]) {
 	test(`keeps the three games and the race choice in view in world ${worldIndex + 1}`, async ({
 		page
 	}) => {

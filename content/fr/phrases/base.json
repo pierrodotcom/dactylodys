@@ -755,6 +755,126 @@
 			"level": 2,
 			"review": "human"
 		},
+		{ "text": "Mon dino a dormi, moi aussi.", "themes": ["dinos"], "level": 1, "review": "agent" },
+		{
+			"text": "Le lama a froid, il met un pull.",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"text": "Un mouton tricote, l'autre compte.",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"text": "Le canard file, la tortue fait la sieste.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le cuistot sale, sucre, pimente et éternue.",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "Lundi, la sorcière a raté sa potion.", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "Mardi, le pirate a perdu sa carte.", "themes": [], "level": 1, "review": "agent" },
+		{ "text": "Samedi, le monstre fait sa toilette.", "themes": [], "level": 1, "review": "agent" },
+		{
+			"text": "Ce soir, la lune prend son parapluie.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Un, trois, cinq, mon dino compte mal.",
+			"themes": ["dinos"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Ma tartine fuit, le pirate la rattrape.",
+			"themes": ["cuisine"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Sur la piste, un poulpe fait du patin.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Dans la mare, un crocodile compte ses dents.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{ "text": "Le monstre a dit merci, il est poli.", "themes": [], "level": 1, "review": "agent" },
+		{
+			"text": "La limace court, court, et reste sur place.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Ma trompette joue seule, c'est pratique.",
+			"themes": [],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Petit à petit, la limace monte au sommet.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le coq crie ; la lune s'en moque.",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "agent"
+		},
+		{ "text": "La mer monte ; le pirate recule.", "themes": [], "level": 1, "review": "agent" },
+		{
+			"text": "Le dino ronfle ; la tente décolle.",
+			"themes": ["dinos"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"text": "Le pirate dort ; le perroquet pilote.",
+			"themes": ["animaux"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le lait monte ; la casserole panique.",
+			"themes": ["cuisine"],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"text": "La fusée part ; le dino court derrière.",
+			"themes": ["espace", "dinos"],
+			"level": 2,
+			"review": "agent"
+		},
+		{
+			"text": "Le tonnerre tonne ; le monstre a peur.",
+			"themes": [],
+			"level": 1,
+			"review": "agent"
+		},
+		{
+			"text": "Nuit noire ; la lune a perdu sa lampe.",
+			"themes": ["espace"],
+			"level": 2,
+			"review": "agent"
+		},
 		{
 			"text": "Le dragon fait un gâteau pour la forêt.",
 			"themes": ["cuisine"],
@@ -1077,7 +1197,7 @@
 			"lessonId": "fr.lesson.tartine-t-n"
 		},
 		{
-			"text": "il se rue sur les fruits",
+			"text": "il renifle les fruits",
 			"themes": ["cuisine"],
 			"level": 1,
 			"review": "human",
@@ -1140,94 +1260,94 @@
 			"lessonId": "fr.lesson.epices-accent-apostrophe"
 		},
 		{
-			"text": "la girafe espionne tout du haut de son cou",
+			"text": "La girafe espionne tout du haut de son cou.",
 			"themes": ["animaux"],
 			"level": 1,
 			"review": "human",
 			"lessonId": "fr.lesson.girafe-g-h"
 		},
 		{
-			"text": "les singes regardent ton dino",
+			"text": "Les singes regardent ton dino.",
 			"themes": ["animaux"],
 			"level": 1,
 			"review": "human",
 			"lessonId": "fr.lesson.girafe-g-h"
 		},
 		{
-			"text": "la vache danse la polka en tutu",
+			"text": "La vache ouvre le bal en tutu.",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "agent",
+			"lessonId": "fr.lesson.vache-v-b"
+		},
+		{
+			"text": "Ton dino n'ose pas danser avec la vache.",
 			"themes": ["animaux"],
 			"level": 1,
 			"review": "human",
 			"lessonId": "fr.lesson.vache-v-b"
 		},
 		{
-			"text": "ton dino n'ose pas danser avec la vache",
-			"themes": ["animaux"],
-			"level": 1,
-			"review": "human",
-			"lessonId": "fr.lesson.vache-v-b"
-		},
-		{
-			"text": "le yak cache un xylophone dans sa laine",
+			"text": "Le yak cache un xylophone dans sa laine.",
 			"themes": ["animaux"],
 			"level": 1,
 			"review": "human",
 			"lessonId": "fr.lesson.yak-y-x"
 		},
 		{
-			"text": "ton dino examine la laine du yak",
+			"text": "Ton dino examine la laine du yak.",
 			"themes": ["animaux"],
 			"level": 1,
 			"review": "human",
 			"lessonId": "fr.lesson.yak-y-x"
 		},
 		{
-			"text": "le bel équidé compte ses rayures",
+			"text": "Le zèbre compte ses rayures.",
+			"themes": ["animaux"],
+			"level": 1,
+			"review": "agent",
+			"lessonId": "fr.lesson.zebre-z-w"
+		},
+		{
+			"text": "Il trouve douze rayures et demie.",
 			"themes": ["animaux"],
 			"level": 1,
 			"review": "human",
 			"lessonId": "fr.lesson.zebre-z-w"
 		},
 		{
-			"text": "il trouve douze rayures et demie",
-			"themes": ["animaux"],
-			"level": 1,
-			"review": "human",
-			"lessonId": "fr.lesson.zebre-z-w"
-		},
-		{
-			"text": "le café s'élève et flotte hors de la tasse",
+			"text": "le café flotte près de la tasse",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "human",
+			"review": "agent",
 			"lessonId": "fr.lesson.lune-accents-graves"
 		},
 		{
-			"text": "ton dino boit son café à la paille",
+			"text": "ton dino attrape son café à la cuillère",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "human",
+			"review": "agent",
 			"lessonId": "fr.lesson.lune-accents-graves"
 		},
 		{
-			"text": "la comète file si vite qu'elle perd sa queue",
+			"text": "la comète pressée perd sa queue en route",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "human",
+			"review": "agent",
 			"lessonId": "fr.lesson.comete-cedille-u-grave"
 		},
 		{
-			"text": "sa queue reste là où elle l'a oubliée",
+			"text": "sa queue reste là où elle l'a laissée",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "human",
+			"review": "agent",
 			"lessonId": "fr.lesson.comete-cedille-u-grave"
 		},
 		{
-			"text": "Les géantes se penchent pour te voir",
+			"text": "Jupiter met ses lunettes pour te lire",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "human",
+			"review": "agent",
 			"lessonId": "fr.lesson.grandes-majuscules"
 		},
 		{
@@ -1238,10 +1358,10 @@
 			"lessonId": "fr.lesson.grandes-majuscules"
 		},
 		{
-			"text": "Sur Virgule, tout le monde fait une pause.",
+			"text": "Ici, tout le monde fait une petite pause.",
 			"themes": ["espace"],
 			"level": 1,
-			"review": "human",
+			"review": "agent",
 			"lessonId": "fr.lesson.virgule-point"
 		},
 		{
@@ -1273,7 +1393,7 @@
 			"lessonId": "fr.lesson.tiret-deux-points"
 		},
 		{
-			"text": "Le dernier wagon dit : \"pardon !\"",
+			"text": "Le dernier wagon dit : \"Pardon !\"",
 			"themes": ["vehicules"],
 			"level": 1,
 			"review": "human",
