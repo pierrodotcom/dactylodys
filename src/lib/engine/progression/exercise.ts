@@ -8,6 +8,7 @@ import {
 	usableWordCuts
 } from './banks';
 import { LINE_BREAK, findLesson, freshChars, learnedChars } from './definition';
+import { pacedTargetLength } from './pace';
 import { detourChars, recentErrorRate } from './progress';
 import { repairStarts } from './repair';
 import { buildPatternSuite } from './suites';
@@ -38,6 +39,20 @@ const RELAXED_AFTER_ATTEMPT = 16;
 const MAX_IDENTICAL_IN_A_ROW = 2;
 /** A character is reviewed by words only when two of them hold it: none comes twice in a row. */
 const MIN_REVIEW_WORDS = 2;
+/** What is not a letter nor a digit at the start or the end of a word of a group. */
+const EDGE_MARKS_PATTERN = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu;
+/** Times a word may come in an exercise before a group added to it is refused for holding it. */
+const MAX_SAME_WORD = 2;
+/** Graphemes from which a word counts for that: shorter ones (`le`, `de`, `un`) come back anyway. */
+const MIN_COUNTED_WORD_LENGTH = 4;
+
+/** The words of a group as the banks write them: without capital, nor the marks around them. */
+function wordsOf(group: string): string[] {
+	return group
+		.split(/\s+/u)
+		.map((token) => token.toLowerCase().replace(EDGE_MARKS_PATTERN, ''))
+		.filter((word) => word !== '');
+}
 
 type Genre = 'drill' | 'word' | 'phrase';
 
@@ -74,6 +89,20 @@ interface Settings {
 	readonly patterns: DrillPatternRules | undefined;
 	/** A suite holds a letter or a digit as soon as one is known: never marks alone. */
 	readonly wantsLetter: boolean;
+}
+
+/** A whole phrase: several words, a capital first, a mark last. */
+function isWhole(graphemes: readonly string[]): boolean {
+	const first = graphemes[0];
+	const last = graphemes[graphemes.length - 1];
+	return (
+		first !== undefined &&
+		last !== undefined &&
+		isCapital(first) &&
+		graphemes.includes(SPACE) &&
+		last !== LINE_BREAK &&
+		!isLetterOrDigit(last)
+	);
 }
 
 export function between(min: number, max: number, rng: Rng): number {
@@ -713,6 +742,135 @@ export function generateExercise(
 		if (accepted.reserve === words || (accepted.madeOf ?? []).length > 0) owesWord = false;
 		lastWord = accepted.madeOf?.[accepted.madeOf.length - 1];
 		record(accepted.text);
+	}
+
+	// What comes now is added to the exercise the lesson gives: it never takes anything from it.
+	/** Every word and phrase of the exercise so far: none of them is added a second time. */
+	const typed = new Set<string>();
+	/** How many times each word was typed so far, as the banks write it. */
+	const seen = new Map<string, number>();
+	const noteTyped = (group: string) => {
+		typed.add(group);
+		for (const word of wordsOf(group)) seen.set(word, (seen.get(word) ?? 0) + 1);
+	};
+	groups.forEach(noteTyped);
+	/** A word alone is new when it was typed nowhere; a phrase, when none of its words tires. */
+	const countedBy = new Map<Item, readonly string[]>();
+	/**
+	 * The words of a phrase long enough to tire when they come back. Counted in code points, never
+	 * fewer than graphemes: cutting every phrase of the bank into graphemes again would be slow.
+	 */
+	const countedWordsOf = (item: Item): readonly string[] => {
+		let counted = countedBy.get(item);
+		if (counted === undefined) {
+			counted = wordsOf(item.text).filter(
+				(word) => Array.from(word).length >= MIN_COUNTED_WORD_LENGTH
+			);
+			countedBy.set(item, counted);
+		}
+		return counted;
+	};
+	const isNew = (item: Item, alone: boolean): boolean => {
+		if (typed.has(item.text)) return false;
+		// The banks write a word as `wordsOf` gives it: no need to cut it again.
+		if (alone) return !seen.has(item.text);
+		const counted = countedWordsOf(item);
+		return counted.every(
+			(word) =>
+				(seen.get(word) ?? 0) + counted.filter((other) => other === word).length <= MAX_SAME_WORD
+		);
+	};
+	/** An entry new to this exercise, of at most `room` graphemes; it is never taken twice. */
+	const drawNew = (
+		reserve: Reserve,
+		preferred: readonly string[],
+		room: number,
+		keep: (item: Item) => boolean = () => true
+	): Item | undefined => {
+		let pool = reserve.items.filter(
+			(item) => item.graphemes.length <= room && isNew(item, reserve === words) && keep(item)
+		);
+		if (pool.length === 0) return undefined;
+		const matching = pool.filter((item) => item.graphemes.some((char) => preferred.includes(char)));
+		if (matching.length > 0 && rng() < newCharWeight) pool = matching;
+		const item = pickWeighted(
+			pool,
+			pool.map((candidate) => candidate.weight),
+			rng
+		);
+		noteTyped(item.text);
+		return item;
+	};
+	/** Index of the first group of what ends the exercise: the groups added go before it. */
+	let tailFrom = endingFrom;
+	let length = groups.reduce((sum, group) => sum + toGraphemes(group).length, 0);
+
+	// Once whole phrases can be written, an exercise whose mix has phrases holds one, even when the
+	// warm-up of the new characters has filled it; a text is whole on its own.
+	const wholeWanted =
+		completes && text === undefined && lesson.mix.phrases > 0
+			? (rules.wholePhraseMinCount ?? 0)
+			: 0;
+	let whole = wholeWanted === 0 ? 0 : groups.filter((group) => isWhole(toGraphemes(group))).length;
+	while (whole < wholeWanted && groups.length < (rules.maxGroupCount ?? lesson.groupCount)) {
+		const item =
+			drawNew(phrases, fresh, lesson.targetLength, (phrase) => isWhole(phrase.graphemes)) ??
+			drawNew(phrases, fresh, Number.POSITIVE_INFINITY, (phrase) => isWhole(phrase.graphemes));
+		if (item === undefined) break;
+		const at = endingFrom ?? groups.length;
+		groups.splice(at, 0, item.text);
+		tailFrom ??= at;
+		if (endingFrom !== undefined) endingFrom += 1;
+		length += item.graphemes.length;
+		whole += 1;
+	}
+
+	// A child whose pace is known gets more groups, up to what that pace types in the minutes aimed
+	// at: words and phrases, never suites. The groups come one after the other whatever the length
+	// aimed at, so that a faster pace only adds some: the exercise never gets shorter with it.
+	const aimed = pacedTargetLength(rules, lesson, context.paces);
+	const { maxGroupCount, maxTargetLength } = rules;
+	if (aimed > lesson.targetLength && maxGroupCount !== undefined && maxTargetLength !== undefined) {
+		const ceiling = maxTargetLength + (lengthSlack ?? 0);
+		const wordsPerGroup = known.has(SPACE) ? (rules.extraWordsPerGroup ?? 1) : 1;
+		const hasNew = (reserve: Reserve, room: number): boolean =>
+			reserve.items.some((item) => item.graphemes.length <= room && isNew(item, reserve === words));
+		const added: string[] = [];
+		while (length < aimed && groups.length + added.length < maxGroupCount) {
+			const room = ceiling - length;
+			const genres: [Genre, number][] = [
+				['word', hasNew(words, room) ? lesson.mix.words : 0],
+				['phrase', hasNew(phrases, room) ? lesson.mix.phrases : 0]
+			];
+			const open = genres.filter(([, weight]) => weight > 0);
+			if (open.length === 0) break;
+			const genre = pickWeighted(
+				open.map(([name]) => name),
+				open.map(([, weight]) => weight),
+				rng
+			);
+			const pieces: Item[] = [];
+			if (genre === 'phrase') {
+				const phrase = drawNew(phrases, fresh, room);
+				if (phrase !== undefined) pieces.push(phrase);
+			} else {
+				let left = room;
+				while (pieces.length < wordsPerGroup) {
+					const word = drawNew(words, lesson.newChars, left);
+					if (word === undefined) break;
+					pieces.push(word);
+					// The next word comes after a space.
+					left -= word.graphemes.length + 1;
+				}
+			}
+			if (pieces.length === 0) break;
+			const group = pieces.map((item) => item.text).join(SPACE);
+			added.push(group);
+			length += toGraphemes(group).length;
+		}
+		const at = tailFrom ?? groups.length;
+		groups.splice(at, 0, ...added);
+		if (endingFrom !== undefined) endingFrom += added.length;
 	}
 	if (lesson.repair === undefined) return { lessonId, groups };
 	// The mistakes are planted last, so that the groups are those the lesson would give without them.

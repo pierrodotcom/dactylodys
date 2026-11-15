@@ -87,7 +87,14 @@
 			"minAttempts": 5,
 			"minErrorRate": 0.2
 		},
-		"phraseEnd": "."
+		"phraseEnd": ".",
+		"wholePhraseMinCount": 1,
+		"targetMinutes": 2,
+		"maxTargetLength": 150,
+		"paceRecentPlays": 5,
+		"paceMinPlays": 3,
+		"maxGroupCount": 12,
+		"extraWordsPerGroup": 2
 	},
 	"worlds": [
 		{
@@ -640,6 +647,7 @@
 			"title": "La poste des petits mots",
 			"themeId": "general",
 			"gameIds": ["dialogue", "drawing", "train"],
+			"errorPolicy": "backspace",
 			"lessons": [
 				{
 					"id": "fr.lesson.liste-pique-nique",

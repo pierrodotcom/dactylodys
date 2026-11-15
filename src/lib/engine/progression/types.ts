@@ -1,4 +1,4 @@
-import type { SessionMetrics, SessionStart } from '../types';
+import type { ErrorPolicy, SessionMetrics, SessionStart } from '../types';
 
 /** Returns a number in [0, 1). Injected so that exercise generation is reproducible. */
 export type Rng = () => number;
@@ -100,6 +100,35 @@ export interface ProgressionRules {
 	 * end. Absent: phrases are typed as written.
 	 */
 	readonly phraseEnd?: string;
+	/**
+	 * Whole phrases (a capital first, a mark that ends a sentence last) an exercise holds at least,
+	 * from the lesson where they can be written (`phraseEnd` and the capitals learned), when the mix
+	 * of the lesson has phrases: one is added at the end of an exercise that lacks it. An exercise
+	 * that ends with a text is left as it is. Absent or 0: none is added.
+	 */
+	readonly wholePhraseMinCount?: number;
+	/**
+	 * Minutes of typing an exercise aims at, for a child whose pace is known (`ExerciseContext.paces`):
+	 * the exercise grows by whole groups of words and phrases, never by suites, up to the median pace
+	 * times this. Never under the length of the lesson, and unchanged for a child with fewer plays
+	 * than `paceMinPlays`. With it, `maxTargetLength`, `paceRecentPlays`, `paceMinPlays`,
+	 * `maxGroupCount` and `extraWordsPerGroup` are required. Absent: every exercise keeps the length
+	 * of its lesson.
+	 */
+	readonly targetMinutes?: number;
+	/** Most graphemes an exercise that grows aims at; with `lengthSlack` more, none goes beyond. */
+	readonly maxTargetLength?: number;
+	/** Latest plays whose median pace is the pace of the child, at least 1. */
+	readonly paceRecentPlays?: number;
+	/** Plays with a known pace, at least, before an exercise grows: a beginner keeps today's length. */
+	readonly paceMinPlays?: number;
+	/**
+	 * Most groups of an exercise that grows, never under the `groupCount` of a lesson: the games
+	 * draw one thing per group, and stay readable up to this number.
+	 */
+	readonly maxGroupCount?: number;
+	/** Words put side by side in a group added to an exercise that grows, at least 1. */
+	readonly extraWordsPerGroup?: number;
 }
 
 /** A warm-up made of words: data, never constants in the code. */
@@ -185,6 +214,13 @@ export interface HandGuideRules {
 	 */
 	readonly hesitationMs?: number;
 }
+
+/**
+ * The choice of the adult for the mistakes (ADR-075, choice 5): `world`, each world says whether a
+ * mistake is erased with Backspace (`WorldDefinition.errorPolicy`); `backspace`, always erased;
+ * `retry`, never: the game waits for the right key.
+ */
+export type ErrorPolicyPreference = 'world' | ErrorPolicy;
 
 /** The choice of the child or the adult: follow the lessons, always show, never show. */
 export type HandGuidePreference = 'auto' | 'always' | 'off';
@@ -274,6 +310,12 @@ export interface WorldDefinition {
 	readonly themeId: string;
 	/** Mini-games offered in this world; the first one is the default. */
 	readonly gameIds: readonly string[];
+	/**
+	 * How a mistake is handled in the lessons of this world when the adult lets the world decide
+	 * (`ErrorPolicyPreference`): `backspace` where erasing is part of what is learned. Absent: the
+	 * game waits for the right key (`retry`).
+	 */
+	readonly errorPolicy?: ErrorPolicy;
 	readonly lessons: readonly LessonDefinition[];
 }
 
@@ -400,6 +442,12 @@ export interface ExerciseContext {
 	 * mistakes among them. Absent: among the characters learned.
 	 */
 	readonly neighbors?: KeyNeighbors;
+	/**
+	 * Correct characters per minute of the latest plays of the child, the most recent last, measured
+	 * on the active time (ADR-077): with `rules.targetMinutes`, the exercise grows with their
+	 * median. Absent or too few: the length of the lesson.
+	 */
+	readonly paces?: readonly number[];
 }
 
 /** What a mini-game receives: short targets typed one after the other. */

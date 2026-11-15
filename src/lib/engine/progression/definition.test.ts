@@ -1256,3 +1256,88 @@ describe('detours', () => {
 		expect(lessonNumber(parsed, 'fr.lesson.zzz')).toBeNull();
 	});
 });
+
+describe('exercises that grow with the pace of the child', () => {
+	const PACED = {
+		targetMinutes: 2,
+		maxTargetLength: 150,
+		paceRecentPlays: 5,
+		paceMinPlays: 3,
+		maxGroupCount: 12,
+		extraWordsPerGroup: 2
+	};
+
+	function withRules(rules: Record<string, unknown>): Raw {
+		const raw = clone(BASE);
+		Object.assign(raw.rules, rules);
+		return raw;
+	}
+
+	it('keeps the six rules when they are all given', () => {
+		expect(parseProgression(withRules(PACED)).rules).toMatchObject(PACED);
+	});
+
+	it('gives none of them when none is written', () => {
+		const { rules } = parseProgression(clone(BASE));
+		for (const name of Object.keys(PACED)) expect(rules).not.toHaveProperty(name);
+	});
+
+	it.each(Object.keys(PACED))('rejects the rules without %s', (name) => {
+		const rules: Record<string, unknown> = { ...PACED };
+		delete rules[name];
+		expect(() => parseProgression(withRules(rules))).toThrow(new RegExp(`rules\\.${name}`));
+	});
+
+	it.each([
+		['no minute to aim at', 'targetMinutes', 0],
+		['a ceiling of no character', 'maxTargetLength', 0],
+		['no play to look at', 'paceRecentPlays', 0],
+		['more plays asked than looked at', 'paceMinPlays', 6],
+		['no play before growing', 'paceMinPlays', 0],
+		['no group at all', 'maxGroupCount', 0],
+		['no word in a group added', 'extraWordsPerGroup', 0],
+		['half a word in a group added', 'extraWordsPerGroup', 1.5]
+	])('rejects %s', (_label, name, value) => {
+		expect(() => parseProgression(withRules({ ...PACED, [name]: value }))).toThrow(
+			new RegExp(`rules\\.${name}`)
+		);
+	});
+
+	it('rejects a lesson with more groups or a longer aim than an exercise that grows may have', () => {
+		expect(() => parseProgression(withRules({ ...PACED, maxGroupCount: 4 }))).toThrow(
+			/lessons\[0\]\.groupCount: expected at most 4 \(rules\.maxGroupCount\)/
+		);
+		expect(() => parseProgression(withRules({ ...PACED, maxTargetLength: 19 }))).toThrow(
+			/lessons\[0\]\.targetLength: expected at most 19 \(rules\.maxTargetLength\)/
+		);
+	});
+
+	it('keeps a minimum of whole phrases, and asks for the mark that ends them', () => {
+		const rules = { wholePhraseMinCount: 1, phraseEnd: '.' };
+		expect(parseProgression(withRules(rules)).rules.wholePhraseMinCount).toBe(1);
+		expect(() => parseProgression(withRules({ wholePhraseMinCount: 1 }))).toThrow(
+			/rules\.wholePhraseMinCount: expected rules\.phraseEnd/
+		);
+		expect(() => parseProgression(withRules({ ...rules, wholePhraseMinCount: -1 }))).toThrow(
+			/rules\.wholePhraseMinCount/
+		);
+	});
+});
+
+describe('how a world handles a mistake', () => {
+	it('keeps what a world says, and says nothing for the others', () => {
+		const raw = clone(BASE);
+		(raw.worlds[1] as Record<string, unknown>)['errorPolicy'] = 'backspace';
+		const parsed = parseProgression(raw);
+		expect(parsed.worlds[0]).not.toHaveProperty('errorPolicy');
+		expect(parsed.worlds[1]?.errorPolicy).toBe('backspace');
+	});
+
+	it('rejects a way to handle a mistake the game does not know', () => {
+		const raw = clone(BASE);
+		(raw.worlds[0] as Record<string, unknown>)['errorPolicy'] = 'always';
+		expect(() => parseProgression(raw)).toThrow(
+			/worlds\[0\]\.errorPolicy: expected one of: retry, backspace/
+		);
+	});
+});
