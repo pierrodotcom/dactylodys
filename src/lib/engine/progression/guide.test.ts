@@ -26,6 +26,30 @@ describe('guideMode', () => {
 		expect(guideMode(RULES, 1, 'off')).toBe('none');
 	});
 
+	it('shows every key in an aided play, unless the person said never', () => {
+		expect(guideMode(RULES, 24, 'auto', 'aided')).toBe('every-key');
+		expect(guideMode(RULES, 10, 'auto', 'aided')).toBe('every-key');
+		expect(guideMode({ ...RULES, handGuide: undefined }, 10, 'auto', 'aided')).toBe('every-key');
+		expect(guideMode(RULES, 10, 'off', 'aided')).toBe('none');
+		expect(guideMode(RULES, 10, 'auto', 'none')).toBe('new-keys');
+	});
+
+	it('never shows less in an aided play than in another one', () => {
+		const rank: Record<GuideMode, number> = { 'every-key': 2, 'new-keys': 1, none: 0 };
+		const preferences: readonly HandGuidePreference[] = ['auto', 'always', 'off'];
+		fc.assert(
+			fc.property(
+				fc.integer({ min: 1, max: 40 }),
+				fc.constantFrom(...preferences),
+				(number, preference) => {
+					const plain = guideMode(RULES, number, preference);
+					const aided = guideMode(RULES, number, preference, 'aided');
+					expect(rank[aided]).toBeGreaterThanOrEqual(rank[plain]);
+				}
+			)
+		);
+	});
+
 	it('never shows anything on its own when the rules say nothing', () => {
 		const withoutGuide = { ...RULES, handGuide: undefined };
 		expect(guideMode(withoutGuide, 1, 'auto')).toBe('none');

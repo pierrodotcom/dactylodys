@@ -1,10 +1,21 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { GhostRun, PacePoint } from '$lib/engine/ghost/types';
 import type { ProgressionRules } from '$lib/engine/progression/types';
 import type { SessionMetrics } from '$lib/engine/types';
 import type { GameOutcome } from '$lib/games/types';
 import { createProfile, parseProfile, withGhost } from '$lib/state/profile';
-import { recordLessonOutcome, starsOrNone } from './lesson-outcome';
+import {
+	recordLessonOutcome,
+	RESULT_RULES,
+	resultActions,
+	resultPlan,
+	resultSentence,
+	resultSteps,
+	starsOrNone,
+	type PlayFacts,
+	type ResultPlan
+} from './lesson-outcome';
 
 const RULES: ProgressionRules = {
 	unlockAccuracy: 80,
@@ -143,6 +154,159 @@ describe('recordLessonOutcome', () => {
 
 		expect(parseProfile(JSON.parse(JSON.stringify(profile)))).toEqual(profile);
 		expect(before).toEqual(snapshot);
+	});
+});
+
+describe('resultSteps', () => {
+	it('shows each reward alone, then the question of the name, then the stars and what comes next', () => {
+		expect(resultSteps(1, true)).toEqual([
+			{ kind: 'reward', index: 0 },
+			{ kind: 'name' },
+			{ kind: 'result' }
+		]);
+		expect(resultSteps(2, false)).toEqual([
+			{ kind: 'reward', index: 0 },
+			{ kind: 'reward', index: 1 },
+			{ kind: 'result' }
+		]);
+		expect(resultSteps(0, true)).toEqual([{ kind: 'name' }, { kind: 'result' }]);
+	});
+
+	it('adds no step when there is nothing to show', () => {
+		expect(resultSteps(0, false)).toEqual([{ kind: 'result' }]);
+	});
+
+	it('always ends with the result, once, after everything that was won', () => {
+		fc.assert(
+			fc.property(fc.integer({ min: 0, max: 6 }), fc.boolean(), (rewards, askName) => {
+				const steps = resultSteps(rewards, askName);
+				expect(steps.at(-1)).toEqual({ kind: 'result' });
+				expect(steps.filter((step) => step.kind === 'result')).toHaveLength(1);
+				expect(steps.filter((step) => step.kind === 'reward')).toHaveLength(rewards);
+				expect(steps.filter((step) => step.kind === 'name')).toHaveLength(askName ? 1 : 0);
+				expect(steps).toHaveLength(rewards + (askName ? 1 : 0) + 1);
+			})
+		);
+	});
+});
+
+const PASSED_PLAY: PlayFacts = {
+	passed: true,
+	close: false,
+	hasOpenNext: true,
+	suggestBreak: false,
+	tameKeys: [],
+	worldDone: false,
+	race: null,
+	almost: false,
+	perfect: false
+};
+
+const FACTS = fc.record({
+	passed: fc.boolean(),
+	close: fc.boolean(),
+	hasOpenNext: fc.boolean(),
+	suggestBreak: fc.boolean(),
+	tameKeys: fc.subarray(['v', 'b']),
+	worldDone: fc.boolean(),
+	race: fc.constantFrom(null, 'child' as const, 'ghost' as const),
+	almost: fc.boolean(),
+	perfect: fc.boolean()
+});
+
+describe('resultPlan', () => {
+	it('proposes the next lesson once the new keys are tamed', () => {
+		expect(resultPlan(PASSED_PLAY)).toEqual({ primary: 'next', tame: [], retry: null });
+	});
+
+	it('proposes one more play to tame the new keys, with the next lesson still there', () => {
+		const plan = resultPlan({ ...PASSED_PLAY, tameKeys: ['v', 'b'] });
+
+		expect(plan).toEqual({ primary: 'replay', tame: ['v', 'b'], retry: null });
+		expect(resultActions(plan, PASSED_PLAY)).toEqual(['replay', 'next']);
+	});
+
+	it('never proposes to tame keys after a play under the threshold', () => {
+		const plan = resultPlan({ ...PASSED_PLAY, passed: false, hasOpenNext: false, tameKeys: ['v'] });
+
+		expect(plan).toEqual({ primary: 'replay', tame: [], retry: 'far' });
+	});
+
+	it('lets the break proposed come first, the other ways still there', () => {
+		const facts = { ...PASSED_PLAY, suggestBreak: true, tameKeys: ['v'] };
+		const plan = resultPlan(facts);
+
+		expect(plan).toEqual({ primary: 'break', tame: [], retry: null });
+		expect(resultActions(plan, facts)).toEqual(['break', 'next', 'replay']);
+	});
+
+	it('says how close a play under the threshold came, when the next lesson stays closed', () => {
+		const failed = { ...PASSED_PLAY, passed: false, hasOpenNext: false };
+
+		expect(resultPlan({ ...failed, close: true }).retry).toBe('close');
+		expect(resultPlan(failed).retry).toBe('far');
+		// A lesson passed before: the next one is open, nothing to say of the threshold.
+		expect(resultPlan({ ...failed, hasOpenNext: true }).retry).toBeNull();
+	});
+
+	it('never locks anything: the next lesson is offered whenever it is open, and the replay always', () => {
+		fc.assert(
+			fc.property(FACTS, (facts) => {
+				const plan = resultPlan(facts);
+				const actions = resultActions(plan, facts);
+				expect(actions[0]).toBe(plan.primary);
+				expect(new Set(actions).size).toBe(actions.length);
+				expect(actions.includes('next')).toBe(facts.hasOpenNext);
+				expect(actions.includes('replay')).toBe(true);
+				expect(actions.includes('break')).toBe(facts.suggestBreak);
+			})
+		);
+	});
+
+	it('names keys to tame only after a play that opened the next lesson, and only those given', () => {
+		fc.assert(
+			fc.property(FACTS, (facts) => {
+				const plan = resultPlan(facts);
+				if (plan.tame.length > 0) {
+					expect(facts.passed).toBe(true);
+					expect(facts.suggestBreak).toBe(false);
+					expect(plan.tame).toEqual(facts.tameKeys);
+					expect(plan.primary).toBe('replay');
+				}
+				if (!facts.passed) expect(plan.tame).toEqual([]);
+				expect(plan.retry !== null).toBe(!facts.passed && !facts.hasOpenNext);
+			})
+		);
+	});
+});
+
+describe('resultSentence', () => {
+	const plan = (facts: PlayFacts): ResultPlan => resultPlan(facts);
+
+	it('says one sentence: how close a play under the threshold came first', () => {
+		const failed = { ...PASSED_PLAY, passed: false, hasOpenNext: false, almost: true };
+
+		expect(resultSentence(plan({ ...failed, close: true }), failed)).toBe('retry-close');
+		expect(resultSentence(plan(failed), { ...failed, worldDone: true })).toBe('retry-far');
+	});
+
+	it('then the end of the worlds, the race, the star nearly won, a play without a mistake', () => {
+		const passedPlan = plan(PASSED_PLAY);
+		const all = { ...PASSED_PLAY, worldDone: true, race: 'child' as const, almost: true };
+
+		expect(resultSentence(passedPlan, all)).toBe('world-done');
+		expect(resultSentence(passedPlan, { ...all, worldDone: false })).toBe('race-child');
+		expect(resultSentence(passedPlan, { ...PASSED_PLAY, race: 'ghost' })).toBe('race-ghost');
+		expect(resultSentence(passedPlan, { ...PASSED_PLAY, almost: true })).toBe('almost');
+		expect(resultSentence(passedPlan, { ...PASSED_PLAY, perfect: true })).toBe('perfect');
+		expect(resultSentence(passedPlan, PASSED_PLAY)).toBe('note');
+	});
+});
+
+describe('RESULT_RULES', () => {
+	it('are read from the rules of the result shipped with the game', () => {
+		expect(RESULT_RULES.consolidation.maxKeys).toBeGreaterThanOrEqual(1);
+		expect(RESULT_RULES.support.afterFailedPlays).toBeGreaterThanOrEqual(1);
 	});
 });
 
