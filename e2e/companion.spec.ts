@@ -198,7 +198,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('companion and rewards', () => {
-	test('announces the item of the first lesson, puts it on and asks for a name, with the keyboard alone', async ({
+	test('announces the item of the first lesson, puts it on, then asks for a name, one step after the other, with the keyboard alone', async ({
 		page
 	}) => {
 		const child = advancedProfile({ name: 'Nova', passed: {} });
@@ -212,24 +212,24 @@ test.describe('companion and rewards', () => {
 		await page.locator('button[data-proposed]').click();
 		await typeToEnd(page, message('play_result_map'));
 
-		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toBeVisible();
+		// The item first, alone, next to the companion that will wear it (audit E-04).
+		await expect(heading(page, message('play_reward_new'))).toBeVisible();
 		await expect(page.getByText(message('play_reward_won'))).toBeVisible();
 		await expect(page.getByRole('img', { name: NECKLACE.title })).toBeVisible();
-		const photo = page.locator('.photo svg.companion');
-		await expect(photo).not.toHaveAttribute('data-items', /./);
+		const wearer = page.locator('[data-reward-wearer] svg.companion');
+		await expect(wearer).not.toHaveAttribute('data-items', /./);
 
 		await activateByTab(page, button(page, message('play_reward_wear')));
-		await expect(photo).toHaveAttribute('data-items', NECKLACE.artId);
-		// The companion next to the item, in the card: the child sees it put on where it clicked.
-		const wearer = page.locator('[data-reward-wearer] svg.companion');
+		// The companion next to the item, on the same screen: the child sees it put on where it clicked.
 		await expect(wearer).toHaveAttribute('data-items', NECKLACE.artId);
 		await expect(wearer).toBeInViewport();
 		await expect(page.getByText(message('play_reward_worn'))).toBeVisible();
 		await expect(button(page, message('play_reward_wear'))).toHaveCount(0);
+		await expect(button(page, message('play_result_continue'))).toBeFocused();
+		await page.keyboard.press('Enter');
 
-		await expect(
-			page.getByRole('heading', { name: message('play_reward_name_question') })
-		).toBeVisible();
+		// Then the name, alone.
+		await expect(heading(page, message('play_reward_name_question'))).toBeVisible();
 		for (const idea of catalogue.nameSuggestions) {
 			await expect(button(page, idea)).toBeVisible();
 		}
@@ -239,9 +239,7 @@ test.describe('companion and rewards', () => {
 		await expect(
 			page.getByText(message('play_companion_named', { name: COMPANION_NAME }))
 		).toBeVisible();
-		await expect(
-			page.getByRole('heading', { name: message('play_reward_name_question') })
-		).toHaveCount(0);
+		await expect(page.getByLabel(message('play_companion_name_label'))).toHaveCount(0);
 
 		await expect
 			.poll(async () => {
@@ -250,6 +248,13 @@ test.describe('companion and rewards', () => {
 			})
 			.toEqual([COMPANION_NAME, [NECKLACE.id], [NECKLACE.id]]);
 
+		// Then the stars, the item worn in the souvenir photo.
+		await expect(button(page, message('play_result_continue'))).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(page.locator('.photo svg.companion')).toHaveAttribute(
+			'data-items',
+			NECKLACE.artId
+		);
 		await activateByTab(page, button(page, message('play_result_map')));
 		await throughStory(page, heading(page, message('play_map_title')), { keyboard: true });
 		await expect(page.locator('.hero svg.companion')).toHaveAttribute('data-items', NECKLACE.artId);
@@ -259,18 +264,21 @@ test.describe('companion and rewards', () => {
 		const child = advancedProfile({ name: 'Lou', passed: {} });
 		await reachMapAs(page, child);
 		await playLesson(page, FIRST);
+		await button(page, message('play_result_continue')).click();
 		await button(page, message('play_reward_name_later')).click();
 		await expect(
 			page.getByRole('heading', { name: message('play_reward_name_question') })
 		).toHaveCount(0);
+		await expect(page.locator('[data-result-step="result"]')).toBeVisible();
 
-		await button(page, message('play_result_replay')).click();
+		await page.locator('[data-result-replay]').click();
 		await throughStory(page, groupLabel(page));
 		await typeToEnd(page, message('play_result_map'));
 		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
 		await expect(
 			page.getByRole('heading', { name: message('play_reward_name_question') })
 		).toHaveCount(0);
+		await expect(page.locator('[data-result-step="result"]')).toBeVisible();
 		expect((await stored(page, child)).companion.name).toBe('');
 	});
 
@@ -501,6 +509,9 @@ for (const colorScheme of COLOR_SCHEMES) {
 
 			await page.locator('button[data-proposed]').click();
 			await typeToEnd(page, message('play_result_map'));
+			await expect(heading(page, message('play_reward_new'))).toBeVisible();
+			await expectNoAxeViolation(page);
+			await button(page, message('play_result_continue')).click();
 			await expect(
 				page.getByRole('heading', { name: message('play_reward_name_question') })
 			).toBeVisible();

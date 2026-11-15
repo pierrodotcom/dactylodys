@@ -13,6 +13,7 @@ import {
 	openPage,
 	readJson,
 	shortenRewards,
+	throughResult,
 	throughStory
 } from './support';
 
@@ -143,6 +144,7 @@ test.describe('offline', () => {
 		await throughStory(page, heading(page, FIRST.title));
 		await page.locator('button[data-proposed]').click();
 		await typeLessonToResult(page);
+		await throughResult(page);
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
 	});
 

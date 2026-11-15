@@ -65,12 +65,16 @@
 		{#if total > 1}
 			<p class="count">{m.play_reward_count({ index: index + 1, total })}</p>
 		{/if}
-		<p class="dd-visually-hidden" role="status">{wornHere ? m.play_reward_worn() : ''}</p>
 		<div class="actions" bind:this={actions}>
-			{#if canWear}
-				<Button onclick={wear}>{m.play_reward_wear()}</Button>
-			{:else if wornHere}
-				<p class="worn" aria-hidden="true">{m.play_reward_worn()}</p>
+			{#if isItem && (canWear || wornHere)}
+				<!-- The sentence takes the place of the button it answers; it is there from the start, so
+				that a screen reader says it when it is written. -->
+				<div class="wear">
+					{#if canWear}
+						<Button onclick={wear}>{m.play_reward_wear()}</Button>
+					{/if}
+					<p class="worn" role="status">{wornHere ? m.play_reward_worn() : ''}</p>
+				</div>
 			{/if}
 			<Button variant={canWear ? 'secondary' : 'primary'} onclick={oncontinue} data-result-continue>
 				{m.play_result_continue()}
@@ -117,6 +121,17 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--dd-space-md);
+	}
+
+	.wear {
+		display: grid;
+		align-items: center;
+		justify-items: center;
+	}
+
+	/* The button and the sentence that answers it share one place: nothing moves when it is worn. */
+	.wear > :global(*) {
+		grid-area: 1 / 1;
 	}
 
 	.worn {

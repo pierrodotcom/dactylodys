@@ -42,11 +42,9 @@
 			<Companion mood={named ? 'cheer' : 'happy'} />
 		</div>
 		<div class="answer" bind:this={answer}>
-			<p class="dd-visually-hidden" role="status">
-				{named ? m.play_companion_named({ name }) : ''}
-			</p>
+			<!-- There from the start, so that a screen reader says the thanks when they are written. -->
+			<p class="thanks" role="status">{named ? m.play_companion_named({ name }) : ''}</p>
 			{#if named}
-				<p class="thanks" aria-hidden="true">{m.play_companion_named({ name })}</p>
 				<Button onclick={oncontinue} data-result-continue>{m.play_result_continue()}</Button>
 			{:else}
 				<CompanionName id="result-name" name="" {suggestions} onname={give} {onlater} wide />

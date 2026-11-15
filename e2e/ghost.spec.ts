@@ -12,6 +12,7 @@ import {
 	readJson,
 	reloadPage,
 	shortenRewards,
+	throughResult,
 	throughStory
 } from './support';
 
@@ -133,6 +134,7 @@ async function typeToResult(page: Page, afterFirst?: () => Promise<void>) {
 	}
 	if (await finaleButton(page).isVisible()) await finaleButton(page).click();
 	await expect(resultMapButton(page)).toBeVisible();
+	await throughResult(page);
 }
 
 async function expectNoAxeViolation(page: Page) {
@@ -213,7 +215,7 @@ test.describe('race against the ghost', () => {
 		await reachIntro(page, racer(SLOW_RUN));
 		await startRace(page);
 		await typeToResult(page);
-		await button(page, message('play_result_replay')).click();
+		await page.locator('[data-result-replay]').click();
 		await throughStory(page, groupLabel(page));
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(track(page)).toHaveCount(0);

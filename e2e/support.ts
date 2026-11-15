@@ -61,6 +61,49 @@ export async function throughStory(
 	return told;
 }
 
+const RESULT_STEP = '[data-result-step="result"]';
+const STEP_CONTINUE = '[data-result-step] [data-result-continue]';
+const NAME_STEP = '[data-result-step="name"]';
+const RESULT_TIMEOUT = 15_000;
+
+/** Presses Tab until the element has the focus, then Enter, as a child at the keyboard would. */
+async function pressByTab(page: Page, target: Locator): Promise<void> {
+	for (let press = 0; press < 30; press++) {
+		if (await target.evaluate((element) => element === document.activeElement)) break;
+		await page.keyboard.press('Tab');
+	}
+	await expect(target).toBeFocused({ timeout: 1000 });
+	await page.keyboard.press('Enter');
+}
+
+/**
+ * Passes the steps of the result before its stars (audit E-04): « Continuer » on each reward won,
+ * « Plus tard » to the name of the companion. Says how many steps were passed: a test that is not
+ * about them goes on to the stars and the buttons of the result. `keyboard`: Tab, then Enter.
+ */
+export async function throughResult(
+	page: Page,
+	options: { keyboard?: boolean } = {}
+): Promise<number> {
+	const result = page.locator(RESULT_STEP);
+	const goOn = page.locator(STEP_CONTINUE);
+	const later = page
+		.locator(NAME_STEP)
+		.getByRole('button', { name: loadMessages().message('play_reward_name_later'), exact: true });
+	let passed = 0;
+	await expect(async () => {
+		if (await result.isVisible()) return;
+		const next = (await goOn.isVisible()) ? goOn : (await later.isVisible()) ? later : null;
+		if (next !== null) {
+			if (options.keyboard) await pressByTab(page, next);
+			else await next.click();
+			passed += 1;
+		}
+		await expect(result).toBeVisible({ timeout: 500 });
+	}).toPass({ timeout: RESULT_TIMEOUT });
+	return passed;
+}
+
 export async function openPage(page: Page, url: string): Promise<void> {
 	await page.goto(url);
 	await waitForHydration(page);
