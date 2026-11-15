@@ -30,9 +30,19 @@ const PAGES = [
 	{ path: '/pour-les-adultes', title: message('info_link_adults') },
 	{ path: PROFESSIONALS, title: message('info_link_professionals') },
 	{ path: '/confidentialite', title: message('info_link_privacy') },
-	{ path: '/accessibilite', title: message('info_link_accessibility') }
+	{ path: '/accessibilite', title: message('info_link_accessibility') },
+	{ path: '/credits', title: message('info_link_credits') }
 ] as const;
 const PATHS = PAGES.map((info) => info.path);
+const REPOSITORY = 'https://github.com/pierrodotcom/dactylodys';
+/** The rows of the table of `static/ATTRIBUTIONS.md`, without its two heading lines. */
+const ATTRIBUTION_ROWS = readFileSync('static/ATTRIBUTIONS.md', 'utf8')
+	.split(/\r?\n/)
+	.filter((line) => line.startsWith('|'))
+	.slice(2);
+const ATTRIBUTION_ADDRESSES = ATTRIBUTION_ROWS.flatMap(
+	(row) => row.match(/https?:\/\/[^\s,)|]+/g) ?? []
+);
 
 function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
@@ -158,6 +168,119 @@ test('opens a page from the home page and goes back, by keyboard alone', async (
 		await expect(page).toHaveURL(/\/$/);
 		await expect(heading(page, message('app_name'))).toBeVisible();
 	}
+});
+
+test.describe('the credits page', () => {
+	test('names the licenses, the repository and every attribution, by keyboard alone', async ({
+		page
+	}) => {
+		await openPage(page, '/');
+		await focusByTab(
+			page,
+			page.locator('footer').getByRole('link', { name: message('info_link_credits'), exact: true })
+		);
+		await page.keyboard.press('Enter');
+		await expect(heading(page, message('info_link_credits'))).toBeVisible();
+
+		const main = page.getByRole('main');
+		await expect(main).toContainText('AGPL-3.0-or-later');
+		await expect(main).toContainText('CC BY-SA 4.0');
+		await expect(main).toContainText('données dérivées du CLDR (licence Unicode)');
+		await expect(main).not.toContainText('CC0');
+		await expect(main.locator('[data-repository-link]')).toHaveAttribute('href', REPOSITORY);
+
+		expect(ATTRIBUTION_ROWS.length).toBeGreaterThan(0);
+		await expect(main.locator('[data-credit-source]')).toHaveCount(ATTRIBUTION_ROWS.length);
+		const links = main.getByRole('link');
+		const linked = await links.evaluateAll((all) =>
+			all.map((link) => (link as HTMLAnchorElement).href)
+		);
+		expect(linked).toEqual(expect.arrayContaining(ATTRIBUTION_ADDRESSES));
+
+		for (const link of await links.all()) await focusByTab(page, link);
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('app_name'))).toBeVisible();
+	});
+
+	test('names the host of the site on the privacy page', async ({ page }) => {
+		await openPage(page, '/confidentialite');
+		const host = page.locator('[data-privacy-host]');
+		await expect(host).toContainText('GitHub Pages');
+		await expect(host).toContainText('adresse IP');
+	});
+});
+
+test.describe('a page for adults opened from the adult space', () => {
+	async function openAdultSpace(page: Page) {
+		await openPage(page, '/adulte');
+		await page.locator('[data-gate-answer]').fill(String(await gateNumber(page)));
+		await page.keyboard.press('Enter');
+		await expect(page.locator('[data-adult-home]')).toBeVisible();
+	}
+
+	function adultLink(page: Page, title: string): Locator {
+		return page.locator('[data-adult-info]').getByRole('link', { name: title, exact: true });
+	}
+
+	function wayOut(page: Page): Locator {
+		return page.locator('[data-screen-back]').getByRole('button');
+	}
+
+	test('leads back to the adult space without the gate, by keyboard alone', async ({ page }) => {
+		await openAdultSpace(page);
+		for (const info of PAGES) {
+			await focusByTab(page, adultLink(page, info.title));
+			await page.keyboard.press('Enter');
+			await expect(heading(page, info.title)).toBeVisible();
+			await expect(wayOut(page)).toHaveText(message('info_back'));
+
+			await page.keyboard.press('Escape');
+			await expect(page).toHaveURL(/\/adulte$/);
+			await expect(page.locator('[data-adult-home]')).toBeVisible();
+			await expect(page.locator('[data-gate-answer]')).toHaveCount(0);
+		}
+	});
+
+	test('stays open from one page to the next and through the Back button of the browser', async ({
+		page
+	}) => {
+		await openAdultSpace(page);
+		await adultLink(page, message('info_link_privacy')).click();
+		await expect(heading(page, message('info_link_privacy'))).toBeVisible();
+		await page
+			.locator('footer')
+			.getByRole('link', { name: message('info_link_credits'), exact: true })
+			.click();
+		await expect(heading(page, message('info_link_credits'))).toBeVisible();
+		await expect(wayOut(page)).toHaveText(message('info_back'));
+
+		await page.goBack();
+		await expect(heading(page, message('info_link_privacy'))).toBeVisible();
+		await page.goBack();
+		await expect(page.locator('[data-adult-home]')).toBeVisible();
+		await expect(page.locator('[data-gate-answer]')).toHaveCount(0);
+	});
+
+	test('meets the gate again once the adult has left the adult space', async ({ page }) => {
+		await openAdultSpace(page);
+		await adultLink(page, message('info_link_accessibility')).click();
+		await wayOut(page).click();
+		await expect(page.locator('[data-adult-home]')).toBeVisible();
+
+		await wayOut(page).click();
+		await expect(page).toHaveURL(/\/jouer$/);
+		await page.goBack();
+		await expect(page).toHaveURL(/\/adulte$/);
+		await expect(page.locator('[data-gate-answer]')).toBeVisible();
+		await expect(page.locator('[data-adult-home]')).toHaveCount(0);
+	});
+
+	test('leads to the home page when it was not opened from the adult space', async ({ page }) => {
+		await openPage(page, '/adulte');
+		await expect(page.locator('[data-gate-answer]')).toBeVisible();
+		await openPage(page, '/credits');
+		await expect(wayOut(page)).toHaveText(message('info_back_home'));
+	});
 });
 
 test.describe('reflow at 320 pixels', () => {

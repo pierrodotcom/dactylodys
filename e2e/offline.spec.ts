@@ -17,7 +17,7 @@ const PLAYER_NAME = 'Mini';
 const STEP_TIMEOUT = 15_000;
 const IPHONE_USER_AGENT =
 	'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
-/** Every page that is prerendered, which must open without a connection. */
+/** Every page of the game, which must open without a connection. */
 const PAGES = [
 	'/',
 	'/jouer',
@@ -26,9 +26,10 @@ const PAGES = [
 	'/pour-les-professionnels',
 	'/confidentialite',
 	'/accessibilite',
-	'/dev/ui',
-	'/dev/compagnon'
+	'/credits'
 ];
+/** The trial pages are tools: none is downloaded for playing offline (ADR-075). */
+const TRIAL_PAGES = ['/dev/traces', '/dev/voix', '/dev/ui', '/dev/compagnon'];
 
 const { message, templateRegex } = loadMessages();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
@@ -194,6 +195,29 @@ test.describe('offline', () => {
 			new URL(baseURL ?? '').origin
 		);
 		expect(foreign).toEqual([]);
+	});
+
+	test('keeps no trial page of /dev, which still opens with a connection', async ({ page }) => {
+		// The worker downloads the whole game before it is ready: long on a busy machine.
+		test.slow();
+		await visitOnce(page);
+		const kept = await page.evaluate(async () => {
+			const paths: string[] = [];
+			for (const name of await caches.keys()) {
+				for (const request of await (await caches.open(name)).keys()) {
+					paths.push(new URL(request.url).pathname);
+				}
+			}
+			return paths;
+		});
+		expect(kept).toContain('/credits');
+		expect(kept.filter((path) => path.startsWith('/dev'))).toEqual([]);
+
+		for (const path of TRIAL_PAGES) {
+			const response = await page.goto(path);
+			expect(response?.status(), path).toBe(200);
+			await expect(page.locator('h1').first(), path).toBeVisible();
+		}
 	});
 });
 

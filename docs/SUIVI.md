@@ -35,7 +35,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18 | En cours (branche `feat/reglages-ranges`) |
 | Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | À faire (migration des progrès) |
 | Textes et typographie | C-01 à C-07, C-10, C-11, C-16, C-17, E-09, E-13 | À faire, avant la campagne de voix |
-| Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27 | À faire |
+| Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27, E-13, E-14 | Fait (ADR-078) ; reste Q-07 a-b-c (mise à jour du cache), trois règles typées dans `state/`, jetons inutilisés |
 | Espace adulte | E-14, E-15, P-17, P-21 | À faire |
 | Doigtés réduits | § 5 de l'audit de pédagogie | Après les lots ci-dessus |
 | Voix | P-01, P-12, P-13 | Campagne du porteur, quand les textes sont figés |
@@ -249,3 +249,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-14** — Audit complet rendu (quatre rapports, `docs/audit/`) ; le porteur suit les 22 recommandations (ADR-075). Lot 5 de J5 et page « Pour les professionnels » fusionnés (PR 103). Lot « vrais mots » (ADR-074) : plus de suites de lettres au hasard aux leçons 8 à 24, échauffements variés. Leçons L-135 à L-139.
 - **2026-11-14** — « Vrais mots » fusionné (PR 104). Le porteur reçoit « Ton clavier est un peu différent » sur un AZERTY ordinaire : la vérification jugeait la touche annoncée par le navigateur, fausse sous un navigateur qui résiste au pistage ; elle juge maintenant la lettre écrite (ADR-076, L-142).
 - **2026-11-14** — « Mesures justes » (ADR-077) : vitesse comptée depuis l'affichage du groupe, pauses retirées, une erreur par faute en mode Retour arrière, caractères par minute pour l'adulte, profil version 14.
+- **2026-11-14** — « Crédits et hors-ligne » (ADR-078) : page Crédits et licences, pages d'essai internes retirées du site publié (12,25 → 4,91 Mo), politique de sécurité de contenu, tests unitaires avant chaque publication.
