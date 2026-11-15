@@ -38,7 +38,8 @@ describe('viewOf', () => {
 	});
 
 	it('reports the error in progress', () => {
-		const state = type(createGame(['fj'], 'retry'), 'x');
+		const charIndex = new Map([['x', [[{ code: 'KeyX', level: 'base' as const }]]]]);
+		const state = type(createGame(['fj'], 'retry', { charIndex }), 'x');
 
 		expect(viewOf(state, false)).toMatchObject({ errorIndex: 0, mood: 'oops', wrongCode: 'KeyX' });
 	});

@@ -26,7 +26,9 @@ import type { Profile } from '../src/lib/state/types';
 import { LAST_PLAYER_KEY } from '../src/routes/jouer/last-player';
 import {
 	advancedProfile,
+	answerCheckKey,
 	installProfile,
+	keyboardCheckKeys,
 	loadMessages,
 	openPage,
 	readJson,
@@ -47,6 +49,8 @@ const PLAYER_NAME = 'Mini';
 const PRESS_BUDGET = 60;
 /** A letter that no lesson of the first world asks for. */
 const WRONG_KEY = 'x';
+/** A letter the first lesson does not ask for, that is not at the same place on every keyboard. */
+const MOVED_KEY = 'q';
 /** Enter is ignored while typing, and moves on to the next group while the reward is on screen. */
 const SKIP_KEY = 'Enter';
 /** Enough mistakes to lose at least one star whatever the length of the exercise. */
@@ -97,11 +101,7 @@ const phraseBank = parsePhraseBank(readJson('content/fr/phrases/base.json'));
 const playRules = readJson<{
 	sessionLengths: { normal: { clockMinutes: number } };
 	maxWordLevel: 1 | 2 | 3;
-	keyboardCheckCodes: string[];
 }>('content/common/play-rules.json');
-const azerty = readJson<{ keys: Record<string, { base?: string }> }>(
-	'layouts/fr-fr-azerty-pc.json'
-);
 
 const worlds = progressionData.worlds;
 const allLessons = worlds.flatMap((item) => item.lessons);
@@ -119,10 +119,12 @@ const RECIPE = 'recipe';
 const DRAWING = 'drawing';
 const WHOLE_IN_VIEW = 0.999;
 const ROCKET = 'rocket';
-const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => {
-	const letter = azerty.keys[code]?.base ?? '';
-	return { code, letter, label: letter.toLocaleUpperCase('fr') };
-});
+/** A laptop screen: nothing a screen needs may be out of view without scrolling. */
+const LAPTOP_VIEWPORT = { width: 1280, height: 720 } as const;
+/** What `getComputedStyle` gives for a transparent border. */
+const NO_COLOR = 'rgba(0, 0, 0, 0)';
+const CHECK_KEYS = keyboardCheckKeys();
+const FIRST_CHECK_KEY = CHECK_KEYS[0]?.label ?? '';
 
 const GROUP_LABEL = templateRegex('ui_target_text_label');
 const GROUP_DONE = templateRegex('ui_target_text_done');
@@ -275,18 +277,25 @@ async function createPlayer(page: Page, name = PLAYER_NAME) {
 }
 
 /**
- * Playwright simulates an American keyboard: `same` types the letters the layout expects, whatever
- * key writes them; `different` presses the physical keys, which write other letters there.
+ * Answers every key the check asks for, up to its result. Playwright simulates an American
+ * keyboard: `same` writes the characters the layout expects, whatever key writes them;
+ * `different` presses the physical keys, which write other characters there.
  */
-async function checkKeyboard(page: Page, kind: 'different' | 'same') {
-	await button(page, message('play_check_continue')).click();
+async function answerCheckKeys(page: Page, kind: 'different' | 'same') {
 	for (const key of CHECK_KEYS) {
 		await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
-		await page.keyboard.press(kind === 'same' ? key.letter : key.code);
+		await answerCheckKey(page, key, kind);
 	}
 	const outcome = kind === 'same' ? 'play_check_ok_title' : 'play_check_diff_title';
 	await expect(heading(page, message(outcome))).toBeVisible();
+}
+
+/** Goes through the check to the map: a keyboard that differs is played with all the same. */
+async function checkKeyboard(page: Page, kind: 'different' | 'same') {
 	await button(page, message('play_check_continue')).click();
+	await answerCheckKeys(page, kind);
+	const goOn = kind === 'same' ? 'play_check_continue' : 'play_check_play_anyway';
+	await button(page, message(goOn)).click();
 	await expect(heading(page, message('play_map_title'))).toBeVisible();
 }
 
@@ -526,10 +535,7 @@ test.describe('play route', () => {
 		await page.keyboard.press(backward ?? '');
 		await expect(chosen).toHaveAttribute('value', chosenValue);
 		await activateByTab(page, button(page, message('play_check_continue')));
-		for (const key of CHECK_KEYS) {
-			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
-			await page.keyboard.press(key.letter);
-		}
+		await answerCheckKeys(page, 'same');
 		await expect(button(page, message('play_check_continue'))).toBeFocused();
 		await page.keyboard.press('Enter');
 
@@ -568,7 +574,12 @@ test.describe('play route', () => {
 		await expect(page.getByRole('img', { name: message('ui_companion_oops') })).toBeVisible();
 		await expect(page.locator('main')).not.toContainText(/%|\b(erreurs?|fautes?|score|vies?)\b/i);
 
-		for (let mistake = 1; mistake < FEW_MISTAKES; mistake++) {
+		// The mistake is marked on the key that writes the letter on the drawn keyboard, not on the
+		// physical key the browser reports: an American keyboard writes q where an AZERTY one has A.
+		await page.keyboard.press(MOVED_KEY);
+		await expect(page.locator('.keyboard [data-wrong]')).toHaveAttribute('data-code', 'KeyA');
+
+		for (let mistake = 2; mistake < FEW_MISTAKES; mistake++) {
 			await page.keyboard.press(WRONG_KEY);
 		}
 		await page.keyboard.type(group);
@@ -925,6 +936,172 @@ test.describe('play route', () => {
 		await createPlayer(page);
 
 		await checkKeyboard(page, 'same');
+	});
+
+	test('draws the key with two characters as it is printed, and asks for the one below', async ({
+		page
+	}) => {
+		const accent = CHECK_KEYS.find((key) => !key.pressable);
+		await openPlay(page);
+		await createPlayer(page);
+		await button(page, message('play_check_continue')).click();
+
+		for (const key of CHECK_KEYS) {
+			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+			if (key === accent) break;
+			await expect(page.locator('.tile')).toHaveText(key.label);
+			await answerCheckKey(page, key, 'same');
+		}
+
+		// The é key of an AZERTY keyboard: the 2 above, the é below.
+		await expect(page.locator('.tile > span')).toHaveText(['2', accent?.label ?? '']);
+	});
+
+	test('says each key of the check to a screen reader, and explains Caps Lock when it is on', async ({
+		page
+	}) => {
+		const [first, second] = CHECK_KEYS;
+		const status = page.getByRole('status');
+		const field = page.locator('#keyboard-check-input');
+		await openPlay(page);
+		await createPlayer(page);
+		await button(page, message('play_check_continue')).click();
+
+		await expect(status).toHaveCount(1);
+		await expect(status).toContainText(
+			message('play_check_step', { position: 1, total: CHECK_KEYS.length })
+		);
+		await expect(status).toContainText(message('play_check_prompt', { key: first?.label ?? '' }));
+		await expect(page.locator('[data-caps-lock]')).toHaveCount(0);
+
+		await field.evaluate((element) => {
+			element.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key: 'Shift',
+					code: 'ShiftLeft',
+					modifierCapsLock: true,
+					bubbles: true
+				})
+			);
+		});
+		// The paragraph on screen is hidden from a screen reader: the one live region says it.
+		await expect(page.locator('[data-caps-lock]')).toHaveText(message('game_shared_caps_lock'));
+		await expect(status).toContainText(message('game_shared_caps_lock'));
+
+		await field.evaluate((element) => {
+			element.dispatchEvent(
+				new KeyboardEvent('keyup', { key: 'CapsLock', code: 'CapsLock', bubbles: true })
+			);
+		});
+		await expect(page.locator('[data-caps-lock]')).toHaveCount(0);
+
+		if (first) await answerCheckKey(page, first, 'same');
+		await expect(status).toContainText(message('play_check_prompt', { key: second?.label ?? '' }));
+	});
+
+	test('lets the child try again when the keys wrote other letters, with the keyboard alone', async ({
+		page
+	}) => {
+		await openPlay(page);
+		await createPlayer(page);
+		await button(page, message('play_check_continue')).click();
+
+		await answerCheckKeys(page, 'different');
+		// No blame, no jargon, nothing about the settings of the child; the adult is not called yet.
+		await expect(page.getByText(message('play_check_diff_text'))).toBeVisible();
+		await expect(page.getByText(message('play_check_diff_adult'))).toHaveCount(0);
+		await expect(page.locator('main')).not.toContainText(/réglages/i);
+		const retry = button(page, message('play_check_retry'));
+		await expect(retry).toBeFocused();
+		await expect(retry).toHaveAccessibleDescription(
+			`${message('play_check_diff_title')} ${message('play_check_diff_text')}`
+		);
+
+		await page.keyboard.press('Enter');
+		await expect(
+			heading(page, message('play_check_prompt', { key: FIRST_CHECK_KEY }))
+		).toBeVisible();
+		await expect(page.locator('#keyboard-check-input')).toBeFocused();
+		await answerCheckKeys(page, 'same');
+		await expect(button(page, message('play_check_continue'))).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+	});
+
+	test('tells the child to ask an adult from the second difference in a row, and still lets the child play', async ({
+		page
+	}) => {
+		await page.setViewportSize(LAPTOP_VIEWPORT);
+		await openPlay(page);
+		await createPlayer(page);
+		await button(page, message('play_check_continue')).click();
+
+		await answerCheckKeys(page, 'different');
+		await expect(page.getByText(message('play_check_diff_adult'))).toHaveCount(0);
+		await button(page, message('play_check_retry')).click();
+		await answerCheckKeys(page, 'different');
+
+		await expect(page.getByText(message('play_check_diff_adult'))).toBeVisible();
+		await expect(button(page, message('play_check_retry'))).toBeFocused();
+		// Nothing locks the game: playing is still one press away, and says what the help will do.
+		const anyway = button(page, message('play_check_play_anyway'));
+		await expect(anyway).toBeInViewport({ ratio: WHOLE_IN_VIEW });
+		await expect(page.getByText(message('play_check_play_anyway_note'))).toBeInViewport({
+			ratio: WHOLE_IN_VIEW
+		});
+		await expect(anyway).toHaveAccessibleDescription(message('play_check_play_anyway_note'));
+		await activateByTab(page, anyway);
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+
+		// The check is done: the child is not asked again.
+		await reloadPage(page);
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+	});
+
+	test('counts a key the child does not find as a difference, with the keyboard alone', async ({
+		page
+	}) => {
+		const wayOut = page.locator('[data-screen-back] button');
+		const notFound = button(page, message('play_check_not_found'));
+		const field = page.locator('#keyboard-check-input');
+		await openPlay(page);
+		await createPlayer(page);
+		await button(page, message('play_check_continue')).click();
+		await expect(
+			heading(page, message('play_check_prompt', { key: FIRST_CHECK_KEY }))
+		).toBeVisible();
+
+		// Tab goes round the screen: the way out, the button, the field again; no trap, no way out of the page.
+		// The field is hidden: the key drawn wears the focus ring while the keyboard writes in it.
+		const ring = () =>
+			page.locator('.tile-zone').evaluate((zone) => getComputedStyle(zone).borderTopColor);
+		await expect(field).toBeFocused();
+		expect(await ring()).not.toBe(NO_COLOR);
+		await page.keyboard.press('Tab');
+		await expect(wayOut).toBeFocused();
+		expect(await ring()).toBe(NO_COLOR);
+		await page.keyboard.press('Tab');
+		await expect(notFound).toBeFocused();
+		await page.keyboard.press('Tab');
+		await expect(field).toBeFocused();
+		expect(await ring()).not.toBe(NO_COLOR);
+		await page.keyboard.press('Shift+Tab');
+		await expect(notFound).toBeFocused();
+
+		// Enter keeps its role on the button: the key is skipped, and the next one is asked in the field.
+		await page.keyboard.press('Enter');
+		const [, ...others] = CHECK_KEYS;
+		await expect(
+			heading(page, message('play_check_prompt', { key: others[0]?.label ?? '' }))
+		).toBeVisible();
+		await expect(field).toBeFocused();
+		for (const key of others) {
+			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+			await answerCheckKey(page, key, 'same');
+		}
+
+		await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
+		await expect(button(page, message('play_check_retry'))).toBeFocused();
 	});
 
 	test('applies a setting at once and keeps it after a reload', async ({ page }) => {
@@ -1526,11 +1703,11 @@ for (const colorScheme of COLOR_SCHEMES) {
 			for (const [index, key] of CHECK_KEYS.entries()) {
 				await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
 				if (index === 0) await expectNoAxeViolation(page);
-				await page.keyboard.press(key.code);
+				await answerCheckKey(page, key, 'different');
 			}
 			await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
 			await expectNoAxeViolation(page);
-			await button(page, message('play_check_continue')).click();
+			await button(page, message('play_check_play_anyway')).click();
 
 			await expect(heading(page, message('play_map_title'))).toBeVisible();
 			await expectNoAxeViolation(page);

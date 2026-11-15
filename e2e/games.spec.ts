@@ -26,6 +26,14 @@ const TOTAL_KEYS = Array.from(
 ).length;
 /** A letter that no group asks for. */
 const WRONG_KEY = [...ALPHABET].find((letter) => !GROUPS.join('').includes(letter)) ?? '';
+/**
+ * The key of the drawn keyboard that writes this letter: a mistake is marked on it, whatever
+ * physical key wrote the letter (Playwright simulates an American keyboard).
+ */
+const WRONG_KEY_CODE =
+	Object.entries(
+		readJson<{ keys: Record<string, { base?: string }> }>('layouts/fr-fr-azerty-pc.json').keys
+	).find(([, levels]) => levels.base === WRONG_KEY)?.[0] ?? '';
 
 const GROUP_LABEL = templateRegex('ui_target_text_label');
 const GROUP_DONE = templateRegex('ui_target_text_done');
@@ -316,7 +324,7 @@ for (const game of games) {
 			await expect(doneCells(page)).toHaveCount(0);
 			await expect(page.locator('.keyboard [data-wrong]')).toHaveAttribute(
 				'data-code',
-				`Key${WRONG_KEY.toUpperCase()}`
+				WRONG_KEY_CODE
 			);
 			expect(await game.probe(page)).toBe(before);
 			await expect(page.locator('main')).not.toContainText(/%|\b(erreurs?|fautes?|score|vies?)\b/i);

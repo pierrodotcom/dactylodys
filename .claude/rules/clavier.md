@@ -25,7 +25,7 @@ paths:
 
 ## Règles
 
-1. La frappe est validée sur le **caractère produit**, lu uniquement dans `beforeinput`/`input` et la fin de composition, **jamais dans `key`**. `code` sert uniquement à savoir quelle touche physique allumer et quel doigt est attendu.
+1. La frappe est validée sur le **caractère produit**, lu uniquement dans `beforeinput`/`input` et la fin de composition, **jamais dans `key`**. `code` ne juge rien et ne désigne aucune touche à l'écran (ADR-082) : la touche attendue et son doigt viennent de la disposition, la touche fausse du caractère produit (`keyCodeForChar`). `code` ne sert qu'aux touches sans caractère (Retour arrière, Entrée, Tab, Échap, modificateurs) et à apparier `keydown` et `keyup`.
 2. Le moteur consomme des `NormalizedKeystroke`. Toute la complexité navigateur vit dans **un** normaliseur pur, `keyboard/input-adapter/` : il reçoit des `RawInputEvent` (copies en données simples des événements DOM) et n'accède jamais au DOM. Le branchement des écouteurs DOM est un adaptateur mince dans `src/lib/ui/keyboard-capture/`, qui ne contient aucune logique. C'est ce qui permet de rejouer les traces en Node.
 3. Une disposition est une donnée JSON : touche physique (`code`) → caractères par couche (base, Maj, AltGr, Maj+AltGr, touches mortes) → doigt assigné. Variantes PC et Mac séparées. Aucun `if (layout === 'azerty')` dans le code.
 4. L'assignation des doigts est un **profil de doigté** distinct de la disposition (10 doigts, doigté réduit) pour permettre les adaptations recommandées par les ergothérapeutes.

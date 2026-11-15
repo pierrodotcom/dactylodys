@@ -1,5 +1,6 @@
 import type { NormalizedKeystroke } from '../keyboard/types';
 import { toGraphemes } from './graphemes';
+import { countsAs } from './typed-equivalents';
 import type {
 	KeystrokeRecord,
 	SessionEvent,
@@ -113,7 +114,7 @@ function applyCharacter(
 		return ignored(state);
 	}
 	const waitingForErase = state.options.errorPolicy === 'backspace' && state.pending.length > 0;
-	const correct = !waitingForErase && typed === expected;
+	const correct = !waitingForErase && countsAs(typed, expected);
 	const record: KeystrokeRecord = {
 		targetIndex: state.position,
 		expected,

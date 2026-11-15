@@ -1,4 +1,7 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import azertyPc from '../../../../layouts/fr-fr-azerty-pc.json';
+import { buildCharIndex, parseLayout } from '../../keyboard/layout';
 import type { KeyCode, NormalizedKeystroke } from '../../keyboard/types';
 import {
 	completedCount,
@@ -9,6 +12,8 @@ import {
 	type GameAction,
 	type GameState
 } from './game-state';
+
+const charIndex = buildCharIndex(parseLayout(azertyPc));
 
 let clock = 0;
 
@@ -83,7 +88,7 @@ describe('a good key', () => {
 
 describe('a wrong key', () => {
 	it('does not move forward, flags the character and the key, and the mood says oops', () => {
-		const step = reduce(createGame(['fj'], 'retry'), char('d'));
+		const step = reduce(createGame(['fj'], 'retry', { charIndex }), char('d'));
 
 		expect(step.state.session.position).toBe(0);
 		expect(step.state.errorIndex).toBe(0);
@@ -141,6 +146,63 @@ describe('a wrong key', () => {
 	});
 });
 
+// The key marked on the drawn keyboard is the one that writes the wrong character on the layout,
+// never the physical key the browser reports: a browser that resists fingerprinting reports the
+// keys of an American keyboard, whatever the real one.
+describe('the key of a mistake', () => {
+	function wrongKey(value: string, code: KeyCode | null, index = charIndex): KeyCode | null {
+		return reduce(createGame(['fj'], 'retry', { charIndex: index }), char(value, code)).state
+			.wrongCode;
+	}
+
+	it('is the key that writes the letter on the layout', () => {
+		expect(wrongKey('d', 'KeyD')).toBe('KeyD');
+		expect(wrongKey('a', 'KeyQ')).toBe('KeyQ');
+	});
+
+	it('is the right key even when the browser reports another physical key', () => {
+		// The Q of an AZERTY keyboard, reported as on an American one.
+		expect(wrongKey('q', 'KeyQ')).toBe('KeyA');
+		expect(wrongKey('m', 'KeyM')).toBe('Semicolon');
+		expect(wrongKey('a', null)).toBe('KeyQ');
+	});
+
+	it('is the key of the letter for a capital, with Shift or with Caps Lock', () => {
+		expect(wrongKey('Q', 'KeyA')).toBe('KeyA');
+		expect(wrongKey('É', 'Digit2')).toBe('Digit2');
+	});
+
+	it('is the key pressed after the dead key for a composed character', () => {
+		expect(wrongKey('ê', 'KeyE')).toBe('KeyE');
+		expect(wrongKey('ï', null)).toBe('KeyI');
+	});
+
+	it('is no key at all for a character the layout does not write, whatever the browser reports', () => {
+		expect(wrongKey('ß', 'KeyS')).toBeNull();
+		expect(wrongKey('д', 'KeyL')).toBeNull();
+	});
+
+	it('is no key at all when the game was given no layout', () => {
+		const step = reduce(createGame(['fj'], 'retry'), char('d', 'KeyD'));
+
+		expect(step.state.errorIndex).toBe(0);
+		expect(step.state.wrongCode).toBeNull();
+	});
+
+	it('never comes from the physical key reported, whatever it is', () => {
+		const typedChars = [...charIndex.keys()].filter((value) => value !== 'f');
+		fc.assert(
+			fc.property(
+				fc.constantFrom(...typedChars),
+				fc.option(fc.string({ maxLength: 12 }), { nil: null }),
+				(value, code) => {
+					expect(wrongKey(value, code)).toBe(wrongKey(value, null));
+				}
+			)
+		);
+	});
+});
+
 describe('the characters missed', () => {
 	it('starts with none', () => {
 		expect(createGame(['fj'], 'retry').missedChars).toEqual([]);
@@ -190,7 +252,7 @@ describe('keys that are not characters', () => {
 
 describe('the backspace policy', () => {
 	it('writes a wrong key after the good ones, flags the character it took the place of', () => {
-		const state = typeText(createGame(['fjd'], 'backspace'), 'f');
+		const state = typeText(createGame(['fjd'], 'backspace', { charIndex }), 'f');
 
 		const step = reduce(state, char('k'));
 

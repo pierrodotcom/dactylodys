@@ -5,7 +5,9 @@ import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
 import {
 	advancedProfile,
+	answerCheckKey,
 	installProfile,
+	keyboardCheckKeys,
 	loadMessages,
 	openPage,
 	readJson,
@@ -57,15 +59,7 @@ const FIRST = lessons[0] as Lesson;
 const SECOND = lessons[1] as Lesson;
 const CIRCUMFLEX = lessons.find((lesson) => lesson.newChars.includes(CIRCUMFLEX_LETTER)) as Lesson;
 const REPAIR = lessons.find((lesson) => lesson.repair !== undefined) as Lesson;
-const playRules = readJson<{ keyboardCheckCodes: string[] }>('content/common/play-rules.json');
-const azerty = readJson<{ keys: Record<string, { base?: string }> }>(
-	'layouts/fr-fr-azerty-pc.json'
-);
-/** The check judges the letter written, and Playwright simulates an American keyboard. */
-const CHECK_KEYS = playRules.keyboardCheckCodes.map((code) => {
-	const letter = azerty.keys[code]?.base ?? '';
-	return { letter, label: letter.toLocaleUpperCase('fr') };
-});
+const CHECK_KEYS = keyboardCheckKeys();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
 const GROUP_DONE = templateRegex('ui_target_text_done');
 const GROUP_ERASE = templateRegex('ui_target_text_erase');
@@ -304,17 +298,59 @@ test.describe('Tab during a game', () => {
 		await button(page, message('play_new_submit')).click();
 		await button(page, message('play_check_continue')).click();
 		const wayOut = page.locator('[data-screen-back] button');
-		const leaveField = ['Tab', 'Shift+Tab', 'Tab'];
+		const notFound = button(page, message('play_check_not_found'));
+		// Tab from the field goes to the way out; Shift + Tab goes to the button just before it.
+		const leaveField = [
+			{ press: 'Tab', lands: wayOut },
+			{ press: 'Shift+Tab', lands: notFound },
+			{ press: 'Tab', lands: wayOut }
+		];
 
 		for (const [index, key] of CHECK_KEYS.entries()) {
 			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
 			await expect(page.locator('#keyboard-check-input')).toBeFocused();
-			await page.keyboard.press(leaveField[index % leaveField.length] ?? 'Tab');
-			await expect(wayOut).toBeFocused();
-			await page.keyboard.press(key.letter);
+			// A character the simulated keyboard has no key for is written as text: no key to take.
+			const leave = leaveField[index % leaveField.length];
+			if (key.pressable && leave) {
+				await page.keyboard.press(leave.press);
+				await expect(leave.lands).toBeFocused();
+			}
+			await answerCheckKey(page, key, 'same');
 		}
 
 		await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
+	});
+
+	test('takes a letter pressed on the button of a key that is not found, and keeps Space for the button', async ({
+		page
+	}) => {
+		const notFound = button(page, message('play_check_not_found'));
+		const [first, second, third] = CHECK_KEYS;
+		await openPage(page, '/jouer');
+		await button(page, message('play_new_player')).click();
+		await page.getByLabel(message('play_new_label')).fill(PLAYER_NAME);
+		await button(page, message('play_new_submit')).click();
+		await button(page, message('play_check_continue')).click();
+		await expect(
+			heading(page, message('play_check_prompt', { key: first?.label ?? '' }))
+		).toBeVisible();
+
+		// A letter typed while the focus is on the button is the answer, not lost.
+		await notFound.focus();
+		await page.keyboard.press(first?.letter ?? '');
+		await expect(
+			heading(page, message('play_check_prompt', { key: second?.label ?? '' }))
+		).toBeVisible();
+		await expect(page.locator('#keyboard-check-input')).toBeFocused();
+
+		// Space on the button presses the button: the key is skipped, nothing is typed.
+		await notFound.focus();
+		await page.keyboard.press('Space');
+		await expect(
+			heading(page, message('play_check_prompt', { key: third?.label ?? '' }))
+		).toBeVisible();
+		await expect(page.locator('#keyboard-check-input')).toBeFocused();
+		await expect(page.locator('#keyboard-check-input')).toHaveValue('');
 	});
 });
 
@@ -481,7 +517,9 @@ test.describe('keeps playing, accessibility', () => {
 		await expectNoAxeViolation(page);
 	});
 
-	test('has no axe violation on the three steps of the keyboard check', async ({ page }) => {
+	test('has no axe violation on the steps and the two results of the keyboard check', async ({
+		page
+	}) => {
 		await openPage(page, '/jouer');
 		await installProfile(page, { ...childBefore(FIRST), calibrated: false });
 		await reloadPage(page);
@@ -496,7 +534,24 @@ test.describe('keeps playing, accessibility', () => {
 		).toBeVisible();
 		await expectNoAxeViolation(page);
 
-		for (const key of CHECK_KEYS) await page.keyboard.press(key.letter);
+		// The keys write other letters, twice: the second result asks for an adult.
+		for (const attempt of [1, 2]) {
+			for (const key of CHECK_KEYS) {
+				await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+				// The key drawn with its two characters.
+				if (!key.pressable) await expectNoAxeViolation(page);
+				await answerCheckKey(page, key, 'different');
+			}
+			await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
+			await expect(page.getByText(message('play_check_diff_adult'))).toHaveCount(attempt - 1);
+			await expectNoAxeViolation(page);
+			await button(page, message('play_check_retry')).click();
+		}
+
+		for (const key of CHECK_KEYS) {
+			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+			await answerCheckKey(page, key, 'same');
+		}
 		await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
 		await expectNoAxeViolation(page);
 	});
