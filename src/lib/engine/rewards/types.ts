@@ -45,9 +45,9 @@ export type RewardCondition =
 	/** The lesson has reached the accuracy that opens the next one. */
 	| { readonly kind: 'lesson-passed'; readonly lessonId: string }
 	| { readonly kind: 'lesson-stars'; readonly lessonId: string; readonly stars: RewardStars }
-	/** Every lesson of the world is passed. */
+	/** Every lesson of the world is passed, its detours left out (`LessonDefinition.optional`). */
 	| { readonly kind: 'world-passed'; readonly worldId: string }
-	/** Every lesson of the world has at least this number of stars. */
+	/** Every lesson of the world has at least this number of stars, its detours left out. */
 	| { readonly kind: 'world-stars'; readonly worldId: string; readonly stars: RewardStars }
 	/**
 	 * Each of these characters has been typed at least `minAttempts` times with an error rate

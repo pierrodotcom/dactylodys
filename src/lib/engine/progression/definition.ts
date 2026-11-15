@@ -32,6 +32,8 @@ const MIX_KEYS = ['drills', 'words', 'phrases'] as const;
 
 interface Introduced {
 	readonly chars: Set<string>;
+	/** Characters brought by the detours so far: known in a detour, never in a lesson on the way. */
+	readonly detours: Set<string>;
 	uppercase: boolean;
 }
 
@@ -667,10 +669,16 @@ function parseLesson(
 			'groupLength',
 			'warmUp',
 			'warmUpReserve',
-			'repair'
+			'repair',
+			'optional'
 		],
 		path
 	);
+	const optional = record['optional'];
+	if (optional !== undefined && typeof optional !== 'boolean') {
+		fail(`${path}.optional`, 'expected true or false');
+	}
+	const isDetour = optional === true;
 	const id = expectId(record['id'], 'lesson', language, `${path}.id`);
 	if (lessonIds.has(id)) fail(`${path}.id`, `duplicate lesson id "${id}"`);
 	lessonIds.add(id);
@@ -679,15 +687,18 @@ function parseLesson(
 
 	const newChars = expectArray(record['newChars'], `${path}.newChars`).map((raw, i) => {
 		const char = expectGrapheme(raw, `${path}.newChars[${i}]`);
-		if (knownChars(introduced).has(char)) {
+		if (knownChars(introduced).has(char) || introduced.detours.has(char)) {
 			fail(`${path}.newChars[${i}]`, `character "${char}" is already introduced`);
 		}
-		introduced.chars.add(char);
+		(isDetour ? introduced.detours : introduced.chars).add(char);
 		return char;
 	});
 
 	const mix = parseMix(record['mix'], `${path}.mix`);
 	const unlocks = parseUnlocks(record['unlocks'], `${path}.unlocks`);
+	if (isDetour && unlocks.length > 0) {
+		fail(`${path}.unlocks`, 'a detour unlocks nothing: the lessons after it do not wait for it');
+	}
 	if (unlocks.includes('uppercase')) introduced.uppercase = true;
 
 	const groupCount = expectInteger(record['groupCount'], `${path}.groupCount`);
@@ -702,6 +713,7 @@ function parseLesson(
 	if (max < min) fail(`${path}.groupLength[1]`, 'expected a value not below the minimum');
 
 	const known = knownChars(introduced);
+	if (isDetour) for (const char of introduced.detours) known.add(char);
 	const words: string[] = [];
 	expectArray(record['words'], `${path}.words`).forEach((raw, i) => {
 		const word = parseWord(raw, known, `${path}.words[${i}]`);
@@ -762,7 +774,8 @@ function parseLesson(
 		groupLength: [min, max],
 		...(warmUp === undefined ? {} : { warmUp }),
 		...(warmUpReserve === undefined ? {} : { warmUpReserve }),
-		...(repair === undefined ? {} : { repair })
+		...(repair === undefined ? {} : { repair }),
+		...(isDetour ? { optional: true as const } : {})
 	};
 	checkGeneratable(lesson, known, rules.newCharMinCount, path);
 	if (warmUp !== undefined && warmUp.length > groupCount) {
@@ -804,14 +817,18 @@ function parseWorld(
 
 	const rawLessons = expectArray(record['lessons'], `${path}.lessons`);
 	if (rawLessons.length === 0) fail(`${path}.lessons`, 'expected at least one lesson');
+	const lessons = rawLessons.map((lesson, i) =>
+		parseLesson(lesson, introduced, lessonIds, language, rules, `${path}.lessons[${i}]`)
+	);
+	if (lessons[0]?.optional === true) {
+		fail(`${path}.lessons[0].optional`, 'a world starts with a lesson on the way, not a detour');
+	}
 	return {
 		id,
 		title: expectString(record['title'], `${path}.title`),
 		themeId: expectString(record['themeId'], `${path}.themeId`),
 		gameIds,
-		lessons: rawLessons.map((lesson, i) =>
-			parseLesson(lesson, introduced, lessonIds, language, rules, `${path}.lessons[${i}]`)
-		)
+		lessons
 	};
 }
 
@@ -849,7 +866,11 @@ export function parseProgression(data: unknown): ProgressionDefinition {
 
 	const rawWorlds = expectArray(root['worlds'], 'progression.worlds');
 	if (rawWorlds.length === 0) fail('progression.worlds', 'expected at least one world');
-	const introduced: Introduced = { chars: new Set<string>(), uppercase: false };
+	const introduced: Introduced = {
+		chars: new Set<string>(),
+		detours: new Set<string>(),
+		uppercase: false
+	};
 	const lessonIdSet = new Set<string>();
 	const worldIdSet = new Set<string>();
 	const worlds = rawWorlds.map((world, i) =>
@@ -882,14 +903,46 @@ export function findLesson(
 	return undefined;
 }
 
-export function learnedChars(progression: ProgressionDefinition, lessonId: string): string[] {
-	const learned: string[] = [];
+/** A detour: a lesson nothing waits for (`LessonDefinition.optional`). */
+export function isDetour(lesson: LessonDefinition): boolean {
+	return lesson.optional === true;
+}
+
+/**
+ * Rank of a lesson among those on the way, from 1: the number the child reads. `null` for a
+ * detour, which has none, and for a lesson the progression does not have.
+ */
+export function lessonNumber(progression: ProgressionDefinition, lessonId: string): number | null {
+	let number = 0;
+	for (const world of progression.worlds) {
+		for (const lesson of world.lessons) {
+			if (!isDetour(lesson)) number += 1;
+			if (lesson.id === lessonId) return isDetour(lesson) ? null : number;
+		}
+	}
+	return null;
+}
+
+/**
+ * Characters known up to this lesson, in the order they are brought. `detours`: whether the
+ * characters of the detours before it count; those of a detour always count in that detour and in
+ * the ones after it.
+ */
+function charsUpTo(
+	progression: ProgressionDefinition,
+	lessonId: string,
+	detours: boolean
+): string[] {
+	const brought: { readonly char: string; readonly detour: boolean }[] = [];
 	let uppercase = false;
 	for (const world of progression.worlds) {
 		for (const lesson of world.lessons) {
-			learned.push(...lesson.newChars);
+			for (const char of lesson.newChars) brought.push({ char, detour: isDetour(lesson) });
 			if (lesson.unlocks.includes('uppercase')) uppercase = true;
 			if (lesson.id === lessonId) {
+				const learned = brought
+					.filter((entry) => detours || isDetour(lesson) || !entry.detour)
+					.map((entry) => entry.char);
 				if (!uppercase) return learned;
 				const present = new Set(learned);
 				return [...learned, ...capitalsOf(learned).filter((capital) => !present.has(capital))];
@@ -897,6 +950,22 @@ export function learnedChars(progression: ProgressionDefinition, lessonId: strin
 		}
 	}
 	throw new RangeError(`Unknown lesson: ${lessonId}`);
+}
+
+/**
+ * Characters every child knows at this lesson, this lesson included. What a detour brings is
+ * known in that detour and in the detours after it only: a lesson on the way never counts on it.
+ */
+export function learnedChars(progression: ProgressionDefinition, lessonId: string): string[] {
+	return charsUpTo(progression, lessonId, false);
+}
+
+/**
+ * Characters a child may know at this lesson: `learnedChars`, and what the detours before it
+ * bring. A text may use them; it is then offered only to a child who took the detour.
+ */
+export function reachableChars(progression: ProgressionDefinition, lessonId: string): string[] {
+	return charsUpTo(progression, lessonId, true);
 }
 
 /** Characters a lesson brings: its new characters, and the capitals it unlocks. */

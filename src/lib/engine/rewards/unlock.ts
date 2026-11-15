@@ -1,4 +1,4 @@
-import { findLesson } from '../progression/definition';
+import { findLesson, isDetour } from '../progression/definition';
 import { isLessonPassed, recentCharStats } from '../progression/progress';
 import type { ProgressionDefinition, ProgressState } from '../progression/types';
 import type { RewardCatalogue, RewardCondition, RewardDefinition } from './types';
@@ -7,14 +7,17 @@ function starsOf(progress: ProgressState, lessonId: string): number {
 	return Object.hasOwn(progress.lessons, lessonId) ? (progress.lessons[lessonId]?.stars ?? 0) : 0;
 }
 
-/** Lessons of a world, or `null` when the progression has no such world (or it is empty). */
+/**
+ * Lessons of a world that are on the way, or `null` when the progression has no such world (or it
+ * has none): a detour is never asked for what the world gives.
+ */
 function lessonsOfWorld(
 	progression: ProgressionDefinition,
 	worldId: string
 ): readonly string[] | null {
 	const world = progression.worlds.find((candidate) => candidate.id === worldId);
-	if (world === undefined || world.lessons.length === 0) return null;
-	return world.lessons.map((lesson) => lesson.id);
+	const lessons = world?.lessons.filter((lesson) => !isDetour(lesson)) ?? [];
+	return lessons.length === 0 ? null : lessons.map((lesson) => lesson.id);
 }
 
 function isMet(

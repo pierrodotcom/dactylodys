@@ -1,3 +1,4 @@
+import { isDetour } from '../progression/definition';
 import { isLessonPassed } from '../progression/progress';
 import type { ProgressionDefinition, ProgressState } from '../progression/types';
 import type { StoryDefinition, StoryLessonLine, StoryMoment, StoryWorld } from './types';
@@ -5,6 +6,8 @@ import type { StoryDefinition, StoryLessonLine, StoryMoment, StoryWorld } from '
 interface Place {
 	/** Every lesson of the world, from the progression. */
 	readonly lessonIds: readonly string[];
+	/** Those on the way: the world ends once they are passed, whatever its detours. */
+	readonly wayIds: readonly string[];
 	readonly told: StoryWorld;
 }
 
@@ -20,7 +23,11 @@ function placeOf(
 	if (world === undefined) return undefined;
 	const told = story.worlds.find((candidate) => candidate.worldId === world.id);
 	if (told === undefined) return undefined;
-	return { lessonIds: world.lessons.map((lesson) => lesson.id), told };
+	return {
+		lessonIds: world.lessons.map((lesson) => lesson.id),
+		wayIds: world.lessons.filter((lesson) => !isDetour(lesson)).map((lesson) => lesson.id),
+		told
+	};
 }
 
 function openingOf(world: StoryWorld): StoryMoment {
@@ -72,7 +79,8 @@ export function storyBeforeLesson(
 
 /**
  * The line of the lesson when it has just been passed for the first time, then the ending of its
- * world when this play passed the last lesson left. A lesson that the story does not tell, or an
+ * world when this play passed the last lesson left on the way (a detour never holds the ending,
+ * and tells only its line). A lesson that the story does not tell, or an
  * unknown lesson, tells nothing.
  */
 export function storyAfterLesson(
@@ -93,7 +101,7 @@ export function storyAfterLesson(
 		moments.push(lineOf(place.told, told));
 	}
 	const passedAll = (progress: ProgressState) =>
-		place.lessonIds.every((id) => isLessonPassed(rules, progress, id));
+		place.wayIds.every((id) => isLessonPassed(rules, progress, id));
 	if (passedAll(after) && !passedAll(before)) {
 		moments.push(endingOf(place.told));
 	}
@@ -103,7 +111,7 @@ export function storyAfterLesson(
 /**
  * Every moment the child has already won, in the order of the progression: the opening of each
  * world one of whose lessons was played, the line of each passed lesson, the ending of each world
- * whose lessons are all passed. Deduced from the progress alone, so a child who passed lessons
+ * whose lessons on the way are all passed. Deduced from the progress alone, so a child who passed lessons
  * before the story existed finds them told.
  */
 export function storySoFar(
@@ -125,7 +133,8 @@ export function storySoFar(
 				moments.push(lineOf(told, line));
 			}
 		}
-		if (lessonIds.every((id) => isLessonPassed(rules, progress, id))) moments.push(endingOf(told));
+		const wayIds = world.lessons.filter((lesson) => !isDetour(lesson)).map((lesson) => lesson.id);
+		if (wayIds.every((id) => isLessonPassed(rules, progress, id))) moments.push(endingOf(told));
 	}
 	return moments;
 }

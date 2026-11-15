@@ -1,4 +1,11 @@
-import { AGE_BANDS, lessonTexts, storyPhrases, usablePhrases, usableWords } from './banks';
+import {
+	AGE_BANDS,
+	lessonTexts,
+	storyPhrases,
+	typableTexts,
+	usablePhrases,
+	usableWords
+} from './banks';
 import { learnedChars } from './definition';
 import type {
 	AgeBand,
@@ -102,7 +109,10 @@ export function lessonEntryCounts(
 		texts:
 			banks.texts === undefined
 				? 0
-				: lessonTexts(banks.texts, lessonId, ageBand).filter((entry) => entry.level <= level).length
+				: // A text that needs a detour is not counted: not every child can be given it.
+					typableTexts(lessonTexts(banks.texts, lessonId, ageBand), learned).filter(
+						(entry) => entry.level <= level
+					).length
 	};
 }
 

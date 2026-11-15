@@ -239,6 +239,13 @@ export interface LessonDefinition {
 	 * characters after the right ones, to erase with Backspace. Absent: every group starts empty.
 	 */
 	readonly repair?: RepairRules;
+	/**
+	 * A detour (ADR-075): the lesson is played and rewarded like any other, but nothing waits for
+	 * it. The lesson on the way after it opens without it, its world ends without it, and what it
+	 * brings is asked later only of a child who passed it. Never the first lesson of a world, and it
+	 * unlocks nothing. Absent: the lesson is on the way.
+	 */
+	readonly optional?: true;
 }
 
 /** How a lesson of repairs plants its mistakes: data, never constants in the code. */
