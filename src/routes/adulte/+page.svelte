@@ -394,6 +394,15 @@
 </main>
 
 <style>
+	/*
+	 * The title and the way out name the child: a long nickname without a space is cut rather than
+	 * wider than the page (320 pixels).
+	 */
+	main :global(h1),
+	main :global([data-screen-back] button) {
+		overflow-wrap: anywhere;
+	}
+
 	.loading {
 		padding: var(--dd-space-xl);
 		text-align: center;

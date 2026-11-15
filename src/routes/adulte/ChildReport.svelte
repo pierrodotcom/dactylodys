@@ -146,7 +146,14 @@
 		gap: var(--dd-space-md);
 		justify-items: start;
 		text-align: start;
-		/* A long nickname without a space is cut rather than wider than the page (320 pixels). */
+	}
+
+	/*
+	 * A long nickname without a space is cut rather than wider than the page (320 pixels), in every
+	 * sentence and every button of the report that names the child.
+	 */
+	.report :global(p),
+	.report :global(button) {
 		overflow-wrap: anywhere;
 	}
 
