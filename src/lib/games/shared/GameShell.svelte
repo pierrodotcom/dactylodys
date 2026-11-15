@@ -643,6 +643,7 @@
 		border-color: var(--dd-color-focus-ring);
 	}
 
+	/* Tight lines: a notice on two lines (what to erase first) keeps the game on a short laptop. */
 	.notice {
 		padding: var(--dd-space-sm) var(--dd-space-md);
 		border-width: var(--dd-border-width-thick);
@@ -651,6 +652,7 @@
 		border-radius: var(--dd-radius-md);
 		background-color: var(--dd-color-surface-sunken);
 		font-weight: var(--dd-font-weight-bold);
+		line-height: var(--dd-line-height-tight);
 	}
 
 	/* The hint, the reminder and the Caps Lock notice share one cell, as tall as the tallest. */

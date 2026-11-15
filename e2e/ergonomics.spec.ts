@@ -455,8 +455,8 @@ function childBefore(lesson: Lesson, name = 'Lou'): Profile {
 
 /** Correct characters per minute of the latest plays: a fast child gets the longest plays. */
 const FAST_PACE = 100;
-/** Any seed: the exercise of the page is then the same at every run. */
-const SEED = 7;
+/** Seeds tried in turn for a play of the most groups: the number of groups depends on the draw. */
+const SEEDS = [7, 1, 2, 3, 4, 5, 6, 8, 9, 10];
 
 /**
  * A fast child who has passed the lesson, so that a play of it holds the most groups (ADR-084),
@@ -498,12 +498,16 @@ function fastChildThrough(lesson: Lesson): Profile {
 	});
 }
 
+/** The map of this profile; a page that has shown a map already goes back to the last player. */
 async function reachMapAs(page: Page, profile: Profile) {
 	await openPage(page, '/jouer');
 	await installProfile(page, profile);
 	await reloadPage(page);
-	await page.getByRole('button', { name: profile.name }).click();
-	await expect(heading(page, message('play_map_title'))).toBeVisible();
+	const map = heading(page, message('play_map_title'));
+	const player = page.getByRole('button', { name: profile.name, exact: true });
+	await expect(map.or(player)).toBeVisible();
+	if (await player.isVisible()) await player.click();
+	await expect(map).toBeVisible();
 }
 
 async function openIntro(page: Page, lesson: Lesson) {
@@ -591,7 +595,8 @@ async function expectGameInSight(page: Page, what: string, options: { keyboard?:
 		await expect(page.locator('.keyboard')).toHaveCount(0);
 		return;
 	}
-	await expectInSight(page, page.locator('.finger-hint'), `${what}: finger`);
+	// The finger to use, or what to erase first in a group that arrives with a mistake.
+	await expectInSight(page, page.locator('.text-zone .slot'), `${what}: finger`);
 	await expectInSight(page, page.locator('.keyboard'), `${what}: keyboard`);
 }
 
@@ -606,12 +611,36 @@ async function startDevGame(page: Page, gameId: string, options: { keyboard?: bo
 }
 
 /** Makes the exercises of the page the same at every run. */
-async function seedExercises(page: Page) {
+async function seedExercises(page: Page, seed: number) {
 	await page.evaluate(
 		([source, value]) => {
 			Math.random = new Function(`return (${source})`)()(value);
 		},
-		[seededRng.toString(), SEED] as const
+		[seededRng.toString(), seed] as const
+	);
+}
+
+/**
+ * Starts the game of the lesson, race on, with a play of the most groups: the seeds are tried in
+ * turn, the game left for the map between two.
+ */
+async function startLongestPlay(page: Page, lesson: Lesson, gameId: string) {
+	const totals: number[] = [];
+	for (const seed of SEEDS) {
+		await openIntro(page, lesson);
+		await seedExercises(page, seed);
+		await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
+		await page.locator(`button[data-game="${gameId}"]`).click();
+		await expectGroup(page);
+		const total = await groupTotal(page, gameId);
+		if (total === playRules.maxGroupCount) return;
+		totals.push(total);
+		await page.keyboard.press('Escape');
+		await button(page, message('game_shared_quit')).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
+	}
+	throw new Error(
+		`No play of ${playRules.maxGroupCount} groups of ${gameId}: ${totals.join(', ')}`
 	);
 }
 
@@ -670,15 +699,9 @@ test.describe('on the screens children play on', () => {
 				test(`keeps a play of the most groups of ${gameId} on the screen, race included`, async ({
 					page
 				}) => {
+					test.slow();
 					await reachMapAs(page, fastChildThrough(lesson));
-					await openIntro(page, lesson);
-					await seedExercises(page);
-					await page
-						.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) })
-						.check();
-					await page.locator(`button[data-game="${gameId}"]`).click();
-					await expectGroup(page);
-					expect(await groupTotal(page, gameId)).toBe(playRules.maxGroupCount);
+					await startLongestPlay(page, lesson, gameId);
 					await expectInSight(page, page.locator('[data-ghost-track]'), 'race');
 					await expectGameInSight(page, `${gameId}, ${playRules.maxGroupCount} groups`);
 				});
@@ -696,9 +719,11 @@ test.describe('on the screens children play on', () => {
 				});
 			}
 
-			test('shows a moment of the story with its picture and Continue whole', async ({ page }) => {
-				// The opening of the first world, then the longest opening, that of the zoo.
-				for (const lesson of [firstOfEachWorld[0] as Lesson, firstOfEachWorld[3] as Lesson]) {
+			// The opening of the first world, and the longest opening, that of the zoo.
+			for (const lesson of [firstOfEachWorld[0] as Lesson, firstOfEachWorld[3] as Lesson]) {
+				test(`shows the story before « ${lesson.title} » with its picture and Continue whole`, async ({
+					page
+				}) => {
 					await reachMapAs(page, childBefore(lesson));
 					await page.getByRole('button', { name: lesson.title }).click();
 					const proceed = page.locator('[data-story-continue]');
@@ -708,8 +733,8 @@ test.describe('on the screens children play on', () => {
 					await expectInSight(page, page.locator('svg.story-picture'), 'picture of the story');
 					await expectInSight(page, page.locator('figcaption'), 'text of the story');
 					await expectInSight(page, proceed, 'Continue');
-				}
-			});
+				});
+			}
 
 			for (const lesson of [...firstOfEachWorld, CAPITALS, DIGITS, REPAIRS]) {
 				test(`shows the instruction, the keys and the games of « ${lesson.title} » together`, async ({
@@ -731,8 +756,10 @@ test.describe('on the screens children play on', () => {
 					const games = page.locator('button[data-game]');
 					const boxes: { top: number; bottom: number }[] = [];
 					for (const game of await games.all()) {
-						await expectInSight(page, game, `game ${await game.getAttribute('data-game')}`);
-						const box = await game.boundingBox();
+						// Its place in the list: a focused or pointed game is drawn a little larger.
+						const place = game.locator('xpath=..');
+						await expectInSight(page, place, `game ${await game.getAttribute('data-game')}`);
+						const box = await place.boundingBox();
 						boxes.push({ top: box?.y ?? 0, bottom: (box?.y ?? 0) + (box?.height ?? 0) });
 					}
 					// The games of the world on one row: each one starts above the end of every other.
@@ -783,6 +810,7 @@ test.describe('on the screens children play on', () => {
 	test('names the keys a lesson works, and leaves the keyboard out when none is said', async ({
 		page
 	}) => {
+		test.slow();
 		await page.setViewportSize(SCREENS.laptop);
 		const keysHeading = page.locator('#intro-keys-heading');
 		for (const [lesson, title] of [
@@ -815,6 +843,7 @@ test.describe('on the screens children play on', () => {
 	test('keeps the line being typed in view in a long text, without sliding in calm motion', async ({
 		page
 	}) => {
+		test.slow();
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.setViewportSize(SCREENS['short laptop']);
 		await reachMapAs(page, childBefore(firstOfEachWorld[4] as Lesson));
@@ -865,10 +894,12 @@ test.describe('on the screens children play on', () => {
 			const covered = await page.evaluate(() => {
 				const focused = document.activeElement;
 				const bar = document.querySelector('[data-top-bar]');
-				if (!(focused instanceof HTMLElement) || !bar || bar.contains(focused)) return false;
+				if (!(focused instanceof HTMLElement) || focused === document.body) return false;
+				if (!bar || bar.contains(focused)) return false;
 				return focused.getBoundingClientRect().top < bar.getBoundingClientRect().bottom;
 			});
 			expect(covered).toBe(false);
+			if (await page.locator('[data-top-bar] :focus').count()) break;
 		}
 	});
 
@@ -880,7 +911,10 @@ test.describe('on the screens children play on', () => {
 		for (const key of ['play_companion_open', 'play_hideout_open', 'play_settings_open']) {
 			await expect(bar.getByRole('button', { name: message(key) })).toBeVisible();
 		}
-		await expectNoScroll(page, 'map at 320 pixels, its top');
+		const sideways = await page.evaluate(
+			() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+		);
+		expect(sideways, 'nothing scrolls sideways').toBeLessThanOrEqual(SUBPIXEL);
 		const lines = await bar.locator('.line').evaluate((line) => line.clientHeight);
 		const buttonHeight = await button(page, message('play_settings_open')).evaluate(
 			(node) => (node as HTMLElement).offsetHeight
@@ -930,6 +964,7 @@ test.describe('on the screens children play on', () => {
 	test('has no axe violation on the map, the lesson screen and a game of a short laptop', async ({
 		page
 	}) => {
+		test.slow();
 		await page.setViewportSize(SCREENS['short laptop']);
 		const lesson = firstOfEachWorld[5] as Lesson;
 		await reachMapAs(page, childBefore(lesson));

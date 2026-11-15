@@ -2392,7 +2392,8 @@
 			"$value": "100%"
 		},
 		"scene-stacked-min": {
-			"$value": "9rem"
+			"$description": "Lowest scene across the page (Décollage): with the largest text, the game still holds in 625 pixels.",
+			"$value": "6rem"
 		},
 		"scene-stacked-max": {
 			"$value": "27rem"
@@ -2400,9 +2401,16 @@
 		"story-picture": {
 			"$value": "30rem"
 		},
-		"story-picture-fit": {
-			"$description": "The picture of a moment of the story, after the height of the screen: its title, its text and Continue take about 29rem, the picture is 1.6 times as wide as tall (E-03 e).",
-			"$value": "min({size.story-picture}, calc((100dvh - 29rem) * 1.6))"
+		"story-moment": {
+			"$description": "Height of a moment of the story, its picture and its text: what the screen leaves beside the title of the world and Continue (about 15.5rem), never more than a whole picture and three lines of text (E-03 e).",
+			"$value": "min(calc(100dvh - 15.5rem), {size.story-moment-max})"
+		},
+		"story-moment-max": {
+			"$value": "34rem"
+		},
+		"story-picture-min": {
+			"$description": "Lowest picture of a moment of the story, on a very short screen.",
+			"$value": "5rem"
 		},
 		"story-picture-small": {
 			"$value": "14rem"
@@ -2450,6 +2458,13 @@
 			"$description": "Width of the title of a game not proposed, when a world offers three games or more.",
 			"$value": "11rem"
 		},
+		"game-picture-many": {
+			"$description": "Picture of the game proposed when a world offers three games or more: the games stay in view with the keys of the lesson.",
+			"$value": "5rem"
+		},
+		"game-picture-small-many": {
+			"$value": "3.5rem"
+		},
 		"game-title-proposed-max": {
 			"$description": "Width of the title of the game proposed, when a world offers three games or more: the three games stay on one row.",
 			"$value": "15rem"
@@ -2459,7 +2474,8 @@
 			"$value": "6rem"
 		},
 		"key-unit-compact": {
-			"$value": "2.5rem"
+			"$description": "Keys of the keyboard of the screen before a lesson: the instruction, the keys and the games hold together on a laptop.",
+			"$value": "2rem"
 		},
 		"visually-hidden": {
 			"$value": "1px"

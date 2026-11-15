@@ -52,20 +52,32 @@
 </ScreenFrame>
 
 <style>
+	/*
+	 * As tall as the screen leaves beside the title and Continue: the picture takes what the text
+	 * does not need, so that Continue stays whole on a laptop, whatever the length of the text (E-03 e).
+	 */
 	.moment {
 		display: grid;
+		grid-template-rows: minmax(var(--dd-size-story-picture-min), 1fr) auto;
 		gap: var(--dd-space-lg);
 		justify-items: center;
 		inline-size: 100%;
+		block-size: var(--dd-size-story-moment);
 		margin: 0;
 	}
 
-	/* The picture follows the height of the screen: Continue stays in view on a laptop (E-03 e). */
+	/* A definite row, so that the drawing can take the whole height of its cell. */
 	.picture {
 		display: grid;
+		grid-template-rows: minmax(0, 1fr);
 		justify-items: center;
-		inline-size: var(--dd-size-story-picture-fit);
-		max-inline-size: 100%;
+		inline-size: 100%;
+		min-block-size: 0;
+	}
+
+	/* The drawing is as large as its cell allows, in the middle of it. */
+	.picture :global(.story-picture) {
+		block-size: 100%;
 	}
 
 	figcaption {

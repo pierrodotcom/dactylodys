@@ -5,6 +5,11 @@ export const focusOnMount: Attachment<HTMLElement> = (node) => {
 	node.focus();
 };
 
+/** The same, for a screen that brings the element into view itself: the focus does not scroll. */
+export const focusOnMountInPlace: Attachment<HTMLElement> = (node) => {
+	node.focus({ preventScroll: true });
+};
+
 /**
  * Puts the keyboard focus on the element a moment after it appears. For a button that shows up
  * under a child who is still pressing keys: Enter would otherwise click it at once.

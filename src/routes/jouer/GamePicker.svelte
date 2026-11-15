@@ -2,7 +2,7 @@
 	import type { Attachment } from 'svelte/attachments';
 	import GamePicture from '$lib/games/GamePicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
-	import { focusOnMount, revealInView } from '$lib/ui/focus';
+	import { focusOnMountInPlace, revealInView } from '$lib/ui/focus';
 	import type { GameOption } from './game-choice';
 
 	interface Props {
@@ -41,7 +41,7 @@
 				class="game"
 				data-proposed={isProposed || undefined}
 				data-game={game.value}
-				{@attach isProposed ? focusOnMount : undefined}
+				{@attach isProposed ? focusOnMountInPlace : undefined}
 				onclick={() => onplay(game.value)}
 			>
 				<span class="picture" aria-hidden="true">
@@ -136,8 +136,8 @@
 	}
 
 	/*
-	 * Three games or more: the titles go on two lines (three for the others), so that all the games
-	 * stay on one row, even with a long title proposed (world 6).
+	 * Three games or more: smaller pictures and titles on two or three lines, so that all the games
+	 * stay on one row, even with a long title proposed (world 6), under the keys of the lesson.
 	 */
 	.games[data-many] .title {
 		max-inline-size: var(--dd-size-game-title-small-max);
@@ -147,6 +147,17 @@
 
 	.games[data-many] .game[data-proposed] .title {
 		max-inline-size: var(--dd-size-game-title-proposed-max);
+		font-size: var(--dd-font-size-lg);
+	}
+
+	.games[data-many] .game[data-proposed] .picture {
+		inline-size: var(--dd-size-game-picture-many);
+		block-size: var(--dd-size-game-picture-many);
+	}
+
+	.games[data-many] .game:not([data-proposed]) .picture {
+		inline-size: var(--dd-size-game-picture-small-many);
+		block-size: var(--dd-size-game-picture-small-many);
 	}
 
 	@keyframes bob {

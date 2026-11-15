@@ -149,8 +149,10 @@
 
 		{#if shown}
 			<section class="keys" aria-labelledby="intro-keys-heading" data-intro-keys={shown.kind}>
-				<h2 id="intro-keys-heading">{heading}</h2>
-				<!-- The fingers beside the keyboard, and the sentence of the world under them. -->
+				<!--
+					Beside the keyboard: the title of the keys, the fingers, and the sentence of the world under
+					them. The keyboard is a picture only (screen readers skip it): the title comes first for them.
+				-->
 				<div class="keys-row">
 					<div class="board">
 						<KeyboardView
@@ -166,6 +168,7 @@
 						/>
 					</div>
 					<div class="beside">
+						<h2 id="intro-keys-heading">{heading}</h2>
 						<ul class="hints">
 							{#each lines as line, index (index)}
 								<li>
@@ -214,7 +217,7 @@
 <style>
 	.lesson {
 		display: grid;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm);
 		justify-items: center;
 		inline-size: 100%;
 	}
@@ -292,7 +295,7 @@
 	.beside {
 		display: grid;
 		flex: 1 1 var(--dd-size-text-zone-side-min);
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm);
 		justify-items: center;
 	}
 
