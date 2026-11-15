@@ -127,10 +127,14 @@
 </header>
 
 <style>
-	/* What a keyboard reaches scrolls into view below the bar, never under it (WCAG 2.4.11). */
+	/*
+	 * What a keyboard reaches scrolls into view below the bar, never under it (WCAG 2.4.11); at the
+	 * bottom, a little room for a focused card drawn larger.
+	 */
 	:global(html:has(.top-bar[data-sticky])) {
 		--dd-top-bar-height: var(--dd-size-touch-target-min);
-		scroll-padding-block-start: calc(var(--dd-top-bar-height) + var(--dd-space-md));
+		scroll-padding-block-start: calc(var(--dd-top-bar-height) + var(--dd-space-xs));
+		scroll-padding-block-end: var(--dd-space-md);
 	}
 
 	.top-bar[data-sticky] {

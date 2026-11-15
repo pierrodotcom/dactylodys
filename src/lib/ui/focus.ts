@@ -42,6 +42,12 @@ function topClearance(): number {
 	return Number.isFinite(padding) ? padding : 0;
 }
 
+/** Room kept at the bottom of the page: a focused card, drawn a little larger, stays whole. */
+function bottomClearance(): number {
+	const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBlockEnd);
+	return Number.isFinite(padding) ? padding : 0;
+}
+
 /** The element is whole on the screen, below the bar that stays at the top of the page. */
 export function isInView(element: Element): boolean {
 	const box = element.getBoundingClientRect();
@@ -58,15 +64,25 @@ export const revealInView: Attachment<HTMLElement> = (node) => {
 
 /**
  * Scrolls the page the least that shows the element whole, without taking `keep` out of view
- * above it: an instruction is never scrolled away to show the choices that follow it.
+ * above it: an instruction is never scrolled away to show the choices that follow it. Done again
+ * once the fonts are there: the screen is a little taller then.
  */
 export function revealBelow(keep: () => Element | null | undefined): Attachment<HTMLElement> {
 	return (node) => {
-		const below = node.getBoundingClientRect().bottom - window.innerHeight;
-		if (below <= 0) return;
-		const anchor = keep()?.getBoundingClientRect();
-		const room = anchor === undefined ? below : anchor.top - topClearance();
-		const by = Math.min(below, room);
-		if (by > 0) window.scrollBy({ top: by, behavior: 'instant' });
+		let gone = false;
+		const reveal = () => {
+			if (gone) return;
+			const below = node.getBoundingClientRect().bottom + bottomClearance() - window.innerHeight;
+			if (below <= 0) return;
+			const anchor = keep()?.getBoundingClientRect();
+			const room = anchor === undefined ? below : anchor.top - topClearance();
+			const by = Math.min(below, room);
+			if (by > 0) window.scrollBy({ top: by, behavior: 'instant' });
+		};
+		reveal();
+		void document.fonts.ready.then(() => requestAnimationFrame(reveal));
+		return () => {
+			gone = true;
+		};
 	};
 }

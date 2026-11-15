@@ -319,7 +319,7 @@
 
 	.choice {
 		display: grid;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm);
 		justify-items: center;
 		inline-size: 100%;
 	}
