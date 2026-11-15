@@ -54,17 +54,25 @@ describe('chooseCheckSteps', () => {
 describe('stepMatches', () => {
 	const step: CheckStep = { code: 'KeyQ', char: 'a', label: 'A' };
 
-	it('accepts the expected physical key', () => {
+	it('accepts the expected character on the expected physical key', () => {
 		expect(stepMatches(step, keystroke('KeyQ', 'a'))).toBe(true);
 	});
 
-	it('refuses another physical key, even when the character is the same', () => {
-		expect(stepMatches(step, keystroke('KeyA', 'a'))).toBe(false);
+	// A browser that resists fingerprinting (LibreWolf, Tor Browser, Firefox with the setting on)
+	// reports the keys of an American keyboard: a real AZERTY keyboard says KeyA for the letter a.
+	it('accepts the expected character whatever physical key the browser reports', () => {
+		expect(stepMatches(step, keystroke('KeyA', 'a'))).toBe(true);
+		expect(stepMatches(step, keystroke(null, 'a'))).toBe(true);
 	});
 
-	it('falls back on the produced character when the key is unknown', () => {
-		expect(stepMatches(step, keystroke(null, 'a'))).toBe(true);
+	// An AZERTY keyboard on a system set to QWERTY: the key printed A writes q.
+	it('refuses another character, even on the expected physical key', () => {
+		expect(stepMatches(step, keystroke('KeyQ', 'q'))).toBe(false);
 		expect(stepMatches(step, keystroke(null, 'q'))).toBe(false);
+	});
+
+	it('accepts the capital of the expected letter, typed with Caps Lock on', () => {
+		expect(stepMatches(step, keystroke('KeyQ', 'A'))).toBe(true);
 	});
 });
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { findLesson } from '$lib/engine/progression/definition';
 	import { gameTitle } from '$lib/games/labels';
@@ -13,6 +13,7 @@
 	import type { Profile, ProfileStore, Settings } from '$lib/state/types';
 	import { downloadTextFile } from '$lib/ui/download';
 	import { isElidedBefore } from '$lib/ui/elision';
+	import { adultSpace } from '$lib/ui/info-pages';
 	import { progressionFor } from '../jouer/content';
 	import { FREE_PRACTICE_RULES } from '../jouer/free-practice';
 	import { forgetLastPlayerId } from '../jouer/last-player';
@@ -75,7 +76,8 @@
 		lastBackupAt = readLastBackupAt();
 		const now = Date.now();
 		today = localDay(now, utcOffsetAt(now));
-		view = { name: 'gate' };
+		// Back from a page for adults opened from here: the gate was passed already (`adultSpace`).
+		view = adultSpace.isOpen() ? { name: 'home' } : { name: 'gate' };
 		store = createIndexedDbProfileStore();
 		try {
 			profiles = await store.list();
@@ -84,6 +86,15 @@
 			memoryOnly = true;
 		}
 	});
+
+	beforeNavigate(({ to, willUnload }) => {
+		if (!willUnload) adultSpace.follow(to?.route.id ?? null);
+	});
+
+	function enter() {
+		adultSpace.open();
+		void show({ name: 'home' });
+	}
 
 	/** Back on the player screen, nobody chosen: the last player is not opened again on its own. */
 	function leave() {
@@ -225,7 +236,7 @@
 			rng={Math.random}
 			{code}
 			codeLength={ADULT_RULES.codeLength}
-			onenter={() => show({ name: 'home' })}
+			onenter={enter}
 			onleave={leave}
 		/>
 	{:else if view.name === 'child' && shown}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import InfoPage from '$lib/ui/components/InfoPage.svelte';
+	import { PROJECT_HOST } from '$lib/ui/project-links';
 </script>
 
 <InfoPage id="privacy" title={m.info_link_privacy()}>
@@ -24,7 +25,7 @@
 			<li>{m.privacy_never_third()}</li>
 			<li>{m.privacy_never_external()}</li>
 		</ul>
-		<p>{m.privacy_host()}</p>
+		<p data-privacy-host>{m.privacy_host(PROJECT_HOST)}</p>
 	</section>
 
 	<section aria-labelledby="privacy-backup">

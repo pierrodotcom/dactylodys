@@ -1,11 +1,7 @@
-<script lang="ts" module>
-	/** The pages written for adults, linked from the home page and from the adult space. */
-	export type InfoPageId = 'adults' | 'professionals' | 'privacy' | 'accessibility';
-</script>
-
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages.js';
+	import { INFO_PAGES, type InfoPageId } from '$lib/ui/info-pages';
 
 	interface Props {
 		/** The page these links are shown on, if it is one of them. */
@@ -16,16 +12,14 @@
 
 	let { current, labelledby }: Props = $props();
 
-	const links = [
-		{ id: 'adults', route: '/pour-les-adultes', label: m.info_link_adults() },
-		{
-			id: 'professionals',
-			route: '/pour-les-professionnels',
-			label: m.info_link_professionals()
-		},
-		{ id: 'privacy', route: '/confidentialite', label: m.info_link_privacy() },
-		{ id: 'accessibility', route: '/accessibilite', label: m.info_link_accessibility() }
-	] as const;
+	const LABELS: Record<InfoPageId, () => string> = {
+		adults: m.info_link_adults,
+		professionals: m.info_link_professionals,
+		privacy: m.info_link_privacy,
+		accessibility: m.info_link_accessibility,
+		credits: m.info_link_credits
+	};
+	const links = INFO_PAGES.map((page) => ({ ...page, label: LABELS[page.id]() }));
 </script>
 
 <nav

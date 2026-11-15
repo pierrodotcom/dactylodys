@@ -40,9 +40,16 @@ jobs:
 
       - run: npm ci
 
+      # Nothing is published when a unit test fails (ADR-075). Kept as short as it can be, minutes
+      # being counted (ADR-053): the unit tests only, in this same job, on the same installation;
+      # no type check, no lint, no end-to-end test. The generated files are made once for both steps.
+      - run: npm run -s generate
+
+      - run: npm test
+
       - uses: actions/configure-pages@v6
 
-      - run: npm run build
+      - run: npm run build --ignore-scripts
         env:
           BASE_PATH: /${{ github.event.repository.name }}
 

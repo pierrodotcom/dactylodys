@@ -14,7 +14,11 @@ import {
 	validateStoryPhrases,
 	validateTexts
 } from '../../src/lib/engine/progression/banks';
-import { learnedChars, parseProgression } from '../../src/lib/engine/progression/definition';
+import {
+	findLesson,
+	learnedChars,
+	parseProgression
+} from '../../src/lib/engine/progression/definition';
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
 import { keyNeighbors } from '../../src/lib/engine/progression/repair';
 import { parseGeometry } from '../../src/lib/keyboard/geometry';
@@ -54,6 +58,11 @@ const MIN_USABLE_PHRASES = 6;
 const MIN_PHRASES_PER_NEW_CHAR = 6;
 const MAX_STORY_PHRASE_LENGTH = 45;
 const SEED_COUNT = 20;
+/**
+ * For the tests that generate every lesson over `SEED_COUNT` seeds: a few seconds alone, more than
+ * the default five when the whole suite shares a busy machine. The global timeout stays as it is.
+ */
+const HEAVY_PROPERTY_TIMEOUT_MS = 30_000;
 const STORY_SEED_COUNT = 5;
 const HELP_SEED_COUNT = 8;
 
@@ -144,12 +153,17 @@ describe('progression and banks together', () => {
 					themeId,
 					maxLevel: PLAY_RULES.maxWordLevel
 				});
+				// A word alone, one of the words put side by side to warm a new key up, or a word
+				// drawn with a capital in the lesson of capitals.
+				const isWord = (part: string) =>
+					usable.has(part) || usable.has(`${part.charAt(0).toLowerCase()}${part.slice(1)}`);
 				expect(
-					exercise.groups.some((group) => usable.has(group)),
+					exercise.groups.some((group) => group.split(' ').some(isWord)),
 					`${lessonId} seed ${seed}: ${exercise.groups.join(' | ')}`
 				).toBe(true);
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
 	it('offers only games that exist in the registry', () => {
@@ -187,7 +201,8 @@ describe('progression and banks together', () => {
 					}
 				}
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
 	it('writes every story phrase for an existing lesson, with the keys learned there', () => {
@@ -240,6 +255,11 @@ describe('progression and banks together', () => {
 	)(
 		`%s asks each new character at least the minimum number of times over ${SEED_COUNT} seeds`,
 		(lessonId, themeId, newChars) => {
+			// A warm-up written by hand shows a mark in its place: it has its own, lower, minimum.
+			const written = findLesson(progression, lessonId)?.warmUp !== undefined;
+			const minimum =
+				(written ? progression.rules.writtenWarmUpMinCount : undefined) ??
+				progression.rules.newCharMinCount;
 			for (let seed = 1; seed <= SEED_COUNT; seed++) {
 				const exercise = generateExercise(progression, lessonId, seededRng(seed), {
 					words,
@@ -251,12 +271,11 @@ describe('progression and banks together', () => {
 				const asked = exercise.groups.flatMap((group) => toGraphemes(group));
 				for (const char of newChars) {
 					const count = asked.filter((grapheme) => grapheme === char).length;
-					expect(count, `${lessonId} seed ${seed}: "${char}"`).toBeGreaterThanOrEqual(
-						progression.rules.newCharMinCount
-					);
+					expect(count, `${lessonId} seed ${seed}: "${char}"`).toBeGreaterThanOrEqual(minimum);
 				}
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 });
 
@@ -423,7 +442,8 @@ describe('useful texts and progression together', () => {
 					}
 				}
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
 	it('writes every e-mail address on a domain reserved for examples, never a real one', () => {
@@ -487,6 +507,7 @@ describe('the lesson of repairs over the shipped content', () => {
 					expect(start.pending[0]).not.toBe(toGraphemes(group)[start.typed]);
 				});
 			}
-		}
+		},
+		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 });

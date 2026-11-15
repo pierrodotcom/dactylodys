@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages.js';
-	import InfoLinks, { type InfoPageId } from './InfoLinks.svelte';
+	import { adultSpace, type InfoPageId } from '$lib/ui/info-pages';
+	import InfoLinks from './InfoLinks.svelte';
 	import ScreenFrame from './ScreenFrame.svelte';
 
 	interface Props {
@@ -13,6 +14,15 @@
 	}
 
 	let { id, title, children }: Props = $props();
+
+	// Opened from the adult space, the page leads back to it; from anywhere else, to the home page.
+	const back = adultSpace.isOpen()
+		? { label: m.info_back(), onclick: () => void goto(resolve('/adulte')) }
+		: { label: m.info_back_home(), onclick: () => void goto(resolve('/')) };
+
+	beforeNavigate(({ to, willUnload }) => {
+		if (!willUnload) adultSpace.follow(to?.route.id ?? null);
+	});
 </script>
 
 <svelte:head>
@@ -21,10 +31,7 @@
 
 <div class="info-page" data-info-page={id}>
 	<main>
-		<ScreenFrame
-			{title}
-			back={{ label: m.info_back_home(), onclick: () => void goto(resolve('/')) }}
-		>
+		<ScreenFrame {title} {back}>
 			<div class="text">{@render children()}</div>
 		</ScreenFrame>
 	</main>

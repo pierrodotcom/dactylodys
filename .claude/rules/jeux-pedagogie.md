@@ -113,7 +113,7 @@ Livrés depuis (PR 24, 25, 29) : `engine/rewards` (`parseRewardCatalogue`, `vali
 
 Types d'origine, à ne pas modifier sans passer par le chef d'orchestre : `engine/rewards/types.ts` (`RewardCondition`, `RewardDefinition`, `RewardCatalogue`, `CompanionChoice`, `CompanionLook`), `engine/story/types.ts` (`StoryDefinition`), `audio/voice-types.ts` (`VoiceManifest`, `VoicePlayer`). Les signatures attendues sont en tête de chaque fichier. Aucune condition de récompense ne porte sur le temps, les jours, le nombre de parties ou la vitesse.
 
-À savoir : le temps « actif » d'une partie est la somme des durées de groupes, de la première à la dernière frappe de chaque groupe (le fantôme avance sur cette horloge) ; `ProgressState.chars[c]` porte le cumul à vie (`attempts`, `errors`) et les parties récentes (`recent`) ; `voiceKey` doit être synchrone. Une version de profil déjà fusionnée dans `main` est en ligne : on ne modifie plus son étape de migration, on en ajoute une.
+À savoir : depuis l'ADR-077, le temps **mesuré** d'un groupe part de son affichage (attente avant la première frappe plafonnée à 5 s) et finit à sa dernière frappe, pauses retirées : c'est lui qui donne la vitesse. Le temps de **frappe** (`sessionTypingMs`, de la première à la dernière frappe, pauses retirées) reste l'horloge du fantôme ; `ProgressState.chars[c]` porte le cumul à vie (`attempts`, `errors`) et les parties récentes (`recent`) ; `voiceKey` doit être synchrone. Une version de profil déjà fusionnée dans `main` est en ligne : on ne modifie plus son étape de migration, on en ajoute une.
 
 ## Récompenses et compagnon (R2, ADR-037)
 

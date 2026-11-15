@@ -275,6 +275,11 @@
 		if (document.visibilityState === 'hidden') dispatch({ type: 'pause' });
 	}
 
+	// A hidden page is not being typed on: the game pauses, and waits for the child to resume it.
+	function onVisibilityChange() {
+		if (document.visibilityState === 'hidden') dispatch({ type: 'pause' });
+	}
+
 	function keepFocus(event: MouseEvent) {
 		if (paused || suspended) return;
 		if (!(event.target as Element).closest('button')) field?.focus();
