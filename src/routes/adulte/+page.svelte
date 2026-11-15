@@ -340,6 +340,7 @@
 			onsheet={() => show({ name: 'sheet', id: child.id })}
 			onmeasures={() => downloadMeasures(child)}
 			onbackup={() => downloadBackup(child)}
+			otherNames={profiles.filter((other) => other.id !== child.id).map((other) => other.name)}
 			onrename={(name) => rename(child, name)}
 			ondelete={() => show({ name: 'removal', id: child.id })}
 			onback={() => show({ name: 'home' })}

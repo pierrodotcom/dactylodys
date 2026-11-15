@@ -1,8 +1,9 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { toGraphemes } from '$lib/engine/graphemes';
-import { createProfile, MAX_NAME_LENGTH, normalizeName } from '$lib/state/profile';
-import { distinctName, nameCopies, type CopyNameFormat } from './copy-name';
+import { createProfile, MAX_NAME_LENGTH, normalizeName, sameNickname } from '$lib/state/profile';
+import type { Profile } from '$lib/state/types';
+import { distinctName, duplicateNicknames, nameCopies, type CopyNameFormat } from './copy-name';
 
 const FORMAT: CopyNameFormat = (name, number) => `${name} (${number})`;
 
@@ -66,5 +67,86 @@ describe('nameCopies', () => {
 			['d', 'Lou (3)'],
 			['b', 'Ali']
 		]);
+	});
+});
+
+function allDistinct(profiles: readonly Profile[]): boolean {
+	return profiles.every((one, index) =>
+		profiles.slice(index + 1).every((other) => !sameNickname(one.name, other.name))
+	);
+}
+
+describe('nameCopies, nicknames borne twice', () => {
+	it('gives its own nickname to a loaded profile whose nickname another profile of the device bears', () => {
+		const saved = nameCopies(
+			[{ profile: profile('b', 'lou'), copyOf: null }],
+			[profile('a', 'Lou')],
+			FORMAT
+		);
+		expect(saved.map((entry) => [entry.id, entry.name])).toEqual([['b', 'lou (2)']]);
+	});
+
+	it('keeps the nickname of a loaded profile that replaces the one of the device', () => {
+		const saved = nameCopies(
+			[{ profile: profile('a', 'Lou'), copyOf: null }],
+			[profile('a', 'Lou')],
+			FORMAT
+		);
+		expect(saved.map((entry) => entry.name)).toEqual(['Lou']);
+	});
+
+	it('gives distinct nicknames to two loaded profiles that bear the same one', () => {
+		const saved = nameCopies(
+			[
+				{ profile: profile('a', 'Zoé'), copyOf: null },
+				{ profile: profile('b', 'Zoe'), copyOf: null }
+			],
+			[],
+			FORMAT
+		);
+		expect(saved.map((entry) => entry.name)).toEqual(['Zoé', 'Zoe (2)']);
+	});
+
+	it('never leaves two profiles of the device with the same nickname', () => {
+		const names = fc.constantFrom('Lou', 'lou', 'Zoé', 'Zoe', 'Ali', 'Lou (2)');
+		const ids = fc.constantFrom('a', 'b', 'c', 'd');
+		const entries = fc.uniqueArray(fc.tuple(ids, names), {
+			selector: ([id]) => id,
+			maxLength: 4
+		});
+		const device = entries
+			.map((list) => list.map(([id, name]) => profile(id, name)))
+			.filter(allDistinct);
+		fc.assert(
+			fc.property(device, entries, (existing, file) => {
+				const saved = nameCopies(
+					file.map(([id, name]) => ({ profile: profile(id, name), copyOf: null })),
+					existing,
+					FORMAT
+				);
+				const savedIds = new Set(saved.map((entry) => entry.id));
+				const after = [...existing.filter((entry) => !savedIds.has(entry.id)), ...saved];
+				expect(allDistinct(after)).toBe(true);
+				saved.forEach((entry) => expect(normalizeName(entry.name)).toBe(entry.name));
+			})
+		);
+	});
+});
+
+describe('duplicateNicknames', () => {
+	it('names once each nickname that several profiles bear, as the first of them bears it', () => {
+		const profiles = [
+			profile('a', 'Lou'),
+			profile('b', 'Ali'),
+			profile('c', 'lou'),
+			profile('d', 'Zoé'),
+			profile('e', 'Zoe'),
+			profile('f', 'LOU')
+		];
+		expect(duplicateNicknames(profiles)).toEqual(['Lou', 'Zoé']);
+	});
+
+	it('names nothing when every profile has its own nickname', () => {
+		expect(duplicateNicknames([profile('a', 'Lou'), profile('b', 'Lou 2')])).toEqual([]);
 	});
 });

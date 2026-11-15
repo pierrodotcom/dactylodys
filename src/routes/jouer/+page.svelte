@@ -1209,7 +1209,11 @@
 			onforget={forgetUnreadable}
 		/>
 	{:else if screen.name === 'new-player'}
-		<NewPlayer oncreate={createPlayer} onback={() => go({ type: 'cancel-new-player' })} />
+		<NewPlayer
+			oncreate={createPlayer}
+			onback={() => go({ type: 'cancel-new-player' })}
+			takenNames={profiles.map((profile) => profile.name)}
+		/>
 	{:else if !profile || !assets || !progression}
 		<p class="loading" role="alert">{m.play_error_content()}</p>
 	{:else if screen.name === 'keyboard-check'}

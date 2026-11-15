@@ -157,6 +157,24 @@ test.describe('player screens', () => {
 		release();
 		await expect(heading(page, message('play_check_title'))).toBeVisible();
 	});
+
+	test("refuses the nickname of another player of the device, and says how to find one's own", async ({
+		page
+	}) => {
+		await install(page, [lou, zoe]);
+		await button(page, message('play_new_player')).click();
+		const input = page.getByLabel(message('play_new_label'));
+		await input.fill('  ZOE ');
+		await input.press('Enter');
+		await expect(page.getByRole('alert')).toHaveText(
+			message('play_new_error_taken', { name: zoe.name })
+		);
+		await expect(input).toHaveAttribute('aria-invalid', 'true');
+
+		await input.fill('Zoé 2');
+		await input.press('Enter');
+		await expect(heading(page, message('play_check_title'))).toBeVisible();
+	});
 });
 
 for (const colorScheme of COLOR_SCHEMES) {

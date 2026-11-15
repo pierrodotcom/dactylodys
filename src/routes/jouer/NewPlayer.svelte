@@ -16,9 +16,11 @@
 		 */
 		oncreate: (name: string, ageBand: AgeBand | null) => Promise<boolean>;
 		onback: () => void;
+		/** The nicknames of the players of the device: a new player bears none of them. */
+		takenNames: readonly string[];
 	}
 
-	let { oncreate, onback }: Props = $props();
+	let { oncreate, onback, takenNames }: Props = $props();
 
 	const INPUT_ID = 'player-name';
 	const ERROR_ID = 'player-name-error';
@@ -36,7 +38,9 @@
 
 	let name = $state('');
 	let age = $state<AgeAnswer>(UNKNOWN_AGE);
-	let error = $state<'empty' | 'invalid' | 'save' | null>(null);
+	let error = $state<'empty' | 'invalid' | 'taken' | 'save' | null>(null);
+	/** The player who bears the nickname already, as the player screen shows it. */
+	let takenBy = $state('');
 	let busy = $state(false);
 	/** The creation lasts: said under the button. */
 	let slow = $state(false);
@@ -46,17 +50,20 @@
 			? m.play_new_error_empty()
 			: error === 'invalid'
 				? m.play_new_error_invalid({ min: MIN_NAME_LENGTH, max: MAX_NAME_LENGTH })
-				: error === 'save'
-					? m.play_new_error_save()
-					: ''
+				: error === 'taken'
+					? m.play_new_error_taken({ name: takenBy })
+					: error === 'save'
+						? m.play_new_error_save()
+						: ''
 	);
 
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy) return;
-		const check = checkPlayerName(name);
+		const check = checkPlayerName(name, takenNames);
 		if (!check.ok) {
 			error = check.reason;
+			takenBy = check.reason === 'taken' ? check.existing : '';
 			return;
 		}
 		error = null;
