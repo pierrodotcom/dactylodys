@@ -102,9 +102,10 @@ function hesitantChild(name: string): Profile {
 }
 
 const [SECOND, THIRD] = (world?.lessons.slice(1, 3) ?? []) as { id: string; title: string }[];
-const playRules = readJson<{ breakAfterMinutes: number; breakAfterExercises: number }>(
-	'content/common/play-rules.json'
-);
+const playRules = readJson<{
+	sessionLengths: { normal: { clockMinutes: number; earlyExercises: number } };
+}>('content/common/play-rules.json');
+const usualSession = playRules.sessionLengths.normal;
 
 /** Two lessons passed; M still being learned, Q fragile, L right but long to find. */
 function sheetChild(name: string): Profile {
@@ -402,8 +403,8 @@ test.describe('adult space', () => {
 			message('adult_sheet_keys_hesitant', { keys: 'L' })
 		);
 		await expect(page.locator('[data-sheet-length]')).toHaveText(
-			plural('adult_sheet_during_length_games', playRules.breakAfterExercises, {
-				duration: `${playRules.breakAfterMinutes} minutes`
+			plural('adult_sheet_during_length_games', usualSession.earlyExercises, {
+				duration: `${usualSession.clockMinutes} minutes`
 			})
 		);
 

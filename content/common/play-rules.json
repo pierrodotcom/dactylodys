@@ -1,7 +1,11 @@
 {
 	"schemaVersion": 1,
-	"breakAfterMinutes": 12,
-	"breakAfterExercises": 4,
+	"sessionLengths": {
+		"short": { "typingMinutes": 5, "clockMinutes": 8, "earlyExercises": 4, "exercises": 4 },
+		"normal": { "typingMinutes": 8, "clockMinutes": 12, "earlyExercises": 4, "exercises": 0 },
+		"long": { "typingMinutes": 12, "clockMinutes": 15, "earlyExercises": 6, "exercises": 0 }
+	},
+	"earlyWorlds": 2,
 	"maxWordLevel": 3,
 	"wordLevels": {
 		"8-9": [1, 1, 2, 3],

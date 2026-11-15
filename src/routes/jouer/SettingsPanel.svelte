@@ -4,13 +4,16 @@
 	import { toGraphemes } from '$lib/engine/graphemes';
 	import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { calmDown, type CalmChange } from '$lib/state/calm';
+	import { SESSION_LENGTHS } from '$lib/state/profile';
 	import type {
 		AgeBand,
 		AmbiencePreference,
-		ErrorPolicy,
+		ErrorPolicyPreference,
 		HandGuidePreference,
 		MotionPreference,
+		SessionLength,
 		Settings,
 		TextScale,
 		TextSpacing,
@@ -21,6 +24,7 @@
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import TargetText from '$lib/ui/components/TargetText.svelte';
 	import { AMBIENCE_LABELS, LAYOUT_LABELS } from './labels';
+	import { PLAY_RULES } from './play-rules';
 
 	interface Props {
 		settings: Settings;
@@ -76,9 +80,26 @@
 		{ value: 'wider', label: m.settings_spacing_wider() }
 	];
 	const BACKSPACE_OPTIONS = [
+		{ value: 'world', label: m.settings_backspace_world() },
 		{ value: 'backspace', label: m.settings_backspace_on() },
 		{ value: 'retry', label: m.settings_backspace_off() }
 	];
+	const SESSION_LABELS: Readonly<Record<SessionLength, () => string>> = {
+		short: m.settings_session_short,
+		normal: m.settings_session_normal,
+		long: m.settings_session_long
+	};
+	const SESSION_OPTIONS = SESSION_LENGTHS.map((length) => ({
+		value: length,
+		label: SESSION_LABELS[length]()
+	}));
+	const minutes = new Intl.NumberFormat(getLocale(), {
+		style: 'unit',
+		unit: 'minute',
+		unitDisplay: 'long'
+	});
+	const typingMinutes = (length: SessionLength) =>
+		minutes.format(PLAY_RULES.sessionLengths[length].typingMinutes);
 	const FADE_OPTIONS = [
 		{ value: YES, label: m.settings_keyboard_fade_on() },
 		{ value: NO, label: m.settings_keyboard_fade_off() }
@@ -247,13 +268,29 @@
 			onchange={(value) => change({ layoutId: value as LayoutId })}
 		/>
 		{#if adult}
+			<div class="adult-only" data-adult-setting="session">
+				<ChoiceGroup
+					legend={m.settings_session_label()}
+					name="setting-session"
+					options={SESSION_OPTIONS}
+					value={settings.sessionLength}
+					onchange={(value) => change({ sessionLength: value as SessionLength })}
+				/>
+				<p class="hint">
+					{m.settings_session_hint({
+						short: typingMinutes('short'),
+						normal: typingMinutes('normal'),
+						long: typingMinutes('long')
+					})}
+				</p>
+			</div>
 			<div class="adult-only" data-adult-setting="backspace">
 				<ChoiceGroup
 					legend={m.settings_backspace_label()}
 					name="setting-backspace"
 					options={BACKSPACE_OPTIONS}
 					value={settings.errorPolicy}
-					onchange={(value) => change({ errorPolicy: value as ErrorPolicy })}
+					onchange={(value) => change({ errorPolicy: value as ErrorPolicyPreference })}
 				/>
 				<p class="hint">{m.settings_backspace_hint()}</p>
 			</div>

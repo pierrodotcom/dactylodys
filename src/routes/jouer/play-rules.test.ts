@@ -2,10 +2,24 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { PLAY_RULES, parsePlayRules } from './play-rules';
 
+const SESSION_LENGTHS = {
+	short: { typingMinutes: 5, clockMinutes: 8, earlyExercises: 4, exercises: 4 },
+	normal: { typingMinutes: 8, clockMinutes: 12, earlyExercises: 4, exercises: 0 },
+	long: { typingMinutes: 12, clockMinutes: 15, earlyExercises: 6, exercises: 0 }
+};
+
+/** The valid rules with one field of one length of session changed. */
+function withLength(name: keyof typeof SESSION_LENGTHS, change: Record<string, unknown>) {
+	return {
+		...VALID,
+		sessionLengths: { ...SESSION_LENGTHS, [name]: { ...SESSION_LENGTHS[name], ...change } }
+	};
+}
+
 const VALID = {
 	schemaVersion: 1,
-	breakAfterMinutes: 12,
-	breakAfterExercises: 4,
+	sessionLengths: SESSION_LENGTHS,
+	earlyWorlds: 2,
 	maxWordLevel: 3,
 	bankLoadTimeoutMs: 3000,
 	ghostPaceFactor: 0.9,
@@ -23,8 +37,8 @@ describe('parsePlayRules', () => {
 
 	it('returns the rules as typed data', () => {
 		expect(parsePlayRules(VALID)).toEqual({
-			breakAfterMinutes: 12,
-			breakAfterExercises: 4,
+			sessionLengths: SESSION_LENGTHS,
+			earlyWorlds: 2,
 			maxWordLevel: 3,
 			bankLoadTimeoutMs: 3000,
 			ghostPaceFactor: 0.9,
@@ -65,9 +79,23 @@ describe('parsePlayRules', () => {
 		['a non-object', 'rules'],
 		['an unknown property', { ...VALID, extra: 1 }],
 		['a wrong schema version', { ...VALID, schemaVersion: 2 }],
-		['a negative number of exercises before a break', { ...VALID, breakAfterExercises: -1 }],
-		['a zero break delay', { ...VALID, breakAfterMinutes: 0 }],
-		['a delay that is not a number', { ...VALID, breakAfterMinutes: '12' }],
+		['a negative number of exercises before a break', withLength('normal', { exercises: -1 })],
+		['half an exercise before a break', withLength('normal', { earlyExercises: 2.5 })],
+		['a zero break delay', withLength('normal', { clockMinutes: 0 })],
+		['a delay that is not a number', withLength('normal', { clockMinutes: '12' })],
+		['no time spent typing', withLength('normal', { typingMinutes: 0 })],
+		['a ceiling under the time spent typing', withLength('normal', { clockMinutes: 7 })],
+		['an unknown property of a length', withLength('normal', { extra: 1 })],
+		['a long session shorter than the normal one', withLength('long', { typingMinutes: 6 })],
+		['a short session with a higher ceiling', withLength('short', { clockMinutes: 13 })],
+		['a missing length', { ...VALID, sessionLengths: { normal: SESSION_LENGTHS.normal } }],
+		[
+			'an unknown length',
+			{ ...VALID, sessionLengths: { ...SESSION_LENGTHS, huge: SESSION_LENGTHS.long } }
+		],
+		['no lengths', { ...VALID, sessionLengths: undefined }],
+		['a negative number of first worlds', { ...VALID, earlyWorlds: -1 }],
+		['no number of first worlds', { ...VALID, earlyWorlds: undefined }],
 		['a level that does not exist', { ...VALID, maxWordLevel: 4 }],
 		['no level', { ...VALID, maxWordLevel: undefined }],
 		['levels for an unknown age group', { ...VALID, wordLevels: { '6-7': [1] } }],

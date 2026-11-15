@@ -3,6 +3,7 @@ import type { GhostRun } from '../engine/ghost/types';
 import type { ErrorPolicy } from '../engine/types';
 import type {
 	AgeBand,
+	ErrorPolicyPreference,
 	HandGuidePreference,
 	ProgressState,
 	StarCount
@@ -16,6 +17,8 @@ export type TextScale = 'md' | 'lg' | 'xl';
 export type TextSpacing = 'normal' | 'wide' | 'wider';
 /** A soft background sound during the games (version 11), or none. */
 export type AmbiencePreference = 'none' | AmbienceId;
+/** How long a session lasts before a break is proposed (version 16). */
+export type SessionLength = 'short' | 'normal' | 'long';
 
 export interface Settings {
 	readonly layoutId: LayoutId;
@@ -33,10 +36,17 @@ export interface Settings {
 	/** The hand drawn on the keyboard: as the lessons go, always, never. */
 	readonly handGuide: HandGuidePreference;
 	/**
-	 * Chosen by the adult only (version 9): `retry`, the game waits for the right key; `backspace`,
-	 * a wrong key is written and the child erases it with Backspace before going on.
+	 * Chosen by the adult only (version 9, three choices since version 16): `world`, each world
+	 * says whether a mistake is erased (`errorPolicyFor`); `backspace`, a wrong key is always written
+	 * and the child erases it with Backspace before going on; `retry`, the game always waits for the
+	 * right key.
 	 */
-	readonly errorPolicy: ErrorPolicy;
+	readonly errorPolicy: ErrorPolicyPreference;
+	/**
+	 * Chosen by the adult only (version 16): how long the child plays before the game proposes to
+	 * stop for today, among the lengths of the rules of play. `normal` by default.
+	 */
+	readonly sessionLength: SessionLength;
 	/**
 	 * Chosen by the adult only (version 10): the keys the child knows well lose their letter on
 	 * the keyboard drawn in the games, so that the eyes stay on the text. On by default.
@@ -56,7 +66,14 @@ export interface Settings {
 	readonly ageBand: AgeBand;
 }
 
-export type { AgeBand, CompanionChoice, ErrorPolicy, HandGuidePreference, HelpQuestRecord };
+export type {
+	AgeBand,
+	CompanionChoice,
+	ErrorPolicy,
+	ErrorPolicyPreference,
+	HandGuidePreference,
+	HelpQuestRecord
+};
 
 /**
  * One finished play of a lesson, passed or not (version 7): what the adult space follows from one
@@ -99,7 +116,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 15;
+	readonly schemaVersion: 16;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { SessionMetrics } from '../engine/types';
 import {
 	addPracticeDay,
+	sessionPaces,
 	toSessionRecord,
 	utcOffsetAt,
 	withPracticeDay,
@@ -249,6 +250,33 @@ describe('withSessionRecorded', () => {
 					expect(parseProfile(JSON.parse(JSON.stringify(profile)))).toEqual(profile);
 				}
 			)
+		);
+	});
+});
+
+describe('sessionPaces', () => {
+	const measured = (pace: number): SessionRecord =>
+		toSessionRecord(play({ metrics: { ...METRICS, correctCharsPerMinute: pace, speedRule: 2 } }));
+	const older = (pace: number): SessionRecord =>
+		toSessionRecord(play({ metrics: { ...METRICS, correctCharsPerMinute: pace } }));
+
+	it('gives the pace of each play, the most recent last', () => {
+		expect(sessionPaces([measured(31), measured(48.5), measured(40)])).toEqual([31, 48.5, 40]);
+		expect(sessionPaces([])).toEqual([]);
+	});
+
+	it('leaves out the plays measured before the active time was counted: they were faster', () => {
+		expect(sessionPaces([older(90), measured(31), older(85), measured(40)])).toEqual([31, 40]);
+		expect(sessionPaces([older(90), older(85)])).toEqual([]);
+	});
+
+	it('reads any journal a profile can hold', () => {
+		fc.assert(
+			fc.property(profileArb, ({ sessions }) => {
+				const paces = sessionPaces(sessions);
+				expect(paces.length).toBe(sessions.filter((session) => session.speedRule === 2).length);
+				for (const pace of paces) expect(pace).toBeGreaterThanOrEqual(0);
+			})
 		);
 	});
 });

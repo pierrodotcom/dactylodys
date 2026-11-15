@@ -18,7 +18,7 @@
 	const progression = progressionFor(LAYOUT_IDS[0]);
 	if (!progression) throw new Error(`no progression for ${LAYOUT_IDS[0]}`);
 	const facts = professionalFacts(progression, PLAY_RULES);
-	const pause = { exercises: facts.breakAfterExercises, minutes: facts.breakAfterMinutes };
+	const pause = facts.pause;
 	const accuracy = format.number(facts.unlockAccuracy, 0);
 	const layouts = format.list(LAYOUT_IDS.map((id) => LAYOUT_LABELS[id]()));
 
@@ -93,7 +93,7 @@
 			<li>{m.pro_use_tools()}</li>
 			<li>{m.pro_use_backup()}</li>
 			<li>{m.pro_use_layouts({ layouts })}</li>
-			<li>{m.pro_use_rhythm()}</li>
+			<li>{m.pro_use_rhythm(pause)}</li>
 		</ul>
 		<p>{m.pro_use_guide({ page: m.info_link_adults() })}</p>
 		<p data-print-hidden><a href={resolve('/pour-les-adultes')}>{m.info_link_adults()}</a></p>

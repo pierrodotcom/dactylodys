@@ -23,11 +23,11 @@ Le parcours compte 34 leçons en 6 mondes : F et J, les voyelles tôt pour taper
 Chaque choix s'appuie sur une synthèse de la recherche publiée avec le projet. Peu d'études portent sur des enfants : plusieurs choix sont des déductions prudentes, pas des résultats démontrés.
 
 - **La précision avant la vitesse.** Une leçon se réussit à 80 % de frappes justes, quelle que soit la vitesse, et une erreur ne fait rien perdre. La vitesse vient d'un lien stable entre chaque touche et son doigt (Feit et al., 2016).
-- **Des séances courtes.** Une partie dure quelques minutes ; après 4 parties ou 12 minutes, le jeu propose lui-même une pause. La pratique répartie est le résultat le mieux établi pour apprendre à taper (Baddeley et Longman, 1978).
+- **Des séances courtes.** Une partie dure quelques minutes et s'allonge avec l'allure de l'enfant. Le jeu propose lui-même une pause : après 4 parties dans les premiers mondes, puis après environ 8 minutes de frappe, 12 minutes de jeu au plus. L'adulte peut choisir une séance plus courte ou plus longue. La pratique répartie est le résultat le mieux établi pour apprendre à taper (Baddeley et Longman, 1978).
 - **Aucun mécanisme pour retenir l'enfant.** Pas de série de jours à tenir, pas de classement, pas de récompense au hasard, pas de notification. Les récompenses saluent une compétence acquise, jamais le temps passé (Deci et al., 1999 ; Radesky et al., 2022).
 - **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; la lettre d'une touche bien acquise s'efface, et revient après une erreur. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
 - **Des réglages sensoriels séparés.** Sons, voix, mouvements, effets lumineux, taille et espacement du texte se règlent à part, ou tous ensemble avec « Tout calmer ». Rien ne bouge autour du texte pendant la frappe (Pelham et al., 2011). Le bruit de fond doux, qui aide certains et en gêne d'autres, est coupé par défaut (Nigg et al., 2024).
-- **Le retour arrière, au choix de l'adulte.** Par défaut, le jeu attend la bonne touche. L'adulte peut demander que l'enfant efface lui-même ses erreurs, comme dans un vrai texte. Aucune étude ne tranche : le choix vous revient.
+- **Le retour arrière, au choix de l'adulte.** Dans les leçons de touches, le jeu attend la bonne touche. Dans le monde des textes, l'enfant efface lui-même ses erreurs, comme dans un vrai texte. L'adulte peut demander l'un ou l'autre partout. Aucune étude ne tranche : le choix vous revient.
 - **Un contenu selon l'âge.** Deux tranches, 8-9 ans et 10-12 ans, changent les mots et les textes, jamais la progression ni les seuils : un enfant rejette ce qui lui paraît fait pour plus petit (Nielsen Norman Group).
 - **Une fiche « séance type ».** Depuis le bilan d'un enfant, une page à imprimer reprend sa leçon, ses touches fragiles ou hésitantes et le déroulé d'une séance, à préparer ou à confier à la famille.
 - **Un récit, des choix et un coin à soi.** L'enfant choisit son jeu et accompagne un compagnon ; sa cabane se décore avec les objets gagnés en apprenant, sans rien à acheter ni à débloquer. Le récit et le choix soutiennent l'envie mieux que les points (Sailer et Homner, 2020 ; Patall et al., 2008).
@@ -41,7 +41,7 @@ Les références complètes sont dans la [synthèse de recherche](../reports/Dac
 - Vous y trouvez aussi la fiche « séance type », les mesures pour tableur, une liste de mots à vous (ceux de la classe, par exemple) et de quoi ouvrir un monde d'avance.
 - La sauvegarde se fait par fichier, pour un enfant ou pour tous : un profil peut ainsi passer d'un poste à l'autre, du cabinet à la maison par exemple.
 - Dispositions de clavier proposées : Français AZERTY (PC) et Français AZERTY (Mac).
-- Rythme conseillé : des séances de 10 à 15 minutes, trois à cinq fois par semaine.
+- Rythme conseillé : des séances courtes, trois à cinq fois par semaine. Le jeu propose la pause après environ 8 minutes de frappe, 12 minutes de jeu au plus : une durée que vous pouvez régler pour chaque enfant.
 
 Le mode d'emploi détaillé et la mesure de la vitesse à la main sont dans la page « Pour les adultes ».
 
@@ -67,7 +67,7 @@ Vous êtes ergothérapeute ? Essayez le jeu une vingtaine de minutes, comme un e
 
 1. L'ordre des touches (F et J, puis les voyelles tôt, les accents fréquents au milieu du parcours) vous paraît-il adapté ?
 2. Le doigté : faut-il proposer un doigté à quatre ou six doigts ? Pour quels enfants, avec quelle répartition des touches ?
-3. La durée : une pause proposée après 4 parties ou 12 minutes convient-elle aux enfants que vous suivez ?
+3. La durée : une pause proposée après 4 parties au début, puis après environ 8 minutes de frappe, convient-elle aux enfants que vous suivez ?
 4. Les seuils : une leçon se réussit à 80 % de frappes justes. Est-ce trop exigeant, ou pas assez ?
 5. Le clavier à l'écran : la lettre d'une touche s'efface après 20 frappes récentes avec au plus 10 % d'erreurs. Est-ce trop tôt, ou trop tard ?
 6. Le bilan : quelles mesures vous seraient utiles pour suivre un enfant ? Lesquelles sont inutiles ?

@@ -47,6 +47,18 @@ export function toSessionRecord(play: FinishedPlay): SessionRecord {
 	);
 }
 
+/**
+ * The pace of the plays the journal keeps, in correct characters per minute, the most recent
+ * last: what an exercise that grows with the child reads (`ExerciseContext.paces`). Only the plays
+ * measured on the active time (`speedRule` 2): the older ones counted less time, their speed is
+ * higher and would make the exercises too long.
+ */
+export function sessionPaces(sessions: readonly SessionRecord[]): number[] {
+	return sessions
+		.filter((session) => session.speedRule === 2)
+		.map((session) => session.correctCharsPerMinute);
+}
+
 /** The days with this one added in its place; the same list when it is already there. */
 export function addPracticeDay(days: readonly string[], day: string): readonly string[] {
 	if (!isLocalDay(day)) throw new RangeError(`not a day written YYYY-MM-DD: ${day}`);

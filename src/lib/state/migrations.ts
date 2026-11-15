@@ -270,6 +270,27 @@ function toVersion15(record: StoredRecord): StoredRecord {
 	return { keptOpenLessonIds: openLessonsOfVersion14(record), ...record, schemaVersion: 15 };
 }
 
+/*
+ * Version 16 (ADR-075, choices 4 and 5): the adult has three choices for the mistakes. "The game
+ * waits for the right key" was what every profile had unless the adult had changed it: it becomes
+ * "the world decides", so that the worlds of texts bring Backspace on their own. "Backspace" was a
+ * choice of the adult: it is kept as it is, and now means in every world. A session keeps its
+ * usual length until the adult chooses another one.
+ */
+function toVersion16(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	if (!isRecord(settings)) return { ...record, schemaVersion: 16 };
+	return {
+		...record,
+		settings: {
+			sessionLength: 'normal',
+			...settings,
+			...(settings['errorPolicy'] === 'retry' ? { errorPolicy: 'world' } : {})
+		},
+		schemaVersion: 16
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -285,7 +306,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[11, toVersion12],
 	[12, toVersion13],
 	[13, toVersion14],
-	[14, toVersion15]
+	[14, toVersion15],
+	[15, toVersion16]
 ]);
 
 function versionOf(record: StoredRecord): number {

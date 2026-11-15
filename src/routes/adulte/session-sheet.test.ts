@@ -104,17 +104,57 @@ describe('sessionSheet', () => {
 		expect(sheet.status).toBe('quiet');
 	});
 
-	it('takes the length of a session and the break from the rules of play', () => {
+	const LENGTH = { typingMinutes: 7, clockMinutes: 9, earlyExercises: 3, exercises: 0 };
+	const RULES_OF_PLAY = {
+		earlyWorlds: 2,
+		sessionLengths: {
+			short: { ...LENGTH, typingMinutes: 4, clockMinutes: 6, exercises: 5 },
+			normal: LENGTH,
+			long: { ...LENGTH, typingMinutes: 11, clockMinutes: 14, earlyExercises: 6 }
+		}
+	};
+	/** Every lesson of the first two worlds is passed: the child plays in the third one. */
+	const afterEarlyWorlds = progression.worlds
+		.slice(0, RULES_OF_PLAY.earlyWorlds)
+		.flatMap((world) => world.lessons.map((lesson) => lesson.id));
+
+	function breakOf(profile: Profile) {
 		const sheet = sessionSheet({
-			profile: childWith({}),
+			profile,
 			progression,
 			charIndex,
 			rules: ADULT_RULES,
-			playRules: { breakAfterMinutes: 9, breakAfterExercises: 3 },
+			playRules: RULES_OF_PLAY,
 			compare: collator.compare
 		});
-		expect(sheet.breakAfterMinutes).toBe(9);
-		expect(sheet.breakAfterExercises).toBe(3);
-		expect(sheetOf(childWith({})).breakAfterMinutes).toBe(PLAY_RULES.breakAfterMinutes);
+		return [sheet.breakAfterExercises, sheet.breakAfterTypingMinutes, sheet.breakAfterMinutes];
+	}
+
+	function withLength(profile: Profile, sessionLength: 'short' | 'normal' | 'long'): Profile {
+		return { ...profile, settings: { ...profile.settings, sessionLength } };
+	}
+
+	it('counts the games of a beginner, as the rules of play say', () => {
+		expect(breakOf(childWith({}))).toEqual([3, null, 9]);
+		expect(breakOf(childWith(STEADY, [FIRST_ID]))).toEqual([3, null, 9]);
+	});
+
+	it('counts the time spent typing once the first worlds are behind', () => {
+		expect(breakOf(childWith(STEADY, afterEarlyWorlds))).toEqual([0, 7, 9]);
+	});
+
+	it('follows the length of session the adult chose for this child', () => {
+		const beginner = childWith({});
+		const later = childWith(STEADY, afterEarlyWorlds);
+		expect(breakOf(withLength(beginner, 'long'))).toEqual([6, null, 14]);
+		expect(breakOf(withLength(later, 'long'))).toEqual([0, 11, 14]);
+		expect(breakOf(withLength(later, 'short'))).toEqual([5, 4, 6]);
+	});
+
+	it('gives the figures of the shipped rules', () => {
+		const { clockMinutes, earlyExercises } = PLAY_RULES.sessionLengths.normal;
+		const sheet = sheetOf(childWith({}));
+		expect(sheet.breakAfterMinutes).toBe(clockMinutes);
+		expect(sheet.breakAfterExercises).toBe(earlyExercises);
 	});
 });

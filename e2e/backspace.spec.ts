@@ -16,8 +16,9 @@ import {
 } from './support';
 
 /**
- * The Backspace setting (ADR-057): chosen by the adult, off by default. On, a wrong key is written
- * in the text and the child erases it before going on; off, the game waits for the right key.
+ * The Backspace setting (ADR-057): chosen by the adult. Always, a wrong key is written in the text
+ * and the child erases it before going on; never, the game waits for the right key; by default the
+ * world decides (ADR-075), and the first worlds wait for the right key.
  */
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
@@ -143,8 +144,9 @@ test.describe('Backspace setting', () => {
 		await expect(heading(page, message('adult_settings_title', { name: NAME }))).toBeVisible();
 		const choice = page.getByRole('group', { name: message('settings_backspace_label') });
 		const on = choice.getByRole('radio', { name: message('settings_backspace_on') });
+		// Unless the adult chooses, each world says whether a mistake is erased (ADR-075).
 		await expect(
-			choice.getByRole('radio', { name: message('settings_backspace_off') })
+			choice.getByRole('radio', { name: message('settings_backspace_world') })
 		).toBeChecked();
 		await on.focus();
 		await page.keyboard.press('Space');

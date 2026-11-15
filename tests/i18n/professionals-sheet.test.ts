@@ -22,8 +22,9 @@ const messages = JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<
 
 /** The values the page passes to its questions, read from the same data as the page. */
 const PARAMS: Record<string, string> = {
-	exercises: String(playRules.breakAfterExercises),
-	minutes: String(playRules.breakAfterMinutes),
+	exercises: String(playRules.sessionLengths.normal.earlyExercises),
+	typing: String(playRules.sessionLengths.normal.typingMinutes),
+	minutes: String(playRules.sessionLengths.normal.clockMinutes),
 	accuracy: String(progression.rules.unlockAccuracy),
 	attempts: String(progression.rules.keyboardFade.acquiredMinAttempts),
 	errors: String(Math.round(progression.rules.keyboardFade.acquiredMaxErrorRate * 100))

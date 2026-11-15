@@ -4,7 +4,7 @@
 	import Button from '$lib/ui/components/Button.svelte';
 	import InfoPage from '$lib/ui/components/InfoPage.svelte';
 	import { ADULT_RULES } from '../adulte/adult-rules';
-	import { PLAY_RULES } from '../jouer/play-rules';
+	import { breakFacts, PLAY_RULES } from '../jouer/play-rules';
 
 	const appName = m.app_name();
 </script>
@@ -31,10 +31,7 @@
 		<h2 id="guide-session">{m.guide_session_title()}</h2>
 		<p>{m.guide_session_text()}</p>
 		<p>
-			{m.guide_session_break({
-				exercises: PLAY_RULES.breakAfterExercises,
-				minutes: PLAY_RULES.breakAfterMinutes
-			})}
+			{m.guide_session_break(breakFacts(PLAY_RULES))}
 		</p>
 		<p>{m.guide_session_errors()}</p>
 	</section>

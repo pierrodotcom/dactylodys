@@ -21,13 +21,24 @@ describe('toGameSettings', () => {
 		expect(toGameSettings(base, false, NO_GUIDE)).not.toHaveProperty('soundEnabled');
 	});
 
-	it('keeps the default error policy, where a wrong key does not move on', () => {
+	it('lets the worlds decide by default, and waits for the right key outside the lessons', () => {
+		expect(base.errorPolicy).toBe('world');
 		expect(toGameSettings(base, false, NO_GUIDE).errorPolicy).toBe('retry');
 	});
 
-	it('passes the choice of the adult for Backspace through', () => {
-		const settings = { ...base, errorPolicy: 'backspace' as const };
-		expect(toGameSettings(settings, false, NO_GUIDE).errorPolicy).toBe('backspace');
+	it('passes the choice of the adult for every world through', () => {
+		const always = { ...base, errorPolicy: 'backspace' as const };
+		expect(toGameSettings(always, false, NO_GUIDE).errorPolicy).toBe('backspace');
+		const never = { ...base, errorPolicy: 'retry' as const };
+		expect(toGameSettings(never, false, NO_GUIDE).errorPolicy).toBe('retry');
+	});
+
+	it('takes what the route found for the lesson played', () => {
+		expect(toGameSettings(base, false, NO_GUIDE, 0, [], [], 'backspace').errorPolicy).toBe(
+			'backspace'
+		);
+		const always = { ...base, errorPolicy: 'backspace' as const };
+		expect(toGameSettings(always, false, NO_GUIDE, 0, [], [], 'retry').errorPolicy).toBe('retry');
 	});
 
 	it.each([
