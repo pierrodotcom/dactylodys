@@ -8,13 +8,15 @@
 
 	interface Props {
 		profile: Profile;
+		/** The nicknames of the other profiles of the device: the new one bears none of them. */
+		otherNames: readonly string[];
 		/** Keeps the new nickname, already checked; `false` when the device refused it. */
 		onrename: (name: string) => Promise<boolean>;
 		/** Opens the confirmation of the deletion: nothing is deleted from here. */
 		ondelete: () => void;
 	}
 
-	let { profile, onrename, ondelete }: Props = $props();
+	let { profile, otherNames, onrename, ondelete }: Props = $props();
 
 	const INPUT_ID = 'child-name';
 	const HINT_ID = 'child-name-hint';
@@ -22,7 +24,9 @@
 
 	/** What the adult is writing; `null`: the nickname as it is kept. */
 	let typed = $state<string | null>(null);
-	let problem = $state<'empty' | 'invalid' | 'save' | null>(null);
+	let problem = $state<'empty' | 'invalid' | 'taken' | 'save' | null>(null);
+	/** The other profile that bears the nickname already. */
+	let takenBy = $state('');
 	let status = $state('');
 	let busy = $state(false);
 
@@ -32,9 +36,11 @@
 			? m.adult_rename_error_empty()
 			: problem === 'invalid'
 				? m.adult_rename_error_invalid({ min: MIN_NAME_LENGTH, max: MAX_NAME_LENGTH })
-				: problem === 'save'
-					? m.adult_rename_error_save()
-					: ''
+				: problem === 'taken'
+					? m.adult_rename_error_taken({ name: takenBy })
+					: problem === 'save'
+						? m.adult_rename_error_save()
+						: ''
 	);
 
 	async function rename(event: SubmitEvent) {
@@ -42,9 +48,10 @@
 		if (busy) return;
 		status = '';
 		// The same rule as for a new player.
-		const check = checkPlayerName(name);
+		const check = checkPlayerName(name, otherNames);
 		if (!check.ok) {
 			problem = check.reason;
+			takenBy = check.reason === 'taken' ? check.existing : '';
 			return;
 		}
 		problem = null;

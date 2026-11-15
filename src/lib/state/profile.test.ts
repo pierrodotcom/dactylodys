@@ -4,12 +4,14 @@ import type { ProgressState } from '../engine/progression/types';
 import {
 	createProfile,
 	defaultSettings,
+	findNickname,
 	markCalibrated,
 	MAX_NAME_LENGTH,
 	MIN_NAME_LENGTH,
 	parseProfile,
 	PROFILE_SCHEMA_VERSION,
 	renameProfile,
+	sameNickname,
 	updateSettings,
 	withCompanion,
 	withEarnedRewards,
@@ -695,5 +697,31 @@ describe('parseProfile', () => {
 		const parsed = parseProfile(JSON.parse(json));
 		expect(Object.keys(parsed.progress.chars)).toContain('__proto__');
 		expect(Object.getPrototypeOf(parsed.progress.chars)).toBe(Object.prototype);
+	});
+});
+
+describe('sameNickname', () => {
+	it('takes two nicknames for the same one whatever the case, the accents and the spaces', () => {
+		expect(sameNickname('lou', 'Lou')).toBe(true);
+		expect(sameNickname('  ZOE ', 'Zoé')).toBe(true);
+		expect(sameNickname('Lou  Anne', 'Lou Anne')).toBe(true);
+	});
+
+	it('tells apart nicknames that differ by a letter, a digit or a sign', () => {
+		expect(sameNickname('Lou 2', 'Lou')).toBe(false);
+		expect(sameNickname('Lou2', 'Lou 2')).toBe(false);
+		expect(sameNickname('Lou-Anne', 'Lou Anne')).toBe(false);
+		expect(sameNickname('Loup', 'Lou')).toBe(false);
+	});
+});
+
+describe('findNickname', () => {
+	it('gives the nickname already borne, as it is written', () => {
+		expect(findNickname('lou', ['Ali', 'Lou'])).toBe('Lou');
+	});
+
+	it('finds nothing when no nickname is the same', () => {
+		expect(findNickname('Lou', [])).toBeNull();
+		expect(findNickname('Lou', ['Lou-Anne', 'Loup', 'Lou 2'])).toBeNull();
 	});
 });

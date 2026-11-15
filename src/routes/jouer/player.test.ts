@@ -30,6 +30,27 @@ describe('checkPlayerName', () => {
 	it('refuses control characters', () => {
 		expect(checkPlayerName('Lé\u0007a')).toEqual({ ok: false, reason: 'invalid' });
 	});
+
+	it('refuses a nickname another player of the device bears, and names that player', () => {
+		expect(checkPlayerName(' lou ', ['Ali', 'Lou'])).toEqual({
+			ok: false,
+			reason: 'taken',
+			existing: 'Lou'
+		});
+		expect(checkPlayerName('Zoe', ['Zoé'])).toEqual({
+			ok: false,
+			reason: 'taken',
+			existing: 'Zoé'
+		});
+	});
+
+	it('accepts a nickname that only looks like one already borne', () => {
+		expect(checkPlayerName('Lou 2', ['Lou'])).toEqual({ ok: true, name: 'Lou 2' });
+	});
+
+	it('says an empty nickname is empty before anything else', () => {
+		expect(checkPlayerName(' ', ['Lou'])).toEqual({ ok: false, reason: 'empty' });
+	});
 });
 
 function profileNameOrNull(raw: string): string | null {

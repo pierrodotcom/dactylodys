@@ -36,6 +36,8 @@
 		onsheet: () => void;
 		onmeasures: () => void;
 		onbackup: () => void;
+		/** The nicknames of the other profiles of the device. */
+		otherNames: readonly string[];
 		/** Keeps a new nickname; `false` when the device refused it. */
 		onrename: (name: string) => Promise<boolean>;
 		/** Opens the confirmation of the deletion of the profile. */
@@ -59,6 +61,7 @@
 		onsheet,
 		onmeasures,
 		onbackup,
+		otherNames,
 		onrename,
 		ondelete,
 		onback
@@ -129,7 +132,7 @@
 			</div>
 			<p role="status">{fileStatus}</p>
 		</section>
-		<ChildIdentity {profile} {onrename} {ondelete} />
+		<ChildIdentity {profile} {otherNames} {onrename} {ondelete} />
 	</div>
 </ScreenFrame>
 

@@ -5,9 +5,12 @@
 	import Button from '$lib/ui/components/Button.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import { focusOnMount } from '$lib/ui/focus';
+	import { lastPlayerFirst } from './last-player';
 
 	interface Props {
 		profiles: readonly Profile[];
+		/** The player who played last here: offered first, and set apart from the others. */
+		lastPlayerId?: string | null;
 		/** The browser cannot keep the profiles after the page is closed. */
 		memoryOnly: boolean;
 		loadFailed: boolean;
@@ -21,6 +24,7 @@
 
 	let {
 		profiles,
+		lastPlayerId = null,
 		memoryOnly,
 		loadFailed,
 		onchoose,
@@ -29,6 +33,10 @@
 		forgetFailed = false,
 		onforget = () => {}
 	}: Props = $props();
+
+	const ordered = $derived(lastPlayerFirst(profiles, lastPlayerId));
+	/** With a last player to set apart, the others step back; with none, every player is offered alike. */
+	const lastKnown = $derived(ordered[0]?.id === lastPlayerId);
 
 	/** The record whose deletion waits for a confirmation: one at a time. */
 	let confirming = $state<string | null>(null);
@@ -55,15 +63,26 @@
 		<p class="empty">{m.play_players_empty()}</p>
 	{:else}
 		<ul class="list" aria-label={m.play_players_list_label()}>
-			{#each profiles as profile (profile.id)}
+			{#each ordered as profile (profile.id)}
+				{@const last = lastKnown && profile.id === lastPlayerId}
 				<li>
-					<Button size="lg" onclick={() => onchoose(profile)}>{profile.name}</Button>
+					<Button
+						size="lg"
+						variant={last || !lastKnown ? 'primary' : 'secondary'}
+						data-last-player={last || undefined}
+						onclick={() => onchoose(profile)}
+					>
+						{profile.name}
+					</Button>
 				</li>
 			{/each}
 		</ul>
 	{/if}
 
-	<Button variant="secondary" onclick={onnew}>{m.play_new_player()}</Button>
+	<!-- The only thing to do on an empty device is a main button; beside players, it steps back. -->
+	<Button variant={profiles.length === 0 ? 'primary' : 'secondary'} onclick={onnew}>
+		{m.play_new_player()}
+	</Button>
 
 	{#if unreadable.length > 0}
 		<section class="unreadable" aria-labelledby="unreadable-title">
