@@ -49,6 +49,19 @@ function child(): Profile {
 	return advancedProfile({ name: NAME, passed: {} });
 }
 
+const TEXT_LESSON = worlds.at(-1)?.lessons[0] as Lesson;
+
+/** A child who passed every lesson of the first five worlds: the world of texts is open. */
+function childAtTheTexts(): Profile {
+	const passed = Object.fromEntries(
+		worlds
+			.slice(0, -1)
+			.flatMap((world) => world.lessons)
+			.map((lesson) => [lesson.id, 2 as const])
+	);
+	return advancedProfile({ name: NAME, passed });
+}
+
 function withBackspace(profile: Profile): Profile {
 	return updateSettings(profile, { errorPolicy: 'backspace' });
 }
@@ -202,7 +215,7 @@ test.describe('Backspace setting', () => {
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 	});
 
-	test('is off by default: Backspace does nothing and a wrong key is not written', async ({
+	test('waits by default in the first worlds: Backspace does nothing and a wrong key is not written', async ({
 		page
 	}) => {
 		await installChild(page, child());
@@ -227,6 +240,32 @@ test.describe('Backspace setting', () => {
 		await expect(page.locator('.target-text .cell[data-state="done"]')).toHaveCount(1);
 		await page.keyboard.type(rest.join(''));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+	});
+
+	test('erases by default in the world of texts, which says so before its first play', async ({
+		page
+	}) => {
+		await installChild(page, childAtTheTexts());
+		await reachMap(page);
+		await page.getByRole('button', { name: TEXT_LESSON.title }).click();
+		await throughStory(page, heading(page, TEXT_LESSON.title));
+		await expect(page.locator('[data-erasing-notice]')).toHaveText(message('play_intro_erasing'));
+		await page.locator('button[data-proposed]').click();
+		await expect(page.locator('#game-input')).toBeFocused();
+		const group = await currentGroup(page);
+		const [first = ''] = toGraphemes(group);
+		const wrong = wrongKeyFor(group);
+
+		await page.keyboard.type(wrong);
+		await expect(wrongCells(page)).toHaveText([wrong]);
+		await expect(page.locator('[data-erase-reminder]')).toHaveText(
+			message('game_shared_erase_reminder')
+		);
+		await expect(backspaceKey(page)).toHaveAttribute('data-target', 'true');
+		await page.keyboard.press('Backspace');
+		await expect(wrongCells(page)).toHaveCount(0);
+		await page.keyboard.type(first);
+		await expect(page.locator('.target-text .cell[data-state="done"]')).toHaveCount(1);
 	});
 });
 

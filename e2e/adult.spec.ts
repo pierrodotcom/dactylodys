@@ -3,6 +3,7 @@ import { expect as baseExpect, test, type Download, type Page } from '@playwrigh
 import { readFileSync } from 'node:fs';
 import type { CharProgress } from '../src/lib/engine/progression/types';
 import { BACKUP_FORMAT_ID, exportBackup } from '../src/lib/state/backup';
+import { updateSettings } from '../src/lib/state/profile';
 import type { Profile, SessionRecord } from '../src/lib/state/types';
 import {
 	advancedProfile,
@@ -102,10 +103,15 @@ function hesitantChild(name: string): Profile {
 }
 
 const [SECOND, THIRD] = (world?.lessons.slice(1, 3) ?? []) as { id: string; title: string }[];
+interface SessionLength {
+	clockMinutes: number;
+	earlyExercises: number;
+}
 const playRules = readJson<{
-	sessionLengths: { normal: { clockMinutes: number; earlyExercises: number } };
+	sessionLengths: { normal: SessionLength; long: SessionLength };
 }>('content/common/play-rules.json');
 const usualSession = playRules.sessionLengths.normal;
+const longSession = playRules.sessionLengths.long;
 
 /** Two lessons passed; M still being learned, Q fragile, L right but long to find. */
 function sheetChild(name: string): Profile {
@@ -681,6 +687,41 @@ test.describe('adult space', () => {
 		await button(page, message('play_settings_open')).click();
 		await expect(page.getByRole('radio', { name: message('settings_scale_xl') })).toBeChecked();
 	});
+
+	test('chooses the length of a session of a child with the keyboard, which the sheet then gives', async ({
+		page
+	}) => {
+		await reachPlayers(page);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, lou);
+
+		await page.locator('[data-child-settings]').focus();
+		await page.keyboard.press('Enter');
+		await expect(heading(page, message('adult_settings_title', { name: lou.name }))).toBeVisible();
+		const choice = page.getByRole('group', { name: message('settings_session_label') });
+		await expect(
+			choice.getByRole('radio', { name: message('settings_session_normal') })
+		).toBeChecked();
+		const long = choice.getByRole('radio', { name: message('settings_session_long') });
+		await long.focus();
+		await page.keyboard.press('Space');
+		await expect(long).toBeChecked();
+		await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
+		await expect
+			.poll(async () => (await storedRecord(page, lou))?.['settings'])
+			.toMatchObject({ sessionLength: 'long' });
+
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
+		await page.locator('[data-child-sheet]').focus();
+		await page.keyboard.press('Enter');
+		await expect(page.locator('[data-sheet-length]')).toHaveText(
+			plural('adult_sheet_during_length_games', longSession.earlyExercises, {
+				duration: `${longSession.clockMinutes} minutes`
+			})
+		);
+	});
 });
 
 for (const colorScheme of COLOR_SCHEMES) {
@@ -742,6 +783,22 @@ for (const colorScheme of COLOR_SCHEMES) {
 			}
 			await expect(page.locator('[data-speed-rule-change]')).toHaveCount(2);
 			await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
+			await expectNoAxeViolation(page);
+		});
+
+		test('has no axe violation on the settings of a child, a long session chosen', async ({
+			page
+		}) => {
+			await reachPlayers(page, [updateSettings(lou, { sessionLength: 'long' })]);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, lou);
+			await page.locator('[data-child-settings]').click();
+			await expect(
+				page
+					.getByRole('group', { name: message('settings_session_label') })
+					.getByRole('radio', { name: message('settings_session_long') })
+			).toBeChecked();
 			await expectNoAxeViolation(page);
 		});
 
