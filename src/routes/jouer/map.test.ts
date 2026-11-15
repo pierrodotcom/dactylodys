@@ -12,6 +12,7 @@ import type { SessionMetrics } from '$lib/engine/types';
 import {
 	companionSpot,
 	focusLessonId,
+	followingLessonId,
 	isOpenOnMap,
 	layoutMap,
 	lessonStars,
@@ -307,6 +308,40 @@ describe('a child who passed lessons in another order (ADR-075)', () => {
 	});
 });
 
+describe('followingLessonId', () => {
+	it('is the lesson after this one for a child who follows the way', () => {
+		expect(followingLessonId(MANY_WORLDS, passed(3), 'xx.lesson.2a', [])).toBe('xx.lesson.2b');
+		// Playing an old lesson again leads to the one after it, passed or not.
+		expect(followingLessonId(MANY_WORLDS, passed(4), 'xx.lesson.1a', [])).toBe('xx.lesson.1b');
+		expect(followingLessonId(MANY_WORLDS, passed(6), 'xx.lesson.3b', [])).toBeNull();
+		expect(followingLessonId(MANY_WORLDS, passed(6), 'xx.lesson.unknown', [])).toBeNull();
+	});
+
+	it('leads to the closed lesson after this one when this one is not passed: nothing opens', () => {
+		expect(followingLessonId(MANY_WORLDS, passed(2), 'xx.lesson.2a', [])).toBe('xx.lesson.2b');
+	});
+
+	it('does not send a child on while a lesson that now comes before waits to be played', () => {
+		// The first world and the whole third: the second world came after it when they were passed.
+		const progress = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a');
+		const further = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a', 'xx.lesson.3b');
+		// From a lesson further on, to the first one that waits; then from one to the next.
+		expect(followingLessonId(MANY_WORLDS, progress, 'xx.lesson.3a', [])).toBe('xx.lesson.2a');
+		const caughtUp = passedLessons('xx.lesson.1a', 'xx.lesson.1b', 'xx.lesson.3a', 'xx.lesson.2a');
+		expect(followingLessonId(MANY_WORLDS, caughtUp, 'xx.lesson.2a', [])).toBe('xx.lesson.2b');
+		// After the last lesson nothing follows, whatever waits.
+		expect(followingLessonId(MANY_WORLDS, further, 'xx.lesson.3b', [])).toBeNull();
+	});
+
+	it('goes on in a world the adult opened ahead, whatever waits before it', () => {
+		const progress = passedLessons('xx.lesson.1a', 'xx.lesson.3a');
+		expect(followingLessonId(MANY_WORLDS, progress, 'xx.lesson.3a', ['xx.world.3'])).toBe(
+			'xx.lesson.3b'
+		);
+		expect(followingLessonId(MANY_WORLDS, progress, 'xx.lesson.3a', [])).toBe('xx.lesson.1b');
+	});
+});
+
 describe('detours on the map', () => {
 	/** The second world ends with two detours: x, then y. */
 	const WITH_DETOURS: ProgressionDefinition = {
@@ -386,6 +421,14 @@ describe('detours on the map', () => {
 		// What is open changes nothing on the way, nor after the last detour.
 		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2b', () => false)).toBe('xx.lesson.3a');
 		expect(nextLessonId(WITH_DETOURS, 'xx.lesson.2y', () => false)).toBe('xx.lesson.3a');
+	});
+
+	it('offers the way after a detour that is not passed, and the next detour after a passed one', () => {
+		const wayDone = passedLessons(...MANY_IDS.slice(0, 4));
+		expect(followingLessonId(WITH_DETOURS, wayDone, 'xx.lesson.2x', [])).toBe('xx.lesson.3a');
+		const first = passedLessons(...MANY_IDS.slice(0, 4), 'xx.lesson.2x');
+		expect(followingLessonId(WITH_DETOURS, first, 'xx.lesson.2x', [])).toBe('xx.lesson.2y');
+		expect(followingLessonId(WITH_DETOURS, wayDone, 'xx.lesson.2b', [])).toBe('xx.lesson.3a');
 	});
 });
 

@@ -35,7 +35,13 @@ import { migrateProfile } from '../../src/lib/state/migrations';
 import { createProfile, parseProfile } from '../../src/lib/state/profile';
 import { asVersion14 } from '../../src/lib/state/test-support';
 import type { Profile } from '../../src/lib/state/types';
-import { focusLessonId, layoutMap, lessonStatus, nextLessonId } from '../../src/routes/jouer/map';
+import {
+	focusLessonId,
+	followingLessonId,
+	layoutMap,
+	lessonStatus,
+	nextLessonId
+} from '../../src/routes/jouer/map';
 
 /*
  * The order of the lessons changed (ADR-075, choice 1): capitals, the comma and the full stop
@@ -301,8 +307,48 @@ describe('a child stopped at the former lesson 14 (y x passed, z w to play)', ()
 		expect(lessonStatus(progression, after, 'fr.lesson.klaxon-question-exclamation', [], [])).toBe(
 			'current'
 		);
-		// The map still proposes the lessons that came before since.
+		// The map still proposes the lessons that came before since, and so does "next lesson".
 		expect(focusLessonId(progression, after, [], [])).toBe('fr.lesson.lune-accents-graves');
+		expect(followingLessonId(progression, after, 'fr.lesson.zebre-z-w', [])).toBe(
+			'fr.lesson.lune-accents-graves'
+		);
+	});
+
+	it('goes through the stars from one "next lesson" to the other, then on to the circuit', () => {
+		const passing = (ids: readonly string[]): ProgressState => ({
+			...progress,
+			lessons: {
+				...progress.lessons,
+				...Object.fromEntries(
+					ids.map((id) => [
+						id,
+						{ bestAccuracy: 85, stars: 1 as const, attempts: 1, lastPlayedAt: 2 }
+					])
+				)
+			}
+		});
+		const starIds = [
+			'fr.lesson.lune-accents-graves',
+			'fr.lesson.comete-cedille-u-grave',
+			'fr.lesson.grandes-majuscules',
+			'fr.lesson.virgule-point'
+		];
+		starIds.slice(0, -1).forEach((id, index) => {
+			const sofar = passing(starIds.slice(0, index + 1));
+			expect(followingLessonId(progression, sofar, id, [], profile.keptOpenLessonIds)).toBe(
+				starIds[index + 1]
+			);
+		});
+		// After the comma, the lesson that follows is one of the zoo, passed long ago; the map then
+		// proposes the one that was waiting.
+		const stars = passing(starIds);
+		expect(focusLessonId(progression, stars, [], profile.keptOpenLessonIds)).toBe(
+			'fr.lesson.zebre-z-w'
+		);
+		const all = passing([...starIds, 'fr.lesson.zebre-z-w']);
+		expect(followingLessonId(progression, all, 'fr.lesson.zebre-z-w', [])).toBe(
+			'fr.lesson.klaxon-question-exclamation'
+		);
 	});
 
 	it('keeps its rewards and the page of the zoo of its notebook', () => {

@@ -120,7 +120,7 @@
 	import { recordLessonOutcome } from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
-	import { focusLessonId, nextLessonId, worldOfLesson } from './map';
+	import { focusLessonId, followingLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
 	import { platformFromUserAgent } from './player';
 	import PlayerSelect from './PlayerSelect.svelte';
@@ -527,9 +527,15 @@
 	}
 
 	/** Where "next lesson" leads this child after a lesson; `null` after the last one. */
-	function followingLessonId(current: Profile, lessonId: string): string | null {
+	function followingFor(current: Profile, lessonId: string): string | null {
 		if (!progression) return null;
-		return nextLessonId(progression, lessonId, (id) => isOpenFor(current, id));
+		return followingLessonId(
+			progression,
+			current.progress,
+			lessonId,
+			current.openedWorldIds,
+			current.keptOpenLessonIds
+		);
 	}
 
 	function openLesson(lessonId: string) {
@@ -725,7 +731,7 @@
 		const told = story
 			? storyAfterLesson(story, progression, profile.progress, progress, lessonId)
 			: [];
-		const followingId = followingLessonId(next, lessonId);
+		const followingId = followingFor(next, lessonId);
 		const hasOpenNext = followingId !== null && isOpenFor(next, followingId);
 		const ids = lessonIds(progression);
 		result = {
@@ -840,7 +846,7 @@
 
 	function playNext() {
 		if (!profile || !result) return;
-		const followingId = followingLessonId(profile, result.lessonId);
+		const followingId = followingFor(profile, result.lessonId);
 		if (followingId === null) return;
 		// The ending of a world leads into the opening of the next one.
 		tellOnTheWay([...result.story, ...openingOf(followingId)], followingId);

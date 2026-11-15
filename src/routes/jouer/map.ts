@@ -99,14 +99,51 @@ export function focusLessonId(
 	if (toPlay.length === 0) {
 		return way.findLast((lesson) => statusOf(lesson) !== 'locked')?.id ?? null;
 	}
-	const ahead = Math.max(
+	const ahead = openedAhead(progression, openedWorldIds);
+	const proposed = toPlay.find((lesson) => lessons.indexOf(lesson) >= ahead) ?? toPlay[0];
+	return proposed?.id ?? null;
+}
+
+/** Rank, from 0, of the first lesson of the furthest world the adult opened ahead; 0 without any. */
+function openedAhead(
+	progression: ProgressionDefinition,
+	openedWorldIds: readonly string[]
+): number {
+	const lessons = lessonsOf(progression);
+	return Math.max(
 		0,
 		...progression.worlds
 			.filter((world) => openedWorldIds.includes(world.id))
 			.map((world) => lessons.findIndex((lesson) => lesson.id === world.lessons[0]?.id))
 	);
-	const proposed = toPlay.find((lesson) => lessons.indexOf(lesson) >= ahead) ?? toPlay[0];
-	return proposed?.id ?? null;
+}
+
+/**
+ * Where "next lesson" leads this child after a play: `nextLessonId`, except that a child is not
+ * sent on to a lesson never passed while a lesson on the way that now comes before it waits to be
+ * played. So a child who passed lessons in another order (ADR-075) goes through those that came
+ * before them since, one "next lesson" after the other, without being made to. A lesson that is
+ * not passed changes nothing, and neither does a lesson before a world the adult opened ahead.
+ */
+export function followingLessonId(
+	progression: ProgressionDefinition,
+	progress: ProgressState,
+	lessonId: string,
+	openedWorldIds: readonly string[],
+	keptOpenLessonIds: readonly string[] = []
+): string | null {
+	const statusOf = (id: string) =>
+		lessonStatus(progression, progress, id, openedWorldIds, keptOpenLessonIds);
+	const next = nextLessonId(progression, lessonId, (id) => statusOf(id) !== 'locked');
+	if (next === null || statusOf(lessonId) !== 'done' || statusOf(next) === 'done') return next;
+	const lessons = lessonsOf(progression);
+	const until = lessons.findIndex((lesson) => lesson.id === next);
+	const waiting = lessons
+		.slice(openedAhead(progression, openedWorldIds), until)
+		.find(
+			(lesson) => !isDetour(lesson) && lesson.id !== lessonId && statusOf(lesson.id) === 'current'
+		);
+	return waiting?.id ?? next;
 }
 
 export interface MapLesson {
