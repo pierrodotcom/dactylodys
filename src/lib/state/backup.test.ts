@@ -12,14 +12,27 @@ import {
 } from './backup';
 import { withSessionRecorded } from './journal';
 import { JOURNAL_RULES } from './journal-rules';
-import { createProfile, PROFILE_SCHEMA_VERSION, renameProfile, withProgress } from './profile';
+import {
+	createProfile,
+	PROFILE_SCHEMA_VERSION,
+	renameProfile,
+	updateSettings,
+	withProgress
+} from './profile';
 import {
 	profileArb,
 	realisticInstantArb,
 	sessionRecordArb,
 	utcOffsetArb
 } from './test-arbitraries';
-import { asVersion1, asVersion4, asVersion7, withUnknownLatency } from './test-support';
+import {
+	asVersion1,
+	asVersion4,
+	asVersion7,
+	asVersion15,
+	withUnknownLatency,
+	withWorldPolicy
+} from './test-support';
 import type { Profile } from './types';
 
 type Json = Record<string, unknown>;
@@ -261,6 +274,15 @@ describe('planImport', () => {
 	it('brings the profiles of an older version to the current one', () => {
 		const text = backupOf({ profiles: [asVersion1(LEA), asVersion4(NOE)] });
 		expect(ready(planImport(text, [])).importable).toEqual([LEA, NOE]);
+	});
+
+	it('reads a backup of version 15: the worlds decide where the game waited, Backspace stays', () => {
+		const erasing = updateSettings(NOE, { errorPolicy: 'backspace', sessionLength: 'long' });
+		const text = backupOf({ profiles: [asVersion15(LEA), asVersion15(erasing)] });
+		const [lea, noe] = ready(planImport(text, [])).importable;
+		expect(lea).toEqual(withWorldPolicy(LEA));
+		expect(lea?.settings).toMatchObject({ errorPolicy: 'world', sessionLength: 'normal' });
+		expect(noe?.settings).toMatchObject({ errorPolicy: 'backspace', sessionLength: 'normal' });
 	});
 
 	it('keeps the time of the recent plays, and reads a version 7 profile without it', () => {
