@@ -1,6 +1,10 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import type { CharProgress, ProgressState } from '../engine/progression/types';
+import { lessonIds } from '../engine/progression/definition';
+import { errorPolicyFor } from '../engine/progression/error-policy';
+import { isLessonUnlocked } from '../engine/progression/progress';
+import { loadShippedProgressions } from '../engine/progression/test-support';
+import type { CharProgress, ProgressState, StarCount } from '../engine/progression/types';
 import { migrateProfile, ProfileMigrationError, readProfile } from './migrations';
 import {
 	createProfile,
@@ -1104,6 +1108,79 @@ describe('version 16: the worlds decide for the mistakes, the adult sets the ses
 				const once = parseProfile(migrateProfile(toJson(asVersion15(profile))));
 				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
 			})
+		);
+	});
+});
+
+describe('version 16: the children on their way lose nothing (ADR-081)', () => {
+	const [shipped] = loadShippedProgressions();
+	if (!shipped) throw new Error('no shipped progression');
+	const { progression } = shipped;
+	const ids = lessonIds(progression);
+	const erasing = new Set(
+		progression.worlds
+			.filter((world) => world.errorPolicy === 'backspace')
+			.flatMap((world) => world.lessons.map((lesson) => lesson.id))
+	);
+	/** A profile of version 15 on its way: some lessons played, worlds opened, lessons kept open. */
+	const onTheWayArb = fc
+		.record({
+			profile: profileArb,
+			played: fc.dictionary(fc.constantFrom(...ids), fc.integer({ min: 0, max: 100 }), {
+				maxKeys: 12
+			}),
+			opened: fc.uniqueArray(fc.constantFrom(...progression.worlds.map((world) => world.id)), {
+				maxLength: 2
+			}),
+			kept: fc.uniqueArray(fc.constantFrom(...ids), { maxLength: 3 }),
+			erasing: fc.boolean()
+		})
+		.map(({ profile, played, opened, kept, erasing: chose }) => {
+			const lessons = Object.fromEntries(
+				Object.entries(played).map(([id, bestAccuracy]) => [
+					id,
+					{ bestAccuracy, stars: 0 as StarCount, attempts: 1, lastPlayedAt: 0 }
+				])
+			);
+			const child: Profile = {
+				...profile,
+				progress: { ...profile.progress, lessons },
+				openedWorldIds: opened,
+				keptOpenLessonIds: kept
+			};
+			return updateSettings(child, { errorPolicy: chose ? 'backspace' : 'retry' });
+		});
+
+	it('opens the same lessons after the migration, and erases in the worlds of texts only', () => {
+		fc.assert(
+			fc.property(onTheWayArb, (child) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion15(child))));
+				for (const id of ids) {
+					expect(
+						isLessonUnlocked(
+							progression,
+							migrated.progress,
+							id,
+							migrated.openedWorldIds,
+							migrated.keptOpenLessonIds
+						)
+					).toBe(
+						isLessonUnlocked(
+							progression,
+							child.progress,
+							id,
+							child.openedWorldIds,
+							child.keptOpenLessonIds
+						)
+					);
+					// The adult who chose Backspace keeps it everywhere; a child who waited for the right
+					// key now erases in the worlds that ask for it, and only there.
+					const before = child.settings.errorPolicy === 'backspace' ? 'backspace' : 'retry';
+					const after = errorPolicyFor(migrated.settings.errorPolicy, progression, id);
+					expect(after).toBe(before === 'backspace' || erasing.has(id) ? 'backspace' : 'retry');
+				}
+			}),
+			{ numRuns: 60 }
 		);
 	});
 });
