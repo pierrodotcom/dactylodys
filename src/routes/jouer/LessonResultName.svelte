@@ -74,4 +74,9 @@
 		font-size: var(--dd-font-size-xl);
 		font-weight: var(--dd-font-weight-bold);
 	}
+
+	/* Empty until the companion is named: it takes no room, the form stays in view on a laptop. */
+	.thanks:empty {
+		margin-block-end: calc(var(--dd-space-md) * -1);
+	}
 </style>
