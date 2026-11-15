@@ -323,6 +323,8 @@ test.describe('result in steps', () => {
 	test('aids the play that follows two plays under the threshold: every key shown, simplest words, another game', async ({
 		page
 	}) => {
+		// Three whole plays of a lesson.
+		test.slow();
 		const child = advancedProfile({
 			name: 'Eli',
 			passed: passedThrough(world.lessons[3] as Lesson)
@@ -438,6 +440,8 @@ test.describe('result in steps', () => {
 		test(`keeps the result with a break in view without scrolling at ${screen.width} × ${screen.height}`, async ({
 			page
 		}) => {
+			// A whole play, its item, then the result: as long as the other tests of a play.
+			test.slow();
 			await page.clock.install();
 			await page.setViewportSize(screen);
 			await reachMapAs(page, veteran('Lou'));
