@@ -16,9 +16,11 @@
 		onname: (name: string) => void;
 		/** Shown when the child may answer later. */
 		onlater?: () => void;
+		/** The ideas spread over the whole width: fewer rows, so that a screen of its own fits. */
+		wide?: boolean;
 	}
 
-	let { id, name, suggestions, onname, onlater }: Props = $props();
+	let { id, name, suggestions, onname, onlater, wide = false }: Props = $props();
 
 	let value = $state(untrack(() => name));
 	let error = $state<'empty' | 'invalid' | null>(null);
@@ -51,7 +53,7 @@
 	}
 </script>
 
-<form class="name-form" onsubmit={submit} novalidate>
+<form class="name-form" onsubmit={submit} novalidate data-wide={wide || undefined}>
 	<label for={inputId}>{m.play_companion_name_label()}</label>
 	<input
 		id={inputId}
@@ -90,6 +92,14 @@
 		gap: var(--dd-space-sm);
 		justify-items: center;
 		inline-size: 100%;
+		max-inline-size: var(--dd-size-panel-max);
+	}
+
+	.name-form[data-wide] {
+		max-inline-size: none;
+	}
+
+	.name-form[data-wide] input {
 		max-inline-size: var(--dd-size-panel-max);
 	}
 

@@ -152,13 +152,21 @@ export function recordLessonOutcome(
 }
 
 /**
- * The stars of a play whose recording failed, to show its result all the same: none when even
- * they cannot be told.
+ * How a play whose recording failed went, to show its result all the same: no star and nothing
+ * opened when even that cannot be told.
  */
-export function starsOrNone(rules: ProgressionRules, metrics: SessionMetrics): StarCount {
+export function evaluationOrNone(
+	rules: ProgressionRules,
+	metrics: SessionMetrics
+): LessonEvaluation {
 	try {
-		return evaluateLesson(rules, metrics).stars;
+		return evaluateLesson(rules, metrics);
 	} catch {
-		return 0;
+		return { stars: 0, unlocksNext: false };
 	}
+}
+
+/** The stars of a play whose recording failed (`evaluationOrNone`). */
+export function starsOrNone(rules: ProgressionRules, metrics: SessionMetrics): StarCount {
+	return evaluationOrNone(rules, metrics).stars;
 }

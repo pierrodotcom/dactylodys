@@ -6,6 +6,7 @@ import type { SessionMetrics } from '$lib/engine/types';
 import type { GameOutcome } from '$lib/games/types';
 import { createProfile, parseProfile, withGhost } from '$lib/state/profile';
 import {
+	evaluationOrNone,
 	recordLessonOutcome,
 	RESULT_RULES,
 	resultActions,
@@ -320,5 +321,14 @@ describe('starsOrNone', () => {
 	it('gives none, without failing, when the stars cannot be told', () => {
 		const broken = { ...RULES, starThresholds: null } as unknown as ProgressionRules;
 		expect(starsOrNone(broken, outcome(95).metrics)).toBe(0);
+		expect(evaluationOrNone(broken, outcome(95).metrics)).toEqual({
+			stars: 0,
+			unlocksNext: false
+		});
+	});
+
+	it('says whether the play opened the next lesson, as its recording would', () => {
+		expect(evaluationOrNone(RULES, outcome(95).metrics)).toEqual({ stars: 2, unlocksNext: true });
+		expect(evaluationOrNone(RULES, outcome(60).metrics)).toEqual({ stars: 0, unlocksNext: false });
 	});
 });

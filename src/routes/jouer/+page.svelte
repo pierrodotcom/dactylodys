@@ -18,8 +18,15 @@
 		lessonIds,
 		lessonNumber
 	} from '$lib/engine/progression/definition';
+	import { keysToTame } from '$lib/engine/progression/consolidation';
 	import { errorPolicyFor, isErasingNew } from '$lib/engine/progression/error-policy';
 	import { guideMode } from '$lib/engine/progression/guide';
+	import {
+		aidedContext,
+		isCloseToPassing,
+		supportLevel,
+		type SupportLevel
+	} from '$lib/engine/progression/support';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import { keyNeighbors } from '$lib/engine/progression/repair';
@@ -45,6 +52,7 @@
 	} from '$lib/engine/rewards';
 	import type {
 		Exercise,
+		ExerciseContext,
 		ProgressionDefinition,
 		StarCount,
 		WorldDefinition
@@ -138,7 +146,7 @@
 		writeLastPlayerId
 	} from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
-	import { recordLessonOutcome, starsOrNone } from './lesson-outcome';
+	import { evaluationOrNone, recordLessonOutcome, RESULT_RULES } from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
 	import { focusLessonId, followingLessonId, worldOfLesson } from './map';
@@ -189,6 +197,12 @@
 		readonly story: readonly StoryMoment[];
 		/** Who was done first, when the child raced the ghost to the end. */
 		readonly race: RaceWinner | null;
+		/** The play reached the accuracy that opens the next lesson. */
+		readonly passed: boolean;
+		/** Under that accuracy by a few points only. */
+		readonly close: boolean;
+		/** New keys of the lesson still to tame (`keysToTame`). */
+		readonly tame: readonly string[];
 	}
 
 	interface HelpDoneView {
@@ -218,6 +232,13 @@
 	let raceGhost = $state.raw<GhostRun | null>(null);
 	let raceGreeting = $state(0);
 	let result = $state.raw<ResultView | null>(null);
+	/** The step of the result on screen (E-04), kept while the settings are open over it. */
+	let resultStep = $state(0);
+	/** The game on screen is an aided play of its lesson (P-11): decided when it starts. */
+	let gameSupport = $state<SupportLevel>('none');
+	/** What a play won of the story and a replay put off: told on the way to the next lesson. */
+	let storyPutOff: { readonly lessonId: string; readonly moments: readonly StoryMoment[] } | null =
+		null;
 	let playClock = createPlayClock();
 	let memoryOnly = $state(false);
 	/** Records the app cannot open: listed on the player screen, deleted only on request. */
@@ -274,12 +295,6 @@
 	);
 	const freeWorld = $derived(
 		profile && progression ? freePracticeWorld(progression, profile) : undefined
-	);
-	const askNameNow = $derived(
-		result !== null &&
-			result.askName &&
-			profile !== null &&
-			shouldAskName(true, profile.companion.name, nameLater)
 	);
 
 	let banksRequest: { progression: ProgressionDefinition; ready: Promise<LoadedBanks> } | null =
@@ -837,12 +852,12 @@
 		return focus === null ? [] : fadedFor(current, focus);
 	}
 
-	/** What the hand on the keyboard shows in this lesson, for this child. */
-	function guideFor(current: Profile, lessonId: string): GameGuide {
+	/** What the hand on the keyboard shows in this lesson, for this child; every key in an aided play. */
+	function guideFor(current: Profile, lessonId: string, support: SupportLevel = 'none'): GameGuide {
 		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
 		const number = lessonIds(progression).indexOf(lessonId) + 1;
 		return {
-			mode: guideMode(progression.rules, number, current.settings.handGuide),
+			mode: guideMode(progression.rules, number, current.settings.handGuide, support),
 			freshChars: freshChars(progression, lessonId),
 			hesitationMs: progression.rules.handGuide?.hesitationMs ?? 0
 		};
@@ -889,8 +904,11 @@
 			if (event.type === 'replay') go({ type: 'back-to-map' });
 			return;
 		}
+		// After plays under the threshold, this one is aided: every key shown, the simplest words,
+		// never longer than the lesson (audit P-11). Read from the plays kept, nothing is stored.
+		const support = supportLevel(profile.sessions, lessonId, RESULT_RULES.support);
 		try {
-			exercise = generateExercise(progression, lessonId, Math.random, {
+			const context: ExerciseContext = {
 				...banks,
 				progress: profile.progress,
 				themeId: world.themeId,
@@ -899,7 +917,13 @@
 				neighbors,
 				// The exercise grows with the pace of the latest plays; nothing on screen says so.
 				paces: sessionPaces(profile.sessions)
-			});
+			};
+			exercise = generateExercise(
+				progression,
+				lessonId,
+				Math.random,
+				support === 'aided' ? aidedContext(context, RESULT_RULES.support) : context
+			);
 		} catch {
 			// No exercise could be made: the child is told, as when the game itself does not load.
 			gameLoadFailed = true;
@@ -910,6 +934,8 @@
 			? raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor)
 			: null;
 		raceGreeting = ghostGreetingFor(profile, lessonId);
+		gameSupport = support;
+		if (storyPutOff?.lessonId !== lessonId) storyPutOff = null;
 		gamePaused = false;
 		playClock = startPlaying(playClock, now());
 		go(event);
@@ -917,7 +943,20 @@
 
 	function quitGame() {
 		playClock = stopPlaying(playClock, now());
+		storyPutOff = null;
 		go({ type: 'quit' });
+	}
+
+	/**
+	 * The same lesson again, from its result. What the play won of the story waits for the next
+	 * lesson, as when the child goes on at once (ADR-051): one more play to tame keys is often
+	 * proposed first, and the story must not be lost to it.
+	 */
+	function replayLesson(lessonId: string) {
+		if (result?.lessonId === lessonId && result.story.length > 0) {
+			storyPutOff = { lessonId, moments: result.story };
+		}
+		void beginGame(lessonId, { type: 'replay' });
 	}
 
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
@@ -933,6 +972,7 @@
 			// The child is never left on a finished game: the result is shown, said not to be kept.
 			result = unrecordedResult(source, lessonId, outcome);
 		}
+		resultStep = 0;
 		go({ type: 'completed' });
 		if (record !== null && !(await commit(record)) && result) {
 			result = { ...result, saveFailed: true };
@@ -947,9 +987,10 @@
 		lessonId: string,
 		outcome: GameOutcome
 	): ResultView {
+		const { stars, unlocksNext } = evaluationOrNone(source.rules, outcome.metrics);
 		return {
 			lessonId,
-			stars: starsOrNone(source.rules, outcome.metrics),
+			stars,
 			summary: summarizeMetrics(outcome.metrics),
 			hasOpenNext: false,
 			worldDone: false,
@@ -959,7 +1000,10 @@
 			rewards: [],
 			askName: false,
 			story: [],
-			race: outcome.race ?? null
+			race: outcome.race ?? null,
+			passed: unlocksNext,
+			close: isCloseToPassing(source.rules, RESULT_RULES.support, outcome.metrics.accuracy),
+			tame: []
 		};
 	}
 
@@ -995,7 +1039,12 @@
 		};
 		const { evaluation, announced, profile: next } = played(before);
 		const progress = next.progress;
-		const told = story ? storyAfterLesson(story, source, before.progress, progress, lessonId) : [];
+		const putOff = storyPutOff?.lessonId === lessonId ? storyPutOff.moments : [];
+		storyPutOff = null;
+		const told = [
+			...putOff,
+			...(story ? storyAfterLesson(story, source, before.progress, progress, lessonId) : [])
+		];
 		const followingId = followingFor(next, lessonId);
 		const hasOpenNext = followingId !== null && isOpenFor(next, followingId);
 		const ids = lessonIds(source);
@@ -1020,7 +1069,10 @@
 			rewards: announced,
 			askName: shouldAskName(evaluation.unlocksNext, next.companion.name, nameLater),
 			story: told,
-			race: outcome.race ?? null
+			race: outcome.race ?? null,
+			passed: evaluation.unlocksNext,
+			close: isCloseToPassing(source.rules, RESULT_RULES.support, outcome.metrics.accuracy),
+			tame: keysToTame(source, progress, lessonId, RESULT_RULES.consolidation)
 		};
 		return (current) => played(current).profile;
 	}
@@ -1314,28 +1366,39 @@
 		{@const lessonId = screen.lessonId}
 		{@const view = result}
 		<LessonResult
-			stars={result.stars}
-			summary={result.summary}
-			hasOpenNext={result.hasOpenNext}
-			worldDone={result.worldDone}
-			suggestBreak={result.suggestBreak}
-			almost={result.almost}
-			race={result.race}
-			saveFailed={result.saveFailed}
+			stars={view.stars}
+			summary={view.summary}
+			facts={{
+				passed: view.passed,
+				close: view.close,
+				hasOpenNext: view.hasOpenNext,
+				suggestBreak: view.suggestBreak,
+				tameKeys: view.tame,
+				worldDone: view.worldDone,
+				race: view.race,
+				almost: view.almost,
+				perfect: view.summary.total > 0 && view.summary.correct === view.summary.total
+			}}
+			saveFailed={view.saveFailed}
 			dance={lessonIds(progression).indexOf(lessonId)}
 			date={new Date()}
 			worldLessons={worldOfLesson(progression, lessonId)?.lessons.length ?? 0}
 			still={isMotionReduced(profile.settings, systemPrefersReduced)}
 			{sounds}
+			rewards={view.rewards}
+			{wornIds}
+			askName={view.askName}
+			companionName={profile.companion.name}
+			suggestions={catalogue?.nameSuggestions ?? []}
+			bind:step={resultStep}
+			onwear={wear}
+			onname={nameCompanion}
+			onlater={() => (nameLater = true)}
 			onnext={playNext}
-			onreplay={() => void beginGame(lessonId, { type: 'replay' })}
+			onreplay={() => replayLesson(lessonId)}
 			onmap={() => go({ type: 'back-to-map' })}
 			onbreak={takeBreak}
-		>
-			{#snippet news()}
-				{@render rewardNews(view.rewards, askNameNow)}
-			{/snippet}
-		</LessonResult>
+		/>
 	{:else if screen.name === 'story'}
 		{@const moment = screen.moments[screen.index]}
 		{#if moment}
@@ -1402,7 +1465,7 @@
 			<div hidden={settingsOver}>
 				{@render playing(
 					profile,
-					guideFor(profile, lessonId),
+					guideFor(profile, lessonId, gameSupport),
 					(outcome) => finishGame(lessonId, outcome),
 					settingsOver,
 					fadedFor(profile, lessonId),
