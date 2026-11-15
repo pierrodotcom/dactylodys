@@ -1,4 +1,5 @@
 import { charMastery, type CharMastery, type MasteryRules } from '$lib/engine/progression/mastery';
+import { isDetour } from '$lib/engine/progression/definition';
 import { isLessonPassed, recentCharLatency } from '$lib/engine/progression/progress';
 import type { ProgressionDefinition, ProgressState } from '$lib/engine/progression/types';
 import type { CharIndex, KeyCode } from '$lib/keyboard/types';
@@ -7,7 +8,10 @@ import type { HesitationRules } from './adult-rules';
 
 const MAX_STARS_PER_LESSON = 3;
 
-/** What a child did in one world: never compared with another child. */
+/**
+ * What a child did in one world: never compared with another child. A detour counts once the
+ * child passed it, never before: a way finished is not short of a lesson.
+ */
 export interface WorldSummary {
 	readonly worldId: string;
 	readonly title: string;
@@ -26,12 +30,15 @@ export function worldSummaries(
 	progress: ProgressState
 ): readonly WorldSummary[] {
 	return progression.worlds.map((world) => {
-		const ids = world.lessons.map((lesson) => lesson.id);
+		const passed = (id: string) => isLessonPassed(progression.rules, progress, id);
+		const ids = world.lessons
+			.filter((lesson) => !isDetour(lesson) || passed(lesson.id))
+			.map((lesson) => lesson.id);
 		return {
 			worldId: world.id,
 			title: world.title,
 			lessonCount: ids.length,
-			lessonsPassed: ids.filter((id) => isLessonPassed(progression.rules, progress, id)).length,
+			lessonsPassed: ids.filter(passed).length,
 			stars: ids.reduce((sum, id) => sum + starsOf(progress, id), 0),
 			maxStars: ids.length * MAX_STARS_PER_LESSON
 		};
