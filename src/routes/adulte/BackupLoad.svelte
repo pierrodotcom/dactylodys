@@ -16,11 +16,13 @@
 	interface Props {
 		/** The profiles of the device, which a loaded profile may stand beside or replace. */
 		profiles: readonly Profile[];
-		/** Saves the profiles of the file; `false` when the device refused. */
+		/** Largest file read, in bytes: a bigger one is not a backup and is refused unread. */
+		maxFileBytes: number;
+		/** Saves the profiles of the file, all or none; `false` when the device refused. */
 		onsave: (profiles: readonly Profile[]) => Promise<boolean>;
 	}
 
-	let { profiles, onsave }: Props = $props();
+	let { profiles, maxFileBytes, onsave }: Props = $props();
 
 	const copyName: CopyNameFormat = (name, number) => m.adult_copy_name({ name, number });
 	const REFUSALS: Readonly<Record<ImportRefusal, () => string>> = {
@@ -48,6 +50,10 @@
 		if (!file) return;
 		plan = null;
 		result = null;
+		if (file.size > maxFileBytes) {
+			result = { text: m.adult_import_refused_too_large({ appName: m.app_name() }), ok: false };
+			return;
+		}
 		let text: string;
 		try {
 			text = await file.text();

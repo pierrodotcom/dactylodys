@@ -16,7 +16,13 @@
 		codeLength: number;
 		format: Formatters;
 		lastBackupAt: number | null;
+		/** Whether the browser promised to keep the data of the site; `null` while it is not known. */
+		storageProtected: boolean | null;
+		/** Largest backup file read, in bytes. */
+		maxBackupFileBytes: number;
 		fileStatus: string;
+		/** What became of the list of the children (a profile deleted), said in its live region. */
+		childrenStatus: string;
 		onopen: (profile: Profile) => void;
 		onmeasures: () => void;
 		onbackup: () => void;
@@ -30,7 +36,10 @@
 		codeLength,
 		format,
 		lastBackupAt,
+		storageProtected,
+		maxBackupFileBytes,
 		fileStatus,
+		childrenStatus,
 		onopen,
 		onmeasures,
 		onbackup,
@@ -59,6 +68,7 @@
 					{/each}
 				</ul>
 			{/if}
+			<p role="status" data-children-status>{childrenStatus}</p>
 		</section>
 
 		<section aria-labelledby="files-title" data-adult-files>
@@ -70,6 +80,13 @@
 					? m.adult_backup_never()
 					: m.adult_backup_last({ date: format.dateTime(lastBackupAt) })}
 			</p>
+			{#if storageProtected !== null && !memoryOnly}
+				<p data-storage-protection={storageProtected ? 'protected' : 'unprotected'}>
+					{storageProtected
+						? m.adult_storage_protected({ appName: m.app_name() })
+						: m.adult_storage_unprotected({ appName: m.app_name() })}
+				</p>
+			{/if}
 			<div class="actions">
 				<Button
 					variant="secondary"
@@ -89,7 +106,7 @@
 				</Button>
 			</div>
 			<p role="status">{fileStatus}</p>
-			<BackupLoad {profiles} onsave={onimport} />
+			<BackupLoad {profiles} maxFileBytes={maxBackupFileBytes} onsave={onimport} />
 		</section>
 
 		<InstallSection />
@@ -131,6 +148,12 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
+	}
+
+	/* A long nickname without a space is cut rather than wider than the page (320 pixels). */
+	.children li {
+		max-inline-size: 100%;
+		overflow-wrap: anywhere;
 	}
 
 	.notice {

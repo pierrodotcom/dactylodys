@@ -175,8 +175,22 @@ export interface ProfileStore {
 	/** The profiles the app can open, brought to the current version in memory only. */
 	list(): Promise<readonly Profile[]>;
 	get(id: string): Promise<Profile | null>;
-	/** Rejects rather than replace a record the app cannot open. */
+	/**
+	 * Stores a whole profile: a new one, or one read from a file. A profile already on the device is
+	 * changed with `update`, never saved again from a copy kept in memory. Rejects rather than
+	 * replace a record the app cannot open.
+	 */
 	save(profile: Profile): Promise<void>;
+	/**
+	 * Reads the profile and stores what `change` makes of it, in one step: whatever this page or
+	 * another one stored in between is kept. Resolves with the profile as it is now stored, `null`
+	 * when there is none under this id (nothing is created: a deleted profile does not come back).
+	 * Rejects, nothing stored, when `change` throws, gives an invalid profile or another id, or when
+	 * the record cannot be opened.
+	 */
+	update(id: string, change: (current: Profile) => Profile): Promise<Profile | null>;
+	/** Stores all these profiles or none of them: the first refusal leaves the device as it was. */
+	saveAll(profiles: readonly Profile[]): Promise<void>;
 	/** Rejects rather than delete a record the app cannot open. */
 	remove(id: string): Promise<void>;
 	/** The records left out of `list`; the store never deletes nor replaces them on its own. */

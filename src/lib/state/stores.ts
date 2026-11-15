@@ -76,10 +76,18 @@ function assertUnreadable(existing: unknown, id: string): void {
 	}
 }
 
-function attempt(work: () => void): Promise<void> {
+/** What `change` makes of `current`, checked: a valid profile, still under the same id. */
+function changed(current: Profile, change: (current: Profile) => Profile): Profile {
+	const next = parseProfile(change(current));
+	if (next.id !== current.id) {
+		throw new RangeError(`a change must keep the id of the profile "${current.id}"`);
+	}
+	return next;
+}
+
+function attempt<T>(work: () => T): Promise<T> {
 	try {
-		work();
-		return Promise.resolve();
+		return Promise.resolve(work());
 	} catch (error) {
 		return Promise.reject(error);
 	}
@@ -103,6 +111,22 @@ export function createMemoryProfileStore(stored: readonly unknown[] = []): Profi
 				const copy = parseProfile(profile);
 				assertNotUnreadable(records.get(copy.id), copy.id);
 				records.set(copy.id, copy);
+			}),
+		update: (id, change) =>
+			attempt(() => {
+				const existing = records.get(id);
+				assertNotUnreadable(existing, id);
+				const current = readOne(existing);
+				if (current === null) return null;
+				const next = changed(current, change);
+				records.set(id, next);
+				return parseProfile(next);
+			}),
+		saveAll: (profiles) =>
+			attempt(() => {
+				const copies = profiles.map((profile) => parseProfile(profile));
+				for (const copy of copies) assertNotUnreadable(records.get(copy.id), copy.id);
+				for (const copy of copies) records.set(copy.id, copy);
 			}),
 		remove: (id) =>
 			attempt(() => {
@@ -182,7 +206,18 @@ export function createIndexedDbProfileStore(
 		const transaction = database.transaction(PROFILES_STORE, mode);
 		const done = transactionDone(transaction);
 		done.catch(() => undefined);
-		const result = await work(transaction.objectStore(PROFILES_STORE));
+		let result: T;
+		try {
+			result = await work(transaction.objectStore(PROFILES_STORE));
+		} catch (error) {
+			// What was already asked of this transaction is undone: all of it, or nothing.
+			try {
+				transaction.abort();
+			} catch {
+				// Already over: there is nothing left to undo.
+			}
+			throw error;
+		}
 		await done;
 		return result;
 	}
@@ -201,6 +236,26 @@ export function createIndexedDbProfileStore(
 		save: async (profile) => {
 			const copy = parseProfile(profile);
 			await change(copy.id, (store) => store.put(copy));
+		},
+		update: (id, apply) =>
+			run('readwrite', async (store) => {
+				const existing = await requestResult(store.get(id));
+				assertNotUnreadable(existing, id);
+				const current = readOne(existing);
+				if (current === null) return null;
+				const next = changed(current, apply);
+				await requestResult(store.put(next));
+				return next;
+			}),
+		saveAll: async (profiles) => {
+			const copies = profiles.map((profile) => parseProfile(profile));
+			await run('readwrite', async (store) => {
+				// A refusal on the way undoes the profiles already written: the transaction is aborted.
+				for (const copy of copies) {
+					assertNotUnreadable(await requestResult(store.get(copy.id)), copy.id);
+					await requestResult(store.put(copy));
+				}
+			});
 		},
 		remove: (id) => change(id, (store) => store.delete(id)),
 		listUnreadable: () =>

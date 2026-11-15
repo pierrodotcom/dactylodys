@@ -280,6 +280,8 @@
 	.greeting {
 		font-size: var(--dd-font-size-xl);
 		font-weight: var(--dd-font-weight-bold);
+		/* A long nickname without a space is cut rather than wider than the page (320 pixels). */
+		overflow-wrap: anywhere;
 	}
 
 	/* A speech bubble of the companion. */

@@ -72,6 +72,13 @@
 		withSessionRecorded
 	} from '$lib/state/journal';
 	import { JOURNAL_RULES } from '$lib/state/journal-rules';
+	import {
+		createProfileNotices,
+		withNotices,
+		type ProfileNotices
+	} from '$lib/state/profile-notices';
+	import { isSameData } from '$lib/state/same-data';
+	import { requestStorageProtectionOnce } from '$lib/state/storage-persistence';
 	import { createIndexedDbProfileStore, createMemoryProfileStore } from '$lib/state/stores';
 	import type {
 		AgeBand,
@@ -121,7 +128,7 @@
 	import KeyboardCheck from './KeyboardCheck.svelte';
 	import { forgetLastPlayerId, readLastPlayerId, writeLastPlayerId } from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
-	import { recordLessonOutcome } from './lesson-outcome';
+	import { recordLessonOutcome, starsOrNone } from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
 	import { focusLessonId, followingLessonId, worldOfLesson } from './map';
@@ -184,6 +191,11 @@
 	/** Pictures of the story already told during this visit (ADR-051). */
 	let toldThisVisit: ReadonlySet<string> = new Set();
 	let store: ProfileStore = createMemoryProfileStore();
+	/** What the other pages of the app say of the profiles (the adult space in another tab). */
+	let notices: ProfileNotices | null = null;
+	/** Changes on their way to the device, and how many were ever started. */
+	let pendingWrites = 0;
+	let startedWrites = 0;
 	let profiles = $state.raw<readonly Profile[]>([]);
 	let profile = $state.raw<Profile | null>(null);
 	let assets = $state.raw<KeyboardAssets | null>(null);
@@ -377,7 +389,9 @@
 
 	onMount(async () => {
 		systemPrefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-		store = createIndexedDbProfileStore();
+		notices = createProfileNotices();
+		notices.listen(() => void readAgain());
+		store = withNotices(createIndexedDbProfileStore(), notices);
 		try {
 			profiles = await store.list();
 			unreadable = await store.listUnreadable();
@@ -389,6 +403,7 @@
 	});
 
 	onMount(() => () => sounds.dispose());
+	onMount(() => () => notices?.close());
 	onMount(() => {
 		pageVisible = document.visibilityState === 'visible';
 		return () => ambience.dispose();
@@ -445,18 +460,98 @@
 		applySettings(profile?.settings ?? defaultSettings('pc'), document.documentElement);
 	});
 
-	/** Keeps the new version in memory first, so that the game goes on even if the device refuses to store it. */
-	async function commit(next: Profile): Promise<boolean> {
+	function showProfile(next: Profile) {
 		profile = next;
-		profiles = profiles.some((item) => item.id === next.id)
-			? profiles.map((item) => (item.id === next.id ? next : item))
-			: [...profiles, next];
+		profiles = profiles.map((item) => (item.id === next.id ? next : item));
+	}
+
+	/**
+	 * Shows the change at once, so that the game goes on even if the device refuses to store it,
+	 * then stores it from the profile as the device holds it now, never from the copy kept here:
+	 * what another page stored meanwhile (the adult space in another tab) is not written over.
+	 */
+	async function commit(change: (current: Profile) => Profile): Promise<boolean> {
+		if (!profile) return false;
+		const { id } = profile;
 		try {
-			await store.save(next);
-			return true;
+			showProfile(change(profile));
 		} catch {
 			return false;
 		}
+		pendingWrites += 1;
+		startedWrites += 1;
+		let stored: Profile | null;
+		try {
+			stored = await store.update(id, (current) => change(withEarnedSoFar(current)));
+		} catch {
+			return false;
+		} finally {
+			pendingWrites -= 1;
+		}
+		if (stored === null) return false;
+		// The last change on its way gives the profile as the device holds it, the others included.
+		if (pendingWrites === 0) void showStored(stored);
+		return true;
+	}
+
+	/**
+	 * The profile as the device holds it takes the place of the one on screen, with its keyboard
+	 * when another page changed it. The screen is drawn again only when the two differ.
+	 */
+	async function showStored(stored: Profile) {
+		const shown = profile;
+		if (!shown || shown.id !== stored.id) return;
+		const next = withEarnedSoFar(stored);
+		if (isSameData(next, shown)) return;
+		const { layoutId, fingeringProfileId } = next.settings;
+		if (
+			layoutId !== shown.settings.layoutId ||
+			fingeringProfileId !== shown.settings.fingeringProfileId
+		) {
+			try {
+				const loaded = await loadKeyboardAssets(next.settings);
+				// A change made meanwhile will bring its own stored profile.
+				if (profile !== shown) return;
+				assets = loaded;
+			} catch {
+				return;
+			}
+		}
+		showProfile(next);
+	}
+
+	/** Another page of the app changed the profiles: they are read again, the one on screen too. */
+	async function readAgain() {
+		const writesBefore = startedWrites;
+		let fresh: readonly Profile[];
+		try {
+			fresh = await store.list();
+			unreadable = await store.listUnreadable();
+		} catch {
+			return;
+		}
+		// A change of this page stored meanwhile gave, or will give, a more recent profile.
+		const outdated = pendingWrites > 0 || startedWrites !== writesBefore;
+		const shown = profile;
+		profiles = fresh.map((item) => (outdated && item.id === shown?.id ? shown : item));
+		if (!shown || outdated) return;
+		const stored = fresh.find((item) => item.id === shown.id);
+		if (!stored) {
+			leaveRemovedPlayer();
+			return;
+		}
+		await showStored(stored);
+	}
+
+	/** The player on screen was deleted from the adult space: back to the players, whatever the screen. */
+	function leaveRemovedPlayer() {
+		if (isGame(screen)) playClock = stopPlaying(playClock, now());
+		nameLater = false;
+		helpRun = null;
+		profile = null;
+		assets = null;
+		saveState = 'idle';
+		go({ type: 'player-removed' });
 	}
 
 	async function enter(chosen: Profile): Promise<boolean> {
@@ -492,7 +587,12 @@
 			platform: platformFromUserAgent(navigator.userAgent)
 		});
 		const created = ageBand === null ? blank : updateSettings(blank, { ageBand });
-		if (!(await commit(created))) return false;
+		try {
+			await store.save(created);
+		} catch {
+			return false;
+		}
+		profiles = [...profiles, created];
 		return enter(created);
 	}
 
@@ -527,7 +627,7 @@
 				return;
 			}
 		}
-		saveState = (await commit(next)) ? 'saved' : 'error';
+		saveState = (await commit((current) => updateSettings(current, patch))) ? 'saved' : 'error';
 	}
 
 	async function chooseKeyboardLayout(layoutId: LayoutId) {
@@ -535,7 +635,7 @@
 	}
 
 	async function finishKeyboardCheck() {
-		if (profile) await commit(markCalibrated(profile));
+		if (profile) await commit(markCalibrated);
 		go({ type: 'keyboard-checked' });
 	}
 
@@ -577,13 +677,12 @@
 	/** Every choice about the companion is kept at once. */
 	async function saveCompanion(choice: CompanionChoice) {
 		if (!profile) return;
-		let next: Profile;
 		try {
-			next = withCompanion(profile, choice);
+			withCompanion(profile, choice);
 		} catch {
 			return;
 		}
-		companionSaveFailed = !(await commit(next));
+		companionSaveFailed = !(await commit((current) => withCompanion(current, choice)));
 	}
 
 	function openHideout() {
@@ -594,13 +693,12 @@
 	/** Every change in the hideout is kept at once. */
 	async function saveHideout(layout: HideoutLayout) {
 		if (!profile) return;
-		let next: Profile;
 		try {
-			next = withHideout(profile, layout);
+			withHideout(profile, layout);
 		} catch {
 			return;
 		}
-		hideoutSaveFailed = !(await commit(next));
+		hideoutSaveFailed = !(await commit((current) => withHideout(current, layout)));
 	}
 
 	function wear(item: RewardDefinition) {
@@ -674,7 +772,7 @@
 	/** The choice is kept in the profile, so that the child finds the same game at the next visit. */
 	function chooseGame(worldId: string, lessonId: string, gameId: string) {
 		gameLoadFailed = false;
-		if (profile) void commit(withGames(profile, worldId, lessonId, gameId));
+		if (profile) void commit((current) => withGames(current, worldId, lessonId, gameId));
 	}
 
 	/** A picture of a game was chosen on the lesson screen: it is kept, and the lesson starts with it. */
@@ -773,21 +871,30 @@
 			profile.lastGameByWorld[world.id] !== definition.id ||
 			profile.lastGameByWorld[lessonId] !== definition.id
 		) {
-			void commit(withGames(profile, world.id, lessonId, definition.id));
+			const worldId = world.id;
+			const gameChosen = definition.id;
+			void commit((current) => withGames(current, worldId, lessonId, gameChosen));
 		}
 		const banks = await loadGame(definition, progression);
 		if (banks === null) {
 			if (event.type === 'replay') go({ type: 'back-to-map' });
 			return;
 		}
-		exercise = generateExercise(progression, lessonId, Math.random, {
-			...banks,
-			progress: profile.progress,
-			themeId: world.themeId,
-			...wordLimits(PLAY_RULES, progression, lessonId, profile.settings.ageBand),
-			ageBand: profile.settings.ageBand,
-			neighbors
-		});
+		try {
+			exercise = generateExercise(progression, lessonId, Math.random, {
+				...banks,
+				progress: profile.progress,
+				themeId: world.themeId,
+				...wordLimits(PLAY_RULES, progression, lessonId, profile.settings.ageBand),
+				ageBand: profile.settings.ageBand,
+				neighbors
+			});
+		} catch {
+			// No exercise could be made: the child is told, as when the game itself does not load.
+			gameLoadFailed = true;
+			if (event.type === 'replay') go({ type: 'back-to-map' });
+			return;
+		}
 		raceGhost = race
 			? raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor)
 			: null;
@@ -805,31 +912,82 @@
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
 		playClock = finishPlaying(playClock, now());
-		const finishedAt = Date.now();
-		const recorded = recordLessonOutcome(profile, progression.rules, lessonId, outcome, finishedAt);
-		const { evaluation } = recorded;
-		const earned = earnRewards(recorded.profile, catalogue, progression);
-		const session = toSessionRecord({
+		const source = progression;
+		const rewards = catalogue;
+		const gameId = activeGameId;
+		let record: ((current: Profile) => Profile) | null = null;
+		try {
+			record = showResult(profile, source, rewards, gameId, lessonId, outcome);
+		} catch {
+			// The child is never left on a finished game: the result is shown, said not to be kept.
+			result = unrecordedResult(source, lessonId, outcome);
+		}
+		go({ type: 'completed' });
+		if (record !== null && !(await commit(record)) && result) {
+			result = { ...result, saveFailed: true };
+		}
+		// Asked once, after a first lesson: never on the first screen, and nothing waits for the answer.
+		if (!memoryOnly) void requestStorageProtectionOnce();
+	}
+
+	/** What is shown of a play that could not be recorded: its stars and its numbers, nothing won. */
+	function unrecordedResult(
+		source: ProgressionDefinition,
+		lessonId: string,
+		outcome: GameOutcome
+	): ResultView {
+		return {
 			lessonId,
-			gameId: activeGameId,
-			finishedAt,
-			utcOffsetMinutes: utcOffsetAt(finishedAt),
-			metrics: outcome.metrics,
-			evaluation
-		});
-		const next = withSessionRecorded(
-			withGamePlayed(earned.profile, activeGameId),
-			session,
-			JOURNAL_RULES
-		);
-		const { announced } = earned;
+			stars: starsOrNone(source.rules, outcome.metrics),
+			summary: summarizeMetrics(outcome.metrics),
+			hasOpenNext: false,
+			worldDone: false,
+			suggestBreak: false,
+			almost: false,
+			saveFailed: true,
+			rewards: [],
+			askName: false,
+			story: [],
+			race: outcome.race ?? null
+		};
+	}
+
+	/**
+	 * Prepares the result of a finished play and gives how the play changes a profile: the one on
+	 * screen now, then the one the device holds when it is stored.
+	 */
+	function showResult(
+		before: Profile,
+		source: ProgressionDefinition,
+		rewards: typeof catalogue,
+		gameId: string,
+		lessonId: string,
+		outcome: GameOutcome
+	): (current: Profile) => Profile {
+		const finishedAt = Date.now();
+		const played = (current: Profile) => {
+			const recorded = recordLessonOutcome(current, source.rules, lessonId, outcome, finishedAt);
+			const earned = earnRewards(recorded.profile, rewards, source);
+			const session = toSessionRecord({
+				lessonId,
+				gameId,
+				finishedAt,
+				utcOffsetMinutes: utcOffsetAt(finishedAt),
+				metrics: outcome.metrics,
+				evaluation: recorded.evaluation
+			});
+			return {
+				evaluation: recorded.evaluation,
+				announced: earned.announced,
+				profile: withSessionRecorded(withGamePlayed(earned.profile, gameId), session, JOURNAL_RULES)
+			};
+		};
+		const { evaluation, announced, profile: next } = played(before);
 		const progress = next.progress;
-		const told = story
-			? storyAfterLesson(story, progression, profile.progress, progress, lessonId)
-			: [];
+		const told = story ? storyAfterLesson(story, source, before.progress, progress, lessonId) : [];
 		const followingId = followingFor(next, lessonId);
 		const hasOpenNext = followingId !== null && isOpenFor(next, followingId);
-		const ids = lessonIds(progression);
+		const ids = lessonIds(source);
 		result = {
 			lessonId,
 			stars: evaluation.stars,
@@ -838,7 +996,7 @@
 			worldDone: followingId === null && ids.includes(lessonId) && evaluation.unlocksNext,
 			suggestBreak: shouldSuggestBreak(playClock, now(), PLAY_RULES),
 			almost: almostNextStar(
-				progression.rules,
+				source.rules,
 				(100 * outcome.metrics.correctKeystrokes) / Math.max(1, outcome.metrics.totalKeystrokes),
 				evaluation.stars
 			),
@@ -848,8 +1006,7 @@
 			story: told,
 			race: outcome.race ?? null
 		};
-		go({ type: 'completed' });
-		if (!(await commit(next)) && result) result = { ...result, saveFailed: true };
+		return (current) => played(current).profile;
 	}
 
 	/** "Yes!" to the companion: a short game on the key it lost, in the game of the lesson of that key. */
@@ -884,21 +1041,25 @@
 		if (!profile || !progression || !helpRun) return;
 		const quest = helpRun;
 		playClock = stopPlaying(playClock, now());
-		const recorded = recordHelpOutcome(profile, progression, catalogue, quest, outcome.metrics);
+		const source = progression;
+		const rewards = catalogue;
+		const gameId = activeGameId;
+		const helped = (current: Profile) =>
+			recordHelpOutcome(current, source, rewards, quest, outcome.metrics);
 		// Not a play of a lesson (no stars, one key): its day is counted, the journal does not keep it.
 		const finishedAt = Date.now();
-		const next = withPracticeDay(
-			withGamePlayed(recorded.profile, activeGameId),
-			localDay(finishedAt, utcOffsetAt(finishedAt))
-		);
-		const { announced } = recorded;
+		const day = localDay(finishedAt, utcOffsetAt(finishedAt));
+		const { announced } = helped(profile);
 		helpDone = {
 			rewards: announced,
 			dance: lessonIds(progression).indexOf(quest.lessonId),
 			saveFailed: false
 		};
 		go({ type: 'completed' });
-		if (!(await commit(next)) && helpDone) helpDone = { ...helpDone, saveFailed: true };
+		const stored = await commit((current) =>
+			withPracticeDay(withGamePlayed(helped(current).profile, gameId), day)
+		);
+		if (!stored && helpDone) helpDone = { ...helpDone, saveFailed: true };
 	}
 
 	/** The words of the adult, in the game the child took: no lesson, no stars, no ghost. */
@@ -920,19 +1081,23 @@
 		if (!profile || !progression) return;
 		playClock = stopPlaying(playClock, now());
 		const finishedAt = Date.now();
-		const recorded = recordFreePractice(profile, progression, catalogue, {
+		const source = progression;
+		const rewards = catalogue;
+		const play = {
 			metrics: outcome.metrics,
 			gameId: activeGameId,
 			finishedAt,
 			utcOffsetMinutes: utcOffsetAt(finishedAt)
-		});
+		};
+		const practised = (current: Profile) => recordFreePractice(current, source, rewards, play);
 		freeDone = {
-			rewards: recorded.announced,
+			rewards: practised(profile).announced,
 			dance: freeWorld ? progression.worlds.indexOf(freeWorld) : 0,
 			saveFailed: false
 		};
 		go({ type: 'completed' });
-		if (!(await commit(recorded.profile)) && freeDone) freeDone = { ...freeDone, saveFailed: true };
+		const stored = await commit((current) => practised(current).profile);
+		if (!stored && freeDone) freeDone = { ...freeDone, saveFailed: true };
 	}
 
 	function openFree() {
@@ -1004,7 +1169,11 @@
 {/snippet}
 
 <svelte:document
-	onvisibilitychange={() => (pageVisible = document.visibilityState === 'visible')}
+	onvisibilitychange={() => {
+		pageVisible = document.visibilityState === 'visible';
+		// Back on this page: what another page stored meanwhile is read, even if it could not say so.
+		if (pageVisible) void readAgain();
+	}}
 />
 
 <svelte:head>

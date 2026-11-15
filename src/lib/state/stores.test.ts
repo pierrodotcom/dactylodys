@@ -1,6 +1,13 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
-import { createProfile, PROFILE_SCHEMA_VERSION, withLastGame } from './profile';
+import {
+	createProfile,
+	PROFILE_SCHEMA_VERSION,
+	updateSettings,
+	withAdultWords,
+	withGamePlayed,
+	withLastGame
+} from './profile';
 import { describeProfileStoreContract } from './profile-store-contract';
 import { createIndexedDbProfileStore, createMemoryProfileStore } from './stores';
 import { asVersion1 } from './test-support';
@@ -148,6 +155,43 @@ describe('IndexedDB profile store', () => {
 		await expect(store.save(profile)).rejects.toThrow();
 		await store.save({ ...profile, id: 'b' });
 		expect((await store.list()).map((item) => item.id)).toEqual(['b']);
+	});
+
+	it('loses nothing when two pages on the same database change a profile at the same time', async () => {
+		const databaseName = freshDatabaseName();
+		const game = createIndexedDbProfileStore({ databaseName });
+		const adultSpace = createIndexedDbProfileStore({ databaseName });
+		await game.save(profile);
+		await adultSpace.list();
+
+		// Not awaited one after the other: both pages write as two tabs would.
+		await Promise.all([
+			game.update('a', (current) => withLastGame(current, 'fr.world.x', 'rocket')),
+			adultSpace.update('a', (current) => updateSettings(current, { errorPolicy: 'backspace' })),
+			game.update('a', (current) => withGamePlayed(current, 'rocket')),
+			adultSpace.update('a', (current) => withAdultWords(current, ['chat']))
+		]);
+
+		const expected = withAdultWords(
+			updateSettings(withGamePlayed(withLastGame(profile, 'fr.world.x', 'rocket'), 'rocket'), {
+				errorPolicy: 'backspace'
+			}),
+			['chat']
+		);
+		expect(await game.get('a')).toEqual(expected);
+		expect(await getRaw(databaseName, 'a')).toEqual(expected);
+	});
+
+	it('does not bring back a profile another page removed', async () => {
+		const databaseName = freshDatabaseName();
+		const game = createIndexedDbProfileStore({ databaseName });
+		const adultSpace = createIndexedDbProfileStore({ databaseName });
+		await game.save(profile);
+
+		await adultSpace.remove('a');
+
+		expect(await game.update('a', (current) => withGamePlayed(current, 'rocket'))).toBeNull();
+		expect(await getRaw(databaseName, 'a')).toBeUndefined();
 	});
 
 	it('reopens its connection after close', async () => {
