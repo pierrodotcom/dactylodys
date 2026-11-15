@@ -136,13 +136,13 @@
 	<ScreenFrame title={prompt} focusHeading={false} {back}>
 		<div class="keys">
 			<!-- The one live region of the screen: it says each new key, and the help about Caps Lock. -->
-			<p class="progress" role="status">
-				{m.play_check_step({ position, total })}
-				<span class="dd-visually-hidden">
-					{prompt}
-					{#if capsLock}{m.game_shared_caps_lock()}{/if}
-				</span>
-			</p>
+			<div class="progress" role="status">
+				<p>{m.play_check_step({ position, total })}</p>
+				<p class="dd-visually-hidden">{prompt}</p>
+				{#if capsLock}
+					<p class="dd-visually-hidden">{m.game_shared_caps_lock()}</p>
+				{/if}
+			</div>
 			<div class="tile-zone">
 				<!-- The key as it is printed: one with two characters shows both, the one asked for below. -->
 				<span class="tile" aria-hidden="true" data-two={step.above !== null || undefined}>
@@ -166,7 +166,10 @@
 	</ScreenFrame>
 {:else}
 	<ScreenFrame title={resultTitle} focusHeading={false} {back}>
-		<Companion mood={ready ? 'cheer' : 'happy'} />
+		<!-- The words for the adult take its place: the whole screen fits a laptop without scrolling. -->
+		{#if !askAdult}
+			<Companion mood={ready ? 'cheer' : 'happy'} />
+		{/if}
 		<!-- The screen opens on its button: what happened is read with it. -->
 		<p id={RESULT_TITLE_ID} hidden>{resultTitle}</p>
 		<div class="result" id={RESULT_TEXT_ID}>
