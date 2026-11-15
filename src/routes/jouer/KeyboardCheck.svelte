@@ -11,6 +11,7 @@
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import { focusOnMount } from '$lib/ui/focus';
 	import KeyboardCaptureField from '$lib/ui/keyboard-capture/KeyboardCaptureField.svelte';
+	import { keepTyping } from '$lib/ui/keyboard-capture/typing-focus';
 	import { checkOutcome, chooseCheckSteps, stepMatches, type CheckStep } from './keyboard-check';
 	import { LAYOUT_LABELS } from './labels';
 
@@ -26,6 +27,7 @@
 	let { layoutId, codes, onlayout, ondone, onchangeplayer }: Props = $props();
 
 	const INPUT_ID = 'keyboard-check-input';
+	const WAY_OUT = '[data-screen-back] button';
 
 	let stage = $state<'layout' | 'keys' | 'result'>('layout');
 	let selected = $state<LayoutId>(untrack(() => layoutId));
@@ -38,6 +40,8 @@
 	const options = LAYOUT_IDS.map((id) => ({ value: id, label: LAYOUT_LABELS[id]() }));
 	const step = $derived(steps[matches.length]);
 	const outcome = $derived(checkOutcome(matches));
+	// The way out is at the top of the three steps, and Escape takes it (ADR-046).
+	const back = $derived({ label: m.play_change_player(), onclick: onchangeplayer });
 
 	async function chooseLayout() {
 		loadFailed = false;
@@ -67,12 +71,19 @@
 	function keepFocus(event: MouseEvent) {
 		if (stage === 'keys' && !(event.target as Element).closest('button')) field?.focus();
 	}
+
+	// The key asked for is taken wherever the focus is, and Tab from the field goes to the way out
+	// instead of out of the page.
+	function onWindowKeydown(event: KeyboardEvent) {
+		if (stage !== 'keys') return;
+		keepTyping(event, INPUT_ID, field, document.querySelector<HTMLElement>(WAY_OUT));
+	}
 </script>
 
-<svelte:window onclick={keepFocus} />
+<svelte:window onclick={keepFocus} onkeydown={onWindowKeydown} />
 
 {#if stage === 'layout'}
-	<ScreenFrame title={m.play_check_title()}>
+	<ScreenFrame title={m.play_check_title()} {back}>
 		<p class="intro">{m.play_check_layout_intro()}</p>
 		<ChoiceGroup
 			legend={m.play_check_layout_legend()}
@@ -84,13 +95,10 @@
 		{#if loadFailed}
 			<p class="error" role="alert">{m.play_error_load()}</p>
 		{/if}
-		<div class="actions">
-			<Button onclick={chooseLayout}>{m.play_check_continue()}</Button>
-			<Button variant="quiet" onclick={onchangeplayer}>{m.play_change_player()}</Button>
-		</div>
+		<Button onclick={chooseLayout}>{m.play_check_continue()}</Button>
 	</ScreenFrame>
 {:else if stage === 'keys' && step !== undefined}
-	<ScreenFrame title={m.play_check_prompt({ key: step.label })} focusHeading={false}>
+	<ScreenFrame title={m.play_check_prompt({ key: step.label })} focusHeading={false} {back}>
 		<p class="progress" role="status">
 			{m.play_check_step({ position: matches.length + 1, total: steps.length })}
 		</p>
@@ -104,7 +112,10 @@
 		</div>
 	</ScreenFrame>
 {:else}
-	<ScreenFrame title={outcome === 'match' ? m.play_check_ok_title() : m.play_check_diff_title()}>
+	<ScreenFrame
+		title={outcome === 'match' ? m.play_check_ok_title() : m.play_check_diff_title()}
+		{back}
+	>
 		<Companion mood={outcome === 'match' ? 'cheer' : 'happy'} />
 		<p class="intro">
 			{outcome === 'match' ? m.play_check_ok_text() : m.play_check_diff_text()}
@@ -126,13 +137,6 @@
 	.error {
 		color: var(--dd-color-error-text);
 		font-weight: var(--dd-font-weight-bold);
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--dd-space-md);
 	}
 
 	.tile-zone {

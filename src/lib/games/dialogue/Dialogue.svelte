@@ -7,20 +7,19 @@
 	import { isRewarded, type GameView } from '../shared/game-view';
 	import Progress from './Progress.svelte';
 	import Scene from './Scene.svelte';
-	import { questionOf, reactionOf } from './talk';
+	import { questionAnnouncement, questionOf, reactionOf, type QuestionWords } from './talk';
 	import { QUESTIONS, REACTIONS } from './texts';
 
 	const props: GameProps = $props();
 
 	const decor = $derived(decorFor('dialogue', props.playCount));
 
-	/**
-	 * A new question is said once, with the text to type, the moment it appears, even when the answer
-	 * arrives begun with a mistake to erase (lesson of repairs).
-	 */
-	function isNewQuestion(view: GameView): boolean {
-		return view.phase === 'typing' && view.untouched;
-	}
+	const QUESTION_WORDS: QuestionWords = {
+		question: (question, text) => m.game_dialogue_announce_question({ question, text }),
+		repair: (question, text, char) =>
+			m.game_dialogue_announce_question_repair({ question, text, char }),
+		spoken: spokenGrapheme
+	};
 
 	function announce(view: GameView): string {
 		if (isRewarded(view)) {
@@ -29,13 +28,7 @@
 				? m.game_dialogue_announce_last({ quip })
 				: m.game_dialogue_announce_group({ quip });
 		}
-		if (!isNewQuestion(view)) return '';
-		const text =
-			view.group.length === 1 ? spokenGrapheme(view.group[0] ?? '') : view.group.join('');
-		return m.game_dialogue_announce_question({
-			question: questionOf(QUESTIONS, view)?.() ?? '',
-			text
-		});
+		return questionAnnouncement(view, questionOf(QUESTIONS, view)?.() ?? '', QUESTION_WORDS);
 	}
 </script>
 

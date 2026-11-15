@@ -9,6 +9,7 @@
 	import TargetText from '$lib/ui/components/TargetText.svelte';
 	import { focusOnMount, focusSoon } from '$lib/ui/focus';
 	import KeyboardCaptureField from '$lib/ui/keyboard-capture/KeyboardCaptureField.svelte';
+	import { keepTyping } from '$lib/ui/keyboard-capture/typing-focus';
 	import type { GameOutcome, GameProps } from '../types';
 	import { readDurationToken } from '$lib/ui/motion';
 	import {
@@ -19,7 +20,8 @@
 		type GameState
 	} from './game-state';
 	import { viewOf, type GameView } from './game-view';
-	import { typingAnnouncement, type TypingWords } from './announce';
+	import { shellAnnouncement, typingAnnouncement, type TypingWords } from './announce';
+	import { pauseRequests } from './pause-request';
 	import { spokenGrapheme } from '$lib/ui/components/spoken';
 	import { isGuided } from '$lib/engine/progression/guide';
 	import { isLookReminderDue, needsCapsLockHelp } from './help';
@@ -66,6 +68,8 @@
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
+	/** What a press of the mouse is meant for: it keeps its own way of taking the focus. */
+	const PRESSABLE = 'button, a, input, select, textarea, label';
 	/** The physical key that erases, whatever the layout: `KeyboardEvent.code` names it the same everywhere. */
 	const BACKSPACE_PRESS: KeyPress = { code: 'Backspace', level: 'base' };
 	const TYPING_WORDS: TypingWords = {
@@ -119,7 +123,9 @@
 	);
 	let capsLock = $state(false);
 	let field: KeyboardCaptureField | undefined = $state();
+	let pauseButton: HTMLElement | undefined;
 	let reported = false;
+	const offerPause = pauseRequests();
 
 	// The race against the ghost: its clock runs only while a group is typed (`followGame`).
 	const charCount = untrack(() => exerciseCharCount(exercise.groups));
@@ -142,12 +148,10 @@
 		erasing ? BACKSPACE_PRESS : typing ? targetKeyPress(charIndex, expected) : null
 	);
 	const capsHelp = $derived(typing && !erasing && needsCapsLockHelp(capsLock, expected));
-	// The reward of the game, else the text to type or the key expected after a mistake. Empty until
-	// the game is on screen: a live region only speaks what changes after it appeared.
 	let speaking = $state(false);
-	const announcement = $derived(
-		speaking ? announce(view) || typingAnnouncement(view, TYPING_WORDS) : ''
-	);
+	let fieldFocused = $state(false);
+	// The keys no longer reach the field (Tab, a press on the page): the child is told how to go on.
+	const away = $derived(speaking && !fieldFocused && !paused && !suspended && !inFinale);
 	// A new node for each key: the same mistake twice in a row is said twice.
 	const announcementKey = $derived(game.session.records.length);
 	// A group typed without a single mistake sends a music note out of its last key.
@@ -166,6 +170,18 @@
 			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
 	);
 	const lookReminderText = m.game_shared_look_reminder();
+	// The one live region of the game: its reward, else the text to type or the key expected after a
+	// mistake, then the help about Caps Lock. The reminder to look at the screen is left to the
+	// recorded voice: each thing is heard once. Empty until the game is on screen: a live region
+	// only speaks what changes after it appeared.
+	const announcement = $derived(
+		speaking
+			? shellAnnouncement(announce(view) || typingAnnouncement(view, TYPING_WORDS), {
+					away: away ? m.game_shared_keep_typing() : null,
+					capsLock: capsHelp ? m.game_shared_caps_lock() : null
+				})
+			: ''
+	);
 	const guide = $derived(settings.guide);
 	// A child who waits long on a key is helped: the hand shows it, then goes back to the new keys.
 	let hesitated = $state(false);
@@ -222,16 +238,36 @@
 	}
 
 	async function resume() {
+		// The field takes the focus back in a moment: nothing says it is lost meanwhile.
+		fieldFocused = true;
 		dispatch({ type: 'resume' });
 		normalizer.reset();
 		await tick();
 		field?.focus();
+		readFocus();
 	}
 
 	function onWindowKeydown(event: KeyboardEvent) {
-		if (suspended || event.key !== 'Escape' || event.repeat) return;
-		if (paused) void resume();
-		else dispatch({ type: 'pause' });
+		if (suspended) return;
+		if (event.key === 'Escape') {
+			if (event.repeat) return;
+			if (paused) void resume();
+			else dispatch({ type: 'pause' });
+			return;
+		}
+		// The game never lets go of the child: a key typed beside the field is typed in it, and Tab
+		// from the field goes to "Pause" instead of out of the page.
+		if (!paused && !inFinale) keepTyping(event, INPUT_ID, field, pauseButton);
+	}
+
+	function readFocus() {
+		fieldFocused = document.activeElement?.id === INPUT_ID;
+	}
+
+	// A focus that moves to another element is read when it arrives there; one that goes nowhere
+	// leaves the field for the page, or stays in the field while the window is in the background.
+	function onFocusOut(event: FocusEvent) {
+		if (event.relatedTarget === null) readFocus();
 	}
 
 	// A hidden page is not being typed on: the game pauses, and waits for the child to resume it.
@@ -244,9 +280,17 @@
 		if (!(event.target as Element).closest('button')) field?.focus();
 	}
 
+	/** A press on the picture or beside it does not take the focus out of the field. */
+	function keepFocusOnPress(event: MouseEvent) {
+		if (paused || suspended || inFinale) return;
+		if (!(event.target as Element).closest(PRESSABLE)) event.preventDefault();
+	}
+
 	onMount(() => {
 		field?.focus();
+		readFocus();
 		speaking = true;
+		return offerPause(() => dispatch({ type: 'pause' }));
 	});
 
 	// The ghost moves on its own while the clock runs; nothing ticks when it is stopped.
@@ -312,8 +356,12 @@
 	});
 </script>
 
-<svelte:window onkeydown={onWindowKeydown} onclick={keepFocus} />
-<svelte:document onvisibilitychange={onVisibilityChange} />
+<svelte:window onkeydown={onWindowKeydown} onclick={keepFocus} onmousedown={keepFocusOnPress} />
+<svelte:document
+	onvisibilitychange={onVisibilityChange}
+	onfocusin={readFocus}
+	onfocusout={onFocusOut}
+/>
 
 <div
 	class="game"
@@ -338,7 +386,14 @@
 			</div>
 		{/if}
 		{#if !inFinale}
-			<Button variant="secondary" onclick={() => dispatch({ type: 'pause' })}>
+			<Button
+				variant="secondary"
+				{@attach (node: HTMLElement) => {
+					pauseButton = node;
+					return () => (pauseButton = undefined);
+				}}
+				onclick={() => dispatch({ type: 'pause' })}
+			>
 				{m.game_shared_pause()}
 			</Button>
 		{/if}
@@ -368,16 +423,19 @@
 					errorIndex={view.errorIndex}
 					pending={typing ? view.pending : []}
 				/>
-				<!-- One place for what comes and goes (finger, reminder, Caps Lock): nothing below it moves. -->
+				<!--
+					One place for what comes and goes (finger, reminder, Caps Lock, lost focus): nothing below
+					it moves. None of it is a live region: the announcement of the game says it, once.
+				-->
 				<div class="slot">
 					{#if settings.showKeyboard}
 						<div class="hint">
-							{#if typing && !capsHelp && !erasing}
+							{#if typing && !capsHelp && !erasing && !away}
 								<FingerHint {target} {layout} {fingering} />
 							{/if}
 						</div>
 					{/if}
-					<div role="status" class="alert">
+					<div class="notes">
 						{#if lookReminder}
 							<p class="look-reminder" data-reward data-reward-variant="1">
 								<svg class="eyes" viewBox="0 0 48 24" focusable="false" aria-hidden="true">
@@ -388,12 +446,14 @@
 								</svg>
 								<span>{lookReminderText}</span>
 							</p>
+						{:else if away}
+							<p class="notice" data-keep-typing>{m.game_shared_keep_typing()}</p>
 						{:else if capsHelp}
 							<p class="notice">{m.game_shared_caps_lock()}</p>
 						{/if}
 					</div>
 					<!-- Said by the announcement of the game already, which names the character to erase. -->
-					{#if erasing}
+					{#if erasing && !away}
 						<p class="notice" aria-hidden="true" data-erase-reminder>
 							{m.game_shared_erase_reminder()}
 						</p>

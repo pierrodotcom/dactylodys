@@ -339,6 +339,14 @@ describe('screen automaton', () => {
 			expect(transition(story, { type: 'replay' })).toEqual(story);
 		});
 
+		it('leaves the story for the map when the child goes back', () => {
+			const story = run(
+				[{ type: 'tell', moments: [LINE, ENDING], then: { name: 'intro', lessonId: NEXT } }],
+				RESULT
+			);
+			expect(transition(story, { type: 'back-to-map' })).toEqual({ name: 'map' });
+		});
+
 		it('does not tell from the map what leads anywhere but a lesson', () => {
 			const map: Screen = { name: 'map' };
 			expect(transition(map, { type: 'tell', moments: [LINE], then: { name: 'break' } })).toEqual(
