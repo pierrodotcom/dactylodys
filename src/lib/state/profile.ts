@@ -22,11 +22,12 @@ import type { LayoutPlatform } from '../keyboard/types';
 import type {
 	AmbiencePreference,
 	CompanionChoice,
-	ErrorPolicy,
+	ErrorPolicyPreference,
 	HandwritingSample,
 	HelpQuestRecord,
 	MotionPreference,
 	Profile,
+	SessionLength,
 	SessionRecord,
 	Settings,
 	TextScale,
@@ -49,7 +50,8 @@ const DEFAULT_SETTINGS_COMMON = {
 	textSpacing: 'normal',
 	showKeyboard: true,
 	handGuide: 'auto',
-	errorPolicy: 'retry',
+	errorPolicy: 'world',
+	sessionLength: 'normal',
 	keyboardFade: true,
 	effects: true,
 	ambience: 'none',
@@ -59,14 +61,23 @@ const DEFAULT_SETTINGS_COMMON = {
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
 const MOTIONS = ['system', 'reduced', 'full'] as const satisfies readonly MotionPreference[];
 const HAND_GUIDES = ['auto', 'always', 'off'] as const satisfies readonly HandGuidePreference[];
-const ERROR_POLICIES = ['retry', 'backspace'] as const satisfies readonly ErrorPolicy[];
+const ERROR_POLICIES = [
+	'world',
+	'backspace',
+	'retry'
+] as const satisfies readonly ErrorPolicyPreference[];
+export const SESSION_LENGTHS = [
+	'short',
+	'normal',
+	'long'
+] as const satisfies readonly SessionLength[];
 const TEXT_SCALES = ['md', 'lg', 'xl'] as const satisfies readonly TextScale[];
 const TEXT_SPACINGS = ['normal', 'wide', 'wider'] as const satisfies readonly TextSpacing[];
 const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly AmbiencePreference[];
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 15;
+export const PROFILE_SCHEMA_VERSION = 16;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -133,6 +144,7 @@ const SETTINGS_KEYS = [
 	'showKeyboard',
 	'handGuide',
 	'errorPolicy',
+	'sessionLength',
 	'keyboardFade',
 	'effects',
 	'ambience',
@@ -420,6 +432,7 @@ function parseSettings(data: unknown, path: string): Settings {
 		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
 		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`),
 		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`),
+		sessionLength: expectOneOf(record['sessionLength'], SESSION_LENGTHS, `${path}.sessionLength`),
 		keyboardFade: expectBoolean(record['keyboardFade'], `${path}.keyboardFade`),
 		effects: expectBoolean(record['effects'], `${path}.effects`),
 		ambience: expectOneOf(record['ambience'], AMBIENCES, `${path}.ambience`),

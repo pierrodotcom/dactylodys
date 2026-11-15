@@ -180,12 +180,34 @@ export const EMPTY_JOURNAL = {
  * order of version 14: no lesson is kept open.
  */
 export function withNothingKeptOpen(profile: Profile): Profile {
-	return { ...profile, keptOpenLessonIds: [] };
+	return withWorldPolicy({ ...profile, keptOpenLessonIds: [] });
 }
 
-/** The record version 14 of the app stored: the same profile without the lessons kept open. */
+/**
+ * What a profile becomes once migrated from version 15 or older: a session of the usual length,
+ * and the worlds deciding how a mistake is handled, unless the adult had chosen Backspace.
+ */
+export function withWorldPolicy(profile: Profile): Profile {
+	const errorPolicy = profile.settings.errorPolicy === 'backspace' ? 'backspace' : 'world';
+	return { ...profile, settings: { ...profile.settings, sessionLength: 'normal', errorPolicy } };
+}
+
+/**
+ * The record version 15 of the app stored: the same profile without the length of a session, and
+ * with the two choices the adult had then for the mistakes (the game waits, or Backspace).
+ */
+export function asVersion15(profile: Profile): Record<string, unknown> {
+	const settings: Record<string, unknown> = {
+		...profile.settings,
+		errorPolicy: profile.settings.errorPolicy === 'backspace' ? 'backspace' : 'retry'
+	};
+	delete settings['sessionLength'];
+	return { ...profile, schemaVersion: 15, settings };
+}
+
+/** The record version 14 of the app stored: version 15 without the lessons kept open. */
 export function asVersion14(profile: Profile): Record<string, unknown> {
-	const stored: Record<string, unknown> = { ...profile, schemaVersion: 14 };
+	const stored: Record<string, unknown> = { ...asVersion15(profile), schemaVersion: 14 };
 	delete stored['keptOpenLessonIds'];
 	return stored;
 }

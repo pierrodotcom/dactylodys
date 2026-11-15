@@ -128,7 +128,7 @@ describe('defaultSettings', () => {
 		expect(defaultSettings('mac').layoutId).toBe('fr-fr-azerty-mac');
 	});
 
-	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons, Backspace off, the known keys fading, the light effects on, no background sound and the words of the 8-9 year olds', () => {
+	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons, the worlds deciding for the mistakes, a session of the usual length, the known keys fading, the light effects on, no background sound and the words of the 8-9 year olds', () => {
 		expect(defaultSettings('pc')).toEqual({
 			layoutId: 'fr-fr-azerty-pc',
 			fingeringProfileId: 'ten-fingers-iso',
@@ -140,7 +140,8 @@ describe('defaultSettings', () => {
 			textSpacing: 'normal',
 			showKeyboard: true,
 			handGuide: 'auto',
-			errorPolicy: 'retry',
+			errorPolicy: 'world',
+			sessionLength: 'normal',
 			keyboardFade: true,
 			effects: true,
 			ambience: 'none',
@@ -152,7 +153,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 15,
+			schemaVersion: 16,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -472,8 +473,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 14, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 16, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 15, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 17, /schemaVersion/],
 		[
 			'lessons kept open that are not a list',
 			['keptOpenLessonIds'],
@@ -508,6 +509,8 @@ describe('parseProfile', () => {
 		['a non-boolean keyboard flag', ['settings', 'showKeyboard'], null, /showKeyboard/],
 		['an unknown error policy', ['settings', 'errorPolicy'], 'skip', /settings\.errorPolicy/],
 		['a missing error policy', ['settings', 'errorPolicy'], REMOVE, /settings\.errorPolicy/],
+		['an unknown length of session', ['settings', 'sessionLength'], 'huge', /sessionLength/],
+		['a missing length of session', ['settings', 'sessionLength'], REMOVE, /sessionLength/],
 		['a non-boolean fading flag', ['settings', 'keyboardFade'], 'yes', /settings\.keyboardFade/],
 		['a missing fading flag', ['settings', 'keyboardFade'], REMOVE, /settings\.keyboardFade/],
 		['a non-boolean effects flag', ['settings', 'effects'], 1, /settings\.effects/],

@@ -1,16 +1,37 @@
 import { parseWordLimitRules, type WordLimitRules } from '$lib/engine/progression/word-limits';
 import type { KeyCode } from '$lib/keyboard/types';
+import { SESSION_LENGTHS } from '$lib/state/profile';
+import type { SessionLength } from '$lib/state/types';
 import rulesData from '../../../content/common/play-rules.json';
+
+/** When the game proposes to stop for today, for one length of session: data, never constants. */
+export interface SessionLengthRules {
+	/**
+	 * Minutes spent typing since the session began (the active time of the plays, ADR-077) from
+	 * which a break is suggested, after the first worlds.
+	 */
+	readonly typingMinutes: number;
+	/** Minutes spent in the games after which a break is suggested whatever was typed. */
+	readonly clockMinutes: number;
+	/** Finished exercises from which a break is suggested in the first worlds; 0: never. */
+	readonly earlyExercises: number;
+	/** The same in the worlds after them; 0: never, the time spent typing decides. */
+	readonly exercises: number;
+}
 
 /**
  * Rules of play that are not about learning: data, never constants in the code. The level and the
  * length of the words (`maxWordLevel`, `wordLevels`, `shortWords`) are read by `wordLimits`.
  */
 export interface PlayRules extends WordLimitRules {
-	/** Cumulated play time after which a break is suggested. */
-	readonly breakAfterMinutes: number;
-	/** Finished exercises since the page was opened after which a break is suggested; 0: never. */
-	readonly breakAfterExercises: number;
+	/** When a break is suggested, for each length of session the adult can choose (ADR-075). */
+	readonly sessionLengths: Readonly<Record<SessionLength, SessionLengthRules>>;
+	/**
+	 * Worlds, counted from the first one, where the break is suggested after a number of exercises
+	 * (`earlyExercises`) rather than on the time spent typing: a beginner tires sooner than its
+	 * typing time says. 0: none.
+	 */
+	readonly earlyWorlds: number;
 	/** Longest wait for the banks when a game starts; after that the child plays without them. */
 	readonly bankLoadTimeoutMs: number;
 	/**
@@ -40,14 +61,47 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function expectCount(value: unknown, path: string): number {
+	if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+		fail(path, 'expected an integer of at least 0');
+	}
+	return value;
+}
+
+function expectMinutes(value: unknown, path: string): number {
+	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+		fail(path, 'expected a positive number');
+	}
+	return value;
+}
+
+function parseSessionLength(data: unknown, path: string): SessionLengthRules {
+	if (!isRecord(data)) fail(path, 'expected an object');
+	const names = ['typingMinutes', 'clockMinutes', 'earlyExercises', 'exercises'];
+	for (const name of Object.keys(data)) {
+		if (!names.includes(name)) fail(`${path}.${name}`, 'unknown property');
+	}
+	const typingMinutes = expectMinutes(data['typingMinutes'], `${path}.typingMinutes`);
+	const clockMinutes = expectMinutes(data['clockMinutes'], `${path}.clockMinutes`);
+	if (clockMinutes < typingMinutes) {
+		fail(`${path}.clockMinutes`, 'expected at least the minutes spent typing (typingMinutes)');
+	}
+	return {
+		typingMinutes,
+		clockMinutes,
+		earlyExercises: expectCount(data['earlyExercises'], `${path}.earlyExercises`),
+		exercises: expectCount(data['exercises'], `${path}.exercises`)
+	};
+}
+
 export function parsePlayRules(data: unknown): PlayRules {
 	if (!isRecord(data)) fail('playRules', 'expected an object');
 	for (const name of Object.keys(data)) {
 		if (
 			![
 				'schemaVersion',
-				'breakAfterMinutes',
-				'breakAfterExercises',
+				'sessionLengths',
+				'earlyWorlds',
 				'maxWordLevel',
 				'wordLevels',
 				'shortWords',
@@ -62,19 +116,32 @@ export function parsePlayRules(data: unknown): PlayRules {
 	}
 	if (data['schemaVersion'] !== 1) fail('playRules.schemaVersion', 'expected 1');
 
-	const minutes = data['breakAfterMinutes'];
-	if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) {
-		fail('playRules.breakAfterMinutes', 'expected a positive number');
+	const rawLengths = data['sessionLengths'];
+	if (!isRecord(rawLengths)) fail('playRules.sessionLengths', 'expected an object');
+	for (const name of Object.keys(rawLengths)) {
+		if (!SESSION_LENGTHS.some((length) => length === name)) {
+			fail(`playRules.sessionLengths.${name}`, 'unknown length of session');
+		}
 	}
-
-	const breakAfterExercises = data['breakAfterExercises'];
-	if (
-		typeof breakAfterExercises !== 'number' ||
-		!Number.isSafeInteger(breakAfterExercises) ||
-		breakAfterExercises < 0
-	) {
-		fail('playRules.breakAfterExercises', 'expected an integer of at least 0');
-	}
+	const sessionLengths: Readonly<Record<SessionLength, SessionLengthRules>> = {
+		short: parseSessionLength(rawLengths['short'], 'playRules.sessionLengths.short'),
+		normal: parseSessionLength(rawLengths['normal'], 'playRules.sessionLengths.normal'),
+		long: parseSessionLength(rawLengths['long'], 'playRules.sessionLengths.long')
+	};
+	// A longer session never proposes its break sooner than a shorter one.
+	SESSION_LENGTHS.forEach((name, index) => {
+		const shorter = SESSION_LENGTHS[index - 1];
+		if (shorter === undefined) return;
+		for (const minutes of ['typingMinutes', 'clockMinutes'] as const) {
+			if (sessionLengths[name][minutes] < sessionLengths[shorter][minutes]) {
+				fail(
+					`playRules.sessionLengths.${name}.${minutes}`,
+					`expected at least as much as ${shorter}`
+				);
+			}
+		}
+	});
+	const earlyWorlds = expectCount(data['earlyWorlds'], 'playRules.earlyWorlds');
 
 	const wordLimitRules = parseWordLimitRules(data, 'playRules');
 
@@ -119,8 +186,8 @@ export function parsePlayRules(data: unknown): PlayRules {
 	});
 
 	return {
-		breakAfterMinutes: minutes,
-		breakAfterExercises,
+		sessionLengths,
+		earlyWorlds,
 		...wordLimitRules,
 		bankLoadTimeoutMs,
 		ghostPaceFactor,
@@ -130,3 +197,24 @@ export function parsePlayRules(data: unknown): PlayRules {
 }
 
 export const PLAY_RULES: PlayRules = parsePlayRules(rulesData);
+
+/** The length of session of a profile whose adult chose none. */
+export const USUAL_SESSION_LENGTH: SessionLength = 'normal';
+
+/** What the pages for adults say of the break of a session: read from the rules, never written. */
+export interface BreakFacts {
+	/** Exercises after which the break is proposed in the first worlds. */
+	readonly exercises: number;
+	/** Minutes spent typing after which it is proposed in the worlds after them. */
+	readonly typing: number;
+	/** Minutes spent in the games after which it is proposed anyway. */
+	readonly minutes: number;
+}
+
+export function breakFacts(
+	rules: Pick<PlayRules, 'sessionLengths'>,
+	length: SessionLength = USUAL_SESSION_LENGTH
+): BreakFacts {
+	const { earlyExercises, typingMinutes, clockMinutes } = rules.sessionLengths[length];
+	return { exercises: earlyExercises, typing: typingMinutes, minutes: clockMinutes };
+}

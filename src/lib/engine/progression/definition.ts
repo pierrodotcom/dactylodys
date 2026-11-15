@@ -130,6 +130,18 @@ function knownChars(introduced: Introduced): Set<string> {
 	return known;
 }
 
+/** The rules of an exercise that grows with the pace of the child: all of them, or none. */
+const PACED_LENGTH_RULES = [
+	'targetMinutes',
+	'maxTargetLength',
+	'paceRecentPlays',
+	'paceMinPlays',
+	'maxGroupCount',
+	'extraWordsPerGroup'
+] as const;
+
+type PacedLengthRules = Pick<ProgressionRules, (typeof PACED_LENGTH_RULES)[number]>;
+
 function parseRules(value: unknown, path: string): ProgressionRules {
 	const record = expectRecord(value, path);
 	rejectUnknown(
@@ -155,7 +167,9 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'suiteFreeMinWords',
 			'uppercaseMinCount',
 			'weakChars',
-			'phraseEnd'
+			'phraseEnd',
+			'wholePhraseMinCount',
+			...PACED_LENGTH_RULES
 		],
 		path
 	);
@@ -250,6 +264,17 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 	if (phraseEnd !== undefined && (phraseEnd === SPACE || phraseEnd === LINE_BREAK)) {
 		fail(`${path}.phraseEnd`, 'expected a punctuation mark');
 	}
+	const wholePhraseMinCount =
+		record['wholePhraseMinCount'] === undefined
+			? undefined
+			: expectInteger(record['wholePhraseMinCount'], `${path}.wholePhraseMinCount`);
+	if (wholePhraseMinCount !== undefined && wholePhraseMinCount < 0) {
+		fail(`${path}.wholePhraseMinCount`, 'expected an integer of at least 0');
+	}
+	if (wholePhraseMinCount !== undefined && wholePhraseMinCount > 0 && phraseEnd === undefined) {
+		fail(`${path}.wholePhraseMinCount`, 'expected rules.phraseEnd: a whole phrase ends with it');
+	}
+	const pacedLength = parsePacedLength(record, path);
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -271,7 +296,33 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		...(suiteFreeMinWords === undefined ? {} : { suiteFreeMinWords }),
 		...(uppercaseMinCount === undefined ? {} : { uppercaseMinCount }),
 		...(weakChars === undefined ? {} : { weakChars }),
-		...(phraseEnd === undefined ? {} : { phraseEnd })
+		...(phraseEnd === undefined ? {} : { phraseEnd }),
+		...(wholePhraseMinCount === undefined ? {} : { wholePhraseMinCount }),
+		...pacedLength
+	};
+}
+
+function parsePacedLength(record: Record<string, unknown>, path: string): PacedLengthRules {
+	const given = PACED_LENGTH_RULES.filter((name) => record[name] !== undefined);
+	if (given.length === 0) return {};
+	const missing = PACED_LENGTH_RULES.find((name) => record[name] === undefined);
+	if (missing !== undefined) {
+		fail(`${path}.${missing}`, `expected with ${given[0] as string}: the six rules go together`);
+	}
+	const targetMinutes = expectNumber(record['targetMinutes'], `${path}.targetMinutes`);
+	if (targetMinutes <= 0) fail(`${path}.targetMinutes`, 'expected a positive number');
+	const paceRecentPlays = expectAtLeastOne(record['paceRecentPlays'], `${path}.paceRecentPlays`);
+	const paceMinPlays = expectAtLeastOne(record['paceMinPlays'], `${path}.paceMinPlays`);
+	if (paceMinPlays > paceRecentPlays) {
+		fail(`${path}.paceMinPlays`, `expected at most ${paceRecentPlays} (rules.paceRecentPlays)`);
+	}
+	return {
+		targetMinutes,
+		maxTargetLength: expectAtLeastOne(record['maxTargetLength'], `${path}.maxTargetLength`),
+		paceRecentPlays,
+		paceMinPlays,
+		maxGroupCount: expectAtLeastOne(record['maxGroupCount'], `${path}.maxGroupCount`),
+		extraWordsPerGroup: expectAtLeastOne(record['extraWordsPerGroup'], `${path}.extraWordsPerGroup`)
 	};
 }
 
@@ -801,7 +852,11 @@ function parseWorld(
 	path: string
 ): WorldDefinition {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['id', 'title', 'themeId', 'gameIds', 'lessons'], path);
+	rejectUnknown(record, ['id', 'title', 'themeId', 'gameIds', 'errorPolicy', 'lessons'], path);
+	const errorPolicy = record['errorPolicy'];
+	if (errorPolicy !== undefined && errorPolicy !== 'retry' && errorPolicy !== 'backspace') {
+		fail(`${path}.errorPolicy`, 'expected one of: retry, backspace');
+	}
 	const id = expectId(record['id'], 'world', language, `${path}.id`);
 	if (worldIds.has(id)) fail(`${path}.id`, `duplicate world id "${id}"`);
 	worldIds.add(id);
@@ -828,6 +883,7 @@ function parseWorld(
 		title: expectString(record['title'], `${path}.title`),
 		themeId: expectString(record['themeId'], `${path}.themeId`),
 		gameIds,
+		...(errorPolicy === undefined ? {} : { errorPolicy }),
 		lessons
 	};
 }
@@ -884,6 +940,20 @@ export function parseProgression(data: unknown): ProgressionDefinition {
 			`progression.worlds[${i}]`
 		)
 	);
+
+	// An exercise that grows never has fewer groups nor a shorter aim than a lesson gives it.
+	const { maxGroupCount, maxTargetLength } = rules;
+	worlds.forEach((world, w) => {
+		world.lessons.forEach((lesson, l) => {
+			const path = `progression.worlds[${w}].lessons[${l}]`;
+			if (maxGroupCount !== undefined && lesson.groupCount > maxGroupCount) {
+				fail(`${path}.groupCount`, `expected at most ${maxGroupCount} (rules.maxGroupCount)`);
+			}
+			if (maxTargetLength !== undefined && lesson.targetLength > maxTargetLength) {
+				fail(`${path}.targetLength`, `expected at most ${maxTargetLength} (rules.maxTargetLength)`);
+			}
+		});
+	});
 
 	return { schemaVersion: 1, id, locale, layoutIds, rules, worlds };
 }

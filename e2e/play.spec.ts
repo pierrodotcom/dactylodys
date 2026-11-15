@@ -99,7 +99,7 @@ const progression = parseProgression(progressionData);
 const wordBank = parseWordBank(readJson('content/fr/words/base.json'));
 const phraseBank = parsePhraseBank(readJson('content/fr/phrases/base.json'));
 const playRules = readJson<{
-	breakAfterMinutes: number;
+	sessionLengths: { normal: { clockMinutes: number } };
 	maxWordLevel: 1 | 2 | 3;
 }>('content/common/play-rules.json');
 
@@ -1329,7 +1329,7 @@ test.describe('play route', () => {
 		await startLesson(page, FIRST);
 		await page.keyboard.type((await currentGroup(page)).slice(0, 1));
 
-		await page.clock.fastForward(`${playRules.breakAfterMinutes + 1}:00`);
+		await page.clock.fastForward(`${playRules.sessionLengths.normal.clockMinutes + 1}:00`);
 		await page.keyboard.type((await currentGroup(page)).slice(1));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 		await page.keyboard.press(SKIP_KEY);
@@ -1776,7 +1776,7 @@ for (const colorScheme of COLOR_SCHEMES) {
 			await page.clock.install();
 			await reachMap(page);
 			await startLesson(page, FIRST);
-			await page.clock.fastForward(`${playRules.breakAfterMinutes + 1}:00`);
+			await page.clock.fastForward(`${playRules.sessionLengths.normal.clockMinutes + 1}:00`);
 			await typeToResult(page, { skipDelay: true });
 
 			await expect(button(page, message('play_break_button'))).toBeVisible();

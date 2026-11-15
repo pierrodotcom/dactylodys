@@ -14,8 +14,11 @@ describe('professionalFacts', () => {
 			lessons: lessonIds(progression).length,
 			worlds: progression.worlds.length,
 			unlockAccuracy: progressionData.rules.unlockAccuracy,
-			breakAfterExercises: playRules.breakAfterExercises,
-			breakAfterMinutes: playRules.breakAfterMinutes,
+			pause: {
+				exercises: playRules.sessionLengths.normal.earlyExercises,
+				typing: playRules.sessionLengths.normal.typingMinutes,
+				minutes: playRules.sessionLengths.normal.clockMinutes
+			},
 			fadeMinAttempts: progressionData.rules.keyboardFade.acquiredMinAttempts,
 			fadeMaxErrorPercent: Math.round(progressionData.rules.keyboardFade.acquiredMaxErrorRate * 100)
 		});

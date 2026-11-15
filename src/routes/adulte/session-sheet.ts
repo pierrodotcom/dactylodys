@@ -3,6 +3,7 @@ import { masteryGroups } from '$lib/engine/progression/mastery';
 import type { ProgressionDefinition } from '$lib/engine/progression/types';
 import type { CharIndex } from '$lib/keyboard/types';
 import type { Profile } from '$lib/state/types';
+import { isEarlyLesson } from '../jouer/break';
 import { focusLessonId, worldOfLesson } from '../jouer/map';
 import type { PlayRules } from '../jouer/play-rules';
 import type { AdultRules } from './adult-rules';
@@ -32,10 +33,18 @@ export interface SessionSheet {
 	readonly fragile: readonly string[];
 	/** Acquired, but long to find (ADR-056); empty while the layout is unknown. */
 	readonly hesitant: readonly string[];
-	/** Play time after which the game suggests a break. */
+	/** Time spent in the games after which the game suggests a break, for this child. */
 	readonly breakAfterMinutes: number;
-	/** Finished games after which the game suggests a break; 0: only the time counts. */
+	/**
+	 * Finished games after which the game suggests a break, where the child is now and with the
+	 * length of session the adult chose; 0: the games are not counted.
+	 */
 	readonly breakAfterExercises: number;
+	/**
+	 * Minutes spent typing after which it suggests one; `null` in the first worlds, where only the
+	 * games are counted.
+	 */
+	readonly breakAfterTypingMinutes: number | null;
 }
 
 export interface SessionSheetInput {
@@ -44,22 +53,27 @@ export interface SessionSheetInput {
 	/** `null` while the layout of the child is not loaded, or when it could not be. */
 	readonly charIndex: CharIndex | null;
 	readonly rules: Pick<AdultRules, 'mastery' | 'hesitation'>;
-	readonly playRules: Pick<PlayRules, 'breakAfterMinutes' | 'breakAfterExercises'>;
+	readonly playRules: Pick<PlayRules, 'sessionLengths' | 'earlyWorlds'>;
 	readonly compare: (first: string, second: string) => number;
+}
+
+/** The lesson the map proposes to the child, if any. */
+function focusOf(progression: ProgressionDefinition | undefined, profile: Profile): string | null {
+	if (!progression) return null;
+	return focusLessonId(
+		progression,
+		profile.progress,
+		profile.openedWorldIds,
+		profile.keptOpenLessonIds
+	);
 }
 
 function currentLesson(
 	progression: ProgressionDefinition | undefined,
 	profile: Profile
 ): SheetLesson | null {
-	if (!progression) return null;
-	const id = focusLessonId(
-		progression,
-		profile.progress,
-		profile.openedWorldIds,
-		profile.keptOpenLessonIds
-	);
-	if (id === null) return null;
+	const id = focusOf(progression, profile);
+	if (!progression || id === null) return null;
 	const lesson = findLesson(progression, id);
 	const world = worldOfLesson(progression, id);
 	if (!lesson || !world) return null;
@@ -80,13 +94,22 @@ export function sessionSheet(input: SessionSheetInput): SessionSheet {
 		: [];
 	const typed = groups.acquired.length + groups.fragile.length + groups.learning.length > 0;
 	const flagged = groups.learning.length + groups.fragile.length + hesitant.length > 0;
+	const length = playRules.sessionLengths[profile.settings.sessionLength];
+	// A child who has not started, or whose lessons are unknown, is counted as a beginner.
+	const focus = focusOf(input.progression, profile);
+	const early =
+		!input.progression ||
+		(focus === null
+			? !typed
+			: isEarlyLesson({ earlyWorlds: playRules.earlyWorlds }, input.progression, focus));
 	return {
 		lesson: currentLesson(input.progression, profile),
 		status: !typed ? 'first' : flagged ? 'keys' : 'quiet',
 		learning: groups.learning,
 		fragile: groups.fragile,
 		hesitant,
-		breakAfterMinutes: playRules.breakAfterMinutes,
-		breakAfterExercises: playRules.breakAfterExercises
+		breakAfterMinutes: length.clockMinutes,
+		breakAfterExercises: early ? length.earlyExercises : length.exercises,
+		breakAfterTypingMinutes: early ? null : length.typingMinutes
 	};
 }

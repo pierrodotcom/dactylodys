@@ -262,7 +262,10 @@ describe('what the child types, over the shipped content', () => {
 								`"${char}" in ${groups.join(' | ')}`
 							).toBeGreaterThanOrEqual(weakRules.minCount);
 						}
-						expect(groups.length).toBeLessThanOrEqual(lesson.groupCount);
+						// A whole phrase may come on top of the groups of the lesson (F1).
+						expect(groups.length).toBeLessThanOrEqual(
+							lesson.groupCount + (rules.wholePhraseMinCount ?? 0)
+						);
 					}
 				),
 				{ numRuns: RUNS }

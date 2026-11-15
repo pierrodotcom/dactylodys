@@ -1,6 +1,7 @@
 import { findLesson, learnedChars } from '$lib/engine/progression/definition';
 import { fadedKeys } from '$lib/engine/progression/keyboard-fade';
 import type { ProgressionDefinition, ProgressState } from '$lib/engine/progression/types';
+import type { ErrorPolicy } from '$lib/engine/types';
 import type { GameGuide, GameSettings } from '$lib/games/types';
 import type { CharIndex, KeyCode } from '$lib/keyboard/types';
 import type { Settings } from '$lib/state/types';
@@ -27,19 +28,24 @@ export function fadedKeysFor(
 	return fadedKeys(progress, learnedChars(progression, lessonId), charIndex, rules);
 }
 
-/** `motion: 'system'` follows the operating system preference, `systemPrefersReduced`. */
+/**
+ * `motion: 'system'` follows the operating system preference, `systemPrefersReduced`.
+ * `errorPolicy` is what `errorPolicyFor` gives for the lesson played; without it, what the adult
+ * chose for every world, else the game waits for the right key.
+ */
 export function toGameSettings(
 	settings: Settings,
 	systemPrefersReduced: boolean,
 	guide: GameGuide,
 	lookReminderEvery = 0,
 	scenes: readonly string[] = [],
-	fadedKeys: readonly KeyCode[] = []
+	fadedKeys: readonly KeyCode[] = [],
+	errorPolicy: ErrorPolicy = settings.errorPolicy === 'backspace' ? 'backspace' : 'retry'
 ): GameSettings {
 	return {
 		reducedMotion: isMotionReduced(settings, systemPrefersReduced),
 		showKeyboard: settings.showKeyboard,
-		errorPolicy: settings.errorPolicy,
+		errorPolicy,
 		guide,
 		lookReminderEvery,
 		// A surprise scene is a light effect (ADR-057): without effects, the plain entrance shows.

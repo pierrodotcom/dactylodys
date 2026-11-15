@@ -18,12 +18,14 @@
 		lessonIds,
 		lessonNumber
 	} from '$lib/engine/progression/definition';
+	import { errorPolicyFor, isErasingNew } from '$lib/engine/progression/error-policy';
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
 	import { keyNeighbors } from '$lib/engine/progression/repair';
 	import { wordLimits } from '$lib/engine/progression/word-limits';
 	import { generateFreeExercise } from '$lib/engine/free-practice/exercise';
+	import type { ErrorPolicy } from '$lib/engine/types';
 	import type { RaceWinner } from '$lib/engine/ghost/race';
 	import type { GhostRun } from '$lib/engine/ghost/types';
 	import {
@@ -66,6 +68,7 @@
 		withLastGame
 	} from '$lib/state/profile';
 	import {
+		sessionPaces,
 		toSessionRecord,
 		utcOffsetAt,
 		withPracticeDay,
@@ -94,9 +97,11 @@
 	import {
 		createPlayClock,
 		finishPlaying,
+		isEarlyLesson,
 		shouldSuggestBreak,
 		startPlaying,
-		stopPlaying
+		stopPlaying,
+		withTyping
 	} from './break';
 	import {
 		appearanceOf,
@@ -891,7 +896,9 @@
 				themeId: world.themeId,
 				...wordLimits(PLAY_RULES, progression, lessonId, profile.settings.ageBand),
 				ageBand: profile.settings.ageBand,
-				neighbors
+				neighbors,
+				// The exercise grows with the pace of the latest plays; nothing on screen says so.
+				paces: sessionPaces(profile.sessions)
 			});
 		} catch {
 			// No exercise could be made: the child is told, as when the game itself does not load.
@@ -915,7 +922,7 @@
 
 	async function finishGame(lessonId: string, outcome: GameOutcome) {
 		if (!profile || !progression) return;
-		playClock = finishPlaying(playClock, now());
+		playClock = finishPlaying(playClock, now(), outcome.metrics.elapsedMs);
 		const source = progression;
 		const rewards = catalogue;
 		const gameId = activeGameId;
@@ -998,7 +1005,12 @@
 			summary: summarizeMetrics(outcome.metrics),
 			hasOpenNext,
 			worldDone: followingId === null && ids.includes(lessonId) && evaluation.unlocksNext,
-			suggestBreak: shouldSuggestBreak(playClock, now(), PLAY_RULES),
+			suggestBreak: shouldSuggestBreak(
+				playClock,
+				now(),
+				PLAY_RULES.sessionLengths[before.settings.sessionLength],
+				isEarlyLesson(PLAY_RULES, source, lessonId)
+			),
 			almost: almostNextStar(
 				source.rules,
 				(100 * outcome.metrics.correctKeystrokes) / Math.max(1, outcome.metrics.totalKeystrokes),
@@ -1044,7 +1056,7 @@
 	async function finishHelp(outcome: GameOutcome) {
 		if (!profile || !progression || !helpRun) return;
 		const quest = helpRun;
-		playClock = stopPlaying(playClock, now());
+		playClock = withTyping(stopPlaying(playClock, now()), outcome.metrics.elapsedMs);
 		const source = progression;
 		const rewards = catalogue;
 		const gameId = activeGameId;
@@ -1083,7 +1095,7 @@
 	/** Whatever the result, the child is told well done: the keys and the day count, nothing else. */
 	async function finishFree(outcome: GameOutcome) {
 		if (!profile || !progression) return;
-		playClock = stopPlaying(playClock, now());
+		playClock = withTyping(stopPlaying(playClock, now()), outcome.metrics.elapsedMs);
 		const finishedAt = Date.now();
 		const source = progression;
 		const rewards = catalogue;
@@ -1123,7 +1135,8 @@
 	guide: GameGuide,
 	oncomplete: (outcome: GameOutcome) => void,
 	suspended: boolean,
-	faded: readonly KeyCode[]
+	faded: readonly KeyCode[],
+	errorPolicy: ErrorPolicy
 )}
 	{#if exercise && ActiveGame && assets && progression}
 		<ActiveGame
@@ -1143,7 +1156,8 @@
 					activeGameId,
 					passedLessonCount(progression, current.progress)
 				),
-				faded
+				faded,
+				errorPolicy
 			)}
 			{sounds}
 			playCount={Object.hasOwn(current.gamePlays, activeGameId)
@@ -1284,6 +1298,12 @@
 				{voice}
 				loadFailed={gameLoadFailed}
 				prize={prizeOfLesson(catalogue, lessonId, owned)}
+				erasingNew={isErasingNew(
+					profile.settings.errorPolicy,
+					progression,
+					profile.progress,
+					lessonId
+				)}
 				canRace={raceGhostFor(profile, progression.rules, lessonId, PLAY_RULES.ghostPaceFactor) !==
 					null}
 				onplay={(gameId, race) => playLesson(world.id, lessonId, gameId, race)}
@@ -1385,7 +1405,8 @@
 					guideFor(profile, lessonId),
 					(outcome) => finishGame(lessonId, outcome),
 					settingsOver,
-					fadedFor(profile, lessonId)
+					fadedFor(profile, lessonId),
+					errorPolicyFor(profile.settings.errorPolicy, progression, lessonId)
 				)}
 			</div>
 		{:else if shown.name === 'help-game' && helpRun}
@@ -1395,7 +1416,8 @@
 					guideFor(profile, helpRun.lessonId),
 					finishHelp,
 					settingsOver,
-					fadedFor(profile, helpRun.lessonId)
+					fadedFor(profile, helpRun.lessonId),
+					errorPolicyFor(profile.settings.errorPolicy, progression, helpRun.lessonId)
 				)}
 			</div>
 		{:else if shown.name === 'free-game'}
@@ -1405,7 +1427,8 @@
 					freeGuideFor(profile),
 					finishFree,
 					settingsOver,
-					freeFadedFor(profile)
+					freeFadedFor(profile),
+					errorPolicyFor(profile.settings.errorPolicy, progression)
 				)}
 			</div>
 		{/if}

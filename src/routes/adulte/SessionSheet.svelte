@@ -69,6 +69,13 @@
 	const length = $derived.by(() => {
 		const duration = format.minutes(sheet.breakAfterMinutes);
 		const count = sheet.breakAfterExercises;
+		if (sheet.breakAfterTypingMinutes !== null) {
+			const typing = format.minutes(sheet.breakAfterTypingMinutes);
+			if (count === 0) return m.adult_sheet_during_length_typing({ typing, duration });
+			return isOne(count)
+				? m.adult_sheet_during_length_typing_games_one({ typing, duration, count })
+				: m.adult_sheet_during_length_typing_games_other({ typing, duration, count });
+		}
 		if (count === 0) return m.adult_sheet_during_length({ duration });
 		return isOne(count)
 			? m.adult_sheet_during_length_games_one({ duration, count })
@@ -156,6 +163,7 @@
 			<h2 id="sheet-during-title">{m.adult_sheet_during_title()}</h2>
 			<ul>
 				<li data-sheet-length>{length}</li>
+				<li data-sheet-length-setting>{m.adult_sheet_during_length_setting()}</li>
 				<li>{m.adult_sheet_during_accuracy()}</li>
 				<li>{m.adult_sheet_during_eyes()}</li>
 				<li>{m.adult_sheet_during_role()}</li>

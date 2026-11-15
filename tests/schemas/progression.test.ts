@@ -163,7 +163,16 @@ describe('azerty-decouverte', () => {
 			suiteFreeMinWords: 60,
 			uppercaseMinCount: 10,
 			weakChars: { minCount: 4, maxChars: 2, minAttempts: 5, minErrorRate: 0.2 },
-			phraseEnd: '.'
+			phraseEnd: '.',
+			// A whole phrase in every exercise from the lesson of the full stop (ADR-075, F1).
+			wholePhraseMinCount: 1,
+			// Plays that last: about two minutes of typing for a child whose pace is known.
+			targetMinutes: 2,
+			maxTargetLength: 150,
+			paceRecentPlays: 5,
+			paceMinPlays: 3,
+			maxGroupCount: 12,
+			extraWordsPerGroup: 2
 		});
 	});
 

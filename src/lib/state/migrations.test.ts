@@ -1,6 +1,10 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import type { CharProgress, ProgressState } from '../engine/progression/types';
+import { lessonIds } from '../engine/progression/definition';
+import { errorPolicyFor } from '../engine/progression/error-policy';
+import { isLessonUnlocked } from '../engine/progression/progress';
+import { loadShippedProgressions } from '../engine/progression/test-support';
+import type { CharProgress, ProgressState, StarCount } from '../engine/progression/types';
 import { migrateProfile, ProfileMigrationError, readProfile } from './migrations';
 import {
 	createProfile,
@@ -29,13 +33,16 @@ import {
 	asVersion12,
 	asVersion13,
 	asVersion14,
+	asVersion15,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
 	withKeyboardFade,
+	withNothingKeptOpen,
 	withRetryPolicy,
 	withSensoryDefaults,
 	withUnknownLatency,
 	withUnmarkedSessions,
+	withWorldPolicy,
 	withYoungerAgeBand
 } from './test-support';
 import type { Profile } from './types';
@@ -249,11 +256,12 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 15,
+			schemaVersion: 16,
 			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
-				errorPolicy: 'retry',
+				errorPolicy: 'world',
+				sessionLength: 'normal',
 				keyboardFade: true,
 				effects: true,
 				ambience: 'none',
@@ -333,11 +341,12 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 15,
+			schemaVersion: 16,
 			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
-				errorPolicy: 'retry',
+				errorPolicy: 'world',
+				sessionLength: 'normal',
 				keyboardFade: true,
 				effects: true,
 				ambience: 'none',
@@ -380,7 +389,8 @@ describe('migrateProfile', () => {
 					...profile.settings,
 					voiceEnabled: true,
 					handGuide: 'auto',
-					errorPolicy: 'retry',
+					errorPolicy: 'world',
+					sessionLength: 'normal',
 					keyboardFade: true,
 					effects: true,
 					ambience: 'none',
@@ -399,7 +409,8 @@ describe('migrateProfile', () => {
 					settings: {
 						...profile.settings,
 						handGuide: 'auto',
-						errorPolicy: 'retry',
+						errorPolicy: 'world',
+						sessionLength: 'normal',
 						keyboardFade: true,
 						effects: true,
 						ambience: 'none',
@@ -435,7 +446,8 @@ describe('migrateProfile', () => {
 					settings: {
 						...profile.settings,
 						handGuide: 'auto',
-						errorPolicy: 'retry',
+						errorPolicy: 'world',
+						sessionLength: 'normal',
 						keyboardFade: true,
 						effects: true,
 						ambience: 'none',
@@ -533,12 +545,12 @@ describe('migrateProfile', () => {
 		);
 	});
 
-	it('turns Backspace off in any version 8 profile, and changes nothing else', () => {
+	it('lets the worlds decide for the mistakes in any version 8 profile, and changes nothing else', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion8(profile))));
 				expect(migrated).toEqual(withRetryPolicy(profile));
-				expect(migrated.settings.errorPolicy).toBe('retry');
+				expect(migrated.settings.errorPolicy).toBe('world');
 				expect(migrated.settings.keyboardFade).toBe(true);
 			})
 		);
@@ -559,7 +571,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion10(profile))));
 				expect(migrated).toEqual(withSensoryDefaults(profile));
-				expect(migrated.schemaVersion).toBe(15);
+				expect(migrated.schemaVersion).toBe(16);
 				expect(migrated.settings.effects).toBe(true);
 				expect(migrated.settings.ambience).toBe('none');
 			})
@@ -571,7 +583,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion11(profile))));
 				expect(migrated).toEqual(withYoungerAgeBand(profile));
-				expect(migrated.schemaVersion).toBe(15);
+				expect(migrated.schemaVersion).toBe(16);
 				expect(migrated.settings.ageBand).toBe('8-9');
 			})
 		);
@@ -582,7 +594,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion12(profile))));
 				expect(migrated).toEqual(withEmptyHideout(profile));
-				expect(migrated.schemaVersion).toBe(15);
+				expect(migrated.schemaVersion).toBe(16);
 				expect(migrated.hideout).toEqual({});
 			})
 		);
@@ -593,7 +605,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion13(profile))));
 				expect(migrated).toEqual(withUnmarkedSessions(profile));
-				expect(migrated.schemaVersion).toBe(15);
+				expect(migrated.schemaVersion).toBe(16);
 				expect(migrated.sessions.every((session) => !Object.hasOwn(session, 'speedRule'))).toBe(
 					true
 				);
@@ -633,7 +645,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion11(current);
 		const settings = { ...(stored['settings'] as Json), ageBand: '10-12' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.schemaVersion).toBe(16);
 		expect(migrated.settings.ageBand).toBe('10-12');
 	});
 
@@ -642,7 +654,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion10(current);
 		const settings = { ...(stored['settings'] as Json), effects: false, ambience: 'soft-noise' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.schemaVersion).toBe(16);
 		expect(migrated.settings.effects).toBe(false);
 		expect(migrated.settings.ambience).toBe('soft-noise');
 	});
@@ -652,7 +664,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion9(current);
 		const settings = { ...(stored['settings'] as Json), keyboardFade: false };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.schemaVersion).toBe(16);
 		expect(migrated.settings.keyboardFade).toBe(false);
 	});
 
@@ -661,7 +673,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion8(current);
 		const settings = { ...(stored['settings'] as Json), errorPolicy: 'backspace' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.schemaVersion).toBe(16);
 		expect(migrated.settings.errorPolicy).toBe('backspace');
 	});
 
@@ -684,7 +696,7 @@ describe('migrateProfile', () => {
 			}
 		};
 		const migrated = parseProfile(migrateProfile(stored));
-		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.schemaVersion).toBe(16);
 		expect(migrated.progress.chars).toEqual({
 			f: {
 				attempts: 50,
@@ -937,7 +949,7 @@ describe('version 15: the lessons changed order (ADR-075)', () => {
 
 	it('keeps no lesson open for a child who passed none', () => {
 		const migrated = parseProfile(migrateProfile(asVersion14(base)));
-		expect(migrated.schemaVersion).toBe(15);
+		expect(migrated.schemaVersion).toBe(16);
 		expect(migrated.keptOpenLessonIds).toEqual([]);
 		expect(parseProfile(migrateProfile(storedWith({}))).keptOpenLessonIds).toEqual([]);
 	});
@@ -1019,8 +1031,156 @@ describe('version 15: the lessons changed order (ADR-075)', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion14(profile))));
-				expect(migrated).toEqual({ ...profile, keptOpenLessonIds: [] });
+				expect(migrated).toEqual(withNothingKeptOpen(profile));
 			})
+		);
+	});
+});
+
+describe('version 16: the worlds decide for the mistakes, the adult sets the session (ADR-075)', () => {
+	const base = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+
+	/** The record version 15 stored for `base`, with this choice of the adult for the mistakes. */
+	function storedWith(errorPolicy: unknown): Json {
+		const stored = asVersion15(base);
+		return { ...stored, settings: { ...(stored['settings'] as Json), errorPolicy } };
+	}
+
+	it('describes version 15 without the length of a session, with its two choices', () => {
+		const stored = asVersion15(base);
+		expect(stored['schemaVersion']).toBe(15);
+		expect(stored['settings']).not.toHaveProperty('sessionLength');
+		expect((stored['settings'] as Json)['errorPolicy']).toBe('retry');
+		expect(
+			(asVersion15(updateSettings(base, { errorPolicy: 'backspace' }))['settings'] as Json)[
+				'errorPolicy'
+			]
+		).toBe('backspace');
+	});
+
+	it('lets the worlds decide where the game waited for the right key', () => {
+		const migrated = parseProfile(migrateProfile(storedWith('retry')));
+		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.settings.errorPolicy).toBe('world');
+	});
+
+	it('keeps Backspace where the adult had chosen it: it now holds in every world', () => {
+		const migrated = parseProfile(migrateProfile(storedWith('backspace')));
+		expect(migrated.settings.errorPolicy).toBe('backspace');
+	});
+
+	it('gives a session its usual length', () => {
+		expect(parseProfile(migrateProfile(storedWith('retry'))).settings.sessionLength).toBe('normal');
+	});
+
+	it('keeps the length of a session of a record that already holds it', () => {
+		const stored = storedWith('retry');
+		const settings = { ...(stored['settings'] as Json), sessionLength: 'long' };
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.settings.sessionLength).toBe('long');
+	});
+
+	it('passes on a damaged choice for the parser to refuse', () => {
+		for (const odd of ['always', 3, null]) {
+			expect(readProfile(storedWith(odd)).ok).toBe(false);
+		}
+		const stored = asVersion15(base);
+		const settings: Record<string, unknown> = { ...(stored['settings'] as Json) };
+		delete settings['errorPolicy'];
+		expect(readProfile({ ...stored, settings }).ok).toBe(false);
+		expect(readProfile({ ...stored, settings: 'none' }).ok).toBe(false);
+	});
+
+	it('touches nothing else: lessons, stars, rewards, journal and lessons kept open stay', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion15(profile))));
+				expect(migrated).toEqual(withWorldPolicy(profile));
+				expect(migrated.progress).toEqual(profile.progress);
+				expect(migrated.keptOpenLessonIds).toEqual(profile.keptOpenLessonIds);
+			})
+		);
+	});
+
+	it('gives the same profile from a backup of version 15 read again', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const once = parseProfile(migrateProfile(toJson(asVersion15(profile))));
+				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
+			})
+		);
+	});
+});
+
+describe('version 16: the children on their way lose nothing (ADR-081)', () => {
+	const [shipped] = loadShippedProgressions();
+	if (!shipped) throw new Error('no shipped progression');
+	const { progression } = shipped;
+	const ids = lessonIds(progression);
+	const erasing = new Set(
+		progression.worlds
+			.filter((world) => world.errorPolicy === 'backspace')
+			.flatMap((world) => world.lessons.map((lesson) => lesson.id))
+	);
+	/** A profile of version 15 on its way: some lessons played, worlds opened, lessons kept open. */
+	const onTheWayArb = fc
+		.record({
+			profile: profileArb,
+			played: fc.dictionary(fc.constantFrom(...ids), fc.integer({ min: 0, max: 100 }), {
+				maxKeys: 12
+			}),
+			opened: fc.uniqueArray(fc.constantFrom(...progression.worlds.map((world) => world.id)), {
+				maxLength: 2
+			}),
+			kept: fc.uniqueArray(fc.constantFrom(...ids), { maxLength: 3 }),
+			erasing: fc.boolean()
+		})
+		.map(({ profile, played, opened, kept, erasing: chose }) => {
+			const lessons = Object.fromEntries(
+				Object.entries(played).map(([id, bestAccuracy]) => [
+					id,
+					{ bestAccuracy, stars: 0 as StarCount, attempts: 1, lastPlayedAt: 0 }
+				])
+			);
+			const child: Profile = {
+				...profile,
+				progress: { ...profile.progress, lessons },
+				openedWorldIds: opened,
+				keptOpenLessonIds: kept
+			};
+			return updateSettings(child, { errorPolicy: chose ? 'backspace' : 'retry' });
+		});
+
+	it('opens the same lessons after the migration, and erases in the worlds of texts only', () => {
+		fc.assert(
+			fc.property(onTheWayArb, (child) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion15(child))));
+				for (const id of ids) {
+					expect(
+						isLessonUnlocked(
+							progression,
+							migrated.progress,
+							id,
+							migrated.openedWorldIds,
+							migrated.keptOpenLessonIds
+						)
+					).toBe(
+						isLessonUnlocked(
+							progression,
+							child.progress,
+							id,
+							child.openedWorldIds,
+							child.keptOpenLessonIds
+						)
+					);
+					// The adult who chose Backspace keeps it everywhere; a child who waited for the right
+					// key now erases in the worlds that ask for it, and only there.
+					const before = child.settings.errorPolicy === 'backspace' ? 'backspace' : 'retry';
+					const after = errorPolicyFor(migrated.settings.errorPolicy, progression, id);
+					expect(after).toBe(before === 'backspace' || erasing.has(id) ? 'backspace' : 'retry');
+				}
+			}),
+			{ numRuns: 60 }
 		);
 	});
 });

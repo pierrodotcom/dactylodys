@@ -39,6 +39,11 @@
 		prize: RewardDefinition | null;
 		/** A passed lesson whose pace was kept: the child may race the ghost (ADR-022). */
 		canRace: boolean;
+		/**
+		 * The child enters a world where a mistake is erased with Backspace and has not played there
+		 * yet: one written sentence says so.
+		 */
+		erasingNew?: boolean;
 		/** `race`: the child switched the race on before taking a game. */
 		onplay: (gameId: string, race: boolean) => void;
 		onback: () => void;
@@ -57,6 +62,7 @@
 		loadFailed,
 		prize,
 		canRace,
+		erasingNew = false,
 		onplay,
 		onback
 	}: Props = $props();
@@ -129,6 +135,11 @@
 		</ul>
 	</section>
 
+	<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
+	{#if erasingNew}
+		<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
+	{/if}
+
 	<GamePicker {games} proposed={gameId} onplay={(id) => onplay(id, canRace && race)} />
 
 	{#if canRace}
@@ -169,6 +180,16 @@
 
 	.intro {
 		font-size: var(--dd-font-size-lg);
+		text-align: center;
+	}
+
+	.notice {
+		padding: var(--dd-space-sm) var(--dd-space-md);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-typing-current-frame);
+		border-radius: var(--dd-radius-md);
+		font-weight: var(--dd-font-weight-bold);
 		text-align: center;
 	}
 
