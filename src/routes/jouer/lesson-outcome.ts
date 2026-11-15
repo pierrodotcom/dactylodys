@@ -47,6 +47,8 @@ export interface PlayFacts {
 	/** The last lesson of all is passed. */
 	readonly worldDone: boolean;
 	readonly race: RaceWinner | null;
+	/** The play was typed at least as accurately as the play its ghost copies (`asAccurateAsGhost`). */
+	readonly asAccurateAsGhost: boolean;
 	/** Stopped just short of the next star. */
 	readonly almost: boolean;
 	/** Not one mistake. */
@@ -105,6 +107,7 @@ export type ResultSentence =
 	| 'retry-close'
 	| 'retry-far'
 	| 'world-done'
+	| 'race-child-accurate'
 	| 'race-child'
 	| 'race-ghost'
 	| 'almost'
@@ -114,14 +117,37 @@ export type ResultSentence =
 /**
  * One sentence, the one that says the most about this play: how close a play under the threshold
  * came, the end of the last world, the race, the star nearly won, a play without a mistake, else
- * the note of the stars.
+ * the note of the stars. A race won is praised for the accuracy kept, never for the speed (audit
+ * P-21): only when the play was typed at least as accurately as the play of the ghost.
  */
 export function resultSentence(plan: ResultPlan, facts: PlayFacts): ResultSentence {
 	if (plan.retry !== null) return plan.retry === 'close' ? 'retry-close' : 'retry-far';
 	if (facts.worldDone) return 'world-done';
-	if (facts.race !== null) return facts.race === 'child' ? 'race-child' : 'race-ghost';
+	if (facts.race === 'ghost') return 'race-ghost';
+	if (facts.race === 'child') return facts.asAccurateAsGhost ? 'race-child-accurate' : 'race-child';
 	if (facts.almost) return 'almost';
 	return facts.perfect ? 'perfect' : 'note';
+}
+
+/** Absorbs the rounding error of an accuracy written to the journal and read again. */
+const ACCURACY_EPSILON = 1e-9;
+
+/**
+ * Whether a play was typed at least as accurately as the play its ghost copies: the play of the
+ * journal the ghost was recorded from (same lesson, same date). `false` without a ghost, and once
+ * that play is no longer kept: the result then says nothing of how well it went against it.
+ */
+export function asAccurateAsGhost(
+	profile: Pick<Profile, 'ghosts' | 'sessions'>,
+	lessonId: string,
+	accuracy: number
+): boolean {
+	const ghost = Object.hasOwn(profile.ghosts, lessonId) ? profile.ghosts[lessonId] : undefined;
+	if (ghost === undefined) return false;
+	const copied = profile.sessions.findLast(
+		(session) => session.lessonId === lessonId && session.finishedAt === ghost.recordedAt
+	);
+	return copied !== undefined && accuracy + ACCURACY_EPSILON >= copied.accuracy;
 }
 
 export interface RecordedOutcome {

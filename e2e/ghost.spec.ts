@@ -2,6 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import type { GhostRun } from '../src/lib/engine/ghost/types';
 import type { StarCount } from '../src/lib/engine/progression/types';
+import { toSessionRecord, withSessionRecorded } from '../src/lib/state/journal';
+import { JOURNAL_RULES } from '../src/lib/state/journal-rules';
 import { withGhost } from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
 import {
@@ -87,6 +89,28 @@ function resultMapButton(page: Page): Locator {
 function racer(run?: GhostRun): Profile {
 	const profile = advancedProfile({ name: PLAYER_NAME, passed: { [FIRST.id]: PASSED } });
 	return run ? withGhost(profile, FIRST.id, run) : profile;
+}
+
+/** The play the ghost copies, kept in the journal with this accuracy (the journal finds it by date). */
+function withGhostPlay(profile: Profile, run: GhostRun, accuracy: number): Profile {
+	const session = toSessionRecord({
+		lessonId: FIRST.id,
+		gameId: 'hatching',
+		finishedAt: run.recordedAt,
+		utcOffsetMinutes: 0,
+		metrics: {
+			elapsedMs: run.activeMs,
+			totalKeystrokes: run.charCount,
+			correctKeystrokes: run.charCount,
+			errorCount: 0,
+			accuracy,
+			correctCharsPerMinute: 2,
+			wordsPerMinute: 0.4,
+			perChar: {}
+		},
+		evaluation: { stars: 2, unlocksNext: true }
+	});
+	return withSessionRecorded(profile, session, JOURNAL_RULES);
 }
 
 async function reachIntro(page: Page, profile: Profile, lesson: Lesson = FIRST) {
@@ -190,13 +214,28 @@ test.describe('race against the ghost', () => {
 		await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
 	});
 
-	test('says the child typed faster than before when they arrive first', async ({ page }) => {
-		await reachIntro(page, racer(SLOW_RUN));
+	// Audit P-21: a race won is praised for the accuracy kept, never for the speed.
+	test('says the child typed as accurately as the ghost when they arrive first', async ({
+		page
+	}) => {
+		await reachIntro(page, withGhostPlay(racer(SLOW_RUN), SLOW_RUN, 90));
 		await startRace(page);
 		await typeToResult(page, async () => {
 			await expect(page.locator('[data-ghost-share="running"]')).toBeAttached();
 		});
 		await expect(page.getByText(message('play_result_race_child'))).toBeVisible();
+		await expect(page.getByText(/plus vite/)).toHaveCount(0);
+	});
+
+	test('says nothing of speed nor of accuracy when the play of the ghost is no longer kept', async ({
+		page
+	}) => {
+		await reachIntro(page, racer(SLOW_RUN));
+		await startRace(page);
+		await typeToResult(page);
+		await expect(page.getByText(message('play_result_race_child_neutral'))).toBeVisible();
+		await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
+		await expect(page.getByText(/plus vite/)).toHaveCount(0);
 	});
 
 	test('goes on without the ghost from the pause, and says nothing of a race', async ({ page }) => {
@@ -208,6 +247,7 @@ test.describe('race against the ghost', () => {
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await typeToResult(page);
 		await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
+		await expect(page.getByText(message('play_result_race_child_neutral'))).toHaveCount(0);
 		await expect(page.getByText(message('play_result_race_ghost'))).toHaveCount(0);
 	});
 

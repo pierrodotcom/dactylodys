@@ -146,7 +146,12 @@
 		writeLastPlayerId
 	} from './last-player';
 	import LessonIntro from './LessonIntro.svelte';
-	import { evaluationOrNone, recordLessonOutcome, RESULT_RULES } from './lesson-outcome';
+	import {
+		asAccurateAsGhost,
+		evaluationOrNone,
+		recordLessonOutcome,
+		RESULT_RULES
+	} from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
 	import { focusLessonId, followingLessonId, worldOfLesson } from './map';
@@ -203,6 +208,8 @@
 		readonly close: boolean;
 		/** New keys of the lesson still to tame (`keysToTame`). */
 		readonly tame: readonly string[];
+		/** Typed at least as accurately as the play the ghost copies: a race is praised for that. */
+		readonly asAccurateAsGhost: boolean;
 	}
 
 	interface HelpDoneView {
@@ -1003,7 +1010,8 @@
 			race: outcome.race ?? null,
 			passed: unlocksNext,
 			close: isCloseToPassing(source.rules, RESULT_RULES.support, outcome.metrics.accuracy),
-			tame: []
+			tame: [],
+			asAccurateAsGhost: false
 		};
 	}
 
@@ -1072,7 +1080,10 @@
 			race: outcome.race ?? null,
 			passed: evaluation.unlocksNext,
 			close: isCloseToPassing(source.rules, RESULT_RULES.support, outcome.metrics.accuracy),
-			tame: keysToTame(source, progress, lessonId, RESULT_RULES.consolidation)
+			tame: keysToTame(source, progress, lessonId, RESULT_RULES.consolidation),
+			// The ghost raced is the one of the profile before this play: a play passed replaces it.
+			asAccurateAsGhost:
+				outcome.race === 'child' && asAccurateAsGhost(before, lessonId, outcome.metrics.accuracy)
 		};
 		return (current) => played(current).profile;
 	}
@@ -1376,6 +1387,7 @@
 				tameKeys: view.tame,
 				worldDone: view.worldDone,
 				race: view.race,
+				asAccurateAsGhost: view.asAccurateAsGhost,
 				almost: view.almost,
 				perfect: view.summary.total > 0 && view.summary.correct === view.summary.total
 			}}

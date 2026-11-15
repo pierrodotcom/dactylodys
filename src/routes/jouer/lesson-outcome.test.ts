@@ -4,8 +4,11 @@ import type { GhostRun, PacePoint } from '$lib/engine/ghost/types';
 import type { ProgressionRules } from '$lib/engine/progression/types';
 import type { SessionMetrics } from '$lib/engine/types';
 import type { GameOutcome } from '$lib/games/types';
+import { toSessionRecord } from '$lib/state/journal';
 import { createProfile, parseProfile, withGhost } from '$lib/state/profile';
+import type { SessionRecord } from '$lib/state/types';
 import {
+	asAccurateAsGhost,
 	evaluationOrNone,
 	recordLessonOutcome,
 	RESULT_RULES,
@@ -199,6 +202,7 @@ const PASSED_PLAY: PlayFacts = {
 	tameKeys: [],
 	worldDone: false,
 	race: null,
+	asAccurateAsGhost: false,
 	almost: false,
 	perfect: false
 };
@@ -211,6 +215,7 @@ const FACTS = fc.record({
 	tameKeys: fc.subarray(['v', 'b']),
 	worldDone: fc.boolean(),
 	race: fc.constantFrom(null, 'child' as const, 'ghost' as const),
+	asAccurateAsGhost: fc.boolean(),
 	almost: fc.boolean(),
 	perfect: fc.boolean()
 });
@@ -301,6 +306,71 @@ describe('resultSentence', () => {
 		expect(resultSentence(passedPlan, { ...PASSED_PLAY, almost: true })).toBe('almost');
 		expect(resultSentence(passedPlan, { ...PASSED_PLAY, perfect: true })).toBe('perfect');
 		expect(resultSentence(passedPlan, PASSED_PLAY)).toBe('note');
+	});
+
+	it('praises a race won for the accuracy kept, never for the speed', () => {
+		const won = { ...PASSED_PLAY, race: 'child' as const };
+
+		expect(resultSentence(plan(won), { ...won, asAccurateAsGhost: true })).toBe(
+			'race-child-accurate'
+		);
+		expect(resultSentence(plan(won), won)).toBe('race-child');
+		// A ghost first: the same sentence, however accurately the child typed.
+		const lost = { ...PASSED_PLAY, race: 'ghost' as const, asAccurateAsGhost: true };
+		expect(resultSentence(plan(lost), lost)).toBe('race-ghost');
+	});
+});
+
+describe('asAccurateAsGhost', () => {
+	const GHOST_DATE = 1_700_000_000_000;
+
+	function session(lessonId: string, finishedAt: number, accuracy: number): SessionRecord {
+		return toSessionRecord({
+			lessonId,
+			gameId: 'hatching',
+			finishedAt,
+			utcOffsetMinutes: 60,
+			metrics: { ...outcome(accuracy).metrics, elapsedMs: 3000 },
+			evaluation: { stars: 3, unlocksNext: true }
+		});
+	}
+
+	function racer(sessions: readonly SessionRecord[]) {
+		const profile = withGhost(newProfile(), LESSON, { ...EARLIER_RUN, recordedAt: GHOST_DATE });
+		return { ...profile, sessions };
+	}
+
+	it('compares the play with the play of the journal the ghost was recorded from', () => {
+		const profile = racer([
+			session(LESSON, GHOST_DATE - 1000, 70),
+			session(LESSON, GHOST_DATE, 92),
+			session(OTHER_LESSON, GHOST_DATE, 99)
+		]);
+
+		expect(asAccurateAsGhost(profile, LESSON, 92)).toBe(true);
+		expect(asAccurateAsGhost(profile, LESSON, 100)).toBe(true);
+		expect(asAccurateAsGhost(profile, LESSON, 91.9)).toBe(false);
+	});
+
+	it('says nothing of a ghost whose play is no longer kept, nor of a lesson without a ghost', () => {
+		expect(asAccurateAsGhost(racer([]), LESSON, 100)).toBe(false);
+		expect(asAccurateAsGhost(racer([session(LESSON, GHOST_DATE - 1, 50)]), LESSON, 100)).toBe(
+			false
+		);
+		expect(asAccurateAsGhost(racer([session(LESSON, GHOST_DATE, 50)]), OTHER_LESSON, 100)).toBe(
+			false
+		);
+	});
+
+	it('holds for the play a ghost is recorded from, read back from the journal', () => {
+		const recorded = recordLessonOutcome(newProfile(), RULES, LESSON, outcome(95), GHOST_DATE);
+		const profile = {
+			...recorded.profile,
+			sessions: [session(LESSON, GHOST_DATE, 95)]
+		};
+
+		expect(asAccurateAsGhost(profile, LESSON, 95)).toBe(true);
+		expect(asAccurateAsGhost(profile, LESSON, 94)).toBe(false);
 	});
 });
 

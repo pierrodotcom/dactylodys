@@ -75,7 +75,8 @@
 		'retry-close': m.play_result_retry_close,
 		'retry-far': m.play_result_retry,
 		'world-done': m.play_result_world_done,
-		'race-child': m.play_result_race_child,
+		'race-child-accurate': m.play_result_race_child,
+		'race-child': m.play_result_race_child_neutral,
 		'race-ghost': m.play_result_race_ghost,
 		almost: m.play_result_almost,
 		perfect: m.play_result_note_perfect
@@ -154,9 +155,7 @@
 				<p
 					class="sentence"
 					data-sentence={sentence}
-					data-race={sentence === 'race-child' || sentence === 'race-ghost'
-						? facts.race
-						: undefined}
+					data-race={sentence.startsWith('race-') ? facts.race : undefined}
 				>
 					{sentenceText}
 				</p>
