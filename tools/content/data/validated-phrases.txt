@@ -177,6 +177,31 @@ Peut-on promener un poisson rouge ?
 Cet après-midi, le canapé fait du sport.
 Le robot a rangé ses chaussettes au frigo.
 Voici mon garage : il est plein de vélos.
+Mon dino a dormi, moi aussi.
+Le lama a froid, il met un pull.
+Un mouton tricote, l'autre compte.
+Le canard file, la tortue fait la sieste.
+Le cuistot sale, sucre, pimente et éternue.
+Lundi, la sorcière a raté sa potion.
+Mardi, le pirate a perdu sa carte.
+Samedi, le monstre fait sa toilette.
+Ce soir, la lune prend son parapluie.
+Un, trois, cinq, mon dino compte mal.
+Ma tartine fuit, le pirate la rattrape.
+Sur la piste, un poulpe fait du patin.
+Dans la mare, un crocodile compte ses dents.
+Le monstre a dit merci, il est poli.
+La limace court, court, et reste sur place.
+Ma trompette joue seule, c'est pratique.
+Petit à petit, la limace monte au sommet.
+Le coq crie ; la lune s'en moque.
+La mer monte ; le pirate recule.
+Le dino ronfle ; la tente décolle.
+Le pirate dort ; le perroquet pilote.
+Le lait monte ; la casserole panique.
+La fusée part ; le dino court derrière.
+Le tonnerre tonne ; le monstre a peur.
+Nuit noire ; la lune a perdu sa lampe.
 Le dragon fait un gâteau pour la forêt.
 Une souris dîne sur une île de fromage.
 Une crêpe s'est enfuie par la fenêtre !
@@ -231,3 +256,39 @@ Le bébé dragon réclame "encore".
 Le chat répond "miaou" et s'en va.
 Le klaxon fait "pouet" ; tout le monde rit.
 Le robot dit "bip" puis il s'endort.
+il entre et sent le dessert
+il renifle les fruits
+la tarte enfle et sort du four
+ton dino attend la tarte
+la tomate rit aussi sans raison
+le melon met une toque
+la casserole siffle un air de pirate
+le cuistot met du coton dans les oreilles
+une pincée d'épices et ton dino éternue
+ses narines lancent des étincelles
+La girafe espionne tout du haut de son cou.
+Les singes regardent ton dino.
+La vache ouvre le bal en tutu.
+Ton dino n'ose pas danser avec la vache.
+Le yak cache un xylophone dans sa laine.
+Ton dino examine la laine du yak.
+Le zèbre compte ses rayures.
+Il trouve douze rayures et demie.
+le café flotte près de la tasse
+ton dino attrape son café à la cuillère
+la comète pressée perd sa queue en route
+sa queue reste là où elle l'a laissée
+Jupiter met ses lunettes pour te lire
+Une lune de Saturne salue ton dino
+Ici, tout le monde fait une petite pause.
+Ton dino s'assied ; la fusée attend.
+Ton dino veut piloter ? Sans permis ?
+Pouet ! Tout le circuit éclate de rire.
+Le wagon-lit arrive en retard : il dort.
+Le dernier wagon dit : "Pardon !"
+Le pilote râle : "Pas sans mon chapeau !"
+Une plume de paon se dresse sur sa tête.
+Son casque géant lui tombe sur le nez !
+Il est sûr de lui, mais il ne voit rien.
+Aïe ! Les deux phares du camion s'allument.
+Le camion éteint un phare pour te saluer.
