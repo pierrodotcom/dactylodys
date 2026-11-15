@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import type { ProgressState, StarCount } from '../src/lib/engine/progression/types';
 import { createProfile, markCalibrated, withProgress } from '../src/lib/state/profile';
 import { createIndexedDbProfileStore } from '../src/lib/state/stores';
-import { asVersion1, asVersion2, asVersion4 } from '../src/lib/state/test-support';
+import { asVersion1, asVersion2, asVersion4, asVersion14 } from '../src/lib/state/test-support';
 import type { Profile } from '../src/lib/state/types';
 
 /** SvelteKit adds its announcer once the client app has taken over the page. */
@@ -206,15 +206,18 @@ async function snapshotOfRealStore(profile: Profile): Promise<DatabaseSnapshot> 
 }
 
 /**
- * `version-1`, `version-2`, `version-4`: the record as that version of the app stored it, before any
- * migration; `later-version`: as a more recent app would store it, which this one cannot open.
+ * `version-1`, `version-2`, `version-4`, `version-14`: the record as that version of the app stored
+ * it, before any migration (version 14: the last one of the former order of the lessons);
+ * `later-version`: as a more recent app would store it, which this one cannot open.
  */
-export type StoredFormat = 'current' | 'version-1' | 'version-2' | 'version-4' | 'later-version';
+export type StoredFormat =
+	'current' | 'version-1' | 'version-2' | 'version-4' | 'version-14' | 'later-version';
 
 const STORED_FORMATS = {
 	'version-1': asVersion1,
 	'version-2': asVersion2,
 	'version-4': asVersion4,
+	'version-14': asVersion14,
 	'later-version': (profile: Profile) => ({
 		...profile,
 		schemaVersion: profile.schemaVersion + 1,
