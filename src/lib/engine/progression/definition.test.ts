@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { findLesson, freshChars, learnedChars, lessonIds, parseProgression } from './definition';
+import {
+	findLesson,
+	freshChars,
+	isDetour,
+	learnedChars,
+	lessonIds,
+	lessonNumber,
+	parseProgression,
+	reachableChars
+} from './definition';
 import { clone, loadShippedProgressions } from './test-support';
 
 type Raw = {
@@ -1130,5 +1139,120 @@ describe('lesson accessors', () => {
 				'E'
 			]);
 		});
+	});
+});
+
+describe('detours', () => {
+	/** a, b, then a detour x that brings « î », then c in a second world, then a detour y (« ï »). */
+	function withDetours(change: (raw: Raw) => void = () => {}): unknown {
+		return variant((raw) => {
+			const detour = (id: string, char: string, words: string[]) => ({
+				id,
+				title: id,
+				intro: 'Intro.',
+				newChars: [char],
+				words,
+				mix: { drills: 1, words: 1, phrases: 0 },
+				unlocks: [],
+				groupCount: 5,
+				targetLength: 20,
+				groupLength: [2, 4],
+				optional: true
+			});
+			raw.worlds[0]!.lessons.push(detour('fr.lesson.x', 'î', ['fî']));
+			raw.worlds[1]!.lessons.push(detour('fr.lesson.y', 'ï', ['fîï']));
+			change(raw);
+		});
+	}
+
+	it('reads a detour, absent by default and when it is false', () => {
+		const parsed = parseProgression(
+			withDetours((raw) => {
+				lessonOf(raw, 1, 0)['optional'] = false;
+			})
+		);
+		expect(findLesson(parsed, 'fr.lesson.x')?.optional).toBe(true);
+		expect(isDetour(findLesson(parsed, 'fr.lesson.x')!)).toBe(true);
+		expect(findLesson(parsed, 'fr.lesson.a')?.optional).toBeUndefined();
+		expect(findLesson(parsed, 'fr.lesson.c')).not.toHaveProperty('optional');
+		expect(isDetour(findLesson(parsed, 'fr.lesson.c')!)).toBe(false);
+	});
+
+	it('rejects a detour that is not true or false', () => {
+		expect(() =>
+			parseProgression(
+				withDetours((raw) => {
+					lessonOf(raw, 0, 2)['optional'] = 'yes';
+				})
+			)
+		).toThrow(/lessons\[2\]\.optional: expected true or false/);
+	});
+
+	it('rejects a world that starts with a detour', () => {
+		expect(() =>
+			parseProgression(
+				variant((raw) => {
+					lessonOf(raw, 1, 0)['optional'] = true;
+				})
+			)
+		).toThrow(/worlds\[1\]\.lessons\[0\]\.optional: a world starts with a lesson on the way/);
+	});
+
+	it('rejects a detour that unlocks something: the lessons after it do not wait for it', () => {
+		expect(() =>
+			parseProgression(
+				withDetours((raw) => {
+					lessonOf(raw, 0, 2)['unlocks'] = ['uppercase'];
+				})
+			)
+		).toThrow(/unlocks: a detour unlocks nothing/);
+	});
+
+	it('rejects in a lesson on the way a word written with what a detour brought', () => {
+		expect(() =>
+			parseProgression(
+				withDetours((raw) => {
+					lessonOf(raw, 1, 0)['words'] = ['fî'];
+				})
+			)
+		).toThrow(/character "î" is not learned at this stage/);
+	});
+
+	it('accepts in a detour what the detours before it brought', () => {
+		expect(findLesson(parseProgression(withDetours()), 'fr.lesson.y')?.words).toEqual(['fîï']);
+	});
+
+	it('rejects a character brought twice, by a detour or on the way', () => {
+		expect(() =>
+			parseProgression(
+				withDetours((raw) => {
+					lessonOf(raw, 1, 0)['newChars'] = ['î'];
+				})
+			)
+		).toThrow(/character "î" is already introduced/);
+	});
+
+	it('keeps what a detour brought out of the characters learned on the way', () => {
+		const parsed = parseProgression(withDetours());
+		expect(learnedChars(parsed, 'fr.lesson.x')).toEqual(['f', 'j', 'e', ' ', 'î']);
+		expect(learnedChars(parsed, 'fr.lesson.c')).toEqual(['f', 'j', 'e', ' ', 'd']);
+		expect(learnedChars(parsed, 'fr.lesson.y')).toEqual(['f', 'j', 'e', ' ', 'î', 'd', 'ï']);
+	});
+
+	it('counts what the detours before a lesson brought among what a child may know there', () => {
+		const parsed = parseProgression(withDetours());
+		expect(reachableChars(parsed, 'fr.lesson.b')).toEqual(['f', 'j', 'e', ' ']);
+		expect(reachableChars(parsed, 'fr.lesson.c')).toEqual(['f', 'j', 'e', ' ', 'î', 'd']);
+		expect(() => reachableChars(parsed, 'fr.lesson.zzz')).toThrow(RangeError);
+	});
+
+	it('numbers the lessons on the way from 1, and gives no number to a detour', () => {
+		const parsed = parseProgression(withDetours());
+		expect(
+			['fr.lesson.a', 'fr.lesson.b', 'fr.lesson.x', 'fr.lesson.c', 'fr.lesson.y'].map((id) =>
+				lessonNumber(parsed, id)
+			)
+		).toEqual([1, 2, null, 3, null]);
+		expect(lessonNumber(parsed, 'fr.lesson.zzz')).toBeNull();
 	});
 });

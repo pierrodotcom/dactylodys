@@ -1,5 +1,5 @@
 import { toGraphemes } from '../graphemes';
-import { LINE_BREAK, findLesson, learnedChars } from './definition';
+import { LINE_BREAK, findLesson, learnedChars, reachableChars } from './definition';
 import type {
 	AgeBand,
 	BankSource,
@@ -417,7 +417,9 @@ export function textOf(entry: TextEntry): string {
 
 /**
  * What is wrong with the texts of the bank for this progression: a lesson it does not have, or a
- * character (Enter included) not yet learned at that lesson. Empty when they are all right.
+ * character (Enter included) that no child knows at that lesson. A text may use what a detour
+ * before its lesson brings: it is then offered only to a child who passed that detour
+ * (`typableTexts`). Empty when they are all right.
  */
 export function validateTexts(bank: TextBank, progression: ProgressionDefinition): string[] {
 	const issues: string[] = [];
@@ -426,7 +428,7 @@ export function validateTexts(bank: TextBank, progression: ProgressionDefinition
 			issues.push(`${entry.id}: unknown lesson ${entry.lessonId}`);
 			continue;
 		}
-		const known = new Set(learnedChars(progression, entry.lessonId));
+		const known = new Set(reachableChars(progression, entry.lessonId));
 		const unknown = [...new Set(toGraphemes(textOf(entry)).filter((char) => !known.has(char)))];
 		if (unknown.length > 0) {
 			const shown = unknown.map((char) => JSON.stringify(char)).join(' ');
@@ -434,6 +436,12 @@ export function validateTexts(bank: TextBank, progression: ProgressionDefinition
 		}
 	}
 	return issues;
+}
+
+/** The texts among these that are written with these characters only, Enter included. */
+export function typableTexts(texts: readonly TextEntry[], learned: Iterable<string>): TextEntry[] {
+	const known = new Set(learned);
+	return texts.filter((entry) => toGraphemes(textOf(entry)).every((char) => known.has(char)));
 }
 
 /** The texts of a lesson, in the order of the bank, of this age group when one is given. */

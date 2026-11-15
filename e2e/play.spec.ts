@@ -1328,7 +1328,7 @@ test.describe('play route', () => {
 		await expect(page.getByRole('button', { name: NEXT_THIRD.title })).toBeVisible();
 	});
 
-	test('plays a lesson of the fourth world with the rocket and types a capital sentence', async ({
+	test('plays a lesson of the world of the stars with the rocket and types a capital sentence', async ({
 		page
 	}) => {
 		const uppercase = allLessons.find((lesson) => lesson.unlocks.includes('uppercase'));
@@ -1396,13 +1396,11 @@ test.describe('play route', () => {
 
 		await expect(page.getByRole('alert')).toHaveCount(0);
 		expect((await storedRecord(page, legacy))?.['schemaVersion']).toBe(1);
+		const furthest = allLessons.findLastIndex((lesson) => lesson.id in LEGACY_LESSON_STARS);
 		for (const [index, lesson] of allLessons.entries()) {
-			const earlier = allLessons[index - 1];
-			// A lesson passed by the first version stays open, even when lessons were inserted before it.
-			const open =
-				index === 0 ||
-				(earlier !== undefined && earlier.id in LEGACY_LESSON_STARS) ||
-				lesson.id in LEGACY_LESSON_STARS;
+			// A lesson passed by the first version stays open, and so does the whole way up to it,
+			// lessons inserted before it included (ADR-075): nothing is to play again to go on.
+			const open = index <= furthest + 1;
 			const row = lessonRow(page, lesson);
 			const legacyStars = LEGACY_LESSON_STARS[lesson.id];
 			if (!open) {

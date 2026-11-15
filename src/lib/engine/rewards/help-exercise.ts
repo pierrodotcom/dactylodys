@@ -2,7 +2,7 @@ import { toGraphemes } from '../graphemes';
 import { usableWords } from '../progression/banks';
 import { learnedChars, lessonIds } from '../progression/definition';
 import { between, placeForced } from '../progression/exercise';
-import { isLessonPassed } from '../progression/progress';
+import { detourChars, isLessonPassed } from '../progression/progress';
 import { buildPatternSuite } from '../progression/suites';
 import type {
 	Exercise,
@@ -141,7 +141,11 @@ export function generateHelpExercise(
 	context: ExerciseContext = {}
 ): Exercise {
 	const lastId = lastLessonId(progression, quest, context);
-	const allowed = learnedChars(progression, lastId);
+	// A key of a detour is asked of the child who passed it, wherever the child is now.
+	const allowed = [
+		...learnedChars(progression, lastId),
+		...(context.progress === undefined ? [] : detourChars(progression, context.progress, lastId))
+	];
 	const { char } = quest;
 	if (!allowed.includes(char)) throw new RangeError(`Character "${char}" is not taught yet`);
 

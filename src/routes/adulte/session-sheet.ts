@@ -1,4 +1,4 @@
-import { findLesson, lessonIds } from '$lib/engine/progression/definition';
+import { findLesson, lessonIds, lessonNumber } from '$lib/engine/progression/definition';
 import { masteryGroups } from '$lib/engine/progression/mastery';
 import type { ProgressionDefinition } from '$lib/engine/progression/types';
 import type { CharIndex } from '$lib/keyboard/types';
@@ -53,7 +53,12 @@ function currentLesson(
 	profile: Profile
 ): SheetLesson | null {
 	if (!progression) return null;
-	const id = focusLessonId(progression, profile.progress, profile.openedWorldIds);
+	const id = focusLessonId(
+		progression,
+		profile.progress,
+		profile.openedWorldIds,
+		profile.keptOpenLessonIds
+	);
 	if (id === null) return null;
 	const lesson = findLesson(progression, id);
 	const world = worldOfLesson(progression, id);
@@ -61,7 +66,8 @@ function currentLesson(
 	return {
 		worldTitle: world.title,
 		title: lesson.title,
-		number: lessonIds(progression).indexOf(id) + 1
+		// The number the child reads on the map; the lesson proposed is never a detour.
+		number: lessonNumber(progression, id) ?? lessonIds(progression).indexOf(id) + 1
 	};
 }
 

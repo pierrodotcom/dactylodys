@@ -12,7 +12,12 @@
 	} from '$lib/audio';
 	import { voiceLocale } from '$lib/audio/voice-texts';
 	import { almostNextStar, isLessonUnlocked } from '$lib/engine/progression/progress';
-	import { findLesson, freshChars, lessonIds } from '$lib/engine/progression/definition';
+	import {
+		findLesson,
+		freshChars,
+		lessonIds,
+		lessonNumber
+	} from '$lib/engine/progression/definition';
 	import { guideMode } from '$lib/engine/progression/guide';
 	import { passedLessonCount, unlockedScenes } from '$lib/engine/rewards/scenes';
 	import { generateExercise } from '$lib/engine/progression/exercise';
@@ -126,7 +131,7 @@
 	import { recordLessonOutcome, starsOrNone } from './lesson-outcome';
 	import { ghostGreetingFor, raceGhostFor } from './race';
 	import LessonResult from './LessonResult.svelte';
-	import { focusLessonId, nextLessonId, worldOfLesson } from './map';
+	import { focusLessonId, followingLessonId, worldOfLesson } from './map';
 	import NewPlayer from './NewPlayer.svelte';
 	import { platformFromUserAgent } from './player';
 	import PlayerSelect from './PlayerSelect.svelte';
@@ -704,10 +709,35 @@
 		if (profile) void saveCompanion({ ...profile.companion, name });
 	}
 
+	function isOpenFor(current: Profile, lessonId: string): boolean {
+		return (
+			progression !== undefined &&
+			isLessonUnlocked(
+				progression,
+				current.progress,
+				lessonId,
+				current.openedWorldIds,
+				current.keptOpenLessonIds
+			)
+		);
+	}
+
+	/** Where "next lesson" leads this child after a lesson; `null` after the last one. */
+	function followingFor(current: Profile, lessonId: string): string | null {
+		if (!progression) return null;
+		return followingLessonId(
+			progression,
+			current.progress,
+			lessonId,
+			current.openedWorldIds,
+			current.keptOpenLessonIds
+		);
+	}
+
 	function openLesson(lessonId: string) {
 		if (!profile || !progression) return;
 		gameLoadFailed = false;
-		if (!isLessonUnlocked(progression, profile.progress, lessonId, profile.openedWorldIds)) return;
+		if (!isOpenFor(profile, lessonId)) return;
 		tellOnTheWay(openingOf(lessonId), lessonId);
 	}
 
@@ -765,7 +795,12 @@
 	 */
 	function freeGuideFor(current: Profile): GameGuide {
 		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
-		const focus = focusLessonId(progression, current.progress, current.openedWorldIds);
+		const focus = focusLessonId(
+			progression,
+			current.progress,
+			current.openedWorldIds,
+			current.keptOpenLessonIds
+		);
 		return { ...guideFor(current, focus ?? ''), freshChars: [] };
 	}
 
@@ -784,7 +819,12 @@
 	/** The keys that fade in the free practice: those of the lesson the map proposes. */
 	function freeFadedFor(current: Profile): readonly KeyCode[] {
 		if (!progression) return [];
-		const focus = focusLessonId(progression, current.progress, current.openedWorldIds);
+		const focus = focusLessonId(
+			progression,
+			current.progress,
+			current.openedWorldIds,
+			current.keptOpenLessonIds
+		);
 		return focus === null ? [] : fadedFor(current, focus);
 	}
 
@@ -945,9 +985,8 @@
 		const { evaluation, announced, profile: next } = played(before);
 		const progress = next.progress;
 		const told = story ? storyAfterLesson(story, source, before.progress, progress, lessonId) : [];
-		const followingId = nextLessonId(source, lessonId);
-		const hasOpenNext =
-			followingId !== null && isLessonUnlocked(source, progress, followingId, next.openedWorldIds);
+		const followingId = followingFor(next, lessonId);
+		const hasOpenNext = followingId !== null && isOpenFor(next, followingId);
 		const ids = lessonIds(source);
 		result = {
 			lessonId,
@@ -1067,8 +1106,8 @@
 	}
 
 	function playNext() {
-		if (!progression || !result) return;
-		const followingId = nextLessonId(progression, result.lessonId);
+		if (!profile || !result) return;
+		const followingId = followingFor(profile, result.lessonId);
 		if (followingId === null) return;
 		// The ending of a world leads into the opening of the next one.
 		tellOnTheWay([...result.story, ...openingOf(followingId)], followingId);
@@ -1227,7 +1266,7 @@
 			<LessonIntro
 				{lesson}
 				fresh={freshChars(progression, lessonId)}
-				number={lessonIds(progression).indexOf(lessonId) + 1}
+				number={lessonNumber(progression, lessonId)}
 				{assets}
 				games={gameOptions(world)}
 				gameId={gameFor(world, lessonId, profile)?.id ?? ''}

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseProgression } from '$lib/engine/progression/definition';
-import type { CharSample, ProgressState } from '$lib/engine/progression/types';
+import { isDetour, parseProgression } from '$lib/engine/progression/definition';
+import type { CharSample, LessonProgress, ProgressState } from '$lib/engine/progression/types';
 import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
 import { createProfile } from '$lib/state/profile';
 import { ADULT_RULES } from './adult-rules';
@@ -69,6 +69,31 @@ describe('worldSummaries', () => {
 			maxStars: first.lessons.length * 3
 		});
 		expect(others.every((world) => world.lessonsPassed === 0 && world.stars === 0)).toBe(true);
+	});
+
+	it('counts a detour only once the child passed it: a way finished is never short of a lesson', () => {
+		const world = progression.worlds.find((each) => each.lessons.some(isDetour));
+		if (!world) throw new Error('no detour');
+		const onTheWay = world.lessons.filter((lesson) => !isDetour(lesson));
+		const [detour] = world.lessons.filter(isDetour);
+		if (!detour) throw new Error('no detour');
+		const passed: LessonProgress = { bestAccuracy: 100, stars: 3, attempts: 1, lastPlayedAt: 1 };
+		const wayDone = Object.fromEntries(onTheWay.map((lesson) => [lesson.id, passed]));
+		const summaryOf = (lessons: ProgressState['lessons']) =>
+			worldSummaries(progression, { lessons, chars: {} }).find(
+				(summary) => summary.worldId === world.id
+			);
+
+		expect(summaryOf(wayDone)).toMatchObject({
+			lessonCount: onTheWay.length,
+			lessonsPassed: onTheWay.length,
+			maxStars: onTheWay.length * 3
+		});
+		expect(summaryOf({ ...wayDone, [detour.id]: passed })).toMatchObject({
+			lessonCount: onTheWay.length + 1,
+			lessonsPassed: onTheWay.length + 1,
+			maxStars: (onTheWay.length + 1) * 3
+		});
 	});
 });
 

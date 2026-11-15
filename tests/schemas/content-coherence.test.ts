@@ -11,19 +11,22 @@ import {
 	storyPhrases,
 	textGroups,
 	textOf,
+	typableTexts,
 	validateStoryPhrases,
 	validateTexts
 } from '../../src/lib/engine/progression/banks';
 import {
 	findLesson,
+	isDetour,
 	learnedChars,
-	parseProgression
+	parseProgression,
+	reachableChars
 } from '../../src/lib/engine/progression/definition';
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
 import { keyNeighbors } from '../../src/lib/engine/progression/repair';
 import { parseGeometry } from '../../src/lib/keyboard/geometry';
 import { parseLayout } from '../../src/lib/keyboard/layout';
-import { emptyProgress } from '../../src/lib/engine/progression/progress';
+import { detourChars, emptyProgress } from '../../src/lib/engine/progression/progress';
 import { seededRng } from '../../src/lib/engine/progression/test-support';
 import type { ProgressState } from '../../src/lib/engine/progression/types';
 import { findGame } from '../../src/lib/games/registry';
@@ -83,6 +86,19 @@ const entries = progression.worlds.flatMap((world) =>
 function playedTimes(lessonId: string, attempts: number): ProgressState {
 	const lesson = { bestAccuracy: 90, stars: 2, attempts, lastPlayedAt: 0 } as const;
 	return { ...emptyProgress(), lessons: attempts === 0 ? {} : { [lessonId]: lesson } };
+}
+
+/** The same progress for a child who also passed every detour of the progression. */
+function withDetoursPassed(progress: ProgressState): ProgressState {
+	const passed = { bestAccuracy: 90, stars: 2, attempts: 1, lastPlayedAt: 0 } as const;
+	const detours = entries.filter(({ lesson }) => isDetour(lesson));
+	return {
+		...progress,
+		lessons: {
+			...Object.fromEntries(detours.map(({ lesson }) => [lesson.id, passed])),
+			...progress.lessons
+		}
+	};
 }
 
 /** One play made: not a multiple of `storyPhraseEvery`, so the exercise has no story phrase. */
@@ -387,7 +403,34 @@ describe('useful texts and progression together', () => {
 		);
 		for (const { lesson } of textLessons) {
 			expect(ids.indexOf(lesson.id)).toBeGreaterThanOrEqual(enterLesson);
-			expect(lessonTexts(texts, lesson.id).length).toBeGreaterThanOrEqual(MIN_TEXTS_PER_LESSON);
+			// Enough texts for the child who took no detour: a text with a rare accent is extra.
+			const forAll = typableTexts(
+				lessonTexts(texts, lesson.id),
+				learnedChars(progression, lesson.id)
+			);
+			expect(forAll.length, lesson.id).toBeGreaterThanOrEqual(MIN_TEXTS_PER_LESSON);
+		}
+	});
+
+	it('keeps the rare accents of the detours for the texts of the child who learned them', () => {
+		const rare = new Set(
+			entries.filter(({ lesson }) => isDetour(lesson)).flatMap(({ lesson }) => lesson.newChars)
+		);
+		expect([...rare].sort()).toEqual(['î', 'ï', 'ë', 'ô', 'û'].sort());
+		const withRare = texts.texts.filter((entry) =>
+			toGraphemes(textOf(entry)).some((char) => rare.has(char))
+		);
+		// Three texts of the last world say « goûter » or « bientôt »: found when the detours were made.
+		expect(withRare.map((entry) => entry.id).sort()).toEqual([
+			'fr.text.adresse-poste',
+			'fr.text.invitation-fete',
+			'fr.text.liste-gouter'
+		]);
+		for (const entry of withRare) {
+			const forAll = typableTexts([entry], learnedChars(progression, entry.lessonId));
+			const afterDetours = typableTexts([entry], reachableChars(progression, entry.lessonId));
+			expect(forAll, entry.id).toEqual([]);
+			expect(afterDetours, entry.id).toEqual([entry]);
 		}
 	});
 
@@ -417,11 +460,23 @@ describe('useful texts and progression together', () => {
 		}
 	);
 
-	it.each(textLessons.map(({ world, lesson }) => [lesson.id, world.themeId] as const))(
-		`ends every exercise of %s with its texts in turn, over ${SEED_COUNT} seeds`,
-		(lessonId, themeId) => {
-			const own = lessonTexts(texts, lessonId);
-			const known = new Set(learnedChars(progression, lessonId));
+	it.each(
+		textLessons.flatMap(({ world, lesson }) => [
+			[lesson.id, 'who took no detour', world.themeId, false] as const,
+			[lesson.id, 'who passed the detours', world.themeId, true] as const
+		])
+	)(
+		`ends every exercise of %s with its texts in turn, for a child %s, over ${SEED_COUNT} seeds`,
+		(lessonId, _who, themeId, detours) => {
+			const progressAt = (plays: number) =>
+				detours ? withDetoursPassed(playedTimes(lessonId, plays)) : playedTimes(lessonId, plays);
+			const known = new Set([
+				...learnedChars(progression, lessonId),
+				...detourChars(progression, progressAt(0), lessonId)
+			]);
+			// The texts with a rare accent are given to the child who passed the detours only.
+			const own = typableTexts(lessonTexts(texts, lessonId), known);
+			expect(own.length).toBe(detours ? lessonTexts(texts, lessonId).length : own.length);
 			for (let plays = 0; plays < own.length * 2; plays++) {
 				const expected = own[plays % own.length];
 				for (let seed = 1; seed <= SEED_COUNT; seed++) {
@@ -429,7 +484,7 @@ describe('useful texts and progression together', () => {
 						words,
 						phrases,
 						texts,
-						progress: playedTimes(lessonId, plays),
+						progress: progressAt(plays),
 						themeId,
 						maxLevel: PLAY_RULES.maxWordLevel
 					});

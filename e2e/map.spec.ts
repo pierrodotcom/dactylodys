@@ -9,7 +9,9 @@ import {
 	openPage,
 	readJson,
 	reloadPage,
-	throughStory
+	storedRecord,
+	throughStory,
+	type StoredFormat
 } from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
@@ -27,10 +29,17 @@ const TOP_BAR_BUDGET = 6;
 interface Lesson {
 	id: string;
 	title: string;
+	optional?: boolean;
+}
+
+interface World {
+	id: string;
+	title: string;
+	lessons: Lesson[];
 }
 
 const { message } = loadMessages();
-const worlds = readJson<{ worlds: { lessons: Lesson[] }[] }>(
+const worlds = readJson<{ worlds: World[] }>(
 	'content/fr/progression/azerty-decouverte.json'
 ).worlds;
 const lessons = worlds.flatMap((world) => world.lessons);
@@ -59,9 +68,9 @@ function profileOf(name: string, edit: (profile: Profile) => Profile = (profile)
 	);
 }
 
-async function reachMapAs(page: Page, profile: Profile) {
+async function reachMapAs(page: Page, profile: Profile, format: StoredFormat = 'current') {
 	await openPage(page, PLAY_URL);
-	await installProfile(page, profile);
+	await installProfile(page, profile, format);
 	await reloadPage(page);
 	await page.getByRole('button', { name: profile.name }).click();
 	await expect(page.getByRole('heading', { name: message('play_map_title') })).toBeVisible();
@@ -232,6 +241,166 @@ test.describe('map walked with the arrows', () => {
 			await reachMapAs(page, profileOf('Lumi'));
 			await page.keyboard.press('ArrowLeft');
 			await expectChosen(page, FIRST_OF_SECOND_WORLD);
+
+			await page.evaluate(() => document.fonts.ready);
+			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+			expect(results.violations).toEqual([]);
+		});
+	}
+});
+
+function worldOf(slug: string): World {
+	const world = worlds.find((item) => item.id === `fr.world.${slug}`);
+	if (!world) throw new Error(`No world ${slug}`);
+	return world;
+}
+
+function lessonOf(slug: string): Lesson {
+	const lesson = lessons.find((item) => item.id === `fr.lesson.${slug}`);
+	if (!lesson) throw new Error(`No lesson ${slug}`);
+	return lesson;
+}
+
+function row(page: Page, lesson: Lesson): Locator {
+	return page.getByRole('listitem').filter({ hasText: lesson.title });
+}
+
+function passedProfile(name: string, passed: readonly Lesson[]): Profile {
+	return advancedProfile({
+		name,
+		passed: Object.fromEntries(passed.map((lesson) => [lesson.id, PASSED_STARS]))
+	});
+}
+
+test.describe('a child on the way when the order of the lessons changed (ADR-075)', () => {
+	/**
+	 * The former order: dinosaurs, kitchen, then the zoo before the stars. The child passed its
+	 * first fourteen lessons, up to « y x », and was about to play « z w ».
+	 */
+	const zoo = worldOf('animaux').lessons;
+	const formerFourteen = [
+		...worldOf('dinosaures').lessons,
+		...worldOf('cuisine').lessons,
+		...zoo.slice(0, 3)
+	];
+	const aboutToPlay = zoo[3] as Lesson;
+	const stars = worldOf('espace').lessons;
+	const child = passedProfile('Mila', formerFourteen);
+
+	test('finds everything it had, and knows what to play', async ({ page }) => {
+		const failures: string[] = [];
+		page.on('pageerror', (error) => failures.push(error.message));
+		expect(formerFourteen).toHaveLength(14);
+		await reachMapAs(page, child, 'version-14');
+
+		await expect(page.getByRole('alert')).toHaveCount(0);
+		// Nothing lost: the fourteen lessons are done, with their stars.
+		for (const lesson of formerFourteen) {
+			await expect(row(page, lesson)).toContainText(message('play_lesson_done'));
+			await expect(
+				row(page, lesson).getByRole('img', {
+					name: message('ui_stars_other', { count: PASSED_STARS, total: 3 })
+				})
+			).toBeVisible();
+		}
+		// Nothing closed: the lesson it was about to play, and the four that now come before it.
+		for (const lesson of [...stars, aboutToPlay]) {
+			await expect(lessonButton(page, lesson)).toBeVisible();
+			await expect(row(page, lesson)).toContainText(message('play_lesson_current'));
+		}
+		await expect(row(page, lessonOf('klaxon-question-exclamation'))).toContainText(
+			message('play_lesson_locked')
+		);
+		// It knows what to play: the companion waits at the first lesson of the stars.
+		await expectChosen(page, stars[0] as Lesson);
+		await expect(page.getByRole('region', { name: worldOf('espace').title })).toContainText(
+			message('play_world_current')
+		);
+		// A profile that is only opened is not written again.
+		expect((await storedRecord(page, child))?.['schemaVersion']).toBe(14);
+		expect(failures).toEqual([]);
+	});
+
+	test('walks to the lesson it was about to play and opens it, at the keyboard alone', async ({
+		page
+	}) => {
+		await reachMapAs(page, child, 'version-14');
+		await expectChosen(page, stars[0] as Lesson);
+
+		await page.keyboard.press('End');
+		await expectChosen(page, aboutToPlay);
+		await page.keyboard.press('Enter');
+		const title = page.getByRole('heading', { name: aboutToPlay.title });
+		await throughStory(page, title, { keyboard: true });
+		await expect(title).toBeVisible();
+	});
+});
+
+test.describe('the detours of the rare accents on the map', () => {
+	const vehicles = worldOf('vehicules');
+	const [firstDetour, secondDetour] = vehicles.lessons.filter((lesson) => lesson.optional) as [
+		Lesson,
+		Lesson
+	];
+	const lastOnTheWay = vehicles.lessons.filter((lesson) => !lesson.optional).at(-1) as Lesson;
+	const post = worldOf('poste').lessons[0] as Lesson;
+	/** Every lesson on the way up to the last one of the vehicles; no detour played. */
+	const child = passedProfile(
+		'Sacha',
+		lessons.slice(0, lessons.indexOf(lastOnTheWay) + 1).filter((lesson) => !lesson.optional)
+	);
+	const numberOf = (lesson: Lesson) => lessons.filter((item) => !item.optional).indexOf(lesson) + 1;
+
+	test('opens the last world without them, and shows them as a way to go further', async ({
+		page
+	}) => {
+		await reachMapAs(page, child);
+
+		// The way goes on: the companion waits at the first lesson of the last world.
+		await expectChosen(page, post);
+		await expect(row(page, post)).toContainText(message('play_lesson_current'));
+		// No number is missing on the way, and a detour has none.
+		await expect(row(page, lastOnTheWay)).toContainText(
+			message('play_lesson_number', { number: numberOf(lastOnTheWay) })
+		);
+		await expect(row(page, post)).toContainText(
+			message('play_lesson_number', { number: numberOf(lastOnTheWay) + 1 })
+		);
+		for (const detour of [firstDetour, secondDetour]) {
+			await expect(row(page, detour)).toContainText(message('play_lesson_detour'));
+			await expect(row(page, detour)).not.toContainText(/Leçon \d/);
+		}
+		// Offered, never asked: the first one is open, as a wish; the second one waits for it.
+		await expect(lessonButton(page, firstDetour)).toBeVisible();
+		await expect(row(page, firstDetour)).toContainText(message('play_lesson_detour_open'));
+		await expect(row(page, firstDetour)).not.toContainText(message('play_lesson_current'));
+		await expect(row(page, secondDetour)).toContainText(message('play_lesson_locked'));
+	});
+
+	test('walks to a detour with the arrows and opens it, at the keyboard alone', async ({
+		page
+	}) => {
+		await reachMapAs(page, child);
+		await expectChosen(page, post);
+
+		await page.keyboard.press('ArrowUp');
+		await expectChosen(page, firstDetour);
+		await page.keyboard.press('Enter');
+		const title = page.getByRole('heading', { name: firstDetour.title });
+		await throughStory(page, title, { keyboard: true });
+		await expect(title).toBeVisible();
+		await expect(page.getByText(message('play_lesson_detour'))).toBeVisible();
+
+		await page.getByRole('button', { name: message('play_intro_back') }).click();
+		await expectChosen(page, post);
+	});
+
+	for (const colorScheme of COLOR_SCHEMES) {
+		test(`passes axe on the map with an open detour, ${colorScheme} theme`, async ({ page }) => {
+			await page.emulateMedia({ colorScheme });
+			await reachMapAs(page, child);
+			await page.keyboard.press('ArrowUp');
+			await expectChosen(page, firstDetour);
 
 			await page.evaluate(() => document.fonts.ready);
 			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();

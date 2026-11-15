@@ -195,6 +195,81 @@ function toVersion14(record: StoredRecord): StoredRecord {
 	return { ...record, schemaVersion: 14 };
 }
 
+/*
+ * Version 15 (ADR-075): the lessons changed order. Capitals, the comma and the full stop now come
+ * before g h, v b, y x and z w, and the two lessons of rare accents no longer hold the way. A
+ * lesson that was open in the order of version 14 and not passed yet stays open: it is kept by
+ * name. What was passed, starred or earned is not touched, and the new order opens the rest.
+ * The order and the accuracy that passed a lesson are those of version 14, written here.
+ */
+const LESSON_ORDER_OF_VERSION_14 = [
+	'fr.lesson.oeufs-f-j',
+	'fr.lesson.saut-espace',
+	'fr.lesson.nid-d-k',
+	'fr.lesson.mare-s-l',
+	'fr.lesson.mots-e-i',
+	'fr.lesson.rugissement-r-u',
+	'fr.lesson.tartine-t-n',
+	'fr.lesson.gateau-a-o',
+	'fr.lesson.bras-q-m',
+	'fr.lesson.casserole-c-p',
+	'fr.lesson.epices-accent-apostrophe',
+	'fr.lesson.girafe-g-h',
+	'fr.lesson.vache-v-b',
+	'fr.lesson.yak-y-x',
+	'fr.lesson.zebre-z-w',
+	'fr.lesson.lune-accents-graves',
+	'fr.lesson.comete-cedille-u-grave',
+	'fr.lesson.grandes-majuscules',
+	'fr.lesson.virgule-point',
+	'fr.lesson.klaxon-question-exclamation',
+	'fr.lesson.tiret-deux-points',
+	'fr.lesson.chapeau-circonflexe',
+	'fr.lesson.casque-circonflexe',
+	'fr.lesson.trema',
+	'fr.lesson.liste-pique-nique',
+	'fr.lesson.message-t-rex',
+	'fr.lesson.recette-quiche',
+	'fr.lesson.legende-dessin',
+	'fr.lesson.carte-lune',
+	'fr.lesson.invitation-fete',
+	'fr.lesson.score-du-match',
+	'fr.lesson.train-huit-heures',
+	'fr.lesson.adresse-du-dino',
+	'fr.lesson.reparer-message'
+];
+const PASS_ACCURACY_OF_VERSION_14 = 80;
+/** Absorbs the rounding error of an accuracy computed as a ratio, as version 14 did. */
+const PASS_EPSILON_OF_VERSION_14 = 1e-9;
+
+function wasPassedInVersion14(lessons: StoredRecord, lessonId: string): boolean {
+	const lesson = Object.hasOwn(lessons, lessonId) ? lessons[lessonId] : undefined;
+	if (!isRecord(lesson)) return false;
+	const best = lesson['bestAccuracy'];
+	return (
+		typeof best === 'number' && best + PASS_EPSILON_OF_VERSION_14 >= PASS_ACCURACY_OF_VERSION_14
+	);
+}
+
+/** The lessons that followed a passed one in the order of version 14, and are not passed. */
+function openLessonsOfVersion14(record: StoredRecord): string[] {
+	const progress = record['progress'];
+	const lessons = isRecord(progress) ? progress['lessons'] : undefined;
+	if (!isRecord(lessons)) return [];
+	return LESSON_ORDER_OF_VERSION_14.filter((lessonId, index) => {
+		const before = LESSON_ORDER_OF_VERSION_14[index - 1];
+		return (
+			before !== undefined &&
+			wasPassedInVersion14(lessons, before) &&
+			!wasPassedInVersion14(lessons, lessonId)
+		);
+	});
+}
+
+function toVersion15(record: StoredRecord): StoredRecord {
+	return { keptOpenLessonIds: openLessonsOfVersion14(record), ...record, schemaVersion: 15 };
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -209,7 +284,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[10, toVersion11],
 	[11, toVersion12],
 	[12, toVersion13],
-	[13, toVersion14]
+	[13, toVersion14],
+	[14, toVersion15]
 ]);
 
 function versionOf(record: StoredRecord): number {

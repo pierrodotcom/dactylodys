@@ -3,12 +3,12 @@ import {
 	lessonTexts,
 	storyPhrases,
 	textGroups,
-	textOf,
+	typableTexts,
 	usablePhraseCuts,
 	usableWordCuts
 } from './banks';
 import { LINE_BREAK, findLesson, freshChars, learnedChars } from './definition';
-import { recentErrorRate } from './progress';
+import { detourChars, recentErrorRate } from './progress';
 import { repairStarts } from './repair';
 import { buildPatternSuite } from './suites';
 import type {
@@ -293,11 +293,9 @@ function dueText(
 	context: ExerciseContext
 ): string[] | undefined {
 	if (context.texts === undefined) return undefined;
-	const known = new Set(learned);
 	const maxLevel = context.maxLevel ?? 3;
-	const texts = lessonTexts(context.texts, lessonId, context.ageBand).filter(
-		(entry) =>
-			entry.level <= maxLevel && toGraphemes(textOf(entry)).every((char) => known.has(char))
+	const texts = typableTexts(lessonTexts(context.texts, lessonId, context.ageBand), learned).filter(
+		(entry) => entry.level <= maxLevel
 	);
 	if (texts.length === 0) return undefined;
 	const plays = context.progress?.lessons[lessonId]?.attempts ?? 0;
@@ -335,11 +333,15 @@ export function generateExercise(
 	const lesson = findLesson(progression, lessonId);
 	if (lesson === undefined) throw new RangeError(`Unknown lesson: ${lessonId}`);
 
-	const learned = learnedChars(progression, lessonId);
+	const { progress } = context;
+	// What a detour brought is asked of the child who passed it, and of no other.
+	const learned = [
+		...learnedChars(progression, lessonId),
+		...(progress === undefined ? [] : detourChars(progression, progress, lessonId))
+	];
 	const known = new Set(learned);
 	const { rules } = progression;
 	const { newCharWeight, weakCharBoost, themeBoost, newCharMinCount, lengthSlack } = rules;
-	const { progress } = context;
 	const errorRate = (char: string): number =>
 		progress === undefined ? 0 : recentErrorRate(progress, char);
 

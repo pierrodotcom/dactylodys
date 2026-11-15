@@ -1,6 +1,7 @@
-import { lessonIds } from '$lib/engine/progression/definition';
+import { isDetour } from '$lib/engine/progression/definition';
 import { isLessonUnlocked } from '$lib/engine/progression/progress';
 import type {
+	LessonDefinition,
 	ProgressionDefinition,
 	ProgressState,
 	StarCount,
@@ -17,14 +18,20 @@ function progressOf(progress: ProgressState, lessonId: string) {
 	return Object.hasOwn(progress.lessons, lessonId) ? progress.lessons[lessonId] : undefined;
 }
 
-/** `openedWorldIds`: the worlds the adult opened ahead (`Profile.openedWorldIds`). */
+/**
+ * `openedWorldIds`: the worlds the adult opened ahead (`Profile.openedWorldIds`);
+ * `keptOpenLessonIds`: the lessons kept open since the order changed (`Profile.keptOpenLessonIds`).
+ */
 export function lessonStatus(
 	progression: ProgressionDefinition,
 	progress: ProgressState,
 	lessonId: string,
-	openedWorldIds: readonly string[]
+	openedWorldIds: readonly string[],
+	keptOpenLessonIds: readonly string[] = []
 ): LessonStatus {
-	if (!isLessonUnlocked(progression, progress, lessonId, openedWorldIds)) return 'locked';
+	if (!isLessonUnlocked(progression, progress, lessonId, openedWorldIds, keptOpenLessonIds)) {
+		return 'locked';
+	}
 	const best = progressOf(progress, lessonId)?.bestAccuracy;
 	const passed = best !== undefined && best + ACCURACY_EPSILON >= progression.rules.unlockAccuracy;
 	return passed ? 'done' : 'current';
@@ -34,10 +41,34 @@ export function lessonStars(progress: ProgressState, lessonId: string): StarCoun
 	return progressOf(progress, lessonId)?.stars ?? 0;
 }
 
-export function nextLessonId(progression: ProgressionDefinition, lessonId: string): string | null {
-	const ids = lessonIds(progression);
-	const index = ids.indexOf(lessonId);
-	return index < 0 ? null : (ids[index + 1] ?? null);
+function lessonsOf(progression: ProgressionDefinition): readonly LessonDefinition[] {
+	return progression.worlds.flatMap((world) => world.lessons);
+}
+
+/**
+ * The lesson "next lesson" leads to: after a lesson on the way, the next one on the way (a detour
+ * is never where the way goes on); after a detour, the lesson that follows it. A detour never
+ * holds the child either: when the detour after it is still closed (`isOpen` says so), the way
+ * goes on. `null` after the last one.
+ */
+export function nextLessonId(
+	progression: ProgressionDefinition,
+	lessonId: string,
+	isOpen: (lessonId: string) => boolean = () => true
+): string | null {
+	const lessons = lessonsOf(progression);
+	const index = lessons.findIndex((lesson) => lesson.id === lessonId);
+	if (index < 0) return null;
+	const after = lessons.slice(index + 1);
+	const onTheWay = after.find((lesson) => !isDetour(lesson));
+	const following = after[0];
+	const next =
+		isDetour(lessons[index] as LessonDefinition) &&
+		following !== undefined &&
+		(!isDetour(following) || isOpen(following.id))
+			? following
+			: onTheWay;
+	return next?.id ?? null;
 }
 
 export function worldOfLesson(
@@ -47,23 +78,81 @@ export function worldOfLesson(
 	return progression.worlds.find((world) => world.lessons.some((lesson) => lesson.id === lessonId));
 }
 
-/** The most advanced lesson the child can play: the last open one, in the order of the progression. */
+/**
+ * The lesson the map proposes: the first lesson on the way that is open and not passed yet, so
+ * that a child who passed lessons further on (in another order, ADR-075) is led to those that came
+ * before them since, with nothing closed. A world the adult opened ahead is where the child goes
+ * on: no lesson before it is proposed while it has one to play. Never a detour; once the way is
+ * finished, its last lesson.
+ */
 export function focusLessonId(
 	progression: ProgressionDefinition,
 	progress: ProgressState,
-	openedWorldIds: readonly string[]
+	openedWorldIds: readonly string[],
+	keptOpenLessonIds: readonly string[] = []
 ): string | null {
-	const open = lessonIds(progression).filter(
-		(id) => lessonStatus(progression, progress, id, openedWorldIds) !== 'locked'
+	const lessons = lessonsOf(progression);
+	const statusOf = (lesson: LessonDefinition) =>
+		lessonStatus(progression, progress, lesson.id, openedWorldIds, keptOpenLessonIds);
+	const way = lessons.filter((lesson) => !isDetour(lesson));
+	const toPlay = way.filter((lesson) => statusOf(lesson) === 'current');
+	if (toPlay.length === 0) {
+		return way.findLast((lesson) => statusOf(lesson) !== 'locked')?.id ?? null;
+	}
+	const ahead = openedAhead(progression, openedWorldIds);
+	const proposed = toPlay.find((lesson) => lessons.indexOf(lesson) >= ahead) ?? toPlay[0];
+	return proposed?.id ?? null;
+}
+
+/** Rank, from 0, of the first lesson of the furthest world the adult opened ahead; 0 without any. */
+function openedAhead(
+	progression: ProgressionDefinition,
+	openedWorldIds: readonly string[]
+): number {
+	const lessons = lessonsOf(progression);
+	return Math.max(
+		0,
+		...progression.worlds
+			.filter((world) => openedWorldIds.includes(world.id))
+			.map((world) => lessons.findIndex((lesson) => lesson.id === world.lessons[0]?.id))
 	);
-	return open.at(-1) ?? null;
+}
+
+/**
+ * Where "next lesson" leads this child after a play: `nextLessonId`, except that a child is not
+ * sent on to a lesson never passed while a lesson on the way that now comes before it waits to be
+ * played. So a child who passed lessons in another order (ADR-075) goes through those that came
+ * before them since, one "next lesson" after the other, without being made to. A lesson that is
+ * not passed changes nothing, and neither does a lesson before a world the adult opened ahead.
+ */
+export function followingLessonId(
+	progression: ProgressionDefinition,
+	progress: ProgressState,
+	lessonId: string,
+	openedWorldIds: readonly string[],
+	keptOpenLessonIds: readonly string[] = []
+): string | null {
+	const statusOf = (id: string) =>
+		lessonStatus(progression, progress, id, openedWorldIds, keptOpenLessonIds);
+	const next = nextLessonId(progression, lessonId, (id) => statusOf(id) !== 'locked');
+	if (next === null || statusOf(lessonId) !== 'done' || statusOf(next) === 'done') return next;
+	const lessons = lessonsOf(progression);
+	const until = lessons.findIndex((lesson) => lesson.id === next);
+	const waiting = lessons
+		.slice(openedAhead(progression, openedWorldIds), until)
+		.find(
+			(lesson) => !isDetour(lesson) && lesson.id !== lessonId && statusOf(lesson.id) === 'current'
+		);
+	return waiting?.id ?? next;
 }
 
 export interface MapLesson {
 	readonly id: string;
 	readonly title: string;
-	/** Rank in the whole progression, from 1. */
-	readonly number: number;
+	/** Rank among the lessons on the way, from 1; `null` for a detour, which has no number. */
+	readonly number: number | null;
+	/** A lesson nothing waits for (`LessonDefinition.optional`): shown as a way to go further. */
+	readonly detour: boolean;
 	readonly status: LessonStatus;
 	readonly stars: StarCount;
 	/** Which side of the path the lesson sits on; they alternate along the whole path. */
@@ -88,20 +177,25 @@ export interface WorldMapLayout {
 export function layoutMap(
 	progression: ProgressionDefinition,
 	progress: ProgressState,
-	openedWorldIds: readonly string[]
+	openedWorldIds: readonly string[],
+	keptOpenLessonIds: readonly string[] = []
 ): WorldMapLayout {
-	const focusId = focusLessonId(progression, progress, openedWorldIds);
+	const focusId = focusLessonId(progression, progress, openedWorldIds, keptOpenLessonIds);
 	let number = 0;
+	let place = 0;
 	const worlds = progression.worlds.map((world): MapWorld => {
 		const lessons = world.lessons.map((lesson): MapLesson => {
-			number += 1;
+			const detour = isDetour(lesson);
+			if (!detour) number += 1;
+			place += 1;
 			return {
 				id: lesson.id,
 				title: lesson.title,
-				number,
-				status: lessonStatus(progression, progress, lesson.id, openedWorldIds),
+				number: detour ? null : number,
+				detour,
+				status: lessonStatus(progression, progress, lesson.id, openedWorldIds, keptOpenLessonIds),
 				stars: lessonStars(progress, lesson.id),
-				side: number % 2 === 0 ? 1 : 0
+				side: place % 2 === 0 ? 1 : 0
 			};
 		});
 		return {

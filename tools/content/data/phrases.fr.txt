@@ -186,6 +186,32 @@
 2 | maison | Cet après-midi, le canapé fait du sport.
 2 | | Le robot a rangé ses chaussettes au frigo.
 2 | vehicules | Voici mon garage : il est plein de vélos.
+# Palier 7, sans g h v b y x z w : de vraies phrases dès la leçon de la virgule et du point (ADR-075)
+1 | dinos | Mon dino a dormi, moi aussi.
+1 | animaux | Le lama a froid, il met un pull.
+1 | animaux | Un mouton tricote, l'autre compte.
+2 | animaux | Le canard file, la tortue fait la sieste.
+2 | cuisine | Le cuistot sale, sucre, pimente et éternue.
+1 | | Lundi, la sorcière a raté sa potion.
+1 | | Mardi, le pirate a perdu sa carte.
+1 | | Samedi, le monstre fait sa toilette.
+2 | espace | Ce soir, la lune prend son parapluie.
+2 | dinos | Un, trois, cinq, mon dino compte mal.
+2 | cuisine | Ma tartine fuit, le pirate la rattrape.
+2 | animaux | Sur la piste, un poulpe fait du patin.
+2 | animaux | Dans la mare, un crocodile compte ses dents.
+1 | | Le monstre a dit merci, il est poli.
+2 | animaux | La limace court, court, et reste sur place.
+2 | | Ma trompette joue seule, c'est pratique.
+2 | animaux | Petit à petit, la limace monte au sommet.
+1 | animaux | Le coq crie ; la lune s'en moque.
+1 | | La mer monte ; le pirate recule.
+1 | dinos | Le dino ronfle ; la tente décolle.
+2 | animaux | Le pirate dort ; le perroquet pilote.
+1 | cuisine | Le lait monte ; la casserole panique.
+2 | espace, dinos | La fusée part ; le dino court derrière.
+1 | | Le tonnerre tonne ; le monstre a peur.
+2 | espace | Nuit noire ; la lune a perdu sa lampe.
 # Palier 8 : circonflexes et trémas
 2 | cuisine | Le dragon fait un gâteau pour la forêt.
 3 | animaux | Une souris dîne sur une île de fromage.

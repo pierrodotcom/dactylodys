@@ -4,37 +4,42 @@ Cocher `[x]` = garder la phrase. Barrer (`~~phrase~~`) = retirer la phrase du je
 Pour corriger un thème ou une formulation, écrire la correction à la suite : `→ correction`.
 Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les décisions dans `tools/content/data/`.
 
-## Dinosaures (8)
+## Dinosaures (12)
 
-### Niveau 1 (3)
+### Niveau 1 (5)
 
 - [ ] un dinosaure sort de la salade
 - [ ] je sais où dort le dragon
 - [ ] Le dragon a faim !
+- [ ] Mon dino a dormi, moi aussi.
+- [ ] Le dino ronfle ; la tente décolle.
 
-### Niveau 2 (4)
+### Niveau 2 (6)
 
 - [ ] Le tricératops a oublié son parapluie.
 - [ ] Le diplodocus passe sous la porte !
 - [ ] Petit ou grand, le dinosaure adore les bulles.
+- [ ] Un, trois, cinq, mon dino compte mal.
+- [ ] La fusée part ; le dino court derrière.
 - [ ] Le bébé dragon réclame "encore".
 
 ### Niveau 3 (1)
 
 - [ ] Le dragon a brûlé le dîner du pilote.
 
-## Cuisine (25)
+## Cuisine (28)
 
-### Niveau 1 (6)
+### Niveau 1 (7)
 
 - [ ] je lui sers du jus
 - [ ] elle se rue sur le jus
 - [ ] le fruit est sur le lit
 - [ ] je sens le fruit et je ris
 - [ ] les nouilles dorent au soleil
+- [ ] Le lait monte ; la casserole panique.
 - [ ] La soupe est chaude ; on souffle.
 
-### Niveau 2 (13)
+### Niveau 2 (15)
 
 - [ ] j'adore les tartines de purée
 - [ ] dis où tu caches le chocolat
@@ -43,6 +48,8 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] La pizza a peur du four.
 - [ ] Dans ma soupe, il y a un bouton.
 - [ ] Mon grille-pain raconte des blagues.
+- [ ] Le cuistot sale, sucre, pimente et éternue.
+- [ ] Ma tartine fuit, le pirate la rattrape.
 - [ ] Le dragon fait un gâteau pour la forêt.
 - [ ] Le maïs chante sous la pluie.
 - [ ] Mon goûter a pris le train !
@@ -59,9 +66,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le robot pâtissier a brûlé les crêpes.
 - [ ] Ce poêle chante, le gâteau danse !
 
-## Animaux (86)
+## Animaux (95)
 
-### Niveau 1 (22)
+### Niveau 1 (25)
 
 - [ ] le dindon dort dans la salade
 - [ ] la tortue danse sur le toit
@@ -81,12 +88,15 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le chien ronfle comme un tracteur.
 - [ ] Le chat dort, le chien ronfle.
 - [ ] Tu as vu ce lapin bleu ?
+- [ ] Le lama a froid, il met un pull.
+- [ ] Un mouton tricote, l'autre compte.
+- [ ] Le coq crie ; la lune s'en moque.
 - [ ] Le chat dort ; la souris danse.
 - [ ] Il pleut ; le canard sourit.
 - [ ] Le perroquet dit "bonjour".
 - [ ] Le chien aboie "ouaf".
 
-### Niveau 2 (45)
+### Niveau 2 (51)
 
 - [ ] un renne tire un lutin sur ses skis
 - [ ] le crocodile joue de la trompette
@@ -127,6 +137,12 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Un escargot gagne le marathon !
 - [ ] La chauve-souris joue à cache-cache.
 - [ ] Peut-on promener un poisson rouge ?
+- [ ] Le canard file, la tortue fait la sieste.
+- [ ] Sur la piste, un poulpe fait du patin.
+- [ ] Dans la mare, un crocodile compte ses dents.
+- [ ] La limace court, court, et reste sur place.
+- [ ] Petit à petit, la limace monte au sommet.
+- [ ] Le pirate dort ; le perroquet pilote.
 - [ ] Mon âne mange mon chapeau de paille.
 - [ ] Le canard dîne avec un chapeau.
 - [ ] Le castor range sa bûche dans le frigo.
@@ -156,7 +172,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Un drôle de hibou pilote la fusée.
 - [ ] Un caïman naïf attend le bus.
 
-## Espace (23)
+## Espace (26)
 
 ### Niveau 1 (3)
 
@@ -164,7 +180,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] la lune sort et le soleil ronfle
 - [ ] Le robot tombe ; il se relève.
 
-### Niveau 2 (15)
+### Niveau 2 (18)
 
 - [ ] l'ours a écrit une carte pour la lune
 - [ ] l'étoile a sauté dans la marmite
@@ -178,6 +194,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Le robot porte un chapeau, une cravate.
 - [ ] Sur ma planète, la pluie sent la fraise.
 - [ ] Qui a rangé la lune dans le placard ?
+- [ ] Ce soir, la lune prend son parapluie.
+- [ ] La fusée part ; le dino court derrière.
+- [ ] Nuit noire ; la lune a perdu sa lampe.
 - [ ] Le dinosaure a dîné sur la lune.
 - [ ] La lune brille ; le loup chante.
 - [ ] Le robot dit "bip" puis il s'endort.
@@ -297,9 +316,9 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 - [ ] La cloche sonne ; la classe sort.
 
-## Sans thème particulier (34)
+## Sans thème particulier (41)
 
-### Niveau 1 (20)
+### Niveau 1 (26)
 
 - [ ] je lis le jeudi
 - [ ] elle relie les fils
@@ -321,8 +340,14 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Où est ma chaussette ?
 - [ ] Un, deux, trois, je saute.
 - [ ] Voici mon plan : une sieste.
+- [ ] Lundi, la sorcière a raté sa potion.
+- [ ] Mardi, le pirate a perdu sa carte.
+- [ ] Samedi, le monstre fait sa toilette.
+- [ ] Le monstre a dit merci, il est poli.
+- [ ] La mer monte ; le pirate recule.
+- [ ] Le tonnerre tonne ; le monstre a peur.
 
-### Niveau 2 (11)
+### Niveau 2 (12)
 
 - [ ] le pirate a perdu sa casserole
 - [ ] le capitaine ronfle sur son tapis
@@ -333,6 +358,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Mon chapeau a disparu dans le frigo.
 - [ ] Devinette : qui a des roues et un pyjama ?
 - [ ] Le robot a rangé ses chaussettes au frigo.
+- [ ] Ma trompette joue seule, c'est pratique.
 - [ ] Où est ma pâte à modeler ?
 - [ ] Une tête de chou prend le bateau.
 
