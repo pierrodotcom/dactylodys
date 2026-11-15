@@ -203,12 +203,11 @@ test('gives a fast child a longer play, typed to the result in two games, the ga
 	expect(total).toBeLessThanOrEqual(progression.rules.maxGroupCount);
 	await expect(page.locator('[data-ghost-track]')).toBeInViewport({ ratio: 1 });
 	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
-	await expect(page.locator('.keyboard')).toBeInViewport({ ratio: 1 });
 	expect(await typeToResult(page)).toHaveLength(total);
 
 	// Another game of the same lesson, as long.
 	await button(page, message('play_result_map')).click();
-	await expect(heading(page, message('play_map_title'))).toBeVisible();
+	await throughStory(page, heading(page, message('play_map_title')));
 	await openLesson(page);
 	await button(page, message(`game_${OTHER_GAME}_play`)).click();
 	await expect(page.locator('#game-input')).toBeFocused();

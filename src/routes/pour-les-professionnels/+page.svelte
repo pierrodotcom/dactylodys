@@ -93,7 +93,7 @@
 			<li>{m.pro_use_tools()}</li>
 			<li>{m.pro_use_backup()}</li>
 			<li>{m.pro_use_layouts({ layouts })}</li>
-			<li>{m.pro_use_rhythm(pause)}</li>
+			<li>{m.pro_use_rhythm()}</li>
 		</ul>
 		<p>{m.pro_use_guide({ page: m.info_link_adults() })}</p>
 		<p data-print-hidden><a href={resolve('/pour-les-adultes')}>{m.info_link_adults()}</a></p>

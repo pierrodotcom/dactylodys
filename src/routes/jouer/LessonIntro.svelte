@@ -110,9 +110,6 @@
 		{/if}
 	</div>
 	<p class="intro">{lesson.intro}</p>
-	{#if erasingNew}
-		<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
-	{/if}
 
 	<section class="keys" aria-labelledby="intro-keys-heading">
 		<h2 id="intro-keys-heading">
@@ -137,6 +134,11 @@
 			{/each}
 		</ul>
 	</section>
+
+	<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
+	{#if erasingNew}
+		<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
+	{/if}
 
 	<GamePicker {games} proposed={gameId} onplay={(id) => onplay(id, canRace && race)} />
 

@@ -249,7 +249,10 @@ test.describe('Backspace setting', () => {
 		await reachMap(page);
 		await page.getByRole('button', { name: TEXT_LESSON.title }).click();
 		await throughStory(page, heading(page, TEXT_LESSON.title));
-		await expect(page.locator('[data-erasing-notice]')).toHaveText(message('play_intro_erasing'));
+		// Read right above the games, where the screen settles on a laptop.
+		const notice = page.locator('[data-erasing-notice]');
+		await expect(notice).toHaveText(message('play_intro_erasing'));
+		await expect(notice).toBeInViewport({ ratio: 1 });
 		await page.locator('button[data-proposed]').click();
 		await expect(page.locator('#game-input')).toBeFocused();
 		const group = await currentGroup(page);
