@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { join, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { PUBLISHED_DEV_PAGES } from '../tools/lib/dev-pages.js';
+import { E2E_HOSTS, siteOrigin } from '../tools/lib/e2e-site.js';
 import { createStaticSiteServer } from '../tools/lib/static-site.js';
 import { CHROMIUM_ONLY } from './engines';
 
@@ -14,7 +15,8 @@ import { CHROMIUM_ONLY } from './engines';
  * serves a site (`tools/lib/static-site.js`).
  */
 const SITE = resolve('build');
-const HOST = '127.0.0.1';
+// The loopback the browsers reach first at localhost.
+const [HOST] = E2E_HOSTS;
 const INTERNAL_DEV_PAGES = readdirSync('src/routes/dev', { withFileTypes: true })
 	.filter((entry) => entry.isDirectory() && !PUBLISHED_DEV_PAGES.includes(entry.name))
 	.map((entry) => entry.name);
@@ -32,7 +34,7 @@ test.beforeAll(async () => {
 	expect(existsSync(join(SITE, 'index.html')), 'run `npm run build` before these tests').toBe(true);
 	server = createStaticSiteServer(SITE);
 	await new Promise<void>((done) => server.listen(0, HOST, done));
-	origin = `http://${HOST}:${(server.address() as AddressInfo).port}`;
+	origin = siteOrigin((server.address() as AddressInfo).port);
 });
 
 test.afterAll(async () => {

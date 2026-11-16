@@ -8,7 +8,11 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
  * took half a minute to start on a busy machine and compressed every file of every page.
  */
 
-/** The type a static host gives each kind of file of the site. */
+/**
+ * The type a static host gives each kind of file of the site.
+ *
+ * @type {Record<string, string>}
+ */
 export const CONTENT_TYPES = {
 	'.html': 'text/html; charset=utf-8',
 	'.js': 'text/javascript; charset=utf-8',

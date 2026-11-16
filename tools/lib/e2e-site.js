@@ -10,8 +10,27 @@ import { E2E_SITE_DIRECTORY } from './dev-pages.js';
  * other copies' sites do not: Playwright waits for the mark of its copy before the first test.
  */
 
+/**
+ * The loopbacks the site of the tests is served on, on the same port, the IPv6 one first: the
+ * browsers reach it before the other (Firefox once told so, see `playwright.config.ts`). On the
+ * machine of the project, under load, a connection to 127.0.0.1 often waited 8 to 10 s before it
+ * opened (38 of 450 in a quarter of an hour, against 2 of 450 to ::1), and a page of the game then
+ * took over a minute to load. Served on 127.0.0.1 too, so that no other server answers there.
+ */
+export const E2E_HOSTS = ['::1', '127.0.0.1'];
+
 /** The ports the copies ask for: away from those of the tools (4273, 5273) and of the system. */
 export const PORT_RANGE = { first: 20_000, size: 10_000 };
+
+/**
+ * The origin the browsers open the site of the tests at: localhost, which all three engines count
+ * as a secure context (service worker, caches); Firefox refuses the caches to `http://[::1]`.
+ *
+ * @param {number | string} port
+ */
+export function siteOrigin(port) {
+	return `http://localhost:${port}`;
+}
 
 /** The folder of the site of the tests, which `tools/e2e-server.js` serves. */
 export const SITE_OUTPUT = E2E_SITE_DIRECTORY;

@@ -4,10 +4,12 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
 	copyIdentity,
+	E2E_HOSTS,
 	markFileName,
 	PORT_RANGE,
 	preferredPort,
 	siteMark,
+	siteOrigin,
 	SITE_OUTPUT,
 	writeSiteMark
 } from '../../tools/lib/e2e-site.js';
@@ -50,6 +52,11 @@ describe('the site of the end-to-end tests of a copy', () => {
 		expect(copyIdentity(written, 'win32')).toBe(copyIdentity(FIRST_COPY.toLowerCase(), 'win32'));
 		expect(siteMark(written, 'win32')).toBe(siteMark(FIRST_COPY, 'win32'));
 		expect(preferredPort(written, 'win32')).toBe(preferredPort(FIRST_COPY, 'win32'));
+	});
+
+	it('is served on both loopbacks, the IPv6 one first, and opened as localhost', () => {
+		expect(E2E_HOSTS).toEqual(['::1', '127.0.0.1']);
+		expect(siteOrigin(25_048)).toBe('http://localhost:25048');
 	});
 
 	it('writes in the built site of a copy the mark it waits for, never the mark of another copy', () => {

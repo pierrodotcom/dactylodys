@@ -3,20 +3,25 @@ import { createServer, type Server } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it } from 'vitest';
+import { E2E_HOSTS } from '../../tools/lib/e2e-site.js';
 
 const HOST = '127.0.0.1';
 const SCRIPT = fileURLToPath(new URL('../../tools/e2e-port.js', import.meta.url));
 
-async function pickPort(preferred: number): Promise<number> {
-	const { stdout } = await promisify(execFile)(process.execPath, [SCRIPT, HOST, String(preferred)]);
+async function pickPort(preferred: number, hosts = HOST): Promise<number> {
+	const { stdout } = await promisify(execFile)(process.execPath, [
+		SCRIPT,
+		hosts,
+		String(preferred)
+	]);
 	return Number(stdout.trim());
 }
 
-function listen(port: number): Promise<Server> {
+function listen(port: number, host = HOST): Promise<Server> {
 	return new Promise((resolve, reject) => {
 		const server = createServer();
 		server.once('error', reject);
-		server.listen({ host: HOST, port, exclusive: true }, () => resolve(server));
+		server.listen({ host, port, exclusive: true }, () => resolve(server));
 	});
 }
 
@@ -53,5 +58,18 @@ describe('e2e port picker', () => {
 		expect(picked).not.toBe(taken);
 		expect(picked).toBeGreaterThan(0);
 		servers.push(await listen(picked));
+	});
+
+	// The site of the tests is served on both loopbacks (`tools/lib/e2e-site.js`): a port taken on
+	// one of them would let another server answer the browser there.
+	it('gives a port free on every loopback, never one taken on one of them', async () => {
+		const blocker = await listen(0, '127.0.0.1');
+		servers.push(blocker);
+		const taken = portOf(blocker);
+
+		const picked = await pickPort(taken, E2E_HOSTS.join(','));
+
+		expect(picked).not.toBe(taken);
+		for (const host of E2E_HOSTS) servers.push(await listen(picked, host));
 	});
 });

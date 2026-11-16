@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { E2E_HOSTS, siteOrigin } from '../../tools/lib/e2e-site.js';
 import { createStaticSiteServer, fileFor } from '../../tools/lib/static-site.js';
 
 describe('a built site served as a static host serves it', () => {
@@ -20,9 +21,10 @@ describe('a built site served as a static host serves it', () => {
 		writeFileSync(join(site, 'dev', 'jeux.html'), '<h1>games</h1>');
 		writeFileSync(join(site, '_app', 'start.js'), 'export {};');
 		writeFileSync(join(site, 'secret.txt'), 'inside');
+		// On the loopback of the end-to-end tests the browsers reach first, opened as they open it.
 		server = createStaticSiteServer(site);
-		await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
-		origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+		await new Promise<void>((done) => server.listen(0, E2E_HOSTS[0], done));
+		origin = siteOrigin((server.address() as AddressInfo).port);
 	});
 
 	afterAll(async () => {
