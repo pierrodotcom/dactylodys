@@ -78,7 +78,7 @@
 	.river-scene {
 		position: relative;
 		inline-size: 100%;
-		max-inline-size: var(--dd-size-scene-max);
+		max-inline-size: var(--dd-size-scene-fit);
 		overflow: hidden;
 		border-radius: var(--dd-radius-lg);
 	}

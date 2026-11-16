@@ -99,7 +99,7 @@
 		align-content: space-between;
 		gap: var(--dd-space-sm);
 		inline-size: 100%;
-		max-inline-size: var(--dd-size-scene-max);
+		max-inline-size: var(--dd-size-scene-fit);
 		padding: var(--dd-space-md) var(--dd-space-md) var(--dd-space-xs);
 		overflow: hidden;
 		border-radius: var(--dd-radius-lg);

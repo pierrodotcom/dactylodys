@@ -12,7 +12,7 @@ import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
 import azertyMac from '../../../layouts/fr-fr-azerty-mac.json';
 import azertyPc from '../../../layouts/fr-fr-azerty-pc.json';
 import tenFingers from '../../../layouts/fingering/ten-fingers-iso.json';
-import { introKeys } from './intro-keys';
+import { headingCount, introKeys, introLines, introShown } from './intro-keys';
 
 const progression = parseProgression(
 	JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
@@ -73,5 +73,79 @@ describe('introKeys', () => {
 		const lesson = { ...lessonOf('fr.lesson.oeufs-f-j'), newChars: ['f', '€€'] };
 		const [, charIndex] = layouts[0];
 		expect(introKeys(lesson, ['f'], charIndex, fingering).map((key) => key.char)).toEqual(['f']);
+	});
+});
+
+describe('introShown', () => {
+	const [, charIndex] = layouts[0];
+
+	function shownFor(id: string) {
+		return introShown(lessonOf(id), freshChars(progression, id), charIndex, fingering);
+	}
+
+	it('shows the keys a lesson brings as new, and counts them for the heading', () => {
+		const first = shownFor('fr.lesson.oeufs-f-j');
+		expect(first?.kind).toBe('new');
+		expect(first && headingCount(lessonOf('fr.lesson.oeufs-f-j'), first)).toBe(2);
+		const enter = shownFor('fr.lesson.liste-pique-nique');
+		expect(enter?.kind).toBe('new');
+		expect(enter?.keys.map((key) => key.press.code)).toEqual(['Enter']);
+		expect(enter && headingCount(lessonOf('fr.lesson.liste-pique-nique'), enter)).toBe(1);
+	});
+
+	it('shows what the data says a lesson without a new key works: the capitals, Backspace', () => {
+		const capitals = shownFor('fr.lesson.grandes-majuscules');
+		expect(capitals?.kind).toBe('practice');
+		expect(capitals?.keys.map((key) => key.char)).toEqual(['F', 'J']);
+		const repairs = shownFor('fr.lesson.reparer-message');
+		expect(repairs?.kind).toBe('practice');
+		expect(repairs?.keys.map((key) => key.press)).toEqual([{ code: 'Backspace', level: 'base' }]);
+		expect(repairs && headingCount(lessonOf('fr.lesson.reparer-message'), repairs)).toBe(1);
+	});
+
+	it('leaves the keyboard out of a lesson whose data names no key', () => {
+		for (const id of lessonIds(progression)) {
+			const lesson = lessonOf(id);
+			const named =
+				lesson.newChars.length > 0 ||
+				lesson.unlocks.includes('uppercase') ||
+				lesson.repair !== undefined;
+			expect(shownFor(id) === null, id).toBe(!named);
+		}
+	});
+
+	it('never calls new a key that a lesson does not bring', () => {
+		for (const id of lessonIds(progression)) {
+			const shown = shownFor(id);
+			if (shown?.kind === 'new') expect(lessonOf(id).newChars.length, id).toBeGreaterThan(0);
+		}
+	});
+});
+
+describe('introLines', () => {
+	const [, charIndex] = layouts[0];
+
+	function linesFor(id: string) {
+		const keys = introKeys(lessonOf(id), freshChars(progression, id), charIndex, fingering);
+		return introLines(keys, fingering);
+	}
+
+	it('says the digits of one hand on one line, Shift held', () => {
+		expect(linesFor('fr.lesson.score-du-match')).toEqual([
+			{ kind: 'hand', hand: 'left', level: 'shift', chars: ['1', '2', '3', '4', '5'] }
+		]);
+		expect(linesFor('fr.lesson.train-huit-heures')).toEqual([
+			{ kind: 'hand', hand: 'right', level: 'shift', chars: ['6', '7', '8', '9', '0'] }
+		]);
+	});
+
+	it('keeps one line for each key and its finger otherwise', () => {
+		expect(linesFor('fr.lesson.oeufs-f-j').map((line) => line.kind)).toEqual(['key', 'key']);
+		// Comma, period and semicolon: three keys of the right hand, not all with Shift.
+		expect(linesFor('fr.lesson.virgule-point').map((line) => line.kind)).toEqual([
+			'key',
+			'key',
+			'key'
+		]);
 	});
 });

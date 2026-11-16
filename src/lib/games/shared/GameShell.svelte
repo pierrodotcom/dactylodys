@@ -46,7 +46,8 @@
 		/**
 		 * `side`: scene, text and aside on one line; `wide`: a wider scene beside the text, above it when
 		 * the room is short; `stacked`: the scene across the page, as tall as the screen allows, the text
-		 * below it and the keyboard at the bottom, all on one screen.
+		 * below it and the keyboard at the bottom. Each one holds on one screen: the scene follows the
+		 * height of the screen, the text shows two lines (one across the page) and follows the typing.
 		 */
 		arrangement?: 'side' | 'wide' | 'stacked';
 		/** Next to the pause button: how far the exercise has gone. */
@@ -68,6 +69,8 @@
 	const NOTICE_TOKEN = '--dd-duration-notice';
 	const FINALE_FOCUS_TOKEN = '--dd-duration-base';
 	const INPUT_ID = 'game-input';
+	/** Lines of the text in view: across the page, one line holds as much as two beside a scene. */
+	const TEXT_LINES = { side: 2, wide: 2, stacked: 1 } as const;
 	/** What a press of the mouse is meant for: it keeps its own way of taking the focus. */
 	const PRESSABLE = 'button, a, input, select, textarea, label';
 	/** The physical key that erases, whatever the layout: `KeyboardEvent.code` names it the same everywhere. */
@@ -423,6 +426,8 @@
 					position={typing ? view.position : view.group.length}
 					errorIndex={view.errorIndex}
 					pending={typing ? view.pending : []}
+					lines={TEXT_LINES[arrangement]}
+					still={settings.reducedMotion}
 				/>
 				<!--
 					One place for what comes and goes (finger, reminder, Caps Lock, lost focus): nothing below
@@ -518,16 +523,23 @@
 {/if}
 
 <style>
+	/*
+	 * One screen: the game is as tall as the screen. The first and last rows share what is left of
+	 * the height, so that the game sits in the middle of a tall screen; on a short one they are empty
+	 * and the game starts at the top, Pause in view (centring the rows would push it out of reach).
+	 */
 	.game {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		gap: var(--dd-space-lg);
-		max-inline-size: var(--dd-size-page-wide);
-		margin: auto;
-		padding: var(--dd-space-lg);
+		grid-template-rows: 1fr auto auto auto 1fr;
+		block-size: var(--dd-size-viewport-full);
+		max-inline-size: var(--dd-size-page-game);
+		margin-inline: auto;
+		padding: var(--dd-space-sm) var(--dd-space-lg);
 	}
 
 	.top {
+		grid-row: 2;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -541,43 +553,38 @@
 		min-inline-size: 0;
 	}
 
-	.stage {
-		display: grid;
-		align-items: center;
-		gap: var(--dd-space-xl);
-	}
-
 	/* On one line when there is room; on a narrow page, the text goes below the scene. */
-	.stage[data-arrangement='side'] {
+	.stage {
+		grid-row: 3;
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		justify-content: center;
+		gap: var(--dd-space-lg) var(--dd-space-xl);
+		margin-block: var(--dd-space-sm);
 	}
 
 	.stage[data-arrangement='side'] .text-zone {
 		flex: 1 1 var(--dd-size-text-zone-side-min);
 	}
 
-	.stage[data-arrangement='wide'] {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-	}
-
+	/*
+	 * The scene grows first, up to the widest the height of the screen allows (`scene-fit`); the
+	 * text takes the rest, never less than its longest word: a long word narrows the scene rather
+	 * than sending the text under it.
+	 */
 	.stage[data-arrangement='wide'] .scene {
-		flex: 0 1 var(--dd-size-scene-max);
+		display: grid;
+		flex: 999 1 var(--dd-size-scene-min);
+		justify-items: center;
+		max-inline-size: var(--dd-size-scene-fit);
 	}
 
-	/* One screen, without scrolling: the scene takes the height left by the text and the keyboard. */
+	/* The scene takes the height left by the text and the keyboard, between its two sizes. */
 	.game[data-arrangement='stacked'] {
-		grid-template-rows: auto minmax(
-				var(--dd-size-scene-stacked-min),
-				var(--dd-size-scene-stacked-max)
-			);
-		align-content: center;
-		gap: var(--dd-space-sm);
-		block-size: var(--dd-size-viewport-full);
-		padding-block: var(--dd-space-sm);
+		grid-template-rows:
+			1fr auto minmax(var(--dd-size-scene-stacked-min), var(--dd-size-scene-stacked-max))
+			auto auto 1fr;
 	}
 
 	.stage[data-arrangement='stacked'] {
@@ -586,25 +593,36 @@
 
 	/* A definite row, so that the picture can take the whole height of its cell. */
 	.stage[data-arrangement='stacked'] .scene {
+		grid-row: 3;
 		display: grid;
 		grid-template-rows: minmax(0, 1fr);
 		min-block-size: 0;
+		margin-block-start: var(--dd-space-sm);
 	}
 
 	/* The finger hint goes beside the text: the line saved goes to the scene. */
+	.stage[data-arrangement='stacked'] .text-zone,
+	.stage[data-arrangement='stacked'] .finale {
+		grid-row: 4;
+		margin-block: var(--dd-space-sm);
+	}
+
 	.stage[data-arrangement='stacked'] .text-zone {
 		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: center;
-		padding-block: var(--dd-space-sm);
+	}
+
+	.game[data-arrangement='stacked'] .bottom {
+		grid-row: 5;
 	}
 
 	.text-zone,
 	.finale {
 		position: relative;
 		display: grid;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm);
 		align-content: center;
-		padding: var(--dd-space-md);
+		padding: var(--dd-space-sm) var(--dd-space-md);
 		border-width: var(--dd-border-width-thick);
 		border-style: solid;
 		border-color: transparent;
@@ -625,6 +643,7 @@
 		border-color: var(--dd-color-focus-ring);
 	}
 
+	/* Tight lines: a notice on two lines (what to erase first) keeps the game on a short laptop. */
 	.notice {
 		padding: var(--dd-space-sm) var(--dd-space-md);
 		border-width: var(--dd-border-width-thick);
@@ -633,6 +652,7 @@
 		border-radius: var(--dd-radius-md);
 		background-color: var(--dd-color-surface-sunken);
 		font-weight: var(--dd-font-weight-bold);
+		line-height: var(--dd-line-height-tight);
 	}
 
 	/* The hint, the reminder and the Caps Lock notice share one cell, as tall as the tallest. */
@@ -693,6 +713,7 @@
 	}
 
 	.bottom {
+		grid-row: 4;
 		display: grid;
 		justify-items: center;
 	}
