@@ -1,18 +1,19 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { toGraphemes } from '../src/lib/engine/graphemes';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
 	answerCheckKey,
+	expectNoAxeViolation,
 	installProfile,
 	keyboardCheckKeys,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
 
@@ -25,7 +26,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const PLAY_URL = /\/jouer$/;
 const HOME_URL = /\/$/;
 const PLAYER_NAME = 'Lou';
@@ -35,7 +35,6 @@ const LAPTOP = { width: 1280, height: 720 } as const;
 const FAR_DOWN = 100_000;
 /** Groups a test may type before it meets the character it looks for. */
 const GROUP_BUDGET = 6;
-const SKIP_KEY = 'Enter';
 /** Stands for a parameter of a message whose value a test does not know. */
 const ANYTHING = 'ANYTHINGTOKEN';
 /** Time given to a reward to give way to the next group or to the result. */
@@ -137,19 +136,9 @@ async function currentGroup(page: Page): Promise<string> {
 	return GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? '';
 }
 
-/** Types the group on screen, then passes its reward with a key, up to the next group. */
-async function typeGroupAndGoOn(page: Page, group: string) {
-	await page.keyboard.type(group);
-	await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-	await expect(async () => {
-		await page.keyboard.press(SKIP_KEY);
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL, { timeout: 500 });
-	}).toPass();
-}
-
 /**
- * Types whole groups until one holds `char`, then that group up to it. Returns how many characters
- * of the group on screen are typed.
+ * Types whole groups until one holds `char`, then that group up to it; the rewards are instant, the
+ * next group comes by itself. Returns how many characters of the group on screen are typed.
  */
 async function typeUpTo(page: Page, char: string): Promise<number> {
 	for (let played = 0; played < GROUP_BUDGET; played++) {
@@ -161,7 +150,7 @@ async function typeUpTo(page: Page, char: string): Promise<number> {
 			await expect(doneCells(page)).toHaveCount(position);
 			return position;
 		}
-		await typeGroupAndGoOn(page, group);
+		await page.keyboard.type(group);
 	}
 	throw new Error(`No group holds ${char} within ${GROUP_BUDGET} groups`);
 }
@@ -173,7 +162,6 @@ async function typeToResult(page: Page, beforeGroup: () => Promise<void>) {
 	for (;;) {
 		await beforeGroup();
 		await page.keyboard.type(await currentGroup(page));
-		await page.keyboard.press(SKIP_KEY);
 		const over = { value: false };
 		await expect(async () => {
 			over.value = (await result.isVisible()) || (await finale.isVisible());
@@ -200,12 +188,6 @@ async function scrollFarDown(page: Page) {
 	await page.evaluate((top) => window.scrollTo(0, top), FAR_DOWN);
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 /** A message whose parameters may hold anything. */
 function anyParams(key: string, names: readonly string[]): RegExp {
 	const filled = message(key, Object.fromEntries(names.map((name) => [name, ANYTHING])));
@@ -214,7 +196,7 @@ function anyParams(key: string, names: readonly string[]): RegExp {
 }
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('Tab during a game', () => {
@@ -385,6 +367,8 @@ test.describe('the Back button of the browser', () => {
 	});
 
 	test('opens the pause of a game, which goes on at the same character', async ({ page }) => {
+		// The group done is looked at once the game goes on: its reward stays.
+		await setRewards(page, 'hold');
 		await reachMapFromHome(page, childBefore(FIRST));
 		await startLesson(page, FIRST);
 		const group = await currentGroup(page);
@@ -491,7 +475,7 @@ test.describe('every screen', () => {
 	});
 });
 
-test.describe('a screen reader', () => {
+test.describe('a screen reader', CHROMIUM_ONLY, () => {
 	test('hears Floup ask and what to erase first, from the one live region of the game', async ({
 		page
 	}) => {

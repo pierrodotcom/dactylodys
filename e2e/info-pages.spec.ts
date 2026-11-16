@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs';
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
-import { installProfile, advancedProfile, loadMessages, openPage, readJson } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import {
+	advancedProfile,
+	expectNoAxeViolation,
+	installProfile,
+	loadMessages,
+	openPage,
+	readJson
+} from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
@@ -11,8 +18,6 @@ const expect = baseExpect.configure({ timeout: 15_000 });
  * screen of the child; readable at 320 pixels, by keyboard alone; the guide prints on one sheet,
  * the sheet for professionals on two pages at most.
  */
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const NARROW = { width: 320, height: 640 } as const;
 /** One A4 sheet, printed on both sides. */
 const MAX_PRINTED_PAGES = 2;
@@ -71,12 +76,6 @@ async function focusByTab(page: Page, target: Locator) {
 	throw new Error('The element cannot be reached with the Tab key');
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 async function gateNumber(page: Page): Promise<number> {
 	const words = (await page.locator('[data-gate-words]').textContent())?.trim();
 	const number = gateNumbers.find((entry) => entry.words === words);
@@ -84,40 +83,48 @@ async function gateNumber(page: Page): Promise<number> {
 	return number.value;
 }
 
-test('links the pages for adults from the foot of the home page', async ({ page }) => {
-	await openPage(page, '/');
-	expect(await pathsOf(page.locator('footer [data-info-links] a'))).toEqual(PATHS);
-
-	for (const info of PAGES) {
+test(
+	'links the pages for adults from the foot of the home page',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
 		await openPage(page, '/');
-		await page.locator('footer').getByRole('link', { name: info.title, exact: true }).click();
-		await expect(page).toHaveURL(new RegExp(`${info.path}$`));
-		await expect(heading(page, info.title)).toBeVisible();
-		await expect(page).toHaveTitle(
-			message('info_page_title', { page: info.title, appName: message('app_name') })
-		);
+		expect(await pathsOf(page.locator('footer [data-info-links] a'))).toEqual(PATHS);
+
+		for (const info of PAGES) {
+			await openPage(page, '/');
+			await page.locator('footer').getByRole('link', { name: info.title, exact: true }).click();
+			await expect(page).toHaveURL(new RegExp(`${info.path}$`));
+			await expect(heading(page, info.title)).toBeVisible();
+			await expect(page).toHaveTitle(
+				message('info_page_title', { page: info.title, appName: message('app_name') })
+			);
+		}
 	}
-});
+);
 
-test('links the pages for adults from the adult space, and not from the screens of the child', async ({
-	page
-}) => {
-	await openPage(page, '/jouer');
-	await installProfile(page, advancedProfile({ name: 'Lou', passed: {} }));
-	await openPage(page, '/jouer');
-	await expect(heading(page, message('play_players_title'))).toBeVisible();
-	expect(await infoLinks(page).count()).toBe(0);
+test(
+	'links the pages for adults from the adult space, and not from the screens of the child',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		await openPage(page, '/jouer');
+		await installProfile(page, advancedProfile({ name: 'Lou', passed: {} }));
+		await openPage(page, '/jouer');
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+		expect(await infoLinks(page).count()).toBe(0);
 
-	await openPage(page, '/adulte');
-	await page.locator('[data-gate-answer]').fill(String(await gateNumber(page)));
-	await page.keyboard.press('Enter');
-	await expect(page.locator('[data-adult-home]')).toBeVisible();
-	const section = page.locator('[data-adult-info]');
-	await expect(section.getByRole('heading', { level: 2 })).toHaveText(message('info_links_label'));
-	expect(await pathsOf(section.locator('a'))).toEqual(PATHS);
-});
+		await openPage(page, '/adulte');
+		await page.locator('[data-gate-answer]').fill(String(await gateNumber(page)));
+		await page.keyboard.press('Enter');
+		await expect(page.locator('[data-adult-home]')).toBeVisible();
+		const section = page.locator('[data-adult-info]');
+		await expect(section.getByRole('heading', { level: 2 })).toHaveText(
+			message('info_links_label')
+		);
+		expect(await pathsOf(section.locator('a'))).toEqual(PATHS);
+	}
+);
 
-test('marks the page shown among the links at its foot', async ({ page }) => {
+test('marks the page shown among the links at its foot', CHROMIUM_ONLY, async ({ page }) => {
 	for (const info of PAGES) {
 		await openPage(page, info.path);
 		const current = page.locator('footer a[aria-current="page"]');
@@ -125,30 +132,34 @@ test('marks the page shown among the links at its foot', async ({ page }) => {
 	}
 });
 
-test('gives each page one title, then sections one level below', async ({ page }) => {
-	for (const info of PAGES) {
-		await openPage(page, info.path);
-		const levels = await page
-			.locator('main :is(h1, h2, h3, h4)')
-			.evaluateAll((all) => all.map((element) => Number(element.tagName.slice(1))));
-		expect(levels[0], info.path).toBe(1);
-		expect(
-			levels.filter((level) => level === 1),
-			info.path
-		).toHaveLength(1);
-		const jumps = levels.slice(1).filter((level, index) => level > (levels[index] ?? 0) + 1);
-		expect(jumps, info.path).toEqual([]);
-		await expect(page.getByRole('main')).toHaveCount(1);
-		await expect(page.getByRole('contentinfo')).toHaveCount(1);
+test(
+	'gives each page one title, then sections one level below',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		for (const info of PAGES) {
+			await openPage(page, info.path);
+			const levels = await page
+				.locator('main :is(h1, h2, h3, h4)')
+				.evaluateAll((all) => all.map((element) => Number(element.tagName.slice(1))));
+			expect(levels[0], info.path).toBe(1);
+			expect(
+				levels.filter((level) => level === 1),
+				info.path
+			).toHaveLength(1);
+			const jumps = levels.slice(1).filter((level, index) => level > (levels[index] ?? 0) + 1);
+			expect(jumps, info.path).toEqual([]);
+			await expect(page.getByRole('main')).toHaveCount(1);
+			await expect(page.getByRole('contentinfo')).toHaveCount(1);
+		}
 	}
-});
+);
 
-test('says on the guide that the game is no treatment', async ({ page }) => {
+test('says on the guide that the game is no treatment', CHROMIUM_ONLY, async ({ page }) => {
 	await openPage(page, '/pour-les-adultes');
 	await expect(page.locator('[data-info-notice]')).toHaveText(message('guide_not_treatment'));
 });
 
-test('sends a problem to the issues of the repository', async ({ page }) => {
+test('sends a problem to the issues of the repository', CHROMIUM_ONLY, async ({ page }) => {
 	await openPage(page, '/accessibilite');
 	await expect(page.locator('[data-issues-link]')).toHaveAttribute(
 		'href',
@@ -202,7 +213,7 @@ test.describe('the credits page', () => {
 		await expect(heading(page, message('app_name'))).toBeVisible();
 	});
 
-	test('names the host of the site on the privacy page', async ({ page }) => {
+	test('names the host of the site on the privacy page', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, '/confidentialite');
 		const host = page.locator('[data-privacy-host]');
 		await expect(host).toContainText('GitHub Pages');
@@ -275,15 +286,19 @@ test.describe('a page for adults opened from the adult space', () => {
 		await expect(page.locator('[data-adult-home]')).toHaveCount(0);
 	});
 
-	test('leads to the home page when it was not opened from the adult space', async ({ page }) => {
-		await openPage(page, '/adulte');
-		await expect(page.locator('[data-gate-answer]')).toBeVisible();
-		await openPage(page, '/credits');
-		await expect(wayOut(page)).toHaveText(message('info_back_home'));
-	});
+	test(
+		'leads to the home page when it was not opened from the adult space',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await openPage(page, '/adulte');
+			await expect(page.locator('[data-gate-answer]')).toBeVisible();
+			await openPage(page, '/credits');
+			await expect(wayOut(page)).toHaveText(message('info_back_home'));
+		}
+	);
 });
 
-test.describe('reflow at 320 pixels', () => {
+test.describe('reflow at 320 pixels', CHROMIUM_ONLY, () => {
 	test.use({ viewport: NARROW });
 
 	test('keeps the pages for adults and the home page within the width of the page', async ({
@@ -304,8 +319,8 @@ test.describe('reflow at 320 pixels', () => {
 
 test.describe('printing', () => {
 	for (const path of ['/pour-les-adultes', PROFESSIONALS]) {
-		test(`prints ${path} on one A4 sheet, both sides`, async ({ page }, testInfo) => {
-			test.skip(testInfo.project.name !== 'chromium', 'Only Chromium prints a page to PDF');
+		// Only Chromium prints a page to PDF.
+		test(`prints ${path} on one A4 sheet, both sides`, CHROMIUM_ONLY, async ({ page }) => {
 			await openPage(page, path);
 			await page.evaluate(() => document.fonts.ready);
 			await page.emulateMedia({ media: 'print' });
@@ -390,12 +405,12 @@ test.describe('the sheet for professionals', () => {
 		await expect(page.locator('[data-research-link]')).toBeHidden();
 	});
 
-	test('says that the game is no treatment', async ({ page }) => {
+	test('says that the game is no treatment', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, PROFESSIONALS);
 		await expect(page.locator('[data-info-notice]')).toHaveText(message('pro_not_treatment'));
 	});
 
-	test('sends the review to the issue form of the repository', async ({ page }) => {
+	test('sends the review to the issue form of the repository', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, PROFESSIONALS);
 		await expect(page.locator('[data-review-link]')).toHaveAttribute('href', REVIEW_FORM);
 		const questions = await page.locator('[data-review-questions] > li').count();
@@ -403,7 +418,7 @@ test.describe('the sheet for professionals', () => {
 		expect(questions).toBeLessThanOrEqual(8);
 	});
 
-	test('shows the same section titles as its Markdown version', async ({ page }) => {
+	test('shows the same section titles as its Markdown version', CHROMIUM_ONLY, async ({ page }) => {
 		const sheet = readFileSync('docs/fiche-professionnels.md', 'utf8');
 		const headings = [...sheet.matchAll(/^## (.+)$/gm)].map((match) => match[1]?.trim());
 
@@ -412,23 +427,19 @@ test.describe('the sheet for professionals', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`pages for adults, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
-
-		test('has no axe violation on the pages for adults and the home page', async ({ page }) => {
-			for (const path of ['/', ...PATHS]) {
-				await openPage(page, path);
-				await expectNoAxeViolation(page);
-			}
-		});
-
-		test('has no axe violation at 320 pixels on the pages for adults', async ({ page }) => {
-			await page.setViewportSize(NARROW);
-			for (const path of PATHS) {
-				await openPage(page, path);
-				await expectNoAxeViolation(page);
-			}
-		});
+test.describe('pages for adults, light and dark themes', () => {
+	test('has no axe violation on the pages for adults and the home page', async ({ page }) => {
+		for (const path of ['/', ...PATHS]) {
+			await openPage(page, path);
+			await expectNoAxeViolation(page);
+		}
 	});
-}
+
+	test('has no axe violation at 320 pixels on the pages for adults', async ({ page }) => {
+		await page.setViewportSize(NARROW);
+		for (const path of PATHS) {
+			await openPage(page, path);
+			await expectNoAxeViolation(page);
+		}
+	});
+});

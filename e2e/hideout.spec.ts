@@ -1,10 +1,11 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { parseRewardCatalogue, type RewardDefinition } from '../src/lib/engine/rewards';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
@@ -17,8 +18,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAY_URL = '/jouer';
 const PRESS_BUDGET = 40;
 const PASSED_STARS: StarCount = 3;
@@ -139,12 +138,6 @@ async function walkTo(page: Page, from: string, to: string) {
 	await expect(placeButton(page, to)).toBeFocused();
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 test.describe('the hideout', () => {
 	test('sets down two objects with the keyboard, takes one away and keeps it after a reload', async ({
 		page
@@ -228,29 +221,31 @@ test.describe('the hideout', () => {
 		await expect(sceneObject(page, 'window')).toHaveCount(0);
 	});
 
-	test('welcomes a new child in an empty cabin, with nothing to unlock in sight', async ({
-		page
-	}) => {
-		await reachMapAs(page, advancedProfile({ name: 'Iris', passed: {} }));
-		await openHideout(page);
-		await expect(page.getByText(message('play_hideout_welcome'))).toBeVisible();
-		await expect(page.locator('[data-place-object]')).toHaveCount(0);
-		await expect(
-			page.locator('[data-silhouette], [data-owned="false"], [data-locked]')
-		).toHaveCount(0);
-		for (const place of rules.places) {
-			await expect(placeButton(page, place)).toHaveAccessibleName(
-				message('play_hideout_place_free', { place: placeName(place) })
-			);
+	test(
+		'welcomes a new child in an empty cabin, with nothing to unlock in sight',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Iris', passed: {} }));
+			await openHideout(page);
+			await expect(page.getByText(message('play_hideout_welcome'))).toBeVisible();
+			await expect(page.locator('[data-place-object]')).toHaveCount(0);
+			await expect(
+				page.locator('[data-silhouette], [data-owned="false"], [data-locked]')
+			).toHaveCount(0);
+			for (const place of rules.places) {
+				await expect(placeButton(page, place)).toHaveAccessibleName(
+					message('play_hideout_place_free', { place: placeName(place) })
+				);
+			}
+			await placeButton(page, 'shelf').click();
+			await expect(page.getByText(message('play_hideout_nothing_fits'))).toBeVisible();
+			await expect(page.locator('button[data-object]')).toHaveCount(0);
+			await button(page, message('play_hideout_other_place')).click();
+			await expect(placeButton(page, 'shelf')).toBeFocused();
 		}
-		await placeButton(page, 'shelf').click();
-		await expect(page.getByText(message('play_hideout_nothing_fits'))).toBeVisible();
-		await expect(page.locator('button[data-object]')).toHaveCount(0);
-		await button(page, message('play_hideout_other_place')).click();
-		await expect(placeButton(page, 'shelf')).toBeFocused();
-	});
+	);
 
-	test('offers the hideout from the map only', async ({ page }) => {
+	test('offers the hideout from the map only', CHROMIUM_ONLY, async ({ page }) => {
 		await reachMapAs(page, firstWorldDone('Sacha'));
 		await expect(button(page, message('play_hideout_open'))).toBeVisible();
 		const lesson = firstWorld[0] as Lesson;
@@ -261,18 +256,14 @@ test.describe('the hideout', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`the hideout, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
-
-		test('has no axe violation on the places and on the choice of an object', async ({ page }) => {
-			await reachMapAs(page, firstWorldDone('Axelle'));
-			await openHideout(page);
-			await expectNoAxeViolation(page);
-			await placeButton(page, 'pegs').click();
-			await page.locator(`button[data-object="${firstFitting('pegs').id}"]`).click();
-			await expect(sceneObject(page, 'pegs')).toHaveCount(1);
-			await expectNoAxeViolation(page);
-		});
+test.describe('the hideout, light and dark themes', () => {
+	test('has no axe violation on the places and on the choice of an object', async ({ page }) => {
+		await reachMapAs(page, firstWorldDone('Axelle'));
+		await openHideout(page);
+		await expectNoAxeViolation(page);
+		await placeButton(page, 'pegs').click();
+		await page.locator(`button[data-object="${firstFitting('pegs').id}"]`).click();
+		await expect(sceneObject(page, 'pegs')).toHaveCount(1);
+		await expectNoAxeViolation(page);
 	});
-}
+});

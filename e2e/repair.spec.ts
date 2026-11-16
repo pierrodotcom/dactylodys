@@ -1,18 +1,19 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { toGraphemes } from '../src/lib/engine/graphemes';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { ErrorPolicy } from '../src/lib/engine/types';
 import { updateSettings } from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
 
@@ -25,7 +26,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const LINE_BREAK = String.fromCharCode(10);
 const PLAYER_NAME = 'Lou';
 const PASSED_STARS: StarCount = 2;
@@ -150,20 +150,24 @@ async function playToResult(page: Page): Promise<number> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('the lesson of repairs', () => {
 	for (const errorPolicy of POLICIES) {
-		test(`erases the planted mistakes, then types the rest, up to the result (${errorPolicy})`, async ({
-			page
-		}) => {
-			await startLesson(page, errorPolicy);
-			const repaired = await playToResult(page);
+		// The same keys in both policies: one of them is enough on the other engines.
+		const engines = errorPolicy === 'backspace' ? {} : CHROMIUM_ONLY;
+		test(
+			`erases the planted mistakes, then types the rest, up to the result (${errorPolicy})`,
+			engines,
+			async ({ page }) => {
+				await startLesson(page, errorPolicy);
+				const repaired = await playToResult(page);
 
-			expect(repaired).toBeGreaterThan(0);
-			await expect(resultButton(page)).toBeVisible();
-		});
+				expect(repaired).toBeGreaterThan(0);
+				await expect(resultButton(page)).toBeVisible();
+			}
+		);
 	}
 
 	test('takes no right key before the mistake is erased', async ({ page }) => {
@@ -186,8 +190,6 @@ test.describe('the lesson of repairs', () => {
 		await startLesson(page, 'retry');
 		const { pending } = await currentGroup(page);
 		expect(pending).toBeGreaterThan(0);
-		await page.evaluate(() => document.fonts.ready);
-		const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-		expect(results.violations).toEqual([]);
+		await expectNoAxeViolation(page);
 	});
 });

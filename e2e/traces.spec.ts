@@ -1,11 +1,14 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { parseTraceFile, replayTrace } from '../src/lib/keyboard/trace';
-import { linkedPaths, openPage } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import { expectNoAxeViolation, linkedPaths, openPage } from './support';
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
+/*
+ * The page asked of keyboard testers, whatever their browser: what it records of the keys stays on
+ * the three engines, the rest of the page runs on Chromium only.
+ */
+
 const PAGE_URL = '/dev/traces';
 const FILE_NAME = /^fr-fr-azerty-pc__[a-z0-9-]+-[a-z0-9-]+__\d{4}-\d{2}-\d{2}\.json$/;
 
@@ -36,7 +39,7 @@ function firstRebuilt(page: Page) {
 }
 
 test.describe('trace recording page', () => {
-	test('loads with its title, setup fields and prompts', async ({ page }) => {
+	test('loads with its title, setup fields and prompts', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, PAGE_URL);
 
 		await expect(page).toHaveTitle(message('traces_title'));
@@ -51,7 +54,7 @@ test.describe('trace recording page', () => {
 		await expect(firstInput(page)).toBeVisible();
 	});
 
-	test('is not linked from the home page', async ({ page }) => {
+	test('is not linked from the home page', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, '/');
 
 		expect(await linkedPaths(page)).not.toContain(PAGE_URL);
@@ -69,17 +72,21 @@ test.describe('trace recording page', () => {
 		);
 	});
 
-	test('reports a prompt as identical once the expected text is typed', async ({ page }) => {
-		await openPage(page, PAGE_URL);
+	test(
+		'reports a prompt as identical once the expected text is typed',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await openPage(page, PAGE_URL);
 
-		await firstInput(page).click();
-		await page.keyboard.type(FIRST_PROMPT_TEXT);
+			await firstInput(page).click();
+			await page.keyboard.type(FIRST_PROMPT_TEXT);
 
-		await expect(firstRebuilt(page)).toHaveText(FIRST_PROMPT_TEXT);
-		await expect(page.getByRole('status').first()).toHaveText(
-			new RegExp(message('traces_status_same'))
-		);
-	});
+			await expect(firstRebuilt(page)).toHaveText(FIRST_PROMPT_TEXT);
+			await expect(page.getByRole('status').first()).toHaveText(
+				new RegExp(message('traces_status_same'))
+			);
+		}
+	);
 
 	test('can be driven with the keyboard alone, including restarting a prompt', async ({ page }) => {
 		await openPage(page, PAGE_URL);
@@ -110,7 +117,7 @@ test.describe('trace recording page', () => {
 		await expect(firstRebuilt(page)).toHaveText('abc');
 	});
 
-	test('keeps the download disabled until something is typed', async ({ page }) => {
+	test('keeps the download disabled until something is typed', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, PAGE_URL);
 		const button = page.getByRole('button', { name: message('traces_download_button') });
 
@@ -160,29 +167,19 @@ test.describe('trace recording page', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`trace recording page, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('trace recording page, light and dark themes', () => {
+	test('has no axe violation for WCAG A and AA', async ({ page }) => {
+		await openPage(page, PAGE_URL);
 
-		test('has no axe violation for WCAG A and AA', async ({ page }) => {
-			await openPage(page, PAGE_URL);
-			await page.evaluate(() => document.fonts.ready);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-			expect(results.violations).toEqual([]);
-		});
-
-		test('has no axe violation once a prompt is filled in', async ({ page }) => {
-			await openPage(page, PAGE_URL);
-			await firstInput(page).click();
-			await page.keyboard.type('abc');
-			await expect(firstRebuilt(page)).toHaveText('abc');
-			await page.evaluate(() => document.fonts.ready);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-			expect(results.violations).toEqual([]);
-		});
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation once a prompt is filled in', async ({ page }) => {
+		await openPage(page, PAGE_URL);
+		await firstInput(page).click();
+		await page.keyboard.type('abc');
+		await expect(firstRebuilt(page)).toHaveText('abc');
+
+		await expectNoAxeViolation(page);
+	});
+});

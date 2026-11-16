@@ -1,7 +1,7 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
@@ -10,7 +10,6 @@ import {
 } from './support';
 
 const PLAY_URL = '/jouer';
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const { message } = loadMessages();
 
 const readable = advancedProfile({ name: 'Nova', passed: {} });
@@ -55,13 +54,12 @@ test.describe('profiles the app cannot open', () => {
 		expect(await storedRecord(page, readable)).toBeDefined();
 	});
 
-	test('has no axe violation on the list and on the question', async ({ page }) => {
+	test('has no axe violation on the list and on the question, light and dark', async ({ page }) => {
 		await reachPlayers(page);
-		const scan = () => new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-		expect((await scan()).violations).toEqual([]);
+		await expectNoAxeViolation(page);
 		await section(page)
 			.getByRole('button', { name: message('play_unreadable_delete') })
 			.click();
-		expect((await scan()).violations).toEqual([]);
+		await expectNoAxeViolation(page);
 	});
 });

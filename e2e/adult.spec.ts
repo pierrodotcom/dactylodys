@@ -1,12 +1,13 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Download, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import type { CharProgress } from '../src/lib/engine/progression/types';
 import { BACKUP_FORMAT_ID, exportBackup } from '../src/lib/state/backup';
 import { updateSettings } from '../src/lib/state/profile';
 import type { Profile, SessionRecord } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
@@ -19,8 +20,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const CODE = '2580';
 const BYTE_ORDER_MARK = [0xef, 0xbb, 0xbf];
 
@@ -248,7 +247,7 @@ test.describe('adult space', () => {
 		await expect(page.locator('[data-gate-words]')).toBeVisible();
 	});
 
-	test('shows the report and the evolution of a child', async ({ page }) => {
+	test('shows the report and the evolution of a child', CHROMIUM_ONLY, async ({ page }) => {
 		await reachPlayers(page);
 		await enterAdultSpace(page);
 		await passGate(page);
@@ -318,65 +317,69 @@ test.describe('adult space', () => {
 		);
 	});
 
-	test('gives the speed in characters per minute too, and says since when it counts the reading time', async ({
-		page
-	}) => {
-		const mia = remeasuredChild('Mia');
-		await reachPlayers(page, [lou, mia]);
-		await enterAdultSpace(page);
-		await passGate(page);
-		await openReport(page, mia);
+	test(
+		'gives the speed in characters per minute too, and says since when it counts the reading time',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const mia = remeasuredChild('Mia');
+			await reachPlayers(page, [lou, mia]);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, mia);
 
-		// The first play measured the new way: 2026-10-22 at 17:00 on the device.
-		const change = message('adult_speed_rule_change', {
-			date: new Intl.DateTimeFormat('fr', { dateStyle: 'long', timeZone: 'UTC' }).format(
-				new Date('2026-10-22T17:00:00Z')
-			)
-		});
-		const evolution = page.locator('[data-child-evolution]');
-		await expect(evolution.locator('[data-speed-rule-change]')).toHaveText(change);
-		await expect(evolution).toContainText(message('adult_speed_note'));
-		await evolution.getByText(message('adult_table_show')).first().click();
-		const table = evolution.locator('[data-sessions-table]');
-		await expect(
-			table.getByRole('columnheader', { name: message('adult_table_speed_chars') })
-		).toBeVisible();
-		await expect(table.locator('tbody tr').last().locator('td').last()).toHaveText('62');
-		await expect(table.locator('tbody tr').last().locator('td').nth(3)).toHaveText('12,4');
+			// The first play measured the new way: 2026-10-22 at 17:00 on the device.
+			const change = message('adult_speed_rule_change', {
+				date: new Intl.DateTimeFormat('fr', { dateStyle: 'long', timeZone: 'UTC' }).format(
+					new Date('2026-10-22T17:00:00Z')
+				)
+			});
+			const evolution = page.locator('[data-child-evolution]');
+			await expect(evolution.locator('[data-speed-rule-change]')).toHaveText(change);
+			await expect(evolution).toContainText(message('adult_speed_note'));
+			await evolution.getByText(message('adult_table_show')).first().click();
+			const table = evolution.locator('[data-sessions-table]');
+			await expect(
+				table.getByRole('columnheader', { name: message('adult_table_speed_chars') })
+			).toBeVisible();
+			await expect(table.locator('tbody tr').last().locator('td').last()).toHaveText('62');
+			await expect(table.locator('tbody tr').last().locator('td').nth(3)).toHaveText('12,4');
 
-		// The median reads the three plays measured the new way, not the two faster ones before.
-		const target = page.locator('[data-child-target]');
-		await expect(target.locator('[data-target-keyboard]')).toHaveText(
-			message('adult_target_keyboard_other', { speed: '12,2', chars: 61, count: 3 })
-		);
-		await expect(target.locator('[data-speed-rule-change]')).toHaveText(change);
+			// The median reads the three plays measured the new way, not the two faster ones before.
+			const target = page.locator('[data-child-target]');
+			await expect(target.locator('[data-target-keyboard]')).toHaveText(
+				message('adult_target_keyboard_other', { speed: '12,2', chars: 61, count: 3 })
+			);
+			await expect(target.locator('[data-speed-rule-change]')).toHaveText(change);
 
-		// A child whose plays were all measured the same way is told nothing about it.
-		await page.keyboard.press('Escape');
-		await openReport(page, lou);
-		await expect(page.locator('[data-target-keyboard]')).toHaveText(
-			message('adult_target_keyboard_other', { speed: '10', chars: 50, count: 3 })
-		);
-		await expect(page.locator('[data-speed-rule-change]')).toHaveCount(0);
-	});
+			// A child whose plays were all measured the same way is told nothing about it.
+			await page.keyboard.press('Escape');
+			await openReport(page, lou);
+			await expect(page.locator('[data-target-keyboard]')).toHaveText(
+				message('adult_target_keyboard_other', { speed: '10', chars: 50, count: 3 })
+			);
+			await expect(page.locator('[data-speed-rule-change]')).toHaveCount(0);
+		}
+	);
 
-	test('lists the acquired key the child takes much longer to find than the others', async ({
-		page
-	}) => {
-		const sam = hesitantChild('Sam');
-		await reachPlayers(page, [sam]);
-		await enterAdultSpace(page);
-		await passGate(page);
-		await openReport(page, sam);
+	test(
+		'lists the acquired key the child takes much longer to find than the others',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const sam = hesitantChild('Sam');
+			await reachPlayers(page, [sam]);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, sam);
 
-		await expect(page.locator('[data-keys="hesitant"]')).toHaveText(
-			message('adult_keys_hesitant', { keys: 'L' })
-		);
-		await expect(page.locator('.key[data-code="KeyL"]')).toHaveAttribute(
-			'data-mastery',
-			'acquired'
-		);
-	});
+			await expect(page.locator('[data-keys="hesitant"]')).toHaveText(
+				message('adult_keys_hesitant', { keys: 'L' })
+			);
+			await expect(page.locator('.key[data-code="KeyL"]')).toHaveAttribute(
+				'data-mastery',
+				'acquired'
+			);
+		}
+	);
 
 	test('opens the session sheet of a child by the keyboard, prints it on one A4 page, then goes back', async ({
 		page,
@@ -444,21 +447,23 @@ test.describe('adult space', () => {
 		await expect(heading(page, message('adult_child_title', { name: kim.name }))).toBeVisible();
 	});
 
-	test('says there is nothing to point out on the sheet of a child whose keys are all right', async ({
-		page
-	}) => {
-		const base = advancedProfile({ name: 'Noa', passed: { [FIRST.id]: 2 } });
-		const noa = { ...base, progress: { ...base.progress, chars: { f: sample(30, 0) } } };
-		await reachPlayers(page, [noa]);
-		await enterAdultSpace(page);
-		await passGate(page);
-		await openReport(page, noa);
-		await page.locator('[data-child-sheet]').click();
-		await expect(page.locator('[data-sheet-keys="quiet"]')).toHaveText(
-			message('adult_sheet_keys_quiet', { name: noa.name })
-		);
-		await expect(page.locator('[data-sheet-keys="hesitant"]')).toHaveCount(0);
-	});
+	test(
+		'says there is nothing to point out on the sheet of a child whose keys are all right',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const base = advancedProfile({ name: 'Noa', passed: { [FIRST.id]: 2 } });
+			const noa = { ...base, progress: { ...base.progress, chars: { f: sample(30, 0) } } };
+			await reachPlayers(page, [noa]);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, noa);
+			await page.locator('[data-child-sheet]').click();
+			await expect(page.locator('[data-sheet-keys="quiet"]')).toHaveText(
+				message('adult_sheet_keys_quiet', { name: noa.name })
+			);
+			await expect(page.locator('[data-sheet-keys="hesitant"]')).toHaveCount(0);
+		}
+	);
 
 	test('downloads the measures for a spreadsheet and a backup', async ({ page }) => {
 		await reachPlayers(page);
@@ -620,197 +625,203 @@ test.describe('adult space', () => {
 		).toBeGreaterThan(0);
 	});
 
-	test('keeps the words of the adult the keyboard types, and lists the others', async ({
-		page
-	}) => {
-		await reachPlayers(page);
-		await enterAdultSpace(page);
-		await passGate(page);
-		await openReport(page, lou);
-
-		const words = page.locator('[data-child-words]');
-		await expect(words.locator('[data-words-current]')).toHaveText(
-			message('adult_words_current_none')
-		);
-		await words.locator('[data-words-input]').focus();
-		await page.keyboard.insertText('lune, vélo; Ça\nlune ÉTÉ');
-		await words.locator('[data-words-save]').focus();
-		await page.keyboard.press('Enter');
-		const outcome = words.locator('[data-words-outcome]');
-		await expect(outcome).toHaveAttribute('aria-live', 'polite');
-		await expect(outcome.locator('[data-words-status]')).toHaveText(plural('adult_words_saved', 2));
-		const refused = [
-			message('adult_words_refused_word', { word: 'Ça', chars: 'Ç' }),
-			message('adult_words_refused_word', { word: 'ÉTÉ', chars: 'É' })
-		];
-		await expect(outcome.locator('[data-words-refused]')).toHaveText(
-			message('adult_words_refused', {
-				name: lou.name,
-				words: new Intl.ListFormat('fr', { type: 'conjunction' }).format(refused)
-			})
-		);
-		await expect(words.locator('[data-words-current]')).toHaveText(
-			message('adult_words_current', { words: 'lune et vélo' })
-		);
-		await expect
-			.poll(async () => (await storedRecord(page, lou))?.['adultWords'])
-			.toEqual(['lune', 'vélo']);
-
-		await words.locator('[data-words-clear]').click();
-		await expect(outcome.locator('[data-words-status]')).toHaveText(message('adult_words_cleared'));
-		await expect.poll(async () => (await storedRecord(page, lou))?.['adultWords']).toEqual([]);
-	});
-
-	test('changes a setting of a child, which the child then finds in the game', async ({ page }) => {
-		await reachPlayers(page);
-		await enterAdultSpace(page);
-		await passGate(page);
-		await openReport(page, lou);
-
-		await page.locator('[data-child-settings]').focus();
-		await page.keyboard.press('Enter');
-		await expect(heading(page, message('adult_settings_title', { name: lou.name }))).toBeVisible();
-		const larger = page.getByRole('radio', { name: message('settings_scale_xl') });
-		await larger.focus();
-		await page.keyboard.press('Space');
-		await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
-		await expect
-			.poll(async () => (await storedRecord(page, lou))?.['settings'])
-			.toMatchObject({ textScale: 'xl' });
-
-		await page.keyboard.press('Escape');
-		await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
-		await page.keyboard.press('Escape');
-		await page.keyboard.press('Escape');
-		await button(page, lou.name).click();
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-		await button(page, message('play_settings_open')).click();
-		await expect(page.getByRole('radio', { name: message('settings_scale_xl') })).toBeChecked();
-	});
-
-	test('chooses the length of a session of a child with the keyboard, which the sheet then gives', async ({
-		page
-	}) => {
-		await reachPlayers(page);
-		await enterAdultSpace(page);
-		await passGate(page);
-		await openReport(page, lou);
-
-		await page.locator('[data-child-settings]').focus();
-		await page.keyboard.press('Enter');
-		await expect(heading(page, message('adult_settings_title', { name: lou.name }))).toBeVisible();
-		const choice = page.getByRole('group', { name: message('settings_session_label') });
-		await expect(
-			choice.getByRole('radio', { name: message('settings_session_normal') })
-		).toBeChecked();
-		const long = choice.getByRole('radio', { name: message('settings_session_long') });
-		await long.focus();
-		await page.keyboard.press('Space');
-		await expect(long).toBeChecked();
-		await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
-		await expect
-			.poll(async () => (await storedRecord(page, lou))?.['settings'])
-			.toMatchObject({ sessionLength: 'long' });
-
-		await page.keyboard.press('Escape');
-		await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
-		await page.locator('[data-child-sheet]').focus();
-		await page.keyboard.press('Enter');
-		await expect(page.locator('[data-sheet-length]')).toHaveText(
-			plural('adult_sheet_during_length_games', longSession.earlyExercises, {
-				duration: `${longSession.clockMinutes} minutes`
-			})
-		);
-	});
-});
-
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`adult space, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
-
-		async function expectNoAxeViolation(page: Page) {
-			const scan = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(scan.violations).toEqual([]);
-		}
-
-		test('has no axe violation on the gate, the list, the report and a conflict', async ({
-			page
-		}) => {
-			test.slow();
+	test(
+		'keeps the words of the adult the keyboard types, and lists the others',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
 			await reachPlayers(page);
-			await expectNoAxeViolation(page);
 			await enterAdultSpace(page);
-			await expectNoAxeViolation(page);
 			await passGate(page);
-			await expectNoAxeViolation(page);
-
-			await loadFile(page, backupFile('sauvegarde.json', exportBackup([lou], Date.now())));
-			await expect(page.locator('[data-import-conflicts]')).toBeVisible();
-			await expectNoAxeViolation(page);
-
 			await openReport(page, lou);
-			for (const summary of await page.getByText(message('adult_table_show')).all()) {
-				await summary.click();
-			}
-			await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
-			await expectNoAxeViolation(page);
 
-			// The question of a world to open, words half refused, then the settings of the child.
-			await page.locator('[data-world-open]').click();
-			await expect(page.locator('[data-world-confirm]')).toBeVisible();
-			await expectNoAxeViolation(page);
-			await page.locator('[data-words-input]').fill('lune Ça');
-			await page.locator('[data-words-save]').click();
-			await expect(page.locator('[data-words-refused]')).toBeVisible();
-			await expectNoAxeViolation(page);
-			await page.locator('[data-child-settings]').click();
+			const words = page.locator('[data-child-words]');
+			await expect(words.locator('[data-words-current]')).toHaveText(
+				message('adult_words_current_none')
+			);
+			await words.locator('[data-words-input]').focus();
+			await page.keyboard.insertText('lune, vélo; Ça\nlune ÉTÉ');
+			await words.locator('[data-words-save]').focus();
+			await page.keyboard.press('Enter');
+			const outcome = words.locator('[data-words-outcome]');
+			await expect(outcome).toHaveAttribute('aria-live', 'polite');
+			await expect(outcome.locator('[data-words-status]')).toHaveText(
+				plural('adult_words_saved', 2)
+			);
+			const refused = [
+				message('adult_words_refused_word', { word: 'Ça', chars: 'Ç' }),
+				message('adult_words_refused_word', { word: 'ÉTÉ', chars: 'É' })
+			];
+			await expect(outcome.locator('[data-words-refused]')).toHaveText(
+				message('adult_words_refused', {
+					name: lou.name,
+					words: new Intl.ListFormat('fr', { type: 'conjunction' }).format(refused)
+				})
+			);
+			await expect(words.locator('[data-words-current]')).toHaveText(
+				message('adult_words_current', { words: 'lune et vélo' })
+			);
+			await expect
+				.poll(async () => (await storedRecord(page, lou))?.['adultWords'])
+				.toEqual(['lune', 'vélo']);
+
+			await words.locator('[data-words-clear]').click();
+			await expect(outcome.locator('[data-words-status]')).toHaveText(
+				message('adult_words_cleared')
+			);
+			await expect.poll(async () => (await storedRecord(page, lou))?.['adultWords']).toEqual([]);
+		}
+	);
+
+	test(
+		'changes a setting of a child, which the child then finds in the game',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachPlayers(page);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, lou);
+
+			await page.locator('[data-child-settings]').focus();
+			await page.keyboard.press('Enter');
 			await expect(
 				heading(page, message('adult_settings_title', { name: lou.name }))
 			).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
+			const larger = page.getByRole('radio', { name: message('settings_scale_xl') });
+			await larger.focus();
+			await page.keyboard.press('Space');
+			await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
+			await expect
+				.poll(async () => (await storedRecord(page, lou))?.['settings'])
+				.toMatchObject({ textScale: 'xl' });
 
-		test('has no axe violation on the report of a child whose speed changed of measure', async ({
-			page
-		}) => {
-			const mia = remeasuredChild('Mia');
-			await reachPlayers(page, [mia]);
-			await enterAdultSpace(page);
-			await passGate(page);
-			await openReport(page, mia);
-			for (const summary of await page.getByText(message('adult_table_show')).all()) {
-				await summary.click();
-			}
-			await expect(page.locator('[data-speed-rule-change]')).toHaveCount(2);
-			await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
+			await page.keyboard.press('Escape');
+			await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
+			await page.keyboard.press('Escape');
+			await page.keyboard.press('Escape');
+			await button(page, lou.name).click();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+			await button(page, message('play_settings_open')).click();
+			await expect(page.getByRole('radio', { name: message('settings_scale_xl') })).toBeChecked();
+		}
+	);
 
-		test('has no axe violation on the settings of a child, a long session chosen', async ({
-			page
-		}) => {
-			await reachPlayers(page, [updateSettings(lou, { sessionLength: 'long' })]);
+	test(
+		'chooses the length of a session of a child with the keyboard, which the sheet then gives',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachPlayers(page);
 			await enterAdultSpace(page);
 			await passGate(page);
 			await openReport(page, lou);
-			await page.locator('[data-child-settings]').click();
-			await expect(
-				page
-					.getByRole('group', { name: message('settings_session_label') })
-					.getByRole('radio', { name: message('settings_session_long') })
-			).toBeChecked();
-			await expectNoAxeViolation(page);
-		});
 
-		test('has no axe violation on the session sheet', async ({ page }) => {
-			const kim = sheetChild('Kim');
-			await reachPlayers(page, [kim]);
-			await enterAdultSpace(page);
-			await passGate(page);
-			await openReport(page, kim);
-			await page.locator('[data-child-sheet]').click();
-			await expect(page.locator('[data-sheet-keys="hesitant"]')).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
+			await page.locator('[data-child-settings]').focus();
+			await page.keyboard.press('Enter');
+			await expect(
+				heading(page, message('adult_settings_title', { name: lou.name }))
+			).toBeVisible();
+			const choice = page.getByRole('group', { name: message('settings_session_label') });
+			await expect(
+				choice.getByRole('radio', { name: message('settings_session_normal') })
+			).toBeChecked();
+			const long = choice.getByRole('radio', { name: message('settings_session_long') });
+			await long.focus();
+			await page.keyboard.press('Space');
+			await expect(long).toBeChecked();
+			await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
+			await expect
+				.poll(async () => (await storedRecord(page, lou))?.['settings'])
+				.toMatchObject({ sessionLength: 'long' });
+
+			await page.keyboard.press('Escape');
+			await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
+			await page.locator('[data-child-sheet]').focus();
+			await page.keyboard.press('Enter');
+			await expect(page.locator('[data-sheet-length]')).toHaveText(
+				plural('adult_sheet_during_length_games', longSession.earlyExercises, {
+					duration: `${longSession.clockMinutes} minutes`
+				})
+			);
+		}
+	);
+});
+
+test.describe('adult space, light and dark themes', () => {
+	test('has no axe violation on the gate, the list, the report and a conflict', async ({
+		page
+	}) => {
+		// Eight screens, each audited in both themes.
+		test.slow();
+		await reachPlayers(page);
+		await expectNoAxeViolation(page);
+		await enterAdultSpace(page);
+		await expectNoAxeViolation(page);
+		await passGate(page);
+		await expectNoAxeViolation(page);
+
+		await loadFile(page, backupFile('sauvegarde.json', exportBackup([lou], Date.now())));
+		await expect(page.locator('[data-import-conflicts]')).toBeVisible();
+		await expectNoAxeViolation(page);
+
+		await openReport(page, lou);
+		for (const summary of await page.getByText(message('adult_table_show')).all()) {
+			await summary.click();
+		}
+		await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
+		await expectNoAxeViolation(page);
+
+		// The question of a world to open, words half refused, then the settings of the child.
+		await page.locator('[data-world-open]').click();
+		await expect(page.locator('[data-world-confirm]')).toBeVisible();
+		await expectNoAxeViolation(page);
+		await page.locator('[data-words-input]').fill('lune Ça');
+		await page.locator('[data-words-save]').click();
+		await expect(page.locator('[data-words-refused]')).toBeVisible();
+		await expectNoAxeViolation(page);
+		await page.locator('[data-child-settings]').click();
+		await expect(heading(page, message('adult_settings_title', { name: lou.name }))).toBeVisible();
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation on the report of a child whose speed changed of measure', async ({
+		page
+	}) => {
+		const mia = remeasuredChild('Mia');
+		await reachPlayers(page, [mia]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, mia);
+		for (const summary of await page.getByText(message('adult_table_show')).all()) {
+			await summary.click();
+		}
+		await expect(page.locator('[data-speed-rule-change]')).toHaveCount(2);
+		await expect(page.locator('.key[data-mastery]').first()).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation on the settings of a child, a long session chosen', async ({
+		page
+	}) => {
+		await reachPlayers(page, [updateSettings(lou, { sessionLength: 'long' })]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, lou);
+		await page.locator('[data-child-settings]').click();
+		await expect(
+			page
+				.getByRole('group', { name: message('settings_session_label') })
+				.getByRole('radio', { name: message('settings_session_long') })
+		).toBeChecked();
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation on the session sheet', async ({ page }) => {
+		const kim = sheetChild('Kim');
+		await reachPlayers(page, [kim]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, kim);
+		await page.locator('[data-child-sheet]').click();
+		await expect(page.locator('[data-sheet-keys="hesitant"]')).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
+});

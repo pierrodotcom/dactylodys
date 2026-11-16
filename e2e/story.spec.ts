@@ -1,17 +1,18 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { voiceKey } from '../src/lib/audio/voice-key';
 import { parseStory } from '../src/lib/engine/story';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughResult,
 	throughStory
 } from './support';
@@ -19,8 +20,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAY_URL = '/jouer';
 const PRESS_BUDGET = 80;
 const STEP_TIMEOUT = 15_000;
@@ -118,7 +117,6 @@ async function typeToResult(page: Page, keyboard = false) {
 	const end = button(page, message('play_result_map'));
 	for (;;) {
 		await page.keyboard.type(await currentGroup(page));
-		await page.keyboard.press('Enter');
 		const found: { over?: boolean } = {};
 		await expect(async () => {
 			if ((await end.isVisible()) || (await finale.isVisible())) found.over = true;
@@ -143,14 +141,8 @@ async function expectToldThenContinue(page: Page, art: string, text: string, wor
 	await page.keyboard.press('Enter');
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('the story between two exercises', () => {
@@ -175,112 +167,141 @@ test.describe('the story between two exercises', () => {
 		await expect(heading(page, SECOND.title)).toBeVisible();
 	});
 
-	test('tells nothing more when a passed lesson is played again', async ({ page }) => {
-		await reachMapAs(page, advancedProfile({ name: 'Eli', passed: passed([FIRST]) }));
-		await page.getByRole('button', { name: FIRST.title }).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
-		await expect(told(page)).toHaveCount(0);
+	test(
+		'tells nothing more when a passed lesson is played again',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Eli', passed: passed([FIRST]) }));
+			await page.getByRole('button', { name: FIRST.title }).click();
+			await expect(heading(page, FIRST.title)).toBeVisible();
+			await expect(told(page)).toHaveCount(0);
 
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
-		await button(page, message('play_result_map')).click();
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-	});
+			await page.locator('button[data-proposed]').click();
+			await typeToResult(page);
+			await button(page, message('play_result_map')).click();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+		}
+	);
 
-	test('ends a world and opens the next one, after the line of its last lesson', async ({
-		page
-	}) => {
-		test.slow();
-		const before = DINOS.lessons.slice(0, -1);
-		await reachMapAs(page, advancedProfile({ name: 'Sacha', passed: passed(before) }));
-		await page.getByRole('button', { name: LAST_DINO.title }).click();
-		await expect(heading(page, LAST_DINO.title)).toBeVisible();
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
+	test(
+		'ends a world and opens the next one, after the line of its last lesson',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const before = DINOS.lessons.slice(0, -1);
+			await reachMapAs(page, advancedProfile({ name: 'Sacha', passed: passed(before) }));
+			await page.getByRole('button', { name: LAST_DINO.title }).click();
+			await expect(heading(page, LAST_DINO.title)).toBeVisible();
+			await page.locator('button[data-proposed]').click();
+			await typeToResult(page);
 
-		await button(page, message('play_result_next')).click();
-		const line = TOLD_DINOS.lessons.at(-1);
-		await expectToldThenContinue(page, line?.art ?? '', line?.line ?? '', DINOS.title);
-		await expectToldThenContinue(page, TOLD_DINOS.endingArt, TOLD_DINOS.ending, DINOS.title);
-		await expectToldThenContinue(
-			page,
-			TOLD_KITCHEN.openingArt,
-			TOLD_KITCHEN.opening,
-			KITCHEN.title
-		);
-		await expect(heading(page, FIRST_KITCHEN.title)).toBeVisible();
-	});
+			await button(page, message('play_result_next')).click();
+			const line = TOLD_DINOS.lessons.at(-1);
+			await expectToldThenContinue(page, line?.art ?? '', line?.line ?? '', DINOS.title);
+			await expectToldThenContinue(page, TOLD_DINOS.endingArt, TOLD_DINOS.ending, DINOS.title);
+			await expectToldThenContinue(
+				page,
+				TOLD_KITCHEN.openingArt,
+				TOLD_KITCHEN.opening,
+				KITCHEN.title
+			);
+			await expect(heading(page, FIRST_KITCHEN.title)).toBeVisible();
+		}
+	);
 
 	// ADR-051: a button goes where it says; the line won waits in the notebook.
-	test('goes straight to a replay and to the map, without telling the line first', async ({
-		page
-	}) => {
-		await reachMapAs(page, advancedProfile({ name: 'Ilan', passed: {} }));
-		await page.getByRole('button', { name: FIRST.title }).click();
-		await throughStory(page, heading(page, FIRST.title));
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
+	test(
+		'goes straight to a replay and to the map, without telling the line first',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Ilan', passed: {} }));
+			await page.getByRole('button', { name: FIRST.title }).click();
+			await throughStory(page, heading(page, FIRST.title));
+			await page.locator('button[data-proposed]').click();
+			await typeToResult(page);
 
-		await page.locator('[data-result-replay]').click();
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(told(page)).toHaveCount(0);
-		await typeToResult(page);
+			await page.locator('[data-result-replay]').click();
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			await expect(told(page)).toHaveCount(0);
+			await typeToResult(page);
 
-		await button(page, message('play_result_map')).click();
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-		await expect(told(page)).toHaveCount(0);
+			await button(page, message('play_result_map')).click();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+			await expect(told(page)).toHaveCount(0);
 
-		await button(page, message('play_story_so_far_open')).click();
-		await expect(
-			page.locator(`[data-story-art="${TOLD_DINOS.lessons[0]?.art ?? ''}"]`).first()
-		).toBeAttached();
-	});
+			await button(page, message('play_story_so_far_open')).click();
+			await expect(
+				page.locator(`[data-story-art="${TOLD_DINOS.lessons[0]?.art ?? ''}"]`).first()
+			).toBeAttached();
+		}
+	);
 
 	// One more play to tame the new keys is often proposed first: the line won is not lost to it.
-	test('tells the line won on the way to the next lesson, after one more play of the lesson', async ({
-		page
-	}) => {
-		await reachMapAs(page, advancedProfile({ name: 'Yan', passed: {} }));
-		await page.getByRole('button', { name: FIRST.title }).click();
-		await throughStory(page, heading(page, FIRST.title));
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
+	test(
+		'tells the line won on the way to the next lesson, after one more play of the lesson',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Yan', passed: {} }));
+			await page.getByRole('button', { name: FIRST.title }).click();
+			await throughStory(page, heading(page, FIRST.title));
+			await page.locator('button[data-proposed]').click();
+			await typeToResult(page);
 
-		await page.locator('[data-result-replay]').click();
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(told(page)).toHaveCount(0);
-		await typeToResult(page);
+			await page.locator('[data-result-replay]').click();
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			await expect(told(page)).toHaveCount(0);
+			await typeToResult(page);
 
-		await button(page, message('play_result_next')).click();
-		const line = TOLD_DINOS.lessons[0];
-		await expect(told(page)).toHaveAttribute('data-art', line?.art ?? '');
-		await expect(told(page).getByText(line?.line ?? '', { exact: true })).toBeVisible();
-		await continueButton(page).click();
-		await expect(heading(page, SECOND.title)).toBeVisible();
-	});
+			await button(page, message('play_result_next')).click();
+			const line = TOLD_DINOS.lessons[0];
+			await expect(told(page)).toHaveAttribute('data-art', line?.art ?? '');
+			await expect(told(page).getByText(line?.line ?? '', { exact: true })).toBeVisible();
+			await continueButton(page).click();
+			await expect(heading(page, SECOND.title)).toBeVisible();
+		}
+	);
 
-	test('opens a world once per visit, even when the child goes back to the map', async ({
-		page
-	}) => {
-		await reachMapAs(page, advancedProfile({ name: 'Lune', passed: {} }));
-		await page.getByRole('button', { name: FIRST.title }).click();
-		await expect(told(page)).toHaveAttribute('data-art', TOLD_DINOS.openingArt);
-		await continueButton(page).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
+	test(
+		'opens a world once per visit, even when the child goes back to the map',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Lune', passed: {} }));
+			await page.getByRole('button', { name: FIRST.title }).click();
+			await expect(told(page)).toHaveAttribute('data-art', TOLD_DINOS.openingArt);
+			await continueButton(page).click();
+			await expect(heading(page, FIRST.title)).toBeVisible();
 
-		await button(page, message('play_intro_back')).click();
-		await page.getByRole('button', { name: FIRST.title }).click();
-		await expect(heading(page, FIRST.title)).toBeVisible();
-		await expect(told(page)).toHaveCount(0);
-	});
+			await button(page, message('play_intro_back')).click();
+			await page.getByRole('button', { name: FIRST.title }).click();
+			await expect(heading(page, FIRST.title)).toBeVisible();
+			await expect(told(page)).toHaveCount(0);
+		}
+	);
 });
 
 test.describe('the story said by the recorded voice', () => {
 	test('says the opening of the first world as it appears, and offers to hear it again', async ({
 		page
 	}) => {
-		const requested: string[] = [];
-		page.on('request', (request) => requested.push(request.url()));
+		// The voice is played by an audio element: what the page plays is noted, not what the network
+		// carries. The WebKit of Playwright for Windows plays nothing and asks for no file (Q-06).
+		await page.addInitScript(() => {
+			const played: string[] = [];
+			class NotedAudio extends EventTarget {
+				src: string;
+				constructor(src = '') {
+					super();
+					this.src = src;
+				}
+				play() {
+					played.push(this.src);
+					return Promise.resolve();
+				}
+				pause() {}
+			}
+			Object.assign(window, { Audio: NotedAudio, playedSounds: played });
+		});
+		const played = () =>
+			page.evaluate(() => (window as unknown as { playedSounds: string[] }).playedSounds);
 		const child = advancedProfile({ name: 'Iris', passed: {} });
 		await reachMapAs(page, { ...child, settings: { ...child.settings, voiceEnabled: true } });
 		await page.getByRole('button', { name: FIRST.title }).click();
@@ -289,20 +310,24 @@ test.describe('the story said by the recorded voice', () => {
 		const listen = new RegExp(`^(${message('ui_listen_start')}|${message('ui_listen_stop')})$`);
 		await expect(told(page).getByRole('button', { name: listen })).toBeVisible();
 		await expect
-			.poll(() => requested.some((url) => url.includes(voiceKey(TOLD_DINOS.opening))))
+			.poll(async () => (await played()).some((url) => url.includes(voiceKey(TOLD_DINOS.opening))))
 			.toBe(true);
 	});
 });
 
 test.describe('the story so far', () => {
-	test('shows a new child an empty notebook, and goes back to the map', async ({ page }) => {
-		await reachMapAs(page, advancedProfile({ name: 'Lior', passed: {} }));
-		await button(page, message('play_story_so_far_open')).click();
-		await expect(heading(page, message('play_story_so_far_title'))).toBeVisible();
-		await expect(page.getByText(message('play_story_so_far_empty'))).toBeVisible();
-		await button(page, message('play_story_so_far_back')).click();
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-	});
+	test(
+		'shows a new child an empty notebook, and goes back to the map',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Lior', passed: {} }));
+			await button(page, message('play_story_so_far_open')).click();
+			await expect(heading(page, message('play_story_so_far_title'))).toBeVisible();
+			await expect(page.getByText(message('play_story_so_far_empty'))).toBeVisible();
+			await button(page, message('play_story_so_far_back')).click();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+		}
+	);
 
 	test('tells a child who passed lessons before the story what they already won, with the keyboard alone', async ({
 		page
@@ -339,7 +364,7 @@ test.describe('the story so far', () => {
 	});
 });
 
-test.describe('the story pages for developers', () => {
+test.describe('the story pages for developers', CHROMIUM_ONLY, () => {
 	test('draws every picture of the story', async ({ page }) => {
 		await openPage(page, '/dev/recit');
 		const moments = story.worlds.flatMap((world) => [
@@ -372,7 +397,7 @@ test.describe('the story pages for developers', () => {
 	});
 });
 
-test.describe('the two states of a story picture', () => {
+test.describe('the two states of a story picture', CHROMIUM_ONLY, () => {
 	test('shows before, then fades to after on the screen of the story', async ({ page }) => {
 		await reachMapAs(page, advancedProfile({ name: 'Nour', passed: {} }));
 		await page.getByRole('button', { name: FIRST.title }).click();
@@ -425,29 +450,25 @@ test.describe('the two states of a story picture', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`the story, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('the story, light and dark themes', () => {
+	test('has no axe violation on a moment of the story and on the story so far', async ({
+		page
+	}) => {
+		await reachMapAs(page, advancedProfile({ name: 'Axel', passed: passed(DINOS.lessons) }));
+		await button(page, message('play_story_so_far_open')).click();
+		await expect(page.locator('main li[data-art]')).toHaveCount(DINOS.lessons.length + 2);
+		await expectNoAxeViolation(page);
 
-		test('has no axe violation on a moment of the story and on the story so far', async ({
-			page
-		}) => {
-			await reachMapAs(page, advancedProfile({ name: 'Axel', passed: passed(DINOS.lessons) }));
-			await button(page, message('play_story_so_far_open')).click();
-			await expect(page.locator('main li[data-art]')).toHaveCount(DINOS.lessons.length + 2);
-			await expectNoAxeViolation(page);
-
-			await button(page, message('play_story_so_far_back')).first().click();
-			await page.getByRole('button', { name: FIRST_KITCHEN.title }).click();
-			await expect(told(page)).toHaveAttribute('data-art', TOLD_KITCHEN.openingArt);
-			await expect(continueButton(page)).toBeFocused();
-			await expectNoAxeViolation(page);
-		});
-
-		test('has no axe violation on the trial page of the story pictures', async ({ page }) => {
-			await openPage(page, '/dev/recit');
-			await expect(page.locator('li[data-art] [data-states]')).toHaveCount(ALL_ARTS.length);
-			await expectNoAxeViolation(page);
-		});
+		await button(page, message('play_story_so_far_back')).first().click();
+		await page.getByRole('button', { name: FIRST_KITCHEN.title }).click();
+		await expect(told(page)).toHaveAttribute('data-art', TOLD_KITCHEN.openingArt);
+		await expect(continueButton(page)).toBeFocused();
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation on the trial page of the story pictures', async ({ page }) => {
+		await openPage(page, '/dev/recit');
+		await expect(page.locator('li[data-art] [data-states]')).toHaveCount(ALL_ARTS.length);
+		await expectNoAxeViolation(page);
+	});
+});

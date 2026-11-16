@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { IDBFactory } from 'fake-indexeddb';
 import { readFileSync } from 'node:fs';
@@ -13,21 +14,6 @@ const HYDRATION_SIGNAL = '#svelte-announcer';
 /** Acting before hydration loses clicks and keystrokes: wait until the page reacts. */
 export async function waitForHydration(page: Page): Promise<void> {
 	await page.locator(HYDRATION_SIGNAL).waitFor({ state: 'attached' });
-}
-
-/**
- * Rewards last a millisecond: a key skips a reward only once it has been seen, and a test that
- * types through a whole exercise must not wait for each one. The tokens are read when a timer is set.
- */
-export async function shortenRewards(page: Page): Promise<void> {
-	await page.addInitScript(() => {
-		document.addEventListener('DOMContentLoaded', () => {
-			const style = document.createElement('style');
-			style.textContent =
-				':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms;--dd-duration-reminder:1ms}';
-			document.head.append(style);
-		});
-	});
 }
 
 /**
@@ -158,6 +144,35 @@ export async function throughResult(
 		await expect(result).toBeVisible({ timeout: 500 });
 	}).toPass({ timeout: RESULT_TIMEOUT });
 	return passed;
+}
+
+const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+const COLOR_SCHEMES = ['light', 'dark'] as const;
+
+/**
+ * axe on the screen as it is, in the light theme then in the dark one: the theme follows the system,
+ * so one walk through the screens checks both (audit Q-13). A failure names the theme. The colours
+ * of a button glide from one theme to the other: axe reads them once they have arrived.
+ * `as shown`: once, in the theme on screen (a theme the page forces, for one).
+ */
+export async function expectNoAxeViolation(
+	page: Page,
+	themes: 'light and dark' | 'as shown' = 'light and dark'
+): Promise<void> {
+	await page.evaluate(() => document.fonts.ready);
+	for (const colorScheme of themes === 'as shown' ? [null] : COLOR_SCHEMES) {
+		if (colorScheme !== null) await page.emulateMedia({ colorScheme });
+		await page.evaluate(() =>
+			Promise.all(
+				document
+					.getAnimations()
+					.filter((animation) => animation instanceof CSSTransition)
+					.map((animation) => animation.finished.catch(() => undefined))
+			)
+		);
+		const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+		expect(violations, `${colorScheme ?? 'shown'} theme`).toEqual([]);
+	}
 }
 
 export async function openPage(page: Page, url: string): Promise<void> {

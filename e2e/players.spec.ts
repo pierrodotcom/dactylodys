@@ -1,7 +1,14 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Page } from '@playwright/test';
 import type { Profile } from '../src/lib/state/types';
-import { advancedProfile, installProfile, loadMessages, openPage, reloadPage } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import {
+	advancedProfile,
+	expectNoAxeViolation,
+	installProfile,
+	loadMessages,
+	openPage,
+	reloadPage
+} from './support';
 
 /**
  * Who plays? (ADR-075): the game goes straight back to the map only on a device with one player;
@@ -11,8 +18,6 @@ import { advancedProfile, installProfile, loadMessages, openPage, reloadPage } f
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAY_URL = '/jouer';
 const MAIN = 'primary';
 const SECONDARY = 'secondary';
@@ -48,16 +53,20 @@ async function expectOnMapOf(page: Page, profile: Profile) {
 }
 
 test.describe('coming back to the game', () => {
-	test('goes straight back to the map on a device with one player', async ({ page }) => {
-		await install(page, [lou]);
-		await button(page, lou.name).click();
-		await expectOnMapOf(page, lou);
+	test(
+		'goes straight back to the map on a device with one player',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await install(page, [lou]);
+			await button(page, lou.name).click();
+			await expectOnMapOf(page, lou);
 
-		await reloadPage(page);
+			await reloadPage(page);
 
-		await expectOnMapOf(page, lou);
-		await expect(heading(page, message('play_players_title'))).toHaveCount(0);
-	});
+			await expectOnMapOf(page, lou);
+			await expect(heading(page, message('play_players_title'))).toHaveCount(0);
+		}
+	);
 
 	test('asks who plays on a device with several players, the last one first and set apart', async ({
 		page
@@ -101,20 +110,24 @@ test.describe('coming back to the game', () => {
 		await expect(players(page).first()).toHaveAttribute('data-last-player');
 	});
 
-	test('keeps the last player first when the child asks to change player', async ({ page }) => {
-		await install(page, [lou, ali]);
-		await button(page, ali.name).click();
-		await expectOnMapOf(page, ali);
+	test(
+		'keeps the last player first when the child asks to change player',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await install(page, [lou, ali]);
+			await button(page, ali.name).click();
+			await expectOnMapOf(page, ali);
 
-		await button(page, message('play_change_player')).click();
+			await button(page, message('play_change_player')).click();
 
-		await expect(heading(page, message('play_players_title'))).toBeVisible();
-		await expect(players(page)).toHaveText([ali.name, lou.name]);
-		await expect(button(page, ali.name)).toHaveAttribute('data-last-player');
-	});
+			await expect(heading(page, message('play_players_title'))).toBeVisible();
+			await expect(players(page)).toHaveText([ali.name, lou.name]);
+			await expect(button(page, ali.name)).toHaveAttribute('data-last-player');
+		}
+	);
 });
 
-test.describe('player screens', () => {
+test.describe('player screens', CHROMIUM_ONLY, () => {
 	test('makes "New player" the main button only while nobody has played here', async ({ page }) => {
 		await openPage(page, PLAY_URL);
 		await expect(page.getByText(message('play_players_empty'))).toBeVisible();
@@ -177,18 +190,14 @@ test.describe('player screens', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test(`has no axe violation on the player screen with a last player set apart (${colorScheme})`, async ({
-		page
-	}) => {
-		await page.emulateMedia({ colorScheme });
-		await install(page, [lou, ali]);
-		await button(page, ali.name).click();
-		await expectOnMapOf(page, ali);
-		await reloadPage(page);
-		await expect(page.locator('[data-last-player]')).toBeVisible();
+test('has no axe violation on the player screen with a last player set apart, light and dark', async ({
+	page
+}) => {
+	await install(page, [lou, ali]);
+	await button(page, ali.name).click();
+	await expectOnMapOf(page, ali);
+	await reloadPage(page);
+	await expect(page.locator('[data-last-player]')).toBeVisible();
 
-		const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-		expect(results.violations).toEqual([]);
-	});
-}
+	await expectNoAxeViolation(page);
+});

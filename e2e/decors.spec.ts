@@ -1,21 +1,25 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Page } from '@playwright/test';
 import { GAMES } from '../src/lib/games/registry';
 import { GAME_DECORS, type DecorGameId } from '../src/lib/games/shared/decor';
-import { loadMessages, openPage, readJson, shortenRewards } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import {
+	expectNoAxeViolation,
+	loadMessages,
+	openPage,
+	passReward,
+	readJson,
+	setRewards
+} from './support';
 
 /**
  * Decors (ADR-057, level 2 of the animations): each game changes its decor with the number of
- * plays of this game already finished; the first play keeps the decor it always had.
+ * plays of this game already finished; the first play keeps the decor it always had. A decor is
+ * a drawing chosen by the game, whatever the engine (`decor.test.ts`): Chromium alone draws it here.
  */
 
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PAGE_URL = '/dev/jeux';
-/** Enter is ignored while typing, and moves on to the next group while the reward is on screen. */
-const SKIP_KEY = 'Enter';
 
 const { message, templateRegex } = loadMessages();
 const GROUPS = readJson<{ groups: string[] }>('content/common/dev/games-sample.json').groups;
@@ -61,13 +65,12 @@ async function startGame(page: Page, game: Game, plays?: number) {
 }
 
 async function playToTheEnd(page: Page) {
-	for (const [index, group] of GROUPS.entries()) {
+	for (const group of GROUPS) {
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await page.keyboard.type(group);
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-		if (index < GROUPS.length - 1) await page.keyboard.press(SKIP_KEY);
+		await passReward(page);
 	}
-	await page.keyboard.press(SKIP_KEY);
 	const result = page.getByRole('heading', {
 		level: 2,
 		name: message('dev_games_result_heading')
@@ -78,18 +81,13 @@ async function playToTheEnd(page: Page) {
 	await expect(result).toBeVisible();
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
+// A group done is looked at: the rewards stay until a key passes them.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 	await openPage(page, PAGE_URL);
 });
 
-test.describe('decors of the games', () => {
+test.describe('decors of the games', CHROMIUM_ONLY, () => {
 	for (const game of games) {
 		test(`${game.id}: keeps the decor of today on the first play`, async ({ page }) => {
 			await startGame(page, game);
@@ -151,28 +149,23 @@ test.describe('decors of the games', () => {
 		});
 	});
 
-	for (const colorScheme of COLOR_SCHEMES) {
-		test.describe(`${colorScheme} theme`, () => {
-			test.use({ colorScheme });
+	for (const game of games) {
+		test(`${game.id}: has no axe violation in any decor, while typing and on a reward, light and dark`, async ({
+			page
+		}) => {
+			// Each decor, typing and on a reward, audited in both themes.
+			test.slow();
+			for (const [count, decor] of game.decors.entries()) {
+				await startGame(page, game, count);
+				await expect(decorOf(page)).toHaveAttribute('data-decor', decor);
+				await expectNoAxeViolation(page);
 
-			for (const game of games) {
-				test(`${game.id}: has no axe violation in any decor, while typing and on a reward`, async ({
-					page
-				}) => {
-					test.slow();
-					for (const [count, decor] of game.decors.entries()) {
-						await startGame(page, game, count);
-						await expect(decorOf(page)).toHaveAttribute('data-decor', decor);
-						await expectNoAxeViolation(page);
+				await page.keyboard.type(FIRST_GROUP);
+				await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+				await expectNoAxeViolation(page);
 
-						await page.keyboard.type(FIRST_GROUP);
-						await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-						await expectNoAxeViolation(page);
-
-						await page.keyboard.press('Escape');
-						await button(page, message('game_shared_quit')).click();
-					}
-				});
+				await page.keyboard.press('Escape');
+				await button(page, message('game_shared_quit')).click();
 			}
 		});
 	}

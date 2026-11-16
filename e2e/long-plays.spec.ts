@@ -2,6 +2,7 @@ import { expect as baseExpect, test, type Locator, type Page } from '@playwright
 import { seededRng } from '../src/lib/engine/progression/test-support';
 import { withGhost } from '../src/lib/state/profile';
 import type { Profile, SessionRecord } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
 	installProfile,
@@ -9,7 +10,7 @@ import {
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
 
@@ -23,7 +24,6 @@ import {
 const expect = baseExpect.configure({ timeout: 15_000 });
 
 const LAPTOP = { width: 1280, height: 720 } as const;
-const SKIP_KEY = 'Enter';
 /** Time given to a reward to give way to the next group or to the result. */
 const STEP_TIMEOUT = 15_000;
 const PLAYER_NAME = 'Lou';
@@ -117,7 +117,6 @@ async function typeToResult(page: Page): Promise<string[]> {
 		const group = await currentGroup(page);
 		await page.keyboard.type(group);
 		typed.push(group);
-		await page.keyboard.press(SKIP_KEY);
 		if ((await nextStep(page)) === 'over') break;
 	}
 	if (await finaleButton(page).isVisible()) await finaleButton(page).click();
@@ -180,40 +179,41 @@ async function openLesson(page: Page) {
 test.use({ viewport: LAPTOP });
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
-test('gives a fast child a longer play, typed to the result in two games, the game in view', async ({
-	page
-}) => {
-	test.slow();
-	await openPage(page, '/jouer');
-	await installProfile(page, fastChild());
-	await reloadPage(page);
-	await button(page, PLAYER_NAME).click();
-	await expect(heading(page, message('play_map_title'))).toBeVisible();
+test(
+	'gives a fast child a longer play, typed to the result in two games, the game in view',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		await openPage(page, '/jouer');
+		await installProfile(page, fastChild());
+		await reloadPage(page);
+		await button(page, PLAYER_NAME).click();
+		await expect(heading(page, message('play_map_title'))).toBeVisible();
 
-	// The tower, the widest row of progress, with the race above the game.
-	await openLesson(page);
-	await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
-	await button(page, message(`game_${RACING_GAME}_play`)).click();
-	await expect(page.locator('#game-input')).toBeFocused();
-	const total = await groupTotal(page, RACING_GAME);
-	expect(total).toBeGreaterThan(LESSON.groupCount);
-	expect(total).toBeLessThanOrEqual(progression.rules.maxGroupCount);
-	await expect(page.locator('[data-ghost-track]')).toBeInViewport({ ratio: 1 });
-	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
-	expect(await typeToResult(page)).toHaveLength(total);
+		// The tower, the widest row of progress, with the race above the game.
+		await openLesson(page);
+		await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
+		await button(page, message(`game_${RACING_GAME}_play`)).click();
+		await expect(page.locator('#game-input')).toBeFocused();
+		const total = await groupTotal(page, RACING_GAME);
+		expect(total).toBeGreaterThan(LESSON.groupCount);
+		expect(total).toBeLessThanOrEqual(progression.rules.maxGroupCount);
+		await expect(page.locator('[data-ghost-track]')).toBeInViewport({ ratio: 1 });
+		await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
+		expect(await typeToResult(page)).toHaveLength(total);
 
-	// Another game of the same lesson, as long.
-	await button(page, message('play_result_map')).click();
-	await throughStory(page, heading(page, message('play_map_title')));
-	await openLesson(page);
-	await button(page, message(`game_${OTHER_GAME}_play`)).click();
-	await expect(page.locator('#game-input')).toBeFocused();
-	const otherTotal = await groupTotal(page, OTHER_GAME);
-	expect(otherTotal).toBeGreaterThan(LESSON.groupCount);
-	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
-	await expect(page.locator('.keyboard')).toBeInViewport({ ratio: 1 });
-	expect(await typeToResult(page)).toHaveLength(otherTotal);
-});
+		// Another game of the same lesson, as long.
+		await button(page, message('play_result_map')).click();
+		await throughStory(page, heading(page, message('play_map_title')));
+		await openLesson(page);
+		await button(page, message(`game_${OTHER_GAME}_play`)).click();
+		await expect(page.locator('#game-input')).toBeFocused();
+		const otherTotal = await groupTotal(page, OTHER_GAME);
+		expect(otherTotal).toBeGreaterThan(LESSON.groupCount);
+		await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
+		await expect(page.locator('.keyboard')).toBeInViewport({ ratio: 1 });
+		expect(await typeToResult(page)).toHaveLength(otherTotal);
+	}
+);

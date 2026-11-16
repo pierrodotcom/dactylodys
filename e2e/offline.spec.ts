@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import {
 	expect as baseExpect,
 	test,
@@ -6,13 +5,15 @@ import {
 	type Locator,
 	type Page
 } from '@playwright/test';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	answerCheckKey,
+	expectNoAxeViolation,
 	keyboardCheckKeys,
 	loadMessages,
 	openPage,
 	readJson,
-	shortenRewards,
+	setRewards,
 	throughResult,
 	throughStory
 } from './support';
@@ -20,8 +21,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAYER_NAME = 'Mini';
 const STEP_TIMEOUT = 15_000;
 const IPHONE_USER_AGENT =
@@ -96,7 +95,6 @@ async function typeLessonToResult(page: Page) {
 		await expect(label).toHaveText(GROUP_LABEL);
 		const group = GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? '';
 		await page.keyboard.type(group);
-		await page.keyboard.press('Enter');
 		const over = button(page, message('play_result_map'));
 		const finale = button(page, message('game_shared_finale_continue'));
 		await expect(async () => {
@@ -115,7 +113,7 @@ test.describe('offline', () => {
 	test.use({ serviceWorkers: 'allow' });
 
 	test.beforeEach(async ({ page }) => {
-		await shortenRewards(page);
+		await setRewards(page, 'instant');
 	});
 
 	test('plays a whole lesson without a connection after one visit', async ({ page, context }) => {
@@ -223,7 +221,8 @@ test.describe('offline', () => {
 	});
 });
 
-test.describe('installation', () => {
+// The offer of the browser is simulated: what is tested is what the pages do with it.
+test.describe('installation', CHROMIUM_ONLY, () => {
 	test('serves a manifest named after app_name with icons that exist', async ({
 		page,
 		request
@@ -347,26 +346,19 @@ test.describe('installation', () => {
 		});
 	});
 
-	for (const colorScheme of COLOR_SCHEMES) {
-		test.describe(`${colorScheme} theme`, () => {
-			test.use({ colorScheme });
-
-			test('has no axe violation on the adult home with the installation offered', async ({
-				page
-			}) => {
-				await adultHome(page);
-				await page.evaluate(() => {
-					const offer = new Event('beforeinstallprompt', { cancelable: true });
-					Object.assign(offer, {
-						prompt: () => Promise.resolve(),
-						userChoice: Promise.resolve({ outcome: 'accepted' })
-					});
-					window.dispatchEvent(offer);
-				});
-				await expect(button(page, message('adult_install_button'))).toBeVisible();
-				const scan = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-				expect(scan.violations).toEqual([]);
+	test('has no axe violation on the adult home with the installation offered, light and dark', async ({
+		page
+	}) => {
+		await adultHome(page);
+		await page.evaluate(() => {
+			const offer = new Event('beforeinstallprompt', { cancelable: true });
+			Object.assign(offer, {
+				prompt: () => Promise.resolve(),
+				userChoice: Promise.resolve({ outcome: 'accepted' })
 			});
+			window.dispatchEvent(offer);
 		});
-	}
+		await expect(button(page, message('adult_install_button'))).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
 });

@@ -1,22 +1,29 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import { seededRng } from '../src/lib/engine/progression/test-support';
 import { GAMES } from '../src/lib/games/registry';
 import { withAdultWords, withGhost } from '../src/lib/state/profile';
 import type { Profile, SessionRecord } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
 	answerCheckKey,
+	expectNoAxeViolation,
 	installProfile,
 	keyboardCheckKeys,
 	loadMessages,
 	openPage,
+	passReward,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
+
+/*
+ * Where things are on the screen (ADR-046, E-03 to E-20): a layout measured in one engine holds in
+ * the others (choice 21 of the owner, ADR-075), so every check of this file runs on Chromium only.
+ */
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
@@ -66,7 +73,7 @@ test.beforeEach(async ({ page }) => {
 	await page.setViewportSize(LAPTOP);
 });
 
-test('puts the way out of every screen at the top of the page', async ({ page }) => {
+test('puts the way out of every screen at the top of the page', CHROMIUM_ONLY, async ({ page }) => {
 	const child = withAdultWords(
 		advancedProfile({ name: 'Lou', passed: { [FIRST.id]: PASSED_STARS } }),
 		['lune']
@@ -117,89 +124,93 @@ test('puts the way out of every screen at the top of the page', async ({ page })
 	await expectWayOutAtTop(page, message('play_intro_back'));
 });
 
-test('gives the keyboard check a way out at the top of its steps and of its two results, and Escape takes it', async ({
-	page
-}) => {
-	const wayOut = message('play_change_player');
-	const firstKey = CHECK_KEYS[0]?.label ?? '';
-	await openPage(page, '/jouer');
-	await button(page, message('play_new_player')).click();
-	await page.getByLabel(message('play_new_label')).fill('Lou');
-	await button(page, message('play_new_submit')).click();
+test(
+	'gives the keyboard check a way out at the top of its steps and of its two results, and Escape takes it',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		const wayOut = message('play_change_player');
+		const firstKey = CHECK_KEYS[0]?.label ?? '';
+		await openPage(page, '/jouer');
+		await button(page, message('play_new_player')).click();
+		await page.getByLabel(message('play_new_label')).fill('Lou');
+		await button(page, message('play_new_submit')).click();
 
-	await expect(heading(page, message('play_check_title'))).toBeVisible();
-	await expectWayOutAtTop(page, wayOut);
+		await expect(heading(page, message('play_check_title'))).toBeVisible();
+		await expectWayOutAtTop(page, wayOut);
 
-	await button(page, message('play_check_continue')).click();
-	await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
-	await expectWayOutAtTop(page, wayOut);
+		await button(page, message('play_check_continue')).click();
+		await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
+		await expectWayOutAtTop(page, wayOut);
 
-	// The keys write other letters, twice: the result asks for an adult and still fits the screen.
-	for (const attempt of [1, 2]) {
+		// The keys write other letters, twice: the result asks for an adult and still fits the screen.
+		for (const attempt of [1, 2]) {
+			for (const key of CHECK_KEYS) {
+				await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
+				await answerCheckKey(page, key, 'different');
+			}
+			await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
+			await expectWayOutAtTop(page, wayOut);
+			await expect(page.getByText(message('play_check_diff_adult'))).toHaveCount(attempt - 1);
+			await expect(button(page, message('play_check_play_anyway'))).toBeInViewport({ ratio: 1 });
+			await expect(page.getByText(message('play_check_play_anyway_note'))).toBeInViewport({
+				ratio: 1
+			});
+			expect(await page.evaluate(() => scrollY)).toBe(0);
+			await button(page, message('play_check_retry')).click();
+		}
+
 		for (const key of CHECK_KEYS) {
 			await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
-			await answerCheckKey(page, key, 'different');
+			await expectWayOutAtTop(page, wayOut);
+			await expect(button(page, message('play_check_not_found'))).toBeInViewport({ ratio: 1 });
+			await answerCheckKey(page, key, 'same');
 		}
-		await expect(heading(page, message('play_check_diff_title'))).toBeVisible();
+
+		await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
 		await expectWayOutAtTop(page, wayOut);
-		await expect(page.getByText(message('play_check_diff_adult'))).toHaveCount(attempt - 1);
-		await expect(button(page, message('play_check_play_anyway'))).toBeInViewport({ ratio: 1 });
-		await expect(page.getByText(message('play_check_play_anyway_note'))).toBeInViewport({
-			ratio: 1
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+
+		// The keyboard was not checked to the end: it is asked again, and Escape leaves the keys too.
+		await page.getByRole('button', { name: 'Lou' }).click();
+		await button(page, message('play_check_continue')).click();
+		await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(heading(page, message('play_players_title'))).toBeVisible();
+	}
+);
+
+test(
+	'keeps the hideout in view while the child goes down the objects to set down',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		const every = progressionWorlds.flatMap((world) => world.lessons);
+		const child = advancedProfile({
+			name: 'Lou',
+			passed: Object.fromEntries(every.map((lesson) => [lesson.id, PASSED_STARS]))
 		});
-		expect(await page.evaluate(() => scrollY)).toBe(0);
-		await button(page, message('play_check_retry')).click();
+		await openPage(page, '/jouer');
+		await installProfile(page, child);
+		await reloadPage(page);
+		await page.getByRole('button', { name: child.name }).click();
+		await button(page, message('play_hideout_open')).click();
+		await expect(heading(page, message('play_hideout_title'))).toBeVisible();
+
+		// The places and the whole cabin fit a laptop screen without scrolling.
+		const scene = page.locator('[data-hideout-scene]');
+		const places = page.locator('button[data-place]');
+		await expectInView(scene);
+		await expectInView(places.last());
+
+		await page.locator('button[data-place="pegs"]').click();
+		const objects = page.locator('button[data-object]');
+		await objects.first().focus();
+		await page.keyboard.press('End');
+		await expect(objects.last()).toBeFocused();
+		await expectInView(objects.last());
+		await expectInView(scene);
 	}
-
-	for (const key of CHECK_KEYS) {
-		await expect(heading(page, message('play_check_prompt', { key: key.label }))).toBeVisible();
-		await expectWayOutAtTop(page, wayOut);
-		await expect(button(page, message('play_check_not_found'))).toBeInViewport({ ratio: 1 });
-		await answerCheckKey(page, key, 'same');
-	}
-
-	await expect(heading(page, message('play_check_ok_title'))).toBeVisible();
-	await expectWayOutAtTop(page, wayOut);
-	await page.keyboard.press('Escape');
-	await expect(heading(page, message('play_players_title'))).toBeVisible();
-
-	// The keyboard was not checked to the end: it is asked again, and Escape leaves the keys too.
-	await page.getByRole('button', { name: 'Lou' }).click();
-	await button(page, message('play_check_continue')).click();
-	await expect(heading(page, message('play_check_prompt', { key: firstKey }))).toBeVisible();
-	await page.keyboard.press('Escape');
-	await expect(heading(page, message('play_players_title'))).toBeVisible();
-});
-
-test('keeps the hideout in view while the child goes down the objects to set down', async ({
-	page
-}) => {
-	const every = progressionWorlds.flatMap((world) => world.lessons);
-	const child = advancedProfile({
-		name: 'Lou',
-		passed: Object.fromEntries(every.map((lesson) => [lesson.id, PASSED_STARS]))
-	});
-	await openPage(page, '/jouer');
-	await installProfile(page, child);
-	await reloadPage(page);
-	await page.getByRole('button', { name: child.name }).click();
-	await button(page, message('play_hideout_open')).click();
-	await expect(heading(page, message('play_hideout_title'))).toBeVisible();
-
-	// The places and the whole cabin fit a laptop screen without scrolling.
-	const scene = page.locator('[data-hideout-scene]');
-	const places = page.locator('button[data-place]');
-	await expectInView(scene);
-	await expectInView(places.last());
-
-	await page.locator('button[data-place="pegs"]').click();
-	const objects = page.locator('button[data-object]');
-	await objects.first().focus();
-	await page.keyboard.press('End');
-	await expect(objects.last()).toBeFocused();
-	await expectInView(objects.last());
-	await expectInView(scene);
-});
+);
 
 /** The element is entirely on the screen, as it is scrolled now. */
 async function expectInView(element: Locator) {
@@ -211,110 +222,76 @@ async function expectInView(element: Locator) {
 	expect(box.bottom).toBeLessThanOrEqual(box.height);
 }
 
-test('puts the way out of the adult space at the top of each of its screens', async ({ page }) => {
-	const child = advancedProfile({ name: 'Lou', passed: {} });
-	const numbers = readJson<{ numbers: { value: number; words: string }[] }>(
-		'content/fr/adult/gate-numbers.json'
-	).numbers;
-	await openPage(page, '/jouer');
-	await installProfile(page, child);
-	await reloadPage(page);
-	await page.getByRole('link', { name: message('adult_entry_link') }).click();
-	await expect(heading(page, message('adult_title'))).toBeVisible();
-	await expectWayOutAtTop(page, message('adult_back_to_players'));
+test(
+	'puts the way out of the adult space at the top of each of its screens',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		const child = advancedProfile({ name: 'Lou', passed: {} });
+		const numbers = readJson<{ numbers: { value: number; words: string }[] }>(
+			'content/fr/adult/gate-numbers.json'
+		).numbers;
+		await openPage(page, '/jouer');
+		await installProfile(page, child);
+		await reloadPage(page);
+		await page.getByRole('link', { name: message('adult_entry_link') }).click();
+		await expect(heading(page, message('adult_title'))).toBeVisible();
+		await expectWayOutAtTop(page, message('adult_back_to_players'));
 
-	const words = (await page.locator('[data-gate-words]').textContent())?.trim();
-	const asked = numbers.find((number) => number.words === words)?.value;
-	await page.getByLabel(message('adult_gate_answer_label')).fill(String(asked));
-	await button(page, message('adult_gate_enter')).click();
-	await expect(page.locator('[data-adult-home]')).toBeVisible();
-	await expectWayOutAtTop(page, message('adult_back_to_players'));
+		const words = (await page.locator('[data-gate-words]').textContent())?.trim();
+		const asked = numbers.find((number) => number.words === words)?.value;
+		await page.getByLabel(message('adult_gate_answer_label')).fill(String(asked));
+		await button(page, message('adult_gate_enter')).click();
+		await expect(page.locator('[data-adult-home]')).toBeVisible();
+		await expectWayOutAtTop(page, message('adult_back_to_players'));
 
-	await page.getByRole('button', { name: child.name }).click();
-	await expect(heading(page, message('adult_child_title', { name: child.name }))).toBeVisible();
-	await expectWayOutAtTop(page, message('adult_back_to_list'));
+		await page.getByRole('button', { name: child.name }).click();
+		await expect(heading(page, message('adult_child_title', { name: child.name }))).toBeVisible();
+		await expectWayOutAtTop(page, message('adult_back_to_list'));
 
-	await page.locator('[data-child-settings]').click();
-	await expect(heading(page, message('adult_settings_title', { name: child.name }))).toBeVisible();
-	await expectWayOutAtTop(page, message('adult_settings_back', { name: child.name }));
+		await page.locator('[data-child-settings]').click();
+		await expect(
+			heading(page, message('adult_settings_title', { name: child.name }))
+		).toBeVisible();
+		await expectWayOutAtTop(page, message('adult_settings_back', { name: child.name }));
 
-	await page.keyboard.press('Escape');
-	await page.locator('[data-child-sheet]').click();
-	await expect(heading(page, message('adult_sheet_title', { name: child.name }))).toBeVisible();
-	await expectWayOutAtTop(page, message('adult_sheet_back', { name: child.name }));
-});
-
-test('puts the way out of the pages for adults at the top of the page', async ({ page }) => {
-	for (const key of [
-		'info_link_adults',
-		'info_link_professionals',
-		'info_link_privacy',
-		'info_link_accessibility',
-		'info_link_credits'
-	]) {
-		await openPage(page, '/');
-		await page
-			.locator('footer')
-			.getByRole('link', { name: message(key), exact: true })
-			.click();
-		await expect(heading(page, message(key))).toBeVisible();
-		await expectWayOutAtTop(page, message('info_back_home'));
-		await button(page, message('info_back_home')).click();
-		await expect(heading(page, message('app_name'))).toBeVisible();
+		await page.keyboard.press('Escape');
+		await page.locator('[data-child-sheet]').click();
+		await expect(heading(page, message('adult_sheet_title', { name: child.name }))).toBeVisible();
+		await expectWayOutAtTop(page, message('adult_sheet_back', { name: child.name }));
 	}
-});
+);
 
-test('keeps the race choice in view with the games, and the race above the game', async ({
-	page
-}) => {
-	const racer = withGhost(
-		advancedProfile({ name: 'Lou', passed: { [FIRST.id]: PASSED_STARS } }),
-		FIRST.id,
-		{
-			recordedAt: 1,
-			charCount: 20,
-			activeMs: 600_000,
-			points: [{ correctChars: 20, activeMs: 600_000 }]
+test(
+	'puts the way out of the pages for adults at the top of the page',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		for (const key of [
+			'info_link_adults',
+			'info_link_professionals',
+			'info_link_privacy',
+			'info_link_accessibility',
+			'info_link_credits'
+		]) {
+			await openPage(page, '/');
+			await page
+				.locator('footer')
+				.getByRole('link', { name: message(key), exact: true })
+				.click();
+			await expect(heading(page, message(key))).toBeVisible();
+			await expectWayOutAtTop(page, message('info_back_home'));
+			await button(page, message('info_back_home')).click();
+			await expect(heading(page, message('app_name'))).toBeVisible();
 		}
-	);
-	await openPage(page, '/jouer');
-	await installProfile(page, racer);
-	await reloadPage(page);
-	await page.getByRole('button', { name: racer.name }).click();
-	await page.getByRole('button', { name: FIRST.title }).click();
-	await throughStory(page, heading(page, FIRST.title));
+	}
+);
 
-	const choice = page.locator('[data-race-choice]');
-	const proposed = page.locator('button[data-proposed]');
-	await expect(proposed).toBeInViewport();
-	await expect(choice).toBeInViewport({ ratio: 1 });
-
-	await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
-	await proposed.click();
-	const track = page.locator('[data-ghost-track]');
-	await expect(track).toBeInViewport({ ratio: 1 });
-	await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
-});
-
-// The kitchen and space offer three games since the river came (ADR-057): the same room is needed.
-for (const worldIndex of [1, 2]) {
-	test(`keeps the three games and the race choice in view in world ${worldIndex + 1}`, async ({
-		page
-	}) => {
-		const lessons = progressionWorlds.flatMap((world) => world.lessons);
-		const lesson = progressionWorlds[worldIndex]?.lessons[0] as Lesson;
-		const before = lessons.slice(
-			0,
-			lessons.findIndex((item) => item.id === lesson.id)
-		);
+test(
+	'keeps the race choice in view with the games, and the race above the game',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
 		const racer = withGhost(
-			advancedProfile({
-				name: 'Lou',
-				passed: Object.fromEntries(
-					[...before, lesson].map((item) => [item.id, PASSED_STARS] as const)
-				)
-			}),
-			lesson.id,
+			advancedProfile({ name: 'Lou', passed: { [FIRST.id]: PASSED_STARS } }),
+			FIRST.id,
 			{
 				recordedAt: 1,
 				charCount: 20,
@@ -326,81 +303,121 @@ for (const worldIndex of [1, 2]) {
 		await installProfile(page, racer);
 		await reloadPage(page);
 		await page.getByRole('button', { name: racer.name }).click();
-		await page.getByRole('button', { name: lesson.title }).click();
-		await throughStory(page, heading(page, lesson.title));
+		await page.getByRole('button', { name: FIRST.title }).click();
+		await throughStory(page, heading(page, FIRST.title));
 
-		const games = page.locator('button[data-game]');
-		await expect(games).toHaveCount(3);
-		for (const game of await games.all()) await expect(game).toBeInViewport();
-		await expect(page.locator('button[data-game="river"]')).toBeInViewport({ ratio: 1 });
-		await expect(page.locator('[data-race-choice]')).toBeInViewport({ ratio: 1 });
-	});
+		const choice = page.locator('[data-race-choice]');
+		const proposed = page.locator('button[data-proposed]');
+		await expect(proposed).toBeInViewport();
+		await expect(choice).toBeInViewport({ ratio: 1 });
+
+		await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
+		await proposed.click();
+		const track = page.locator('[data-ghost-track]');
+		await expect(track).toBeInViewport({ ratio: 1 });
+		await expect(page.locator('.text-zone')).toBeInViewport({ ratio: 1 });
+	}
+);
+
+// The kitchen and space offer three games since the river came (ADR-057): the same room is needed.
+for (const worldIndex of [1, 2]) {
+	test(
+		`keeps the three games and the race choice in view in world ${worldIndex + 1}`,
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const lessons = progressionWorlds.flatMap((world) => world.lessons);
+			const lesson = progressionWorlds[worldIndex]?.lessons[0] as Lesson;
+			const before = lessons.slice(
+				0,
+				lessons.findIndex((item) => item.id === lesson.id)
+			);
+			const racer = withGhost(
+				advancedProfile({
+					name: 'Lou',
+					passed: Object.fromEntries(
+						[...before, lesson].map((item) => [item.id, PASSED_STARS] as const)
+					)
+				}),
+				lesson.id,
+				{
+					recordedAt: 1,
+					charCount: 20,
+					activeMs: 600_000,
+					points: [{ correctChars: 20, activeMs: 600_000 }]
+				}
+			);
+			await openPage(page, '/jouer');
+			await installProfile(page, racer);
+			await reloadPage(page);
+			await page.getByRole('button', { name: racer.name }).click();
+			await page.getByRole('button', { name: lesson.title }).click();
+			await throughStory(page, heading(page, lesson.title));
+
+			const games = page.locator('button[data-game]');
+			await expect(games).toHaveCount(3);
+			for (const game of await games.all()) await expect(game).toBeInViewport();
+			await expect(page.locator('button[data-game="river"]')).toBeInViewport({ ratio: 1 });
+			await expect(page.locator('[data-race-choice]')).toBeInViewport({ ratio: 1 });
+		}
+	);
 }
 
 // The fifth lesson of the kitchen proposes the tower, whose text zone is the narrowest, and its
 // game always has more groups than the reminder waits for (it never shows after the last one).
-test('does not move the keyboard when the reminder to look at the screen shows', async ({
-	page
-}) => {
-	await page.addInitScript(() => {
-		document.addEventListener('DOMContentLoaded', () => {
-			const style = document.createElement('style');
-			style.textContent =
-				':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms;--dd-duration-reminder:4000ms}';
-			document.head.append(style);
-		});
-	});
-	const lessons = progressionWorlds.flatMap((world) => world.lessons);
-	const kitchen = progressionWorlds[1]?.lessons[4] as Lesson;
-	const before = lessons.slice(
-		0,
-		lessons.findIndex((lesson) => lesson.id === kitchen.id)
-	);
-	const child = advancedProfile({
-		name: 'Lou',
-		passed: Object.fromEntries(before.map((lesson) => [lesson.id, PASSED_STARS]))
-	});
-	await openPage(page, '/jouer');
-	await installProfile(page, child);
-	await reloadPage(page);
-	await page.getByRole('button', { name: child.name }).click();
-	await page.getByRole('button', { name: kitchen.title }).click();
-	await throughStory(page, page.locator('button[data-proposed]'));
-	await page.locator('button[data-proposed]').click();
-
-	const label = page.locator('.target-text > .dd-visually-hidden').first();
-	const keyboard = page.locator('.keyboard');
-	const settled = () =>
-		page.evaluate(async () => {
-			await document.fonts.ready;
-			await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
-		});
-	let top: number | undefined;
-	for (let group = 1; group <= REMINDER_EVERY; group++) {
-		await expect(label).toHaveText(GROUP_LABEL);
-		if (group === REMINDER_EVERY) {
-			await settled();
-			top = (await keyboard.boundingBox())?.y;
-		}
-		await page.keyboard.type(
-			GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? ''
+test(
+	'does not move the keyboard when the reminder to look at the screen shows',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		// The reminder shows with the reward, which stays: it is measured however slow the machine is.
+		await setRewards(page, 'hold');
+		const lessons = progressionWorlds.flatMap((world) => world.lessons);
+		const kitchen = progressionWorlds[1]?.lessons[4] as Lesson;
+		const before = lessons.slice(
+			0,
+			lessons.findIndex((lesson) => lesson.id === kitchen.id)
 		);
-		if (group === REMINDER_EVERY) break;
-		await expect(async () => {
-			await page.keyboard.press('Enter');
-			await expect(label).toHaveText(GROUP_LABEL, { timeout: 500 });
-		}).toPass();
+		const child = advancedProfile({
+			name: 'Lou',
+			passed: Object.fromEntries(before.map((lesson) => [lesson.id, PASSED_STARS]))
+		});
+		await openPage(page, '/jouer');
+		await installProfile(page, child);
+		await reloadPage(page);
+		await page.getByRole('button', { name: child.name }).click();
+		await page.getByRole('button', { name: kitchen.title }).click();
+		await throughStory(page, page.locator('button[data-proposed]'));
+		await page.locator('button[data-proposed]').click();
+
+		const label = page.locator('.target-text > .dd-visually-hidden').first();
+		const keyboard = page.locator('.keyboard');
+		const settled = () =>
+			page.evaluate(async () => {
+				await document.fonts.ready;
+				await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+			});
+		let top: number | undefined;
+		for (let group = 1; group <= REMINDER_EVERY; group++) {
+			await expect(label).toHaveText(GROUP_LABEL);
+			if (group === REMINDER_EVERY) {
+				await settled();
+				top = (await keyboard.boundingBox())?.y;
+			}
+			await page.keyboard.type(
+				GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? ''
+			);
+			if (group === REMINDER_EVERY) break;
+			await passReward(page);
+		}
+		await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
+		// Measured once the page has laid the reminder out: a poll would take the first, unmoved value.
+		await settled();
+		expect((await keyboard.boundingBox())?.y).toBe(top);
 	}
-	await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
-	// Measured once the page has laid the reminder out: a poll would take the first, unmoved value.
-	await settled();
-	expect((await keyboard.boundingBox())?.y).toBe(top);
-});
+);
 
 /*
  * Everything essential on one screen (E-03, E-05, E-08, E-10, E-20): the screens a child plays on,
- * measured as they open. A layout measured in one engine holds in the others (choice 21 of the
- * owner, ADR-075): these checks run on Chromium only.
+ * measured as they open.
  */
 
 /**
@@ -419,7 +436,6 @@ const ZOOMED_LAPTOP = { width: 640, height: 360 } as const;
 const NARROW = { width: 320, height: 640 } as const;
 /** A rounding of the browser, in CSS pixels. */
 const SUBPIXEL = 1;
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const ERASE_LABEL = templateRegex('ui_target_text_erase');
 
 const everyLesson = progressionWorlds.flatMap((world) => world.lessons);
@@ -667,16 +683,11 @@ async function groupTotal(page: Page, gameId: string): Promise<number> {
 	return Number(pattern.exec((await picture.getAttribute('aria-label')) ?? '')?.groups?.['total']);
 }
 
-test.describe('on the screens children play on', () => {
-	test.skip(
-		({ browserName }) => browserName !== 'chromium',
-		'A layout measured once: it does not depend on the engine (choice 21 of the owner, ADR-075)'
-	);
-
+test.describe('on the screens children play on', CHROMIUM_ONLY, () => {
 	test.beforeEach(async ({ page }) => {
 		// Whole journeys, from the players to a game: on a busy computer they take their time.
 		test.slow();
-		await shortenRewards(page);
+		await setRewards(page, 'instant');
 	});
 
 	for (const [screenName, screen] of Object.entries(SCREENS)) {
@@ -867,10 +878,7 @@ test.describe('on the screens children play on', () => {
 			if (overflows) break;
 			const label = (await groupLabel(page).textContent()) ?? '';
 			await page.keyboard.type(GROUP_LABEL.exec(label)?.groups?.['text'] ?? '');
-			await expect(async () => {
-				await page.keyboard.press('Enter');
-				await expect(groupLabel(page)).not.toHaveText(label, { timeout: 500 });
-			}).toPass({ timeout: 15_000 });
+			await expect(groupLabel(page)).not.toHaveText(label);
 		}
 		const text = GROUP_LABEL.exec((await groupLabel(page).textContent()) ?? '')?.groups?.['text'];
 		const graphemes = [
@@ -971,20 +979,20 @@ test.describe('on the screens children play on', () => {
 		expect(room.scene).toBeGreaterThan(416);
 	});
 
-	test('has no axe violation on the map, the lesson screen and a game of a short laptop', async ({
+	test('has no axe violation on the map, the lesson screen and a game of a short laptop, light and dark', async ({
 		page
 	}) => {
 		await page.setViewportSize(SCREENS['short laptop']);
 		const lesson = firstOfEachWorld[5] as Lesson;
 		await reachMapAs(page, childBefore(lesson));
 		await settle(page);
-		expect((await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations).toEqual([]);
+		await expectNoAxeViolation(page);
 		await openIntro(page, lesson);
 		await settle(page);
-		expect((await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations).toEqual([]);
+		await expectNoAxeViolation(page);
 		await page.locator('button[data-proposed]').click();
 		await expectGroup(page);
 		await settle(page);
-		expect((await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()).violations).toEqual([]);
+		await expectNoAxeViolation(page);
 	});
 });

@@ -1,10 +1,8 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { linkedPaths, openPage } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import { expectNoAxeViolation, linkedPaths, openPage } from './support';
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PAGE_URL = '/dev/ui';
 const INSTANT_SECONDS = 0.01;
 
@@ -77,7 +75,9 @@ async function turnOnError(page: Page) {
 	await page.getByRole('checkbox', { name: message('dev_ui_error_label') }).check();
 }
 
-test.describe('component gallery', () => {
+// The trial page of the components: what they show is the same in every engine. The screens of
+// the game that use them are walked at the keyboard on the three engines.
+test.describe('component gallery', CHROMIUM_ONLY, () => {
 	test('loads with its title, every section and the whole keyboard', async ({ page }) => {
 		await openGallery(page);
 
@@ -362,7 +362,7 @@ test.describe('listen button', () => {
 	});
 });
 
-test.describe('motion settings', () => {
+test.describe('motion settings', CHROMIUM_ONLY, () => {
 	test.describe('when the system reduces motion', () => {
 		test.use({ reducedMotion: 'reduce' });
 
@@ -402,55 +402,46 @@ async function exerciseStates(page: Page) {
 	await control(page, 'dev_ui_mood_label').selectOption('cheer');
 	await control(page, 'dev_ui_count_label').selectOption('3');
 	await turnOnError(page);
-	await page.evaluate(() => document.fonts.ready);
 }
 
-async function expectNoViolation(page: Page) {
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
+test.describe('component gallery, light and dark themes', () => {
+	test('has no axe violation for WCAG A and AA', async ({ page }) => {
+		await openGallery(page);
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`component gallery, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
-
-		test('has no axe violation for WCAG A and AA', async ({ page }) => {
-			await openGallery(page);
-			await page.evaluate(() => document.fonts.ready);
-
-			await expectNoViolation(page);
-		});
-
-		test('has no axe violation with a target, a wrong key and an error', async ({ page }) => {
-			await exerciseStates(page);
-
-			await expectNoViolation(page);
-		});
-
-		test('has no axe violation while a listen button is playing', async ({ page }) => {
-			await openGallery(page);
-			await page.getByTestId('listen-available').first().getByRole('button').click();
-			await expect(
-				page.getByRole('status').filter({ hasText: message('ui_listen_playing') })
-			).toHaveCount(1);
-			await page.evaluate(() => document.fonts.ready);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-			expect(results.violations).toEqual([]);
-		});
-
-		test('has no axe violation with the theme forced on the page root', async ({ page }) => {
-			await openGallery(page);
-			await control(page, 'dev_ui_theme_label').selectOption(
-				colorScheme === 'light' ? 'dark' : 'light'
-			);
-			await page.evaluate(() => document.fonts.ready);
-
-			await expectNoViolation(page);
-		});
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation with a target, a wrong key and an error', async ({ page }) => {
+		await exerciseStates(page);
+
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation while a listen button is playing', async ({ page }) => {
+		await openGallery(page);
+		await page.getByTestId('listen-available').first().getByRole('button').click();
+		await expect(
+			page.getByRole('status').filter({ hasText: message('ui_listen_playing') })
+		).toHaveCount(1);
+
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation with the theme forced on the page root, against the system', async ({
+		page
+	}) => {
+		await openGallery(page);
+		for (const [system, forced] of [
+			['light', 'dark'],
+			['dark', 'light']
+		] as const) {
+			await page.emulateMedia({ colorScheme: system });
+			await control(page, 'dev_ui_theme_label').selectOption(forced);
+
+			await expectNoAxeViolation(page, 'as shown');
+		}
+	});
+});
 
 test.describe('component gallery, reduced motion', () => {
 	test.use({ reducedMotion: 'reduce' });
@@ -458,7 +449,7 @@ test.describe('component gallery, reduced motion', () => {
 	test('has no axe violation', async ({ page }) => {
 		await exerciseStates(page);
 
-		await expectNoViolation(page);
+		await expectNoAxeViolation(page);
 	});
 });
 
@@ -467,8 +458,7 @@ test.describe('component gallery, large and spaced text', () => {
 		await openGallery(page);
 		await control(page, 'dev_ui_scale_label').selectOption('xl');
 		await control(page, 'dev_ui_spacing_label').selectOption('wider');
-		await page.evaluate(() => document.fonts.ready);
 
-		await expectNoViolation(page);
+		await expectNoAxeViolation(page);
 	});
 });

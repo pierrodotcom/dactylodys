@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
 	installProfile,
@@ -7,7 +8,7 @@ import {
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
 
@@ -97,7 +98,6 @@ async function typeLessonToResult(page: Page) {
 		await expect(label).toHaveText(GROUP_LABEL);
 		const group = GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? '';
 		await page.keyboard.type(group);
-		await page.keyboard.press('Enter');
 		await expect(async () => {
 			const ended = (await over.isVisible()) || (await finale.isVisible());
 			const next = (await groupLabel(page).allTextContents()).some((text) =>
@@ -110,17 +110,22 @@ async function typeLessonToResult(page: Page) {
 	}
 }
 
-test('writes the policy in every page, with no source outside the site', async ({ page }) => {
-	for (const path of PAGES) {
-		await openPage(page, path);
-		const policy = await policyOf(page);
-		for (const directive of REQUIRED_DIRECTIVES) expect(policy, path).toContain(directive);
-		const scripts = /script-src ([^;]*)/.exec(policy)?.[1] ?? '';
-		expect(scripts, path).toContain("'self'");
-		expect(scripts, path).not.toMatch(/unsafe-inline|unsafe-eval|https?:|\*/);
-		expect(policy, path).not.toMatch(/https?:\/\/|\*/);
+// The policy written in the pages is the same text for every engine; each one enforces it below.
+test(
+	'writes the policy in every page, with no source outside the site',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		for (const path of PAGES) {
+			await openPage(page, path);
+			const policy = await policyOf(page);
+			for (const directive of REQUIRED_DIRECTIVES) expect(policy, path).toContain(directive);
+			const scripts = /script-src ([^;]*)/.exec(policy)?.[1] ?? '';
+			expect(scripts, path).toContain("'self'");
+			expect(scripts, path).not.toMatch(/unsafe-inline|unsafe-eval|https?:|\*/);
+			expect(policy, path).not.toMatch(/https?:\/\/|\*/);
+		}
 	}
-});
+);
 
 test('lets the browser refuse a script written in the page and a request to another site', async ({
 	page
@@ -148,7 +153,6 @@ test('lets the browser refuse a script written in the page and a request to anot
 test('plays a whole lesson with sounds and voice without any violation of the policy', async ({
 	page
 }, testInfo) => {
-	test.slow();
 	const violations = await watchPolicy(page);
 	const voices: number[] = [];
 	page.on('response', (response) => {
@@ -156,7 +160,7 @@ test('plays a whole lesson with sounds and voice without any violation of the po
 			voices.push(response.status());
 		}
 	});
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 
 	const child = advancedProfile({ name: 'Mina', passed: {} });
 	await openPage(page, '/jouer');

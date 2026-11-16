@@ -1,17 +1,23 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Page } from '@playwright/test';
-import { loadMessages, openPage, readJson, shortenRewards } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import {
+	expectNoAxeViolation,
+	loadMessages,
+	openPage,
+	passReward,
+	readJson,
+	setRewards
+} from './support';
 
 /**
  * The dialogue game (ADR-057, proposal 12): Floup asks the companion absurd questions, the child
- * types the answers. What the other games share is tested in `games.spec.ts`.
+ * types the answers. What the other games share is tested in `games.spec.ts`, where the whole game
+ * is also played on the three engines.
  */
 
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const PAGE_URL = '/dev/jeux';
-const SKIP_KEY = 'Enter';
 
 const { message, numbered, templateRegex } = loadMessages();
 const GROUPS = readJson<{ groups: string[] }>('content/common/dev/games-sample.json').groups;
@@ -61,30 +67,24 @@ async function startDialogue(page: Page, options: { scenes?: boolean; effects?: 
 
 /** Types every group, moving on from each reward with a key, up to the raw result. */
 async function playToTheEnd(page: Page) {
-	for (const [index, group] of GROUPS.entries()) {
+	for (const group of GROUPS) {
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await page.keyboard.type(group);
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-		if (index < GROUPS.length - 1) await page.keyboard.press(SKIP_KEY);
+		await passReward(page);
 	}
-	await page.keyboard.press(SKIP_KEY);
 	await expect(
 		page.getByRole('heading', { level: 2, name: message('dev_games_result_heading') })
 	).toBeVisible();
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
+// The reactions of Floup are looked at: the rewards stay until a key passes them.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 	await openPage(page, PAGE_URL);
 });
 
-test.describe('game dialogue', () => {
+test.describe('game dialogue', CHROMIUM_ONLY, () => {
 	test('writes the question in Floup’s bubble and keeps the text to type in its own place', async ({
 		page
 	}) => {
@@ -126,7 +126,7 @@ test.describe('game dialogue', () => {
 			await page.keyboard.type(group);
 			await expect(answer(page)).toHaveText(group);
 			await expect(page.locator('.bubble')).toHaveText(QUIPS[index] ?? '');
-			if (index < GROUPS.length - 1) await page.keyboard.press(SKIP_KEY);
+			if (index < GROUPS.length - 1) await passReward(page);
 		}
 	});
 
@@ -172,12 +172,7 @@ test.describe('game dialogue', () => {
 			for (const [index, group] of GROUPS.entries()) {
 				await page.keyboard.type(group);
 				await expect(page.locator(`svg.host[data-scene="${scenes?.[index]}"]`)).toHaveCount(1);
-				if (index < GROUPS.length - 1) {
-					await expect(async () => {
-						await page.keyboard.press(SKIP_KEY);
-						await expect(groupLabel(page)).toHaveText(GROUP_LABEL, { timeout: 500 });
-					}).toPass();
-				}
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 
@@ -207,12 +202,12 @@ test.describe('game dialogue', () => {
 			await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'dd-reward-calm');
 			await expect(page.locator('[data-scene]')).toHaveCount(0);
 			await expect(page.locator('.host .shake')).toHaveCSS('animation-name', 'none');
-			await page.keyboard.press(SKIP_KEY);
+			await passReward(page);
 			for (const group of GROUPS.slice(1)) {
 				await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 				await page.keyboard.type(group);
 				await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-				await page.keyboard.press(SKIP_KEY);
+				await passReward(page);
 			}
 			await expect(
 				page.getByRole('heading', { level: 2, name: message('dev_games_result_heading') })
@@ -227,7 +222,7 @@ test.describe('game dialogue', () => {
 
 		// The second reaction is a delighted one, with sparkles.
 		await page.keyboard.type(FIRST_GROUP);
-		await page.keyboard.press(SKIP_KEY);
+		await passReward(page);
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await page.keyboard.type(GROUPS[1] ?? '');
 
@@ -236,27 +231,22 @@ test.describe('game dialogue', () => {
 		await expect(page.locator('.host .layer[data-role="arriving"] .stroke').first()).toBeVisible();
 	});
 
-	for (const colorScheme of ['light', 'dark'] as const) {
-		test.describe(`${colorScheme} theme`, () => {
-			test.use({ colorScheme });
+	test('has no axe violation on a question, an answer begun and each kind of reaction, light and dark', async ({
+		page
+	}) => {
+		// Seven screens, each audited in both themes.
+		test.slow();
+		await startDialogue(page);
+		await expectNoAxeViolation(page);
 
-			test('has no axe violation on a question, an answer begun and each kind of reaction', async ({
-				page
-			}) => {
-				test.slow();
-				await startDialogue(page);
-				await expectNoAxeViolation(page);
-
-				for (const [index, group] of GROUPS.slice(0, 3).entries()) {
-					await page.keyboard.type(group.slice(0, 1));
-					await expect(answer(page)).toHaveAttribute('data-said');
-					await expectNoAxeViolation(page);
-					await page.keyboard.type(group.slice(1));
-					await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-					await expectNoAxeViolation(page);
-					if (index < 2) await page.keyboard.press(SKIP_KEY);
-				}
-			});
-		});
-	}
+		for (const [index, group] of GROUPS.slice(0, 3).entries()) {
+			await page.keyboard.type(group.slice(0, 1));
+			await expect(answer(page)).toHaveAttribute('data-said');
+			await expectNoAxeViolation(page);
+			await page.keyboard.type(group.slice(1));
+			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+			await expectNoAxeViolation(page);
+			if (index < 2) await passReward(page);
+		}
+	});
 });

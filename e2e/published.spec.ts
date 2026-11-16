@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { PUBLISHED_DEV_PAGES } from '../tools/lib/dev-pages.js';
+import { CHROMIUM_ONLY } from './engines';
 
 /*
  * The other tests run on the site built with every trial page (`npm run build:e2e`). These look at
@@ -65,20 +66,24 @@ test.afterAll(async () => {
 	await new Promise((done) => server.close(done));
 });
 
-test('serves the game and the two trial pages asked of testers', async ({ page }) => {
-	for (const path of [
-		'/',
-		'/jouer',
-		'/credits',
-		...PUBLISHED_DEV_PAGES.map((name) => `/dev/${name}`)
-	]) {
-		const response = await page.goto(origin + path);
-		expect(response?.status(), path).toBe(200);
-		await expect(page.locator('h1').first(), path).toBeVisible();
+test(
+	'serves the game and the two trial pages asked of testers',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		for (const path of [
+			'/',
+			'/jouer',
+			'/credits',
+			...PUBLISHED_DEV_PAGES.map((name) => `/dev/${name}`)
+		]) {
+			const response = await page.goto(origin + path);
+			expect(response?.status(), path).toBe(200);
+			await expect(page.locator('h1').first(), path).toBeVisible();
+		}
 	}
-});
+);
 
-test('no longer serves the internal trial pages', async ({ page }) => {
+test('no longer serves the internal trial pages', CHROMIUM_ONLY, async ({ page }) => {
 	expect(INTERNAL_DEV_PAGES).toContain('compagnon');
 	for (const name of INTERNAL_DEV_PAGES) {
 		// Asked without opening the page: Firefox never ends the load of an answer without a body.
@@ -114,7 +119,7 @@ test.describe('with its service worker', () => {
 	});
 });
 
-test('carries nothing of the internal trial pages in its code', () => {
+test('carries nothing of the internal trial pages in its code', CHROMIUM_ONLY, () => {
 	// What only an internal trial page shows: the title of its screen, in no file of the site.
 	const messages = JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>;
 	const marks = [messages['dev_companion_title'], messages['dev_ghost_title']];
