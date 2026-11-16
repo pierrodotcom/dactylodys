@@ -5,9 +5,9 @@ import { writeSiteMark } from './lib/e2e-site.js';
 
 /*
  * Builds the site the end-to-end tests run on: the published one plus every trial page of `/dev`
- * (ADR-075). `vite preview` serves it from `.svelte-kit/output`; `build/` is left as `npm run build`
- * made it, so that the tests can also look at what is really published. The site then carries the
- * mark of this copy, which Playwright waits for (L-149).
+ * (ADR-075), written to `.svelte-kit/site-with-dev-pages` and served by `tools/e2e-server.js`;
+ * `build/` is left as `npm run build` made it, so that the tests can also look at what is really
+ * published. The site then carries the mark of this copy, which Playwright waits for (L-149).
  */
 const root = fileURLToPath(new URL('..', import.meta.url));
 process.chdir(root);

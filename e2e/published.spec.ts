@@ -1,40 +1,23 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { createServer, type Server } from 'node:http';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { join, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { PUBLISHED_DEV_PAGES } from '../tools/lib/dev-pages.js';
+import { createStaticSiteServer } from '../tools/lib/static-site.js';
 import { CHROMIUM_ONLY } from './engines';
 
 /*
  * The other tests run on the site built with every trial page (`npm run build:e2e`). These look at
  * the site that is really published, `build/`, as `npm run build` writes it (ADR-075): it keeps
- * `/dev/traces` and `/dev/voix` only, and nothing of the others.
+ * `/dev/traces` and `/dev/voix` only, and nothing of the others. Both are served as GitHub Pages
+ * serves a site (`tools/lib/static-site.js`).
  */
 const SITE = resolve('build');
 const HOST = '127.0.0.1';
-const TYPES: Record<string, string> = {
-	'.html': 'text/html; charset=utf-8',
-	'.js': 'text/javascript',
-	'.css': 'text/css',
-	'.json': 'application/json',
-	'.webmanifest': 'application/manifest+json',
-	'.png': 'image/png',
-	'.woff2': 'font/woff2',
-	'.mp3': 'audio/mpeg',
-	'.md': 'text/markdown; charset=utf-8'
-};
 const INTERNAL_DEV_PAGES = readdirSync('src/routes/dev', { withFileTypes: true })
 	.filter((entry) => entry.isDirectory() && !PUBLISHED_DEV_PAGES.includes(entry.name))
 	.map((entry) => entry.name);
-
-/** The file a static host such as GitHub Pages answers with: `/jouer` is `jouer.html`. */
-function fileFor(pathname: string): string | undefined {
-	const path = join(SITE, normalize(decodeURIComponent(pathname)));
-	if (path !== SITE && !path.startsWith(SITE + sep)) return undefined;
-	const candidates = [path, `${path}.html`, join(path, 'index.html')];
-	return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile());
-}
 
 function filesUnder(directory: string): string[] {
 	return readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
@@ -47,17 +30,7 @@ let origin = '';
 
 test.beforeAll(async () => {
 	expect(existsSync(join(SITE, 'index.html')), 'run `npm run build` before these tests').toBe(true);
-	server = createServer((request, response) => {
-		const file = fileFor(new URL(request.url ?? '/', `http://${HOST}`).pathname);
-		if (!file) {
-			response.writeHead(404).end();
-			return;
-		}
-		response.writeHead(200, {
-			'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream'
-		});
-		response.end(readFileSync(file));
-	});
+	server = createStaticSiteServer(SITE);
 	await new Promise<void>((done) => server.listen(0, HOST, done));
 	origin = `http://${HOST}:${(server.address() as AddressInfo).port}`;
 });

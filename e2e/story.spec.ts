@@ -365,6 +365,11 @@ test.describe('the story so far', () => {
 });
 
 test.describe('the story pages for developers', CHROMIUM_ONLY, () => {
+	// Every picture of the story twice, on one page of several megabytes: long to draw.
+	test.beforeEach(() => {
+		test.slow();
+	});
+
 	test('draws every picture of the story', async ({ page }) => {
 		await openPage(page, '/dev/recit');
 		const moments = story.worlds.flatMap((world) => [
@@ -467,6 +472,8 @@ test.describe('the story, light and dark themes', () => {
 	});
 
 	test('has no axe violation on the trial page of the story pictures', async ({ page }) => {
+		// A page of several megabytes, audited in both themes.
+		test.slow();
 		await openPage(page, '/dev/recit');
 		await expect(page.locator('li[data-art] [data-states]')).toHaveCount(ALL_ARTS.length);
 		await expectNoAxeViolation(page);

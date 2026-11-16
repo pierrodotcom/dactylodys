@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { E2E_SITE_DIRECTORY } from './dev-pages.js';
 
 /*
  * The site the end-to-end tests of a copy of the repository run on (L-149): two suites started a few
@@ -12,8 +13,8 @@ import { join, resolve } from 'node:path';
 /** The ports the copies ask for: away from those of the tools (4273, 5273) and of the system. */
 export const PORT_RANGE = { first: 20_000, size: 10_000 };
 
-/** Where `vite preview` serves the files of the built site from. */
-export const SITE_OUTPUT = '.svelte-kit/output/client';
+/** The folder of the site of the tests, which `tools/e2e-server.js` serves. */
+export const SITE_OUTPUT = E2E_SITE_DIRECTORY;
 
 /**
  * The same text for the same copy, however its path is written: Windows ignores the case of a path
@@ -67,8 +68,9 @@ export function preferredPort(root, platform = process.platform) {
 }
 
 /**
- * Writes the mark of the copy into its built site, after the build: each build starts by emptying
- * `.svelte-kit/output`, so the mark never reaches the published site. Gives the path of the file.
+ * Writes the mark of the copy into its built site, after the build: each build of that site starts
+ * by emptying its folder, and the published site is written elsewhere (`build/`), so the mark never
+ * reaches it. Gives the path of the file.
  *
  * @param {string} root
  */

@@ -53,10 +53,11 @@ export default defineConfig({
 		{ name: 'firefox', grepInvert: CHROMIUM_ONLY_TESTS, use: { ...devices['Desktop Firefox'] } },
 		{ name: 'webkit', grepInvert: CHROMIUM_ONLY_TESTS, use: { ...devices['Desktop Safari'] } }
 	],
+	// The built site served as GitHub Pages serves it (`tools/e2e-server.js`): it starts at once and
+	// spends nothing per request, where `vite preview` took half a minute and compressed every file.
 	webServer: {
-		command: `npm run preview -- --host ${HOST} --port ${PORT} --strictPort`,
+		command: `node tools/e2e-server.js ${HOST} ${PORT}`,
 		url: `http://${HOST}:${PORT}/${SITE_MARK}`,
-		stderr: 'ignore',
 		reuseExistingServer: false,
 		timeout: 60_000
 	}
