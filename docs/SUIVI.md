@@ -28,17 +28,18 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Le jeu ne lâche pas l'enfant | E-01, E-02, E-03 d, E-12, E-23 | Fait (ADR-079) |
 | Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | Fait (ADR-080) |
 | Tout tient à l'écran | E-03, E-05, E-08, E-10, E-20 | Fait (ADR-085) ; restent « Réparer un message » au texte le plus grand avec un mot long, et un champ de leçon qui nomme les touches travaillées (leçons 26 à 30) |
-| Bilan en étapes | E-04, E-19 | À faire (« Qui joue ? » et réglages : faits, ADR-083) |
-| Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24, P-07, P-09 | À faire |
-| Rappel « regarde l'écran » | P-20, I-4 ; le compter en caractères (il ne s'affiche plus aux leçons de 3 ou 4 groupes, ADR-074) | À faire, avec la campagne de voix |
+| Bilan en étapes | E-04, P-03 (correction 2), P-11, P-21 | Fait (ADR-086) ; E-19 (trois écrans très longs sans repères) : reste |
+| Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24 | À faire |
+| L'aide qui s'efface, le Mac | P-07 (corrections 1 et 2), P-09, phrase « pas encore vérifié sur un vrai Mac » | À faire |
 | Vérification du clavier, Mac | Q-03, touche fausse déduite du caractère, « Réessayer », Q-09, Q-17, Q-31 | Fait (ADR-076, ADR-082) ; reste : essais sur un vrai Mac (Q7), phrase « pas encore vérifié sur un vrai Mac » près du choix du clavier (avec les réglages rangés) |
 | Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18, pseudo unique (demande du 2026-11-15) | Fait (ADR-083) |
-| Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | Ordre des leçons : fait (ADR-081, profil version 15). Durée des parties, phrase entière, Retour arrière selon le monde : fait (ADR-084, profil version 16). Restent : grand tour de fin de monde (choix 3), P-11 (lot « bilan en étapes ») ; P-18 et P-14 avec la campagne de voix |
-| Textes et typographie | C-01 à C-07, C-10, C-11, C-16, C-17, E-09, E-13 | À faire, avant la campagne de voix |
+| Ordre des leçons, révision, durée | P-10, P-18, P-14, P-03, P-02, P-15, P-11, P-24 | Ordre des leçons : fait (ADR-081, profil version 15). Durée des parties, phrase entière, Retour arrière selon le monde : fait (ADR-084, profil version 16). Bilan qui propose de consolider et partie aidée : fait (ADR-086). Restent : grand tour de fin de monde (choix 3) ; P-18 et P-14 avec la campagne de voix |
+| Textes et typographie | C-01 à C-07, C-09, C-10, C-11, C-13, C-15, C-16, C-17, P-20 (rappel compté en caractères), F4 et F8 de la relecture de l'ordre des leçons | À faire, en dernier : il donne la liste de la campagne de voix |
 | Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27, E-13, E-14 | Fait (ADR-078) ; reste Q-07 a-b-c (mise à jour du cache), trois règles typées dans `state/`, jetons inutilisés |
-| Espace adulte | E-14, E-15, P-17, P-21 | À faire |
-| Doigtés réduits | § 5 de l'audit de pédagogie | Après les lots ci-dessus |
-| Voix | P-01, P-12, P-13 | Campagne du porteur, quand les textes sont figés |
+| Espace adulte | E-09, E-13, E-14, E-15, P-17, P-23 | À faire |
+| Consignes courtes et textes dits | P-12, P-13, P-19, C-07 (consignes) | À faire (code et textes ; enregistrements par le porteur) |
+| Doigtés réduits | § 5 de l'audit de pédagogie (deux index, six doigts) | À faire, après les consignes courtes |
+| Voix | P-01 et la liste du lot « textes » | Campagne du porteur, quand les textes sont figés |
 
 **Après la 1.0 (ADR-057)**, un lot à la fois : ~~phrases qui racontent~~ (fait, ADR-058) → ~~animations, niveau 1~~ (fait, ADR-059) → ~~retour arrière au choix de l'adulte~~ (fait, ADR-060) → ~~clavier qui s'efface~~ (fait, ADR-061) → ~~fiche « séance type »~~ (fait, ADR-062) → ~~réglages sensoriels~~ (fait, ADR-063) → ~~images du récit à deux états~~ (fait, ADR-064) → ~~animations niveau 2 (décors)~~ (fait, ADR-065) → ~~deux nouveaux jeux~~ (fait, ADR-066 et 067) → textes utiles après la leçon 24 (~~monde 6 et Entrée~~ fait, ADR-068 ; ~~chiffres et @~~ fait, ADR-070 ; ~~effacement~~ fait, ADR-073) → dictée (étude de la voix synthétique d'abord) → doigté simplifié (revue des publications d'abord) → ~~contenu selon l'âge~~ (fait, ADR-069) → ~~coin à soi~~ (fait, ADR-071) → ~~faire connaître le jeu~~ (fait, ADR-072 ; fusionné avec le lot 5 de J5).
 
@@ -257,3 +258,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-15** — Réglages rangés (ADR-083) : cinq familles alignées, noms courts, réglages du clavier chez l'adulte, « Qui joue ? » à plusieurs, un pseudo par enfant (création, changement, sauvegarde rechargée). Leçon L-158.
 - **2026-11-15** — Des parties qui durent (ADR-084) : la partie s'allonge avec l'allure de l'enfant (par groupes entiers, au plus 150 caractères), une phrase entière à chaque partie dès la leçon du point, « Durée d'une séance » réglée par l'adulte (pause au temps de frappe réelle), Retour arrière « Selon le monde » (le monde 6 fait effacer). Profil version 16. Les 33 phrases du nouvel ordre des leçons sont relues par le porteur. Leçons L-159 à L-161.
 - **2026-11-15** — Tout tient à l'écran (ADR-085) : sur un portable (1280 × 720, 1366 × 625), les huit jeux, le récit, la carte, l'avant-leçon et la cabane tiennent sans défiler ; barre du joueur collante, texte à taper sur deux lignes qui suivent la frappe, chiffres d'une main sur une ligne. Leçons L-162 à L-165.
+- **2026-11-16** — Bilan en étapes (ADR-086) : un moment à la fois (objet gagné, nom du compagnon, résultat), « Encore une partie pour apprivoiser V et B ? » sans verrou, partie aidée après deux parties difficiles, phrases du bilan fondées sur ce qui est mesuré.
