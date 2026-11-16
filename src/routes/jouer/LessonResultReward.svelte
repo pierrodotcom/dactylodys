@@ -39,7 +39,8 @@
 	}
 </script>
 
-<ScreenFrame title={m.play_reward_new()} back={{ label: m.play_result_map(), onclick: onmap }}>
+<!-- As wide as the other steps: « Retour à la carte » stays in the same place from one step to the next. -->
+<ScreenFrame title={m.play_reward_new()} wide back={{ label: m.play_result_map(), onclick: onmap }}>
 	<div class="step" data-result-step="reward" data-reward-card={reward.id}>
 		<!-- An item to wear sits next to the companion: "Wear it" shows on it, right here (ADR-046). -->
 		<div class="pictures">
