@@ -12,6 +12,7 @@ import {
 	readJson,
 	reloadPage,
 	shortenRewards,
+	throughResult,
 	throughStory
 } from './support';
 
@@ -111,8 +112,8 @@ async function currentGroup(page: Page): Promise<string> {
 	return GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? '';
 }
 
-/** Types every group without a mistake until the result. */
-async function typeToResult(page: Page) {
+/** Types every group without a mistake until the stars of the result, past what was won. */
+async function typeToResult(page: Page, keyboard = false) {
 	const finale = button(page, message('game_shared_finale_continue'));
 	const end = button(page, message('play_result_map'));
 	for (;;) {
@@ -129,6 +130,7 @@ async function typeToResult(page: Page) {
 	}
 	if (await finale.isVisible()) await finale.click();
 	await expect(end).toBeVisible();
+	await throughResult(page, { keyboard });
 }
 
 /** The moment on screen: its picture and its sentence, then Enter on "Continue". */
@@ -163,7 +165,7 @@ test.describe('the story between two exercises', () => {
 		await expect(heading(page, FIRST.title)).toBeVisible();
 
 		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
+		await typeToResult(page, true);
 		await expect(told(page)).toHaveCount(0);
 
 		await focusByTab(page, button(page, message('play_result_next')));
@@ -219,7 +221,7 @@ test.describe('the story between two exercises', () => {
 		await page.locator('button[data-proposed]').click();
 		await typeToResult(page);
 
-		await button(page, message('play_result_replay')).click();
+		await page.locator('[data-result-replay]').click();
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(told(page)).toHaveCount(0);
 		await typeToResult(page);
@@ -232,6 +234,29 @@ test.describe('the story between two exercises', () => {
 		await expect(
 			page.locator(`[data-story-art="${TOLD_DINOS.lessons[0]?.art ?? ''}"]`).first()
 		).toBeAttached();
+	});
+
+	// One more play to tame the new keys is often proposed first: the line won is not lost to it.
+	test('tells the line won on the way to the next lesson, after one more play of the lesson', async ({
+		page
+	}) => {
+		await reachMapAs(page, advancedProfile({ name: 'Yan', passed: {} }));
+		await page.getByRole('button', { name: FIRST.title }).click();
+		await throughStory(page, heading(page, FIRST.title));
+		await page.locator('button[data-proposed]').click();
+		await typeToResult(page);
+
+		await page.locator('[data-result-replay]').click();
+		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+		await expect(told(page)).toHaveCount(0);
+		await typeToResult(page);
+
+		await button(page, message('play_result_next')).click();
+		const line = TOLD_DINOS.lessons[0];
+		await expect(told(page)).toHaveAttribute('data-art', line?.art ?? '');
+		await expect(told(page).getByText(line?.line ?? '', { exact: true })).toBeVisible();
+		await continueButton(page).click();
+		await expect(heading(page, SECOND.title)).toBeVisible();
 	});
 
 	test('opens a world once per visit, even when the child goes back to the map', async ({

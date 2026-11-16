@@ -1,0 +1,13 @@
+{
+	"schemaVersion": 1,
+	"consolidation": {
+		"minRecentAttempts": 15,
+		"maxErrorRate": 0.2,
+		"maxKeys": 2
+	},
+	"support": {
+		"afterFailedPlays": 2,
+		"closeMargin": 3,
+		"wordLevel": 1
+	}
+}

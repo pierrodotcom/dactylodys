@@ -1,17 +1,20 @@
+import type { SupportLevel } from './support';
 import type { GuideMode, HandGuidePreference, ProgressionRules } from './types';
 
 /**
  * What the hand drawn on the keyboard shows during a lesson, `lessonNumber` counted from 1:
  * every key in the first lessons, then the new keys and the key after a mistake, then nothing.
- * The preference of the child or the adult comes first.
+ * An aided play (`supportLevel`) shows every key. The preference of the child or the adult comes
+ * first: "never" stays never.
  */
 export function guideMode(
 	rules: ProgressionRules,
 	lessonNumber: number,
-	preference: HandGuidePreference
+	preference: HandGuidePreference,
+	support: SupportLevel = 'none'
 ): GuideMode {
 	if (preference === 'off') return 'none';
-	if (preference === 'always') return 'every-key';
+	if (preference === 'always' || support === 'aided') return 'every-key';
 	const { handGuide } = rules;
 	if (handGuide === undefined) return 'none';
 	if (lessonNumber <= handGuide.everyKeyUntil) return 'every-key';

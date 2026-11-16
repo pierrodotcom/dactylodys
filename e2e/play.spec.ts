@@ -35,6 +35,7 @@ import {
 	reloadPage,
 	shortenRewards,
 	storedRecord,
+	throughResult,
 	throughStory,
 	type StoredFormat
 } from './support';
@@ -354,6 +355,8 @@ interface PlayOptions {
 	/** Index of the group on screen. */
 	start?: number;
 	onGroupDone?: (index: number, group: string) => Promise<void>;
+	/** Passes the steps of the result before its stars with the keyboard rather than the mouse. */
+	keyboard?: boolean;
 }
 
 interface Played {
@@ -382,7 +385,7 @@ async function nextStep(page: Page): Promise<'group' | 'over'> {
 	return found.step ?? 'over';
 }
 
-/** Types every group, from the one on screen, until the result. */
+/** Types every group, from the one on screen, until the stars of the result (past what was won). */
 async function typeToResult(page: Page, options: PlayOptions = {}): Promise<Played> {
 	const played: Played = { groups: [], typed: 0 };
 	for (let index = options.start ?? 0; ; index++) {
@@ -396,6 +399,7 @@ async function typeToResult(page: Page, options: PlayOptions = {}): Promise<Play
 	}
 	if (await finaleButton(page).isVisible()) await finaleButton(page).click();
 	await expect(button(page, message('play_result_map'))).toBeVisible();
+	await throughResult(page, { keyboard: options.keyboard === true });
 	return played;
 }
 
@@ -495,13 +499,14 @@ test.describe('play route', () => {
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
 
 		await expect(page.getByRole('img', { name: stars(3) }).first()).toBeVisible();
-		await expect(page.getByText(message('play_result_note_3'))).toBeVisible();
+		await expect(page.getByText(message('play_result_note_perfect'))).toBeVisible();
 		await expect(
 			page.getByText(plural('play_result_accuracy', typed, { correct: typed, total: typed }))
 		).toBeVisible();
 		await expect(page.getByText(/%|mots? par minute|par minute/i)).toHaveCount(0);
 		await expect(button(page, message('play_result_next'))).toBeVisible();
-		await expect(button(page, message('play_result_replay'))).toBeVisible();
+		// One play is too few for the new keys: the replay proposes to tame them (ADR-075, choice 3).
+		await expect(page.locator('[data-result-replay]')).toBeVisible();
 		await expect(page.getByText(message('play_break_suggest'))).toHaveCount(0);
 
 		await resultToMap(page, page.getByRole('button', { name: SECOND.title }));
@@ -547,7 +552,7 @@ test.describe('play route', () => {
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(page.locator('#game-input')).toBeFocused();
 
-		await typeToResult(page, { skipDelay: true });
+		await typeToResult(page, { skipDelay: true, keyboard: true });
 		await expect(heading(page, message('play_result_headline_3'))).toBeVisible();
 		await activateByTab(page, button(page, message('play_result_map')));
 		await throughStory(page, page.getByRole('button', { name: SECOND.title }), { keyboard: true });
