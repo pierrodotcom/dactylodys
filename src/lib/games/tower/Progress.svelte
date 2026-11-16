@@ -41,10 +41,11 @@
 		gap: var(--dd-space-sm);
 	}
 
+	/* As wide as the marks of the other games: a long play keeps its race on the same line. */
 	.item {
 		display: block;
 		position: relative;
-		inline-size: calc(var(--dd-size-ingredient-mini) * 1.5);
+		inline-size: var(--dd-size-ingredient-mini);
 		padding-block-end: var(--dd-space-sm);
 	}
 

@@ -104,10 +104,13 @@
 		gap: var(--dd-space-sm);
 	}
 
-	/* The decor is drawn in the frame of the egg, behind it; the rim of the nest, in front of it. */
+	/*
+	 * The decor is drawn in the frame of the egg, behind it; the rim of the nest, in front of it.
+	 * The egg follows the height of the screen: on a short laptop, the game holds on one screen.
+	 */
 	.egg {
 		position: relative;
-		inline-size: var(--dd-size-egg);
+		inline-size: var(--dd-size-egg-fit);
 	}
 
 	.layer {

@@ -8,7 +8,7 @@
 	import Companion from '$lib/ui/components/Companion.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import Stars from '$lib/ui/components/Stars.svelte';
-	import { centerInView } from '$lib/ui/focus';
+	import { isInView, revealInView } from '$lib/ui/focus';
 	import { isMotionReduced } from './game-settings';
 	import {
 		companionSpot,
@@ -90,10 +90,9 @@
 		keepInView(button);
 	}
 
-	/** Scrolls only when the lesson leaves the screen, then brings it to the middle. */
+	/** Scrolls only when the lesson leaves the screen (or goes under the bar), then brings it to the middle. */
 	function keepInView(element: HTMLElement) {
-		const box = element.getBoundingClientRect();
-		if (box.top >= 0 && box.bottom <= window.innerHeight) return;
+		if (isInView(element)) return;
 		element.scrollIntoView({ block: 'center', behavior: still ? 'instant' : 'smooth' });
 	}
 
@@ -141,7 +140,7 @@
 				>
 			{/if}
 			{#if asking && helpKey !== null}
-				<section class="help" aria-labelledby="help-ask" {@attach centerInView}>
+				<section class="help" aria-labelledby="help-ask" {@attach revealInView}>
 					<p id="help-ask" class="ask">{m.play_help_ask({ key: helpKey })}</p>
 					<div class="help-actions">
 						<Button onclick={onhelp}>{m.play_help_yes()}</Button>
@@ -185,7 +184,7 @@
 								data-side={lesson.side}
 								data-detour={lesson.detour || undefined}
 								data-companion={lesson.id === companionId || undefined}
-								{@attach lesson.id === layout.focusId && !asking ? centerInView : undefined}
+								{@attach lesson.id === layout.focusId && !asking ? revealInView : undefined}
 							>
 								{#if lesson.status === 'locked'}
 									<div class="node">

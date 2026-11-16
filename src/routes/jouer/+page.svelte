@@ -1205,6 +1205,7 @@
 		onhideout={catalogue && screen.name === 'map' ? openHideout : undefined}
 		onsettings={openSettings}
 		onchangeplayer={changePlayer}
+		sticky={screen.name === 'map' || screen.name === 'intro'}
 	/>
 {/if}
 <main>

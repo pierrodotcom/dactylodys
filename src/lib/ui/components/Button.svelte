@@ -4,7 +4,8 @@
 
 	interface Props extends Omit<HTMLButtonAttributes, 'children' | 'class' | 'style'> {
 		variant?: 'primary' | 'secondary' | 'quiet';
-		size?: 'md' | 'lg';
+		/** `sm`: narrower sides, for a row of buttons that must hold on one line (the bar of the player). */
+		size?: 'sm' | 'md' | 'lg';
 		children: Snippet;
 	}
 
@@ -34,6 +35,11 @@
 		transition-property: background-color, border-color, scale;
 		transition-duration: var(--dd-duration-fast);
 		transition-timing-function: var(--dd-easing-standard);
+	}
+
+	button[data-size='sm'] {
+		padding-inline: var(--dd-space-md);
+		font-size: var(--dd-font-size-base);
 	}
 
 	button[data-size='lg'] {

@@ -60,7 +60,7 @@
 	.wrap {
 		position: relative;
 		inline-size: 100%;
-		max-inline-size: var(--dd-size-scene-max);
+		max-inline-size: var(--dd-size-scene-fit);
 	}
 
 	.bubble-row {
