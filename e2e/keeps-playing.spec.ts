@@ -137,15 +137,16 @@ async function currentGroup(page: Page): Promise<string> {
 }
 
 /**
- * Types whole groups until one holds `char`, then that group up to it; the rewards are instant, the
- * next group comes by itself. Returns how many characters of the group on screen are typed.
+ * Types whole groups until one holds `char` before its end, then that group up to it; the rewards
+ * are instant, the next group comes by itself. `char` is never the last of its group: typed, it
+ * leaves the group on screen with its cells done. Returns how many characters of it are typed.
  */
 async function typeUpTo(page: Page, char: string): Promise<number> {
 	for (let played = 0; played < GROUP_BUDGET; played++) {
 		const group = await currentGroup(page);
 		const graphemes = toGraphemes(group);
 		const position = graphemes.indexOf(char);
-		if (position >= 0) {
+		if (position >= 0 && position < graphemes.length - 1) {
 			await page.keyboard.type(graphemes.slice(0, position).join(''));
 			await expect(doneCells(page)).toHaveCount(position);
 			return position;
@@ -203,6 +204,8 @@ test.describe('Tab during a game', () => {
 	test('goes to Pause, says how to go on, and gives the next letter back to the game', async ({
 		page
 	}) => {
+		// The two letters typed may finish a short group: its reward stays while its cells are counted.
+		await setRewards(page, 'hold');
 		await reachMapFromHome(page, childBefore(FIRST));
 		await startLesson(page, FIRST);
 		const group = await currentGroup(page);
