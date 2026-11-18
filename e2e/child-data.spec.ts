@@ -218,11 +218,15 @@ test.beforeEach(async ({ page }) => {
 	await setRewards(page, 'instant');
 });
 
+// The tab acted on is brought to the front first, as the click on it would: WebKit holds back the
+// animation frames of a tab behind, and every click on it waits for them.
 test.describe('the game and the adult space open in two tabs', () => {
 	test('keep the lesson played in one and what the adult entered in the other', async ({
 		page,
 		context
 	}) => {
+		// A whole lesson beside the adult space: about a minute on WebKit.
+		test.slow();
 		const child = newChild();
 		await reachMap(page, child);
 
@@ -233,10 +237,12 @@ test.describe('the game and the adult space open in two tabs', () => {
 		await openAdultHome(adult);
 		await openReport(adult, child);
 
+		await page.bringToFront();
 		await startLesson(page, FIRST);
 		await typeToResult(page);
 		await storedOnce(page, child, (record) => countOf(record, 'sessions') === 1);
 
+		await adult.bringToFront();
 		await adult.locator('[data-measure-words]').focus();
 		await adult.keyboard.type('14');
 		await adult.keyboard.press('Enter');
@@ -254,6 +260,7 @@ test.describe('the game and the adult space open in two tabs', () => {
 		expect(afterAdult.sessions[0]?.lessonId).toBe(FIRST.id);
 
 		// The next change of the game, made from its own copy, keeps what the adult entered.
+		await page.bringToFront();
 		await resultToMap(page);
 		await button(page, message('play_settings_open')).click();
 		await page
@@ -297,6 +304,8 @@ test.describe('the game and the adult space open in two tabs', () => {
 		page,
 		context
 	}) => {
+		// A whole lesson beside the adult space: about a minute on WebKit.
+		test.slow();
 		const child = newChild();
 		await reachMap(page, child);
 		const adult = await context.newPage();
@@ -304,6 +313,7 @@ test.describe('the game and the adult space open in two tabs', () => {
 		await openReport(adult, child);
 		await expect(adult.locator('[data-evolution-empty]')).toBeVisible();
 
+		await page.bringToFront();
 		await startLesson(page, FIRST);
 		await typeToResult(page);
 

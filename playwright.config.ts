@@ -64,8 +64,16 @@ export default defineConfig({
 		serviceWorkers: 'block',
 		trace: 'retain-on-failure'
 	},
+	// One WebKit at a time, from the start, beside the other engines: two of them at once ran short
+	// of memory on a busy machine (« Target crashed », tests twice as slow). Listed first, it takes
+	// one worker while the others play Firefox and Chromium, instead of a WebKit phase at the end.
 	projects: [
-		{ name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+		{
+			name: 'webkit',
+			grepInvert: CHROMIUM_ONLY_TESTS,
+			workers: 1,
+			use: { ...devices['Desktop Safari'] }
+		},
 		{
 			name: 'firefox',
 			grepInvert: CHROMIUM_ONLY_TESTS,
@@ -74,7 +82,7 @@ export default defineConfig({
 				launchOptions: { firefoxUserPrefs: FIREFOX_PREFERS_IPV6 }
 			}
 		},
-		{ name: 'webkit', grepInvert: CHROMIUM_ONLY_TESTS, use: { ...devices['Desktop Safari'] } }
+		{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }
 	],
 	// The built site served as GitHub Pages serves it (`tools/e2e-server.js`): it starts at once and
 	// spends nothing per request, where `vite preview` took half a minute and compressed every file.
