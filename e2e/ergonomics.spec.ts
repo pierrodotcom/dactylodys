@@ -650,29 +650,47 @@ async function seedExercises(page: Page, seed: number) {
 	);
 }
 
+/** Opens the game of the lesson, race on, with the exercise of this seed. */
+async function startSeededPlay(page: Page, lesson: Lesson, gameId: string, seed: number) {
+	await openIntro(page, lesson);
+	await seedExercises(page, seed);
+	await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
+	await page.locator(`button[data-game="${gameId}"]`).click();
+	await expectGroup(page);
+	return groupTotal(page, gameId);
+}
+
 /**
- * Starts the game of the lesson, race on, with a play of the most groups: the seeds are tried in
- * turn, the game left for the map between two.
+ * Starts the game of the lesson, race on, with its longest play: the seeds are tried in turn, the
+ * game left for the map between two; a play of the most groups ends the search, else the longest
+ * one found is played again, never shorter than `atLeast` groups.
  */
-async function startLongestPlay(page: Page, lesson: Lesson, gameId: string) {
+async function startLongestPlay(
+	page: Page,
+	lesson: Lesson,
+	gameId: string,
+	atLeast = playRules.maxGroupCount
+) {
 	const totals: number[] = [];
 	for (const seed of SEEDS) {
-		await openIntro(page, lesson);
-		await seedExercises(page, seed);
-		await page.getByRole('checkbox', { name: new RegExp(message('play_intro_race')) }).check();
-		await page.locator(`button[data-game="${gameId}"]`).click();
-		await expectGroup(page);
-		const total = await groupTotal(page, gameId);
+		const total = await startSeededPlay(page, lesson, gameId, seed);
 		if (total === playRules.maxGroupCount) return;
 		totals.push(total);
 		await page.keyboard.press('Escape');
 		await button(page, message('game_shared_quit')).click();
 		await expect(heading(page, message('play_map_title'))).toBeVisible();
 	}
-	throw new Error(
-		`No play of ${playRules.maxGroupCount} groups of ${gameId}: ${totals.join(', ')}`
+	const longest = Math.max(...totals);
+	if (longest < atLeast) {
+		throw new Error(`No play of ${atLeast} groups of ${gameId}: ${totals.join(', ')}`);
+	}
+	expect(await startSeededPlay(page, lesson, gameId, SEEDS[totals.indexOf(longest)] ?? 0)).toBe(
+		longest
 	);
 }
+
+/** Groups of the longest play of the train in the lesson of the digits (ADR-094). */
+const TRAIN_LONGEST_PLAY = 10;
 
 const TOTAL_TOKEN = '__total__';
 
@@ -718,18 +736,18 @@ test.describe('on the screens children play on', CHROMIUM_ONLY, () => {
 				});
 			}
 
-			// The train, in the lesson of the digits: its written warm-up leaves room for the most
-			// groups (the phrases of the circuit fill the play in 11 groups at most).
-			for (const [gameId, lesson] of [
-				['tower', KITCHEN],
-				['river', KITCHEN],
-				['train', DIGITS]
+			// The train, in the lesson of the digits: since its written warm-ups got shorter (ADR-094),
+			// its longest plays there hold 10 groups (the phrases of the circuit, 11 at most).
+			for (const [gameId, lesson, atLeast] of [
+				['tower', KITCHEN, playRules.maxGroupCount],
+				['river', KITCHEN, playRules.maxGroupCount],
+				['train', DIGITS, TRAIN_LONGEST_PLAY]
 			] as const) {
 				test(`keeps a play of the most groups of ${gameId} on the screen, race included`, async ({
 					page
 				}) => {
 					await reachMapAs(page, fastChildThrough(lesson));
-					await startLongestPlay(page, lesson, gameId);
+					await startLongestPlay(page, lesson, gameId, atLeast);
 					await expectInSight(page, page.locator('[data-ghost-track]'), 'race');
 					await expectGameInSight(page, `${gameId}, ${playRules.maxGroupCount} groups`);
 				});
