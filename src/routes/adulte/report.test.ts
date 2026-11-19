@@ -1,11 +1,22 @@
+import fc from 'fast-check';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { isDetour, parseProgression } from '$lib/engine/progression/definition';
+import { charMastery } from '$lib/engine/progression/mastery';
 import type { CharSample, LessonProgress, ProgressState } from '$lib/engine/progression/types';
 import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
+import { CHAR_DAYS_RULES } from '$lib/state/char-days';
 import { createProfile } from '$lib/state/profile';
+import type { Profile } from '$lib/state/types';
 import { ADULT_RULES } from './adult-rules';
-import { hesitantKeys, keyMasteries, sortChildren, worldSummaries } from './report';
+import {
+	adultKeyStates,
+	hesitantKeys,
+	isTypedOnDays,
+	keyMasteries,
+	sortChildren,
+	worldSummaries
+} from './report';
 
 const progression = parseProgression(
 	JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
@@ -221,5 +232,132 @@ describe('sortChildren', () => {
 			new Intl.Collator('fr').compare
 		);
 		expect(sorted.map((profile) => profile.id)).toEqual(['4', '2', '3', '1']);
+	});
+});
+
+describe('adultKeyStates (P-17)', () => {
+	const RULES = ADULT_RULES;
+	const day = (on: string | null, attempts: number, errors = 0) => ({ day: on, attempts, errors });
+	const THREE_DAYS = [day('2026-11-17', 14), day('2026-11-18', 14), day('2026-11-19', 14)];
+
+	function statesOf(progress: ProgressState, charDays: Profile['charDays']) {
+		return adultKeyStates({ progress, charDays }, charIndex, RULES, collator.compare);
+	}
+
+	it('calls a key typed right on three days acquired', () => {
+		const states = statesOf(progressOf({ f: ACQUIRED }), { f: THREE_DAYS });
+		expect(states.groups.acquired).toEqual(['f']);
+		expect(states.keys.get('KeyF')).toBe('acquired');
+	});
+
+	it('says only « typed right » of a key typed right in one evening, however many times', () => {
+		const states = statesOf(progressOf({ f: ACQUIRED }), { f: [day('2026-11-19', 200)] });
+		expect(states.groups.acquired).toEqual([]);
+		expect(states.groups['typed-right']).toEqual(['f']);
+		expect(states.keys.get('KeyF')).toBe('typed-right');
+	});
+
+	it('asks for enough keystrokes over the days, and few errors', () => {
+		const few = [day('2026-11-17', 13), day('2026-11-18', 13), day('2026-11-19', 13)];
+		expect(statesOf(progressOf({ f: ACQUIRED }), { f: few }).groups.acquired).toEqual([]);
+		const wrong = [day('2026-11-17', 14, 2), day('2026-11-18', 14, 2), day('2026-11-19', 14, 1)];
+		expect(statesOf(progressOf({ f: ACQUIRED }), { f: wrong }).groups.acquired).toEqual([]);
+		const atTheLimit = [
+			day('2026-11-17', 14, 2),
+			day('2026-11-18', 14, 1),
+			day('2026-11-19', 12, 1)
+		];
+		expect(statesOf(progressOf({ f: ACQUIRED }), { f: atTheLimit }).groups.acquired).toEqual(['f']);
+	});
+
+	it('counts the days of a profile older than version 18 as one day', () => {
+		const days = [day(null, 30), day('2026-11-18', 10)];
+		expect(statesOf(progressOf({ f: ACQUIRED }), { f: days }).groups.acquired).toEqual([]);
+		const later = [...days, day('2026-11-19', 10)];
+		expect(statesOf(progressOf({ f: ACQUIRED }), { f: later }).groups.acquired).toEqual(['f']);
+	});
+
+	it('never calls acquired a key the child is long to find (ADR-056)', () => {
+		const progress = steadyWith({ m: timed(ACQUIRED, 900) });
+		const charDays = Object.fromEntries(
+			['s', 'd', 'j', 'k', 'l', 'm'].map((char) => [char, THREE_DAYS])
+		);
+		const states = statesOf(progress, charDays);
+		expect(states.hesitant).toEqual(['m']);
+		expect(states.groups['typed-right']).toEqual(['m']);
+		expect(states.groups.acquired).toEqual(['d', 'j', 'k', 'l', 's']);
+	});
+
+	it('follows the recent results first: a key wrong lately is fragile, whatever its days', () => {
+		const states = statesOf(progressOf({ f: FRAGILE }), { f: THREE_DAYS });
+		expect(states.groups.fragile).toEqual(['f']);
+		expect(states.keys.get('KeyF')).toBe('fragile');
+	});
+
+	it('gives a key the weakest state of its characters', () => {
+		const states = statesOf(progressOf({ e: ACQUIRED, E: FRAGILE }), { e: THREE_DAYS });
+		expect(states.keys.get('KeyE')).toBe('fragile');
+	});
+
+	it('never calls acquired a key that is not typed right, and puts each character in one group', () => {
+		const sampleArb = fc
+			.record({ attempts: fc.integer({ min: 1, max: 60 }), errors: fc.nat({ max: 60 }) })
+			.map(({ attempts, errors }) => ({
+				attempts,
+				errors: Math.min(attempts, errors),
+				latencyMs: null
+			}));
+		const daysArb = fc.array(
+			fc.record({ attempts: fc.integer({ min: 1, max: 40 }), errors: fc.nat({ max: 8 }) }),
+			{ maxLength: 5 }
+		);
+		const chars = ['f', 'j', 'd', 'k', 'é', 'E'];
+		fc.assert(
+			fc.property(
+				fc.dictionary(
+					fc.constantFrom(...chars),
+					fc.array(sampleArb, { minLength: 1, maxLength: 3 })
+				),
+				fc.dictionary(fc.constantFrom(...chars), daysArb),
+				(recents, dayCounts) => {
+					const progress: ProgressState = {
+						lessons: {},
+						chars: Object.fromEntries(
+							Object.entries(recents).map(([char, recent]) => [
+								char,
+								{
+									attempts: recent.reduce((sum, sample) => sum + sample.attempts, 0),
+									errors: recent.reduce((sum, sample) => sum + sample.errors, 0),
+									recent
+								}
+							])
+						)
+					};
+					const charDays = Object.fromEntries(
+						Object.entries(dayCounts).map(([char, counts]) => [
+							char,
+							counts.map((count, index) => ({
+								day: `2026-11-${String(10 + index).padStart(2, '0')}`,
+								attempts: count.attempts,
+								errors: Math.min(count.attempts, count.errors)
+							}))
+						])
+					);
+					const states = statesOf(progress, charDays);
+					for (const char of states.groups.acquired) {
+						expect(charMastery(progress, char, RULES.mastery)).toBe('acquired');
+						expect(isTypedOnDays(charDays[char] ?? [], RULES.acquired)).toBe(true);
+					}
+					const grouped = Object.values(states.groups).flat();
+					expect([...grouped].sort()).toEqual(Object.keys(progress.chars).sort());
+				}
+			)
+		);
+	});
+
+	it('is read on days the profile keeps: they cover what an acquired key asks for', () => {
+		expect(CHAR_DAYS_RULES.keptKeystrokes).toBeGreaterThanOrEqual(RULES.acquired.minAttempts);
+		expect(CHAR_DAYS_RULES.keptDays).toBeGreaterThanOrEqual(RULES.acquired.minDays);
+		expect(RULES.acquired.minAttempts).toBeGreaterThan(RULES.mastery.acquiredMinAttempts);
 	});
 });

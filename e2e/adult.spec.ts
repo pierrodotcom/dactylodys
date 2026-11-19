@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { CharProgress } from '../src/lib/engine/progression/types';
 import { BACKUP_FORMAT_ID, exportBackup } from '../src/lib/state/backup';
 import { updateSettings } from '../src/lib/state/profile';
-import type { Profile, SessionRecord } from '../src/lib/state/types';
+import type { CharDay, Profile, SessionRecord } from '../src/lib/state/types';
 import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
@@ -69,12 +69,26 @@ function session(index: number, accuracy: number, correctCharsPerMinute: number)
 	};
 }
 
-/** A child who has played three times, with one key acquired and one fragile. */
+/** Three days of keystrokes, right enough for a key typed right to be acquired (P-17). */
+const THREE_DAYS: CharDay[] = ['2026-10-20', '2026-10-21', '2026-10-22'].map((day) => ({
+	day,
+	attempts: 14,
+	errors: 0
+}));
+
+/**
+ * A child who has played three times: Q typed right on three days (acquired), F typed right in one
+ * evening only, S fragile.
+ */
 function preparedChild(name: string): Profile {
 	const base = advancedProfile({ name, passed: { [FIRST.id]: 2 } });
 	return {
 		...base,
-		progress: { ...base.progress, chars: { q: sample(30, 0), s: sample(30, 15) } },
+		progress: {
+			...base.progress,
+			chars: { q: sample(30, 0), f: sample(30, 0), s: sample(30, 15) }
+		},
+		charDays: { q: THREE_DAYS, f: [{ day: '2026-10-22', attempts: 30, errors: 0 }] },
 		sessions: [session(0, 80, 40), session(1, 90, 50), session(2, 95, 60)],
 		practiceDays: ['2026-10-20', '2026-10-21', '2026-10-22']
 	};
@@ -271,10 +285,18 @@ test.describe('adult space', () => {
 			'data-mastery',
 			'acquired'
 		);
+		// Typed right in one evening: not framed on the keyboard, named in its own list (P-17).
+		await expect(page.locator('.key[data-code="KeyF"]')).toHaveAttribute(
+			'data-mastery',
+			'learning'
+		);
 		await expect(page.locator('.key[data-code="KeyS"]')).toHaveAttribute('data-mastery', 'fragile');
 		await expect(page.locator('.key[data-code="KeyD"]')).not.toHaveAttribute('data-mastery');
 		await expect(page.locator('[data-keys="acquired"]')).toHaveText(
 			message('adult_keys_acquired', { keys: 'Q' })
+		);
+		await expect(page.locator('[data-keys="typed-right"]')).toHaveText(
+			message('adult_keys_typed_right', { keys: 'F' })
 		);
 		await expect(page.locator('[data-keys="fragile"]')).toHaveText(
 			message('adult_keys_fragile', { keys: 'S' })
@@ -383,10 +405,12 @@ test.describe('adult space', () => {
 			await expect(page.locator('[data-keys="hesitant"]')).toHaveText(
 				message('adult_keys_hesitant', { keys: 'L' })
 			);
+			// Long to find, a key typed right is never called acquired (P-17).
 			await expect(page.locator('.key[data-code="KeyL"]')).toHaveAttribute(
 				'data-mastery',
-				'acquired'
+				'learning'
 			);
+			await expect(page.locator('[data-keys="typed-right"]')).toContainText('L');
 		}
 	);
 

@@ -81,13 +81,7 @@
 >
 	<div class="report" data-child-report>
 		<ChildLessons {progression} progress={profile.progress} />
-		<ChildKeyboard
-			progress={profile.progress}
-			settings={profile.settings}
-			rules={rules.mastery}
-			hesitation={rules.hesitation}
-			{format}
-		/>
+		<ChildKeyboard {profile} {rules} {format} />
 		<ChildEvolution
 			{profile}
 			{rules}

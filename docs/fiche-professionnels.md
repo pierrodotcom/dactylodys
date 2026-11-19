@@ -25,7 +25,7 @@ Chaque choix s'appuie sur une synthèse de la recherche publiée avec le projet.
 - **La précision avant la vitesse.** Une leçon se réussit à 80 % de frappes justes, quelle que soit la vitesse, et une erreur ne fait rien perdre. La vitesse vient d'un lien stable entre chaque touche et son doigt (Feit et al., 2016).
 - **Des séances courtes.** Une partie dure quelques minutes, un peu plus quand l'enfant tape vite ; le jeu propose lui-même une pause après 4 parties au début, puis après environ 8 minutes de frappe. La pratique répartie est le résultat le mieux établi pour apprendre à taper (Baddeley et Longman, 1978).
 - **Aucun mécanisme pour retenir l'enfant.** Pas de série de jours à tenir, pas de classement, pas de récompense au hasard, pas de notification. Les récompenses saluent une compétence acquise, jamais le temps passé (Deci et al., 1999 ; Radesky et al., 2022).
-- **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; une touche bien acquise perd sa lettre et ne s'allume plus, sauf quand l'enfant hésite ou se trompe sur elle. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
+- **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; une touche tapée juste ces derniers temps perd sa lettre et ne s'allume plus, sauf quand l'enfant hésite ou se trompe sur elle. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
 - **Des réglages sensoriels séparés.** Sons, voix, mouvements, effets lumineux, taille et espacement du texte se règlent à part, ou tous ensemble avec « Tout calmer ». Rien ne bouge autour du texte pendant la frappe (Pelham et al., 2011). Le bruit de fond doux, qui aide certains et en gêne d'autres, est coupé par défaut (Nigg et al., 2024).
 - **Le retour arrière, au choix de l'adulte.** Le jeu attend la bonne touche, sauf dans le monde des textes, où l'enfant efface lui-même ses erreurs, comme dans un vrai texte. Aucune étude ne tranche : vous pouvez choisir l'un ou l'autre partout.
 - **Un contenu selon l'âge.** Deux tranches, 8-9 ans et 10-12 ans, changent les mots et les textes, jamais la progression ni les seuils : un enfant rejette ce qui lui paraît fait pour plus petit (Nielsen Norman Group).
@@ -37,7 +37,7 @@ Les références complètes sont dans la [synthèse de recherche](../reports/Dac
 ## En séance ou en classe
 
 - Plusieurs enfants peuvent jouer sur le même poste : chacun a son profil, choisi sur l'écran « Qui joue ? ».
-- L'espace adulte s'ouvre depuis cet écran, derrière une petite barrière et, si vous le voulez, un code. Il donne le bilan de chaque enfant : leçons, touches acquises et fragiles, précision, vitesse et jours pratiqués, séance après séance.
+- L'espace adulte s'ouvre depuis cet écran, derrière une petite barrière et, si vous le voulez, un code. Il donne le bilan de chaque enfant : leçons, touches tapées juste, acquises sur plusieurs jours ou fragiles, précision, vitesse et jours pratiqués, séance après séance.
 - Vous y trouvez aussi la fiche « séance type », les mesures pour tableur, une liste de mots à vous (ceux de la classe, par exemple) et de quoi ouvrir un monde d'avance.
 - La sauvegarde se fait par fichier, pour un enfant ou pour tous : un profil peut ainsi passer d'un poste à l'autre, du cabinet à la maison par exemple.
 - Dispositions de clavier proposées : Français AZERTY (PC) et Français AZERTY (Mac).
