@@ -26,7 +26,7 @@
 	import { isGuided } from '$lib/engine/progression/guide';
 	import { isLookReminderDue, needsCapsLockHelp } from './help';
 	import { targetKeyPress } from './target';
-	import { fadedKeysShown } from './keyboard-fade';
+	import { fadedKeysShown, litTarget } from './keyboard-fade';
 	import { ghostShare, raceWinner } from '$lib/engine/ghost/race';
 	import GhostTrack from './GhostTrack.svelte';
 	import {
@@ -169,6 +169,8 @@
 	// Decided once for the game: the results saved at its end change nothing on screen.
 	const fadedAtStart = untrack(() => settings.fadedKeys ?? []);
 	const faded = $derived(fadedKeysShown(fadedAtStart, charIndex, game.missedChars));
+	// The key expected is one the child knows well: it stays dark until the child hesitates (P-07).
+	const fadedTarget = $derived(target !== null && faded.includes(target.code));
 	const lookReminder = $derived(
 		phase === 'celebrating' &&
 			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
@@ -194,6 +196,9 @@
 			(typing &&
 				isGuided(guide.mode, expected, guide.freshChars, game.errorIndex !== null, hesitated))
 	);
+	// What lights, and what the finger hint names: a faded key only while the hand shows it or
+	// would show it, a missed one until the end of the game; Shift and AltGr keep their light.
+	const lit = $derived(litTarget(target, faded, guided || hesitated, fingering));
 	// Each keystroke shows the expected key again, so that a mistake brings the finger back.
 	const hands = $derived(
 		guide.mode === 'none'
@@ -336,7 +341,9 @@
 		void game.groupIndex;
 		void game.session.records.length;
 		hesitated = false;
-		if (!typing || paused || guide.mode !== 'new-keys' || guide.hesitationMs <= 0) return;
+		// The hand waits in the new-keys mode; without a hand, a faded key still lights again.
+		const waits = guide.mode === 'new-keys' || (guide.mode === 'none' && fadedTarget);
+		if (!typing || paused || !waits || guide.hesitationMs <= 0) return;
 		const timer = setTimeout(() => (hesitated = true), guide.hesitationMs);
 		return () => clearTimeout(timer);
 	});
@@ -436,8 +443,8 @@
 				<div class="slot">
 					{#if settings.showKeyboard}
 						<div class="hint">
-							{#if typing && !capsHelp && !erasing && !away}
-								<FingerHint {target} {layout} {fingering} />
+							{#if typing && !capsHelp && !erasing && !away && lit.target}
+								<FingerHint target={lit.target} {layout} {fingering} />
 							{/if}
 						</div>
 					{/if}
@@ -485,7 +492,8 @@
 				{layout}
 				{geometry}
 				{fingering}
-				{target}
+				target={lit.target}
+				marked={lit.modifiers}
 				wrongCode={game.wrongCode}
 				showFingers={true}
 				colors={settings.keyboardColors}
