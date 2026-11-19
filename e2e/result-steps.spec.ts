@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { parsePhraseBank, parseTextBank, parseWordBank } from '../src/lib/engine/progression/banks';
 import { parseProgression } from '../src/lib/engine/progression/definition';
@@ -8,16 +7,18 @@ import { seededRng } from '../src/lib/engine/progression/test-support';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import { parseWordLimitRules, wordLimits } from '../src/lib/engine/progression/word-limits';
 import { parseRewardCatalogue } from '../src/lib/engine/rewards';
-import { withCompanion, withEarnedRewards } from '../src/lib/state/profile';
-import type { Profile } from '../src/lib/state/types';
+import { withCompanion, withEarnedRewards, withProgress } from '../src/lib/state/profile';
+import type { Profile, SessionRecord } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	storedRecord,
 	throughResult,
 	throughStory
@@ -26,8 +27,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 /** A laptop screen, and the room a browser really leaves on a laptop of 1366 × 768 (audit E-03). */
 const SCREENS = [
 	{ width: 1280, height: 720 },
@@ -149,7 +148,6 @@ async function typeToResult(page: Page, mistakes = 0): Promise<string[]> {
 		}
 		await page.keyboard.type(group);
 		groups.push(group);
-		await page.keyboard.press('Enter');
 		const found: { over?: boolean } = {};
 		await expect(async () => {
 			if ((await anyStep.isVisible()) || (await finale.isVisible())) found.over = true;
@@ -193,10 +191,24 @@ async function expectWholeStepInView(page: Page, kind: 'reward' | 'name' | 'resu
 	}
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
+/** Plays of the lesson far under the threshold, in the journal of the child as a real play keeps them. */
+function failedPlays(lesson: Lesson, gameId: string, count: number): SessionRecord[] {
+	const now = Date.now();
+	return Array.from({ length: count }, (_, index) => ({
+		lessonId: lesson.id,
+		gameId,
+		finishedAt: now - (count - index) * 60_000,
+		utcOffsetMinutes: 0,
+		durationMs: 60_000,
+		totalKeystrokes: 60,
+		correctKeystrokes: 30,
+		errorCount: 30,
+		accuracy: 50,
+		correctCharsPerMinute: 30,
+		stars: 0,
+		passed: false,
+		speedRule: 2
+	}));
 }
 
 /** A child who has passed the first lesson, holds what it earned and named the companion. */
@@ -213,7 +225,7 @@ function veteran(name: string): Profile {
 }
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('result in steps', () => {
@@ -262,246 +274,260 @@ test.describe('result in steps', () => {
 		await throughStory(page, heading(page, SECOND.title), { keyboard: true });
 	});
 
-	test('shows one step only when a lesson passed again wins nothing new', async ({ page }) => {
-		await reachMapAs(page, veteran('Lou'));
-		await openLesson(page, FIRST);
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
-
-		await expect(step(page, 'result')).toBeVisible();
-		await expect(page.locator('[data-result-step]')).toHaveCount(1);
-		await expect(heading(page, message('play_result_headline_3'))).toBeFocused();
-		await expect(button(page, message('play_result_next'))).toBeVisible();
-	});
-
-	test('takes the way back to the map from a step, with Escape as with the button at the top', async ({
-		page
-	}) => {
-		await reachMapAs(page, advancedProfile({ name: 'Sam', passed: {} }));
-		await openLesson(page, FIRST);
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
-		await expect(step(page, 'reward')).toBeVisible();
-		await expect(page.locator('[data-screen-back] button')).toHaveText(message('play_result_map'));
-
-		await page.keyboard.press('Escape');
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-	});
-
-	test('proposes one more play to tame the new keys, plays it with another game, and keeps the next lesson open', async ({
-		page
-	}) => {
-		await reachMapAs(page, advancedProfile({ name: 'Ali', passed: {} }));
-		await openLesson(page, FIRST);
-		const firstGame = (await page.locator('button[data-proposed]').getAttribute('data-game')) ?? '';
-		await page.locator('button[data-proposed]').click();
-		await typeToResult(page);
-		await throughResult(page);
-
-		// One play is too few for the new keys: one more is proposed first, nothing is locked.
-		const tame = page.locator('[data-result-replay]');
-		await expect(tame).toHaveAccessibleName(CONSOLIDATE);
-		await expect(tame).toHaveAttribute('data-variant', 'primary');
-		await expect(tame.locator('kbd').first()).toBeVisible();
-		const next = button(page, message('play_result_next'));
-		await expect(next).toBeEnabled();
-		await expect(next).toHaveAttribute('data-variant', 'secondary');
-		await expect(button(page, message('play_result_replay'))).toHaveCount(0);
-
-		await tame.click();
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(progressPicture(page, firstGame)).toHaveCount(0);
-		const others = world.gameIds.filter((gameId) => gameId !== firstGame);
-		await expect(
-			progressPicture(page, others[0] ?? '').or(progressPicture(page, others[1] ?? ''))
-		).toBeVisible();
-		await typeToResult(page);
-		await throughResult(page);
-		await expect(button(page, message('play_result_next'))).toBeVisible();
-	});
-
-	test('aids the play that follows two plays under the threshold: every key shown, simplest words, another game', async ({
-		page
-	}) => {
-		// Three whole plays of a lesson.
-		test.slow();
-		const child = advancedProfile({
-			name: 'Eli',
-			passed: passedThrough(world.lessons[3] as Lesson)
-		});
-		await reachMapAs(page, child);
-		await openLesson(page, WORDS_LESSON);
-		await page.locator('button[data-proposed]').click();
-
-		// Plays far under the threshold: the result proposes to play again, more gently.
-		const plays = resultRules.support.afterFailedPlays;
-		for (let play = 1; play <= plays; play++) {
-			await typeToResult(page, MANY_MISTAKES);
-			await expect(step(page, 'result')).toBeVisible();
-			await expect(page.getByText(message('play_result_retry'))).toBeVisible();
-			await expect(button(page, message('play_result_next'))).toHaveCount(0);
-			await expect
-				.poll(async () => ((await storedRecord(page, child)) as unknown as Profile).sessions.length)
-				.toBe(play);
-			if (play < plays) await button(page, message('play_result_replay')).click();
-		}
-
-		// The aided play: the exercise of the simplest words, never one that grew with the pace.
-		const stored = (await storedRecord(page, child)) as unknown as Profile;
-		const lastGame = stored.lastGameByWorld[WORDS_LESSON.id] ?? '';
-		const rules = parseWordLimitRules(readJson('content/common/play-rules.json'), 'playRules');
-		const expected = generateExercise(
-			progression,
-			WORDS_LESSON.id,
-			seededRng(AIDED_SEED),
-			aidedContext(
-				{
-					words: parseWordBank(readJson('content/fr/words/base.json')),
-					phrases: parsePhraseBank(readJson('content/fr/phrases/base.json')),
-					texts: parseTextBank(readJson('content/fr/texts/base.json')),
-					progress: stored.progress,
-					themeId: world.themeId,
-					...wordLimits(rules, progression, WORDS_LESSON.id, stored.settings.ageBand),
-					ageBand: stored.settings.ageBand,
-					paces: [90, 90, 90, 90, 90]
-				},
-				readJson<{ support: Parameters<typeof aidedContext>[1] }>(
-					'content/common/result-rules.json'
-				).support
-			)
-		);
-		await page.evaluate(
-			([source, value]) => {
-				Math.random = new Function(`return (${source})`)()(value);
-			},
-			[seededRng.toString(), AIDED_SEED] as const
-		);
-		await button(page, message('play_result_replay')).click();
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		// Another game than the last one played.
-		await expect(progressPicture(page, lastGame)).toHaveCount(0);
-
-		// Every key is shown at once, not only the new ones: a key that is not new, before any wait.
-		const shown = page.locator('.keyboard [data-hand-guide] [data-active]');
-		const notNew = (char: string) => /\p{L}/u.test(char) && !WORDS_LESSON.newChars.includes(char);
-		const typed: string[] = [];
-		const finale = button(page, message('game_shared_finale_continue'));
-		let checked = false;
-		for (;;) {
-			const group = await currentGroup(page);
-			const graphemes = [...group];
-			const at = checked ? -1 : graphemes.findIndex((char, index) => index > 0 && notNew(char));
-			if (at > 0) {
-				await page.keyboard.type(graphemes.slice(0, at).join(''));
-				await expect(shown).toHaveCount(1, { timeout: BEFORE_HESITATION_MS });
-				await page.keyboard.type(graphemes.slice(at).join(''));
-				checked = true;
-			} else {
-				await page.keyboard.type(group);
-			}
-			typed.push(group);
-			await page.keyboard.press('Enter');
-			const found: { over?: boolean } = {};
-			await expect(async () => {
-				if ((await page.locator('[data-result-step]').isVisible()) || (await finale.isVisible()))
-					found.over = true;
-				else if ((await groupLabel(page).allTextContents()).some((text) => GROUP_LABEL.test(text)))
-					found.over = false;
-				expect(found.over).toBeDefined();
-			}).toPass({ timeout: STEP_TIMEOUT });
-			if (found.over) break;
-		}
-		expect(checked).toBe(true);
-		expect(typed).toEqual(expected.groups);
-	});
-
-	for (const screen of SCREENS) {
-		test(`keeps each step in view without scrolling at ${screen.width} × ${screen.height}`, async ({
-			page
-		}) => {
-			await page.setViewportSize(screen);
-			await reachMapAs(page, advancedProfile({ name: 'Lou', passed: {} }));
+	test(
+		'shows one step only when a lesson passed again wins nothing new',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, veteran('Lou'));
 			await openLesson(page, FIRST);
 			await page.locator('button[data-proposed]').click();
 			await typeToResult(page);
 
-			await expectWholeStepInView(page, 'reward');
-			await button(page, message('play_reward_wear')).click();
-			await expectWholeStepInView(page, 'reward');
-			await button(page, message('play_result_continue')).click();
-			await expectWholeStepInView(page, 'name');
-			await button(page, COMPANION_NAME).click();
-			await expectWholeStepInView(page, 'name');
-			await button(page, message('play_result_continue')).click();
-			await expectWholeStepInView(page, 'result');
-			await expect(page.locator('[data-result-replay]')).toHaveAccessibleName(CONSOLIDATE);
-		});
+			await expect(step(page, 'result')).toBeVisible();
+			await expect(page.locator('[data-result-step]')).toHaveCount(1);
+			await expect(heading(page, message('play_result_headline_3'))).toBeFocused();
+			await expect(button(page, message('play_result_next'))).toBeVisible();
+		}
+	);
 
-		test(`keeps the result with a break in view without scrolling at ${screen.width} × ${screen.height}`, async ({
-			page
-		}) => {
-			// A whole play, its item, then the result: as long as the other tests of a play.
-			test.slow();
-			await page.clock.install();
-			await page.setViewportSize(screen);
-			await reachMapAs(page, veteran('Lou'));
-			await openLesson(page, SECOND);
+	test(
+		'takes the way back to the map from a step, with Escape as with the button at the top',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Sam', passed: {} }));
+			await openLesson(page, FIRST);
 			await page.locator('button[data-proposed]').click();
-			const group = await currentGroup(page);
-			await page.keyboard.type(group.slice(0, 1));
-			await page.clock.fastForward(`${playRules.sessionLengths.normal.clockMinutes + 1}:00`);
-			await page.keyboard.type(group.slice(1));
-			await page.keyboard.press('Enter');
+			await typeToResult(page);
+			await expect(step(page, 'reward')).toBeVisible();
+			await expect(page.locator('[data-screen-back] button')).toHaveText(
+				message('play_result_map')
+			);
+
+			await page.keyboard.press('Escape');
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+		}
+	);
+
+	test(
+		'proposes one more play to tame the new keys, plays it with another game, and keeps the next lesson open',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, advancedProfile({ name: 'Ali', passed: {} }));
+			await openLesson(page, FIRST);
+			const firstGame =
+				(await page.locator('button[data-proposed]').getAttribute('data-game')) ?? '';
+			await page.locator('button[data-proposed]').click();
 			await typeToResult(page);
 			await throughResult(page);
 
-			await expect(button(page, message('play_break_button'))).toBeVisible();
-			await expectWholeStepInView(page, 'result');
-		});
+			// One play is too few for the new keys: one more is proposed first, nothing is locked.
+			const tame = page.locator('[data-result-replay]');
+			await expect(tame).toHaveAccessibleName(CONSOLIDATE);
+			await expect(tame).toHaveAttribute('data-variant', 'primary');
+			await expect(tame.locator('kbd').first()).toBeVisible();
+			const next = button(page, message('play_result_next'));
+			await expect(next).toBeEnabled();
+			await expect(next).toHaveAttribute('data-variant', 'secondary');
+			await expect(button(page, message('play_result_replay'))).toHaveCount(0);
+
+			await tame.click();
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			await expect(progressPicture(page, firstGame)).toHaveCount(0);
+			const others = world.gameIds.filter((gameId) => gameId !== firstGame);
+			await expect(
+				progressPicture(page, others[0] ?? '').or(progressPicture(page, others[1] ?? ''))
+			).toBeVisible();
+			await typeToResult(page);
+			await throughResult(page);
+			await expect(button(page, message('play_result_next'))).toBeVisible();
+		}
+	);
+
+	test(
+		'aids the play that follows two plays under the threshold: every key shown, simplest words, another game',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			// The plays under the threshold are in the journal of the child, where the game reads them.
+			const lastGame = world.gameIds[0] ?? '';
+			const plays = resultRules.support.afterFailedPlays;
+			const before = advancedProfile({
+				name: 'Eli',
+				passed: passedThrough(world.lessons[3] as Lesson)
+			});
+			const child: Profile = {
+				...withProgress(before, {
+					...before.progress,
+					lessons: {
+						...before.progress.lessons,
+						[WORDS_LESSON.id]: {
+							bestAccuracy: 50,
+							stars: 0,
+							attempts: plays,
+							lastPlayedAt: Date.now()
+						}
+					}
+				}),
+				sessions: failedPlays(WORDS_LESSON, lastGame, plays),
+				lastGameByWorld: { [world.id]: lastGame, [WORDS_LESSON.id]: lastGame }
+			};
+			await reachMapAs(page, child);
+			await openLesson(page, WORDS_LESSON);
+
+			// The aided play: the exercise of the simplest words, never one that grew with the pace.
+			const stored = (await storedRecord(page, child)) as unknown as Profile;
+			const rules = parseWordLimitRules(readJson('content/common/play-rules.json'), 'playRules');
+			const expected = generateExercise(
+				progression,
+				WORDS_LESSON.id,
+				seededRng(AIDED_SEED),
+				aidedContext(
+					{
+						words: parseWordBank(readJson('content/fr/words/base.json')),
+						phrases: parsePhraseBank(readJson('content/fr/phrases/base.json')),
+						texts: parseTextBank(readJson('content/fr/texts/base.json')),
+						progress: stored.progress,
+						themeId: world.themeId,
+						...wordLimits(rules, progression, WORDS_LESSON.id, stored.settings.ageBand),
+						ageBand: stored.settings.ageBand,
+						paces: [90, 90, 90, 90, 90]
+					},
+					readJson<{ support: Parameters<typeof aidedContext>[1] }>(
+						'content/common/result-rules.json'
+					).support
+				)
+			);
+			await page.evaluate(
+				([source, value]) => {
+					Math.random = new Function(`return (${source})`)()(value);
+				},
+				[seededRng.toString(), AIDED_SEED] as const
+			);
+			await page.locator('button[data-proposed]').click();
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			// Another game than the last one played.
+			await expect(progressPicture(page, lastGame)).toHaveCount(0);
+
+			// Every key is shown at once, not only the new ones: a key that is not new, before any wait.
+			const shown = page.locator('.keyboard [data-hand-guide] [data-active]');
+			const notNew = (char: string) => /\p{L}/u.test(char) && !WORDS_LESSON.newChars.includes(char);
+			const typed: string[] = [];
+			const finale = button(page, message('game_shared_finale_continue'));
+			let checked = false;
+			for (;;) {
+				const group = await currentGroup(page);
+				const graphemes = [...group];
+				const at = checked ? -1 : graphemes.findIndex((char, index) => index > 0 && notNew(char));
+				if (at > 0) {
+					await page.keyboard.type(graphemes.slice(0, at).join(''));
+					await expect(shown).toHaveCount(1, { timeout: BEFORE_HESITATION_MS });
+					await page.keyboard.type(graphemes.slice(at).join(''));
+					checked = true;
+				} else {
+					await page.keyboard.type(group);
+				}
+				typed.push(group);
+				const found: { over?: boolean } = {};
+				await expect(async () => {
+					if ((await page.locator('[data-result-step]').isVisible()) || (await finale.isVisible()))
+						found.over = true;
+					else if (
+						(await groupLabel(page).allTextContents()).some((text) => GROUP_LABEL.test(text))
+					)
+						found.over = false;
+					expect(found.over).toBeDefined();
+				}).toPass({ timeout: STEP_TIMEOUT });
+				if (found.over) break;
+			}
+			expect(checked).toBe(true);
+			expect(typed).toEqual(expected.groups);
+		}
+	);
+
+	for (const screen of SCREENS) {
+		test(
+			`keeps each step in view without scrolling at ${screen.width} × ${screen.height}`,
+			CHROMIUM_ONLY,
+			async ({ page }) => {
+				await page.setViewportSize(screen);
+				await reachMapAs(page, advancedProfile({ name: 'Lou', passed: {} }));
+				await openLesson(page, FIRST);
+				await page.locator('button[data-proposed]').click();
+				await typeToResult(page);
+
+				await expectWholeStepInView(page, 'reward');
+				await button(page, message('play_reward_wear')).click();
+				await expectWholeStepInView(page, 'reward');
+				await button(page, message('play_result_continue')).click();
+				await expectWholeStepInView(page, 'name');
+				await button(page, COMPANION_NAME).click();
+				await expectWholeStepInView(page, 'name');
+				await button(page, message('play_result_continue')).click();
+				await expectWholeStepInView(page, 'result');
+				await expect(page.locator('[data-result-replay]')).toHaveAccessibleName(CONSOLIDATE);
+			}
+		);
+
+		test(
+			`keeps the result with a break in view without scrolling at ${screen.width} × ${screen.height}`,
+			CHROMIUM_ONLY,
+			async ({ page }) => {
+				await page.clock.install();
+				await page.setViewportSize(screen);
+				await reachMapAs(page, veteran('Lou'));
+				await openLesson(page, SECOND);
+				await page.locator('button[data-proposed]').click();
+				const group = await currentGroup(page);
+				await page.keyboard.type(group.slice(0, 1));
+				await page.clock.fastForward(`${playRules.sessionLengths.normal.clockMinutes + 1}:00`);
+				await page.keyboard.type(group.slice(1));
+				await typeToResult(page);
+				await throughResult(page);
+
+				await expect(button(page, message('play_break_button'))).toBeVisible();
+				await expectWholeStepInView(page, 'result');
+			}
+		);
 	}
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`result in steps, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('result in steps, light and dark themes', () => {
+	test('has no axe violation on the item, the name and the result', async ({ page }) => {
+		// Six screens, each audited in both themes.
+		test.slow();
+		await reachMapAs(page, advancedProfile({ name: 'Lou', passed: {} }));
+		await openLesson(page, FIRST);
+		await page.locator('button[data-proposed]').click();
+		await typeToResult(page);
 
-		test('has no axe violation on the item, the name and the result', async ({ page }) => {
-			test.slow();
-			await reachMapAs(page, advancedProfile({ name: 'Lou', passed: {} }));
-			await openLesson(page, FIRST);
-			await page.locator('button[data-proposed]').click();
-			await typeToResult(page);
-
-			await expect(step(page, 'reward')).toBeVisible();
-			await expectNoAxeViolation(page);
-			await button(page, message('play_reward_wear')).click();
-			await expect(page.getByText(message('play_reward_worn'))).toBeVisible();
-			await expectNoAxeViolation(page);
-			await button(page, message('play_result_continue')).click();
-			await expect(step(page, 'name')).toBeVisible();
-			await expectNoAxeViolation(page);
-			await button(page, message('play_companion_name_submit')).click();
-			await expect(page.getByRole('alert')).toHaveText(message('play_companion_name_error_empty'));
-			await expectNoAxeViolation(page);
-			await button(page, COMPANION_NAME).click();
-			await expect(
-				page.getByText(message('play_companion_named', { name: COMPANION_NAME }))
-			).toBeVisible();
-			await expectNoAxeViolation(page);
-			await button(page, message('play_result_continue')).click();
-			await expect(step(page, 'result')).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
-
-		test('has no axe violation on the result of a play under the threshold', async ({ page }) => {
-			await reachMapAs(page, advancedProfile({ name: 'Lou', passed: {} }));
-			await openLesson(page, FIRST);
-			await page.locator('button[data-proposed]').click();
-			await typeToResult(page, MANY_MISTAKES);
-
-			await expect(step(page, 'result')).toBeVisible();
-			await expect(page.getByText(message('play_result_retry'))).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
+		await expect(step(page, 'reward')).toBeVisible();
+		await expectNoAxeViolation(page);
+		await button(page, message('play_reward_wear')).click();
+		await expect(page.getByText(message('play_reward_worn'))).toBeVisible();
+		await expectNoAxeViolation(page);
+		await button(page, message('play_result_continue')).click();
+		await expect(step(page, 'name')).toBeVisible();
+		await expectNoAxeViolation(page);
+		await button(page, message('play_companion_name_submit')).click();
+		await expect(page.getByRole('alert')).toHaveText(message('play_companion_name_error_empty'));
+		await expectNoAxeViolation(page);
+		await button(page, COMPANION_NAME).click();
+		await expect(
+			page.getByText(message('play_companion_named', { name: COMPANION_NAME }))
+		).toBeVisible();
+		await expectNoAxeViolation(page);
+		await button(page, message('play_result_continue')).click();
+		await expect(step(page, 'result')).toBeVisible();
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation on the result of a play under the threshold', async ({ page }) => {
+		await reachMapAs(page, advancedProfile({ name: 'Lou', passed: {} }));
+		await openLesson(page, FIRST);
+		await page.locator('button[data-proposed]').click();
+		await typeToResult(page, MANY_MISTAKES);
+
+		await expect(step(page, 'result')).toBeVisible();
+		await expect(page.getByText(message('play_result_retry'))).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
+});

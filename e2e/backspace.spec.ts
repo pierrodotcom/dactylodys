@@ -1,16 +1,16 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { toGraphemes } from '../src/lib/engine/graphemes';
 import { updateSettings } from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	storedRecord,
 	throughStory
 } from './support';
@@ -23,9 +23,6 @@ import {
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
-
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 
 const { message, templateRegex } = loadMessages();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
@@ -136,8 +133,9 @@ async function installChild(page: Page, profile: Profile) {
 	await reloadPage(page);
 }
 
+// Each test ends on a group done: its reward stays to be looked at.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 });
 
 test.describe('Backspace setting', () => {
@@ -272,21 +270,15 @@ test.describe('Backspace setting', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`Backspace setting, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('Backspace setting, light and dark themes', () => {
+	test('has no axe violation on a game with a wrong letter to erase', async ({ page }) => {
+		await installChild(page, withBackspace(child()));
+		await reachMap(page);
+		const group = await startFirstLesson(page);
+		await page.keyboard.type(wrongKeyFor(group));
+		await expect(wrongCells(page)).toHaveCount(1);
+		await expect(page.locator('[data-erase-reminder]')).toBeVisible();
 
-		test('has no axe violation on a game with a wrong letter to erase', async ({ page }) => {
-			await installChild(page, withBackspace(child()));
-			await reachMap(page);
-			const group = await startFirstLesson(page);
-			await page.keyboard.type(wrongKeyFor(group));
-			await expect(wrongCells(page)).toHaveCount(1);
-			await expect(page.locator('[data-erase-reminder]')).toBeVisible();
-
-			await page.evaluate(() => document.fonts.ready);
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(results.violations).toEqual([]);
-		});
+		await expectNoAxeViolation(page);
 	});
-}
+});

@@ -1,16 +1,22 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { GAMES } from '../src/lib/games/registry';
-import { linkedPaths, loadMessages, openPage, readJson, shortenRewards } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import {
+	expectNoAxeViolation,
+	linkedPaths,
+	loadMessages,
+	openPage,
+	passReward,
+	readJson,
+	setRewards
+} from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PAGE_URL = '/dev/jeux';
-/** Enter is ignored while typing, and moves on to the next group while the reward is on screen. */
-const SKIP_KEY = 'Enter';
+/** Much longer than any test: the reminder to look at the screen stays, a key does not pass it. */
+const LONG_REMINDER = ':root{--dd-duration-reminder:600000ms}';
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
 
 const { message, plural, templateRegex, numbered } = loadMessages();
@@ -157,8 +163,6 @@ function progressLabel(game: Game, done: number): string {
 }
 
 interface PlayOptions {
-	/** Press a key while the reward is on screen, which moves on without waiting. */
-	skipDelay?: boolean;
 	/** Index of the first group left to type. */
 	from?: number;
 	/** Index after the last group to type. */
@@ -173,10 +177,7 @@ function bubbleFor(game: Game, rewardIndex: number): string {
 	return message(keys[rewardIndex % keys.length] ?? '');
 }
 
-/**
- * The reward lasts about a second: the group done and the bubble are checked together, in the page,
- * because a slow browser would let several round trips go by and miss both.
- */
+/** The group done and the bubble of its reward, together on the screen: the reward stays (`hold`). */
 async function expectRewardShown(page: Page, bubble: string) {
 	await page.waitForFunction(
 		([text, doneSource]) => {
@@ -190,7 +191,10 @@ async function expectRewardShown(page: Page, bubble: string) {
 	);
 }
 
-/** Types the groups from `from` on, checking the rewards on the way. */
+/**
+ * Types the groups from `from` on, checking the rewards on the way and passing each one with a key,
+ * the last one apart (`leaveLastReward`).
+ */
 async function typeGroups(page: Page, game: Game, options: PlayOptions = {}) {
 	for (let index = options.from ?? 0; index < (options.until ?? GROUPS.length); index++) {
 		const group = await currentGroup(page);
@@ -198,22 +202,16 @@ async function typeGroups(page: Page, game: Game, options: PlayOptions = {}) {
 		await page.keyboard.type(group);
 		await expectRewardShown(page, bubbleFor(game, (options.play ?? 0) * GROUPS.length + index));
 		await expect(page.getByRole('img', { name: progressLabel(game, index + 1) })).toBeVisible();
-		if (index < GROUPS.length - 1 && options.skipDelay) await page.keyboard.press(SKIP_KEY);
+		if (index < GROUPS.length - 1) await passReward(page);
 	}
 }
 
 /** The last reward is on screen: leave it, through the final picture of the game when it has one. */
 async function leaveLastReward(page: Page) {
-	await page.keyboard.press(SKIP_KEY);
+	await passReward(page);
 	await expect(resultHeading(page).or(continueButton(page))).toBeVisible();
 	if (await continueButton(page).isVisible()) await continueButton(page).click();
 	await expect(resultHeading(page)).toBeVisible();
-}
-
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
 }
 
 interface RawMetrics {
@@ -226,11 +224,12 @@ async function rawResult(page: Page): Promise<RawMetrics> {
 	return JSON.parse(await page.locator('.raw').innerText()) as RawMetrics;
 }
 
+// The rewards of the games are looked at: they stay until a key passes them.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 });
 
-test.describe('games test page', () => {
+test.describe('games test page', CHROMIUM_ONLY, () => {
 	test('is not linked from the home page', async ({ page }) => {
 		await openPage(page, '/');
 
@@ -276,28 +275,24 @@ test.describe('games test page', () => {
 		}
 	});
 
-	for (const colorScheme of COLOR_SCHEMES) {
-		test.describe(`${colorScheme} theme`, () => {
-			test.use({ colorScheme });
+	test('has no axe violation on the choice and on the raw result, light and dark', async ({
+		page
+	}) => {
+		await openChooser(page);
+		await expectNoAxeViolation(page);
 
-			test('has no axe violation on the choice and on the raw result', async ({ page }) => {
-				test.slow();
-				await openChooser(page);
-				await expectNoAxeViolation(page);
-
-				await beginGame(page, gameNamed('hatching'));
-				await page.keyboard.type(FIRST_GROUP);
-				await page.keyboard.press(SKIP_KEY);
-				await typeGroups(page, gameNamed('hatching'), { from: 1, skipDelay: true });
-				await leaveLastReward(page);
-				await expectNoAxeViolation(page);
-			});
-		});
-	}
+		await beginGame(page, gameNamed('hatching'));
+		await page.keyboard.type(FIRST_GROUP);
+		await passReward(page);
+		await typeGroups(page, gameNamed('hatching'), { from: 1 });
+		await leaveLastReward(page);
+		await expectNoAxeViolation(page);
+	});
 });
 
 for (const game of games) {
 	test.describe(`game ${game.id}`, () => {
+		// The whole play of each game runs on the three engines; the rest of the game is the same page.
 		test('is played to the end with the keyboard, to the raw result', async ({ page }) => {
 			await startGame(page, game);
 			await expect(page.getByRole('img', { name: progressLabel(game, 0) })).toBeVisible();
@@ -311,120 +306,124 @@ for (const game of games) {
 			expect(raw.errorCount).toBe(0);
 		});
 
-		test('does not advance on a wrong key, flags it, and goes on with the right ones', async ({
-			page
-		}) => {
-			await startGame(page, game);
-			const before = await game.probe(page);
+		test(
+			'does not advance on a wrong key, flags it, and goes on with the right ones',
+			CHROMIUM_ONLY,
+			async ({ page }) => {
+				await startGame(page, game);
+				const before = await game.probe(page);
 
-			await page.keyboard.press(WRONG_KEY);
+				await page.keyboard.press(WRONG_KEY);
 
-			await expect(errorCells(page)).toHaveCount(1);
-			await expect(errorCells(page)).toHaveText(FIRST_CHAR);
-			await expect(doneCells(page)).toHaveCount(0);
-			await expect(page.locator('.keyboard [data-wrong]')).toHaveAttribute(
-				'data-code',
-				WRONG_KEY_CODE
-			);
-			expect(await game.probe(page)).toBe(before);
-			await expect(page.locator('main')).not.toContainText(/%|\b(erreurs?|fautes?|score|vies?)\b/i);
+				await expect(errorCells(page)).toHaveCount(1);
+				await expect(errorCells(page)).toHaveText(FIRST_CHAR);
+				await expect(doneCells(page)).toHaveCount(0);
+				await expect(page.locator('.keyboard [data-wrong]')).toHaveAttribute(
+					'data-code',
+					WRONG_KEY_CODE
+				);
+				expect(await game.probe(page)).toBe(before);
+				await expect(page.locator('main')).not.toContainText(
+					/%|\b(erreurs?|fautes?|score|vies?)\b/i
+				);
 
-			await page.keyboard.type(FIRST_CHAR);
+				await page.keyboard.type(FIRST_CHAR);
 
-			await expect(errorCells(page)).toHaveCount(0);
-			await expect(doneCells(page)).toHaveCount(1);
-			expect(await game.probe(page)).not.toBe(before);
+				await expect(errorCells(page)).toHaveCount(0);
+				await expect(doneCells(page)).toHaveCount(1);
+				expect(await game.probe(page)).not.toBe(before);
 
-			await page.keyboard.type(FIRST_GROUP.slice(FIRST_CHAR.length));
-			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-			await page.keyboard.press(SKIP_KEY);
-			await typeGroups(page, game, { from: 1, skipDelay: true });
-			await leaveLastReward(page);
+				await page.keyboard.type(FIRST_GROUP.slice(FIRST_CHAR.length));
+				await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+				await passReward(page);
+				await typeGroups(page, game, { from: 1 });
+				await leaveLastReward(page);
 
-			const raw = await rawResult(page);
-			expect(raw.errorCount).toBe(1);
-			expect(raw.totalKeystrokes).toBe(TOTAL_KEYS + 1);
-			expect(raw.accuracy).toBeLessThan(100);
-		});
+				const raw = await rawResult(page);
+				expect(raw.errorCount).toBe(1);
+				expect(raw.totalKeystrokes).toBe(TOTAL_KEYS + 1);
+				expect(raw.accuracy).toBeLessThan(100);
+			}
+		);
 
-		test('pauses with Escape, resumes where it was, and quits to the choice', async ({ page }) => {
-			await startGame(page, game);
-			await page.keyboard.type(FIRST_CHAR);
-			await expect(doneCells(page)).toHaveCount(1);
+		test(
+			'pauses with Escape, resumes where it was, and quits to the choice',
+			CHROMIUM_ONLY,
+			async ({ page }) => {
+				await startGame(page, game);
+				await page.keyboard.type(FIRST_CHAR);
+				await expect(doneCells(page)).toHaveCount(1);
 
-			await page.keyboard.press('Escape');
+				await page.keyboard.press('Escape');
 
-			await expect(pauseDialog(page)).toBeVisible();
-			await expect(button(page, message('game_shared_resume'))).toBeFocused();
-			await page.keyboard.press(SECOND_CHAR);
-			await page.keyboard.press('Escape');
-			await expect(pauseDialog(page)).toHaveCount(0);
-			await expect(page.locator('#game-input')).toBeFocused();
-			await expect(doneCells(page)).toHaveCount(1);
+				await expect(pauseDialog(page)).toBeVisible();
+				await expect(button(page, message('game_shared_resume'))).toBeFocused();
+				await page.keyboard.press(SECOND_CHAR);
+				await page.keyboard.press('Escape');
+				await expect(pauseDialog(page)).toHaveCount(0);
+				await expect(page.locator('#game-input')).toBeFocused();
+				await expect(doneCells(page)).toHaveCount(1);
 
-			await button(page, message('game_shared_pause')).click();
-			await expect(pauseDialog(page)).toBeVisible();
-			await button(page, message('game_shared_quit')).click();
+				await button(page, message('game_shared_pause')).click();
+				await expect(pauseDialog(page)).toBeVisible();
+				await button(page, message('game_shared_quit')).click();
 
-			await expect(
-				page.getByRole('heading', { level: 1, name: message('dev_games_title') })
-			).toBeVisible();
-			await expect(resultHeading(page)).toHaveCount(0);
-			await beginGame(page, game);
-			await expect(doneCells(page)).toHaveCount(0);
-		});
+				await expect(
+					page.getByRole('heading', { level: 1, name: message('dev_games_title') })
+				).toBeVisible();
+				await expect(resultHeading(page)).toHaveCount(0);
+				await beginGame(page, game);
+				await expect(doneCells(page)).toHaveCount(0);
+			}
+		);
 
-		test('can be played without the on-screen keyboard', async ({ page }) => {
+		test('can be played without the on-screen keyboard', CHROMIUM_ONLY, async ({ page }) => {
 			await openChooser(page);
 			await page.getByRole('checkbox', { name: message('dev_games_keyboard_label') }).uncheck();
 
 			await beginGame(page, game);
 
 			await expect(page.locator('.keyboard')).toHaveCount(0);
-			await typeGroups(page, game, { skipDelay: true });
+			await typeGroups(page, game);
 			await leaveLastReward(page);
 			await expect(resultHeading(page)).toBeVisible();
 		});
 
-		for (const colorScheme of COLOR_SCHEMES) {
-			test.describe(`${colorScheme} theme`, () => {
-				test.use({ colorScheme });
+		test('has no axe violation while typing, after a mistake, on a reward, paused and at the end, light and dark', async ({
+			page
+		}) => {
+			// Four or five screens, each audited in both themes.
+			test.slow();
+			await startGame(page, game);
+			await expectNoAxeViolation(page);
 
-				test('has no axe violation while typing, after a mistake, on a reward, paused and at the end', async ({
-					page
-				}) => {
-					test.slow();
-					await startGame(page, game);
-					await expectNoAxeViolation(page);
+			await page.keyboard.press(WRONG_KEY);
+			await expect(errorCells(page)).toHaveCount(1);
+			await expectNoAxeViolation(page);
 
-					await page.keyboard.press(WRONG_KEY);
-					await expect(errorCells(page)).toHaveCount(1);
-					await expectNoAxeViolation(page);
+			await page.keyboard.type(FIRST_GROUP);
+			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
+			await expect(page.locator('.bubble')).toBeVisible();
+			await expectNoAxeViolation(page);
 
-					await page.keyboard.type(FIRST_GROUP);
-					await expect(groupLabel(page)).toHaveText(GROUP_DONE);
-					await expect(page.locator('.bubble')).toBeVisible();
-					await expectNoAxeViolation(page);
+			await page.keyboard.press('Escape');
+			await expect(pauseDialog(page)).toBeVisible();
+			await expectNoAxeViolation(page);
+			await button(page, message('game_shared_resume')).click();
 
-					await page.keyboard.press('Escape');
-					await expect(pauseDialog(page)).toBeVisible();
-					await expectNoAxeViolation(page);
-					await button(page, message('game_shared_resume')).click();
+			await passReward(page);
+			await typeGroups(page, game, { from: 1 });
+			await passReward(page);
+			await expect(resultHeading(page).or(continueButton(page))).toBeVisible();
+			if (await continueButton(page).isVisible()) {
+				await expectNoAxeViolation(page);
+				await continueButton(page).click();
+			}
+			await expect(resultHeading(page)).toBeVisible();
+			await expectNoAxeViolation(page);
+		});
 
-					await page.keyboard.press(SKIP_KEY);
-					await typeGroups(page, game, { from: 1, skipDelay: true });
-					await expect(resultHeading(page).or(continueButton(page))).toBeVisible();
-					if (await continueButton(page).isVisible()) {
-						await expectNoAxeViolation(page);
-						await continueButton(page).click();
-					}
-					await expect(resultHeading(page)).toBeVisible();
-					await expectNoAxeViolation(page);
-				});
-			});
-		}
-
-		test.describe('with reduced motion', () => {
+		test.describe('with reduced motion', CHROMIUM_ONLY, () => {
 			test.use({ reducedMotion: 'reduce' });
 
 			test('follows the system setting and plays the same game, with a fade and no movement', async ({
@@ -440,14 +439,14 @@ for (const game of games) {
 				await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 				await expect(page.locator('.bubble')).toHaveCSS('animation-name', 'dd-reward-calm');
 
-				await page.keyboard.press(SKIP_KEY);
-				await typeGroups(page, game, { from: 1, skipDelay: true });
+				await passReward(page);
+				await typeGroups(page, game, { from: 1 });
 				await leaveLastReward(page);
 				expect((await rawResult(page)).accuracy).toBe(100);
 			});
 		});
 
-		test.describe('with motion allowed', () => {
+		test.describe('with motion allowed', CHROMIUM_ONLY, () => {
 			test.use({ reducedMotion: 'no-preference' });
 
 			test('moves the reward bubble, unless the page is told to be still', async ({ page }) => {
@@ -470,7 +469,7 @@ for (const game of games) {
 	});
 }
 
-test.describe('game rocket', () => {
+test.describe('game rocket', CHROMIUM_ONLY, () => {
 	const rocket = gameNamed('rocket');
 
 	test('coughs a little cloud on a wrong key, and loses nothing', async ({ page }) => {
@@ -502,7 +501,7 @@ test.describe('game rocket', () => {
 		await startGame(page, rocket);
 		await expect(page.locator('.rocket .leg')).toHaveCount(0);
 
-		await typeGroups(page, rocket, { skipDelay: true });
+		await typeGroups(page, rocket);
 
 		await expect(page.locator('.rocket .leg')).not.toHaveCount(0);
 	});
@@ -551,7 +550,7 @@ test.describe('game rocket', () => {
 	});
 });
 
-test.describe('game recipe', () => {
+test.describe('game recipe', CHROMIUM_ONLY, () => {
 	const recipe = gameNamed('recipe');
 
 	function possibleDishes(): string[] {
@@ -575,7 +574,8 @@ test.describe('game recipe', () => {
 	}) => {
 		await startGame(page, recipe);
 
-		await typeGroups(page, recipe, { skipDelay: true });
+		await typeGroups(page, recipe);
+		await passReward(page);
 
 		await expect(
 			page.getByRole('heading', { level: 2, name: message('game_recipe_finale_title') })
@@ -596,12 +596,11 @@ test.describe('game recipe', () => {
 		page
 	}) => {
 		await startGame(page, recipe);
-		await typeGroups(page, recipe, { skipDelay: true, until: GROUPS.length - 1 });
-		await page.keyboard.press(SKIP_KEY);
+		await typeGroups(page, recipe, { until: GROUPS.length - 1 });
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 
 		await page.keyboard.type(LAST_GROUP);
-		await page.keyboard.press(SKIP_KEY);
+		await passReward(page);
 
 		await expect(page.locator('.dish-name')).toBeVisible();
 		await expect(continueButton(page)).toBeFocused();
@@ -610,14 +609,16 @@ test.describe('game recipe', () => {
 
 	test('gives the same dish every time the same exercise is played', async ({ page }) => {
 		await startGame(page, recipe);
-		await typeGroups(page, recipe, { skipDelay: true });
+		await typeGroups(page, recipe);
+		await passReward(page);
 		await expect(page.locator('.dish-name')).toBeVisible();
 		const first = await page.locator('.dish-name').textContent();
 		await continueButton(page).click();
 		await expect(resultHeading(page)).toBeVisible();
 
 		await beginGame(page, recipe);
-		await typeGroups(page, recipe, { skipDelay: true, play: 1 });
+		await typeGroups(page, recipe, { play: 1 });
+		await passReward(page);
 
 		await expect(page.locator('.dish-name')).toHaveText(first ?? '');
 	});
@@ -637,7 +638,7 @@ test.describe('game recipe', () => {
 	});
 });
 
-test.describe('surprise scenes', () => {
+test.describe('surprise scenes', CHROMIUM_ONLY, () => {
 	const SCENES = readJson<{ games: Record<string, string[]> }>('content/common/scenes.json');
 	/** The prop each recipe scene draws besides the ingredient, when it has one. */
 	const RECIPE_SCENE_PROPS: Record<string, string> = {
@@ -670,7 +671,7 @@ test.describe('surprise scenes', () => {
 			await openChooser(page);
 			await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
 			await beginGame(page, tower);
-			await typeGroups(page, tower, { skipDelay: true });
+			await typeGroups(page, tower);
 			await leaveLastReward(page);
 
 			await beginGame(page, tower);
@@ -693,7 +694,7 @@ test.describe('surprise scenes', () => {
 				await page.keyboard.type(group);
 				const prop = RECIPE_SCENE_PROPS[scenes[index] ?? ''] ?? '';
 				await expect(page.locator(`[data-scene="${scenes[index]}"]${prop}`)).toHaveCount(1);
-				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 
@@ -707,7 +708,7 @@ test.describe('surprise scenes', () => {
 			for (const [index, group] of GROUPS.entries()) {
 				await page.keyboard.type(group);
 				await expect(page.locator(`[data-scene="${scenes[index]}"]`)).toHaveCount(1);
-				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 
@@ -721,7 +722,7 @@ test.describe('surprise scenes', () => {
 			for (const [index, group] of GROUPS.entries()) {
 				await page.keyboard.type(group);
 				await expect(page.locator(`[data-scene="${scenes[index]}"]`)).toHaveCount(1);
-				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 
@@ -737,7 +738,7 @@ test.describe('surprise scenes', () => {
 				await page.keyboard.type(group);
 				const prop = scenes[index] === 'dino-aboard' ? ' .dino' : '';
 				await expect(page.locator(`[data-scene="${scenes[index]}"]${prop}`)).toHaveCount(1);
-				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 
@@ -763,7 +764,7 @@ test.describe('surprise scenes', () => {
 				const scene = page.locator(`[data-scene="${order[index]}"]`);
 				await expect(scene).toHaveCount(1);
 				await expect(scene.locator(props[order[index] ?? ''] ?? '.scene').first()).toBeAttached();
-				if (index < GROUPS.length - 1) await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 
@@ -786,6 +787,7 @@ test.describe('surprise scenes', () => {
 				await page.keyboard.type(group);
 				const prop = props[order[index] ?? ''] ?? '';
 				await expect(page.locator(`[data-scene="${order[index]}"]${prop}`)).toHaveCount(1);
+				if (index < GROUPS.length - 1) await passReward(page);
 			}
 		});
 	});
@@ -804,27 +806,21 @@ test.describe('surprise scenes', () => {
 	});
 });
 
-test.describe('reminder to look at the screen', () => {
+test.describe('reminder to look at the screen', CHROMIUM_ONLY, () => {
 	test.use({ reducedMotion: 'no-preference' });
 
 	/** The reminder is due after the second group of the sample exercise. */
 	async function reachReminder(page: Page, keyboardTops: number[]) {
 		await openChooser(page);
 		await beginGame(page, gameNamed('hatching'));
-		await page.addStyleTag({ content: ':root{--dd-duration-reminder:4000ms}' });
+		await page.addStyleTag({ content: LONG_REMINDER });
 		const keyboard = page.locator('.keyboard');
 		keyboardTops.push((await keyboard.boundingBox())?.y ?? -1);
 		const game = gameNamed('hatching');
 		for (const [index, group] of GROUPS.slice(0, 2).entries()) {
 			await page.keyboard.type(group);
 			await expectRewardShown(page, message(`${game.bubblePrefix}${index + 1}`));
-			if (index === 0) {
-				// A key skips the reward only once it is settled: press again until the next group shows.
-				await expect(async () => {
-					await page.keyboard.press(SKIP_KEY);
-					await expect(groupLabel(page)).toHaveText(GROUP_LABEL, { timeout: 500 });
-				}).toPass();
-			}
+			if (index === 0) await passReward(page);
 		}
 	}
 
@@ -845,7 +841,7 @@ test.describe('reminder to look at the screen', () => {
 		const reminder = page.getByText(message('game_shared_look_reminder'));
 		await expect(reminder).toBeVisible();
 
-		await page.keyboard.press(SKIP_KEY);
+		await page.keyboard.press('Enter');
 
 		await expect(reminder).toBeVisible();
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);

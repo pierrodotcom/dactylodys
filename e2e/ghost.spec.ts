@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import type { GhostRun } from '../src/lib/engine/ghost/types';
 import type { StarCount } from '../src/lib/engine/progression/types';
@@ -6,14 +5,16 @@ import { toSessionRecord, withSessionRecorded } from '../src/lib/state/journal';
 import { JOURNAL_RULES } from '../src/lib/state/journal-rules';
 import { withGhost } from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughResult,
 	throughStory
 } from './support';
@@ -21,13 +22,9 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAYER_NAME = 'Fantomette';
 const PASSED: StarCount = 3;
 const STEP_TIMEOUT = 15_000;
-/** Enter moves on to the next group while the reward is on screen. */
-const SKIP_KEY = 'Enter';
 const PRESS_BUDGET = 60;
 
 /** Done with the whole exercise in a few milliseconds: always first. */
@@ -153,7 +150,6 @@ async function typeToResult(page: Page, afterFirst?: () => Promise<void>) {
 	for (let index = 0; ; index++) {
 		await page.keyboard.type(await currentGroup(page));
 		if (index === 0) await afterFirst?.();
-		await page.keyboard.press(SKIP_KEY);
 		if ((await nextStep(page)) === 'over') break;
 	}
 	if (await finaleButton(page).isVisible()) await finaleButton(page).click();
@@ -161,45 +157,43 @@ async function typeToResult(page: Page, afterFirst?: () => Promise<void>) {
 	await throughResult(page);
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('race against the ghost', () => {
-	test('is offered, switched off, only on a passed lesson whose pace was kept', async ({
-		page
-	}) => {
-		await reachIntro(page, racer(SLOW_RUN));
-		await expect(raceChoice(page)).toBeVisible();
-		await expect(raceChoice(page)).not.toBeChecked();
+	test(
+		'is offered, switched off, only on a passed lesson whose pace was kept',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachIntro(page, racer(SLOW_RUN));
+			await expect(raceChoice(page)).toBeVisible();
+			await expect(raceChoice(page)).not.toBeChecked();
 
-		await button(page, message('play_intro_back')).click();
-		await page.getByRole('button', { name: SECOND.title }).click();
-		await throughStory(page, heading(page, SECOND.title));
-		await expect(page.locator('button[data-proposed]')).toBeVisible();
-		await expect(raceChoice(page)).toHaveCount(0);
-	});
+			await button(page, message('play_intro_back')).click();
+			await page.getByRole('button', { name: SECOND.title }).click();
+			await throughStory(page, heading(page, SECOND.title));
+			await expect(page.locator('button[data-proposed]')).toBeVisible();
+			await expect(raceChoice(page)).toHaveCount(0);
+		}
+	);
 
-	test('is not offered when no pace was kept for the lesson', async ({ page }) => {
+	test('is not offered when no pace was kept for the lesson', CHROMIUM_ONLY, async ({ page }) => {
 		await reachIntro(page, racer());
 		await expect(page.locator('button[data-proposed]')).toBeVisible();
 		await expect(raceChoice(page)).toHaveCount(0);
 	});
 
-	test('plays the lesson without a ghost when the child does not switch it on', async ({
-		page
-	}) => {
-		await reachIntro(page, racer(SLOW_RUN));
-		await page.locator('button[data-proposed]').click();
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await expect(track(page)).toHaveCount(0);
-	});
+	test(
+		'plays the lesson without a ghost when the child does not switch it on',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachIntro(page, racer(SLOW_RUN));
+			await page.locator('button[data-proposed]').click();
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			await expect(track(page)).toHaveCount(0);
+		}
+	);
 
 	test('lets a ghost that arrives first wait, and says on the result that it came first', async ({
 		page
@@ -215,43 +209,51 @@ test.describe('race against the ghost', () => {
 	});
 
 	// Audit P-21: a race won is praised for the accuracy kept, never for the speed.
-	test('says the child typed as accurately as the ghost when they arrive first', async ({
-		page
-	}) => {
-		await reachIntro(page, withGhostPlay(racer(SLOW_RUN), SLOW_RUN, 90));
-		await startRace(page);
-		await typeToResult(page, async () => {
-			await expect(page.locator('[data-ghost-share="running"]')).toBeAttached();
-		});
-		await expect(page.getByText(message('play_result_race_child'))).toBeVisible();
-		await expect(page.getByText(/plus vite/)).toHaveCount(0);
-	});
+	test(
+		'says the child typed as accurately as the ghost when they arrive first',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachIntro(page, withGhostPlay(racer(SLOW_RUN), SLOW_RUN, 90));
+			await startRace(page);
+			await typeToResult(page, async () => {
+				await expect(page.locator('[data-ghost-share="running"]')).toBeAttached();
+			});
+			await expect(page.getByText(message('play_result_race_child'))).toBeVisible();
+			await expect(page.getByText(/plus vite/)).toHaveCount(0);
+		}
+	);
 
-	test('says nothing of speed nor of accuracy when the play of the ghost is no longer kept', async ({
-		page
-	}) => {
-		await reachIntro(page, racer(SLOW_RUN));
-		await startRace(page);
-		await typeToResult(page);
-		await expect(page.getByText(message('play_result_race_child_neutral'))).toBeVisible();
-		await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
-		await expect(page.getByText(/plus vite/)).toHaveCount(0);
-	});
+	test(
+		'says nothing of speed nor of accuracy when the play of the ghost is no longer kept',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachIntro(page, racer(SLOW_RUN));
+			await startRace(page);
+			await typeToResult(page);
+			await expect(page.getByText(message('play_result_race_child_neutral'))).toBeVisible();
+			await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
+			await expect(page.getByText(/plus vite/)).toHaveCount(0);
+		}
+	);
 
-	test('goes on without the ghost from the pause, and says nothing of a race', async ({ page }) => {
-		await reachIntro(page, racer(SLOW_RUN));
-		await startRace(page);
-		await page.keyboard.press('Escape');
-		await button(page, message('game_shared_race_leave')).click();
-		await expect(track(page)).toHaveCount(0);
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await typeToResult(page);
-		await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
-		await expect(page.getByText(message('play_result_race_child_neutral'))).toHaveCount(0);
-		await expect(page.getByText(message('play_result_race_ghost'))).toHaveCount(0);
-	});
+	test(
+		'goes on without the ghost from the pause, and says nothing of a race',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachIntro(page, racer(SLOW_RUN));
+			await startRace(page);
+			await page.keyboard.press('Escape');
+			await button(page, message('game_shared_race_leave')).click();
+			await expect(track(page)).toHaveCount(0);
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			await typeToResult(page);
+			await expect(page.getByText(message('play_result_race_child'))).toHaveCount(0);
+			await expect(page.getByText(message('play_result_race_child_neutral'))).toHaveCount(0);
+			await expect(page.getByText(message('play_result_race_ghost'))).toHaveCount(0);
+		}
+	);
 
-	test('does not keep the race for a replay from the result', async ({ page }) => {
+	test('does not keep the race for a replay from the result', CHROMIUM_ONLY, async ({ page }) => {
 		await reachIntro(page, racer(SLOW_RUN));
 		await startRace(page);
 		await typeToResult(page);
@@ -277,15 +279,12 @@ test.describe('race against the ghost', () => {
 		await expect(track(page)).toBeVisible();
 	});
 
-	for (const colorScheme of COLOR_SCHEMES) {
-		test(`passes axe on the race choice and during the race, ${colorScheme}`, async ({ page }) => {
-			await page.emulateMedia({ colorScheme });
-			await reachIntro(page, racer(SLOW_RUN));
-			await expect(raceChoice(page)).toBeVisible();
-			await expectNoAxeViolation(page);
-			await startRace(page);
-			await expect(track(page)).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
-	}
+	test('passes axe on the race choice and during the race, light and dark', async ({ page }) => {
+		await reachIntro(page, racer(SLOW_RUN));
+		await expect(raceChoice(page)).toBeVisible();
+		await expectNoAxeViolation(page);
+		await startRace(page);
+		await expect(track(page)).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
 });

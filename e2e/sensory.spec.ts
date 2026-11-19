@@ -1,16 +1,18 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { toGraphemes } from '../src/lib/engine/graphemes';
 import { updateSettings } from '../src/lib/state/profile';
 import type { Profile, Settings } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
+	passReward,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	storedRecord,
 	throughStory
 } from './support';
@@ -22,9 +24,6 @@ import {
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
-
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 
 const { message, templateRegex } = loadMessages();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
@@ -111,11 +110,12 @@ async function gateNumber(page: Page): Promise<number> {
 	return number.value;
 }
 
+// The note of a group typed without a mistake is looked at during its reward: the rewards stay.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 });
 
-test.describe('Light effects', () => {
+test.describe('Light effects', CHROMIUM_ONLY, () => {
 	for (const effects of [true, false]) {
 		test(`${effects ? 'shows' : 'hides'} the light effects with motion allowed, and always the information`, async ({
 			page
@@ -135,7 +135,7 @@ test.describe('Light effects', () => {
 			await page.keyboard.type(group.slice(first.length));
 			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 			// A group with a mistake sends no note: the next one is typed without any.
-			await page.keyboard.press('Enter');
+			await passReward(page);
 			const next = await currentGroup(page);
 			await page.keyboard.type(next);
 			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
@@ -155,7 +155,7 @@ test.describe('Light effects', () => {
 	}
 });
 
-test.describe('Calm everything', () => {
+test.describe('Calm everything', CHROMIUM_ONLY, () => {
 	test('reduces motion and cuts the effects and the sounds in one press, keyboard only', async ({
 		page
 	}) => {
@@ -342,20 +342,14 @@ test.describe('Soft background sound', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`Sensory settings, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('Sensory settings, light and dark themes', () => {
+	test('has no axe violation on the settings of the child, once calmed', async ({ page }) => {
+		await installChild(page, child());
+		await reachMap(page);
+		await openSettings(page);
+		await press(page, button(page, message('settings_calm_button')), 'Enter');
+		await expect(page.locator('[data-calm-status]')).toContainText(message('settings_calm_done'));
 
-		test('has no axe violation on the settings of the child, once calmed', async ({ page }) => {
-			await installChild(page, child());
-			await reachMap(page);
-			await openSettings(page);
-			await press(page, button(page, message('settings_calm_button')), 'Enter');
-			await expect(page.locator('[data-calm-status]')).toContainText(message('settings_calm_done'));
-
-			await page.evaluate(() => document.fonts.ready);
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(results.violations).toEqual([]);
-		});
+		await expectNoAxeViolation(page);
 	});
-}
+});

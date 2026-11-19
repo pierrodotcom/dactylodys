@@ -1,5 +1,4 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { voiceKey } from '../src/lib/audio/voice-key';
 import { parseVoiceRecordings } from '../src/lib/audio/voice-recordings';
@@ -8,10 +7,23 @@ import { inRecordingOrder, LOOK_REMINDER_ID, voiceTexts } from '../src/lib/audio
 import { readZipEntry } from '../src/lib/audio/zip-test-support';
 import { parseProgression } from '../src/lib/engine/progression/definition';
 import { parseStory } from '../src/lib/engine/story';
-import { linkedPaths, loadMessages, openPage, readJson, reloadPage } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import {
+	expectNoAxeViolation,
+	linkedPaths,
+	loadMessages,
+	openPage,
+	readJson,
+	reloadPage
+} from './support';
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
+/*
+ * The page that records the voice (ADR-028), a tool of the adults who lend their voice. Recording a
+ * simulated microphone with MediaRecorder is only reliable on Chromium: tried on Playwright's
+ * WebKit, the page never gets to record, and Firefox could not be tried where these tests were
+ * written. The page is a trial page of `/dev`: all of it runs on Chromium only.
+ */
+
 const PAGE_URL = '/dev/voix';
 const FILE_NAME = /^voix-fr__\d{4}-\d{2}-\d{2}\.zip$/;
 const MIN_TARGET_PIXELS = 48;
@@ -54,18 +66,6 @@ function consentBox(page: Page) {
 async function openRecorder(page: Page) {
 	await openPage(page, PAGE_URL);
 	await expect(page.locator('main[data-ready="true"]')).toBeVisible();
-}
-
-/**
- * MediaRecorder and the decoding of what it records are only exercised on Chromium. Tried on
- * Playwright's WebKit, these tests time out: the page never gets to record there. Firefox could not
- * be tried where they were written. Everything that needs no microphone runs on the three engines.
- */
-function needsRecording(testInfo: TestInfo) {
-	test.skip(
-		testInfo.project.name !== 'chromium',
-		'Recording a simulated microphone is only reliable on Chromium'
-	);
 }
 
 /** Replaces the microphone with a steady tone, so that no device nor permission is needed. */
@@ -117,7 +117,7 @@ async function recordTake(page: Page) {
 	await expect(record).toBeFocused();
 }
 
-test.describe('voice recording page', () => {
+test.describe('voice recording page', CHROMIUM_ONLY, () => {
 	test('loads with its title, the first text to say and what is left to do', async ({ page }) => {
 		await openRecorder(page);
 
@@ -265,15 +265,12 @@ test.describe('voice recording page', () => {
 	});
 });
 
-test.describe('voice recording page, with a microphone', () => {
+test.describe('voice recording page, with a microphone', CHROMIUM_ONLY, () => {
 	for (const [errorName, problem] of [
 		['NotAllowedError', 'dev_voix_problem_denied'],
 		['NotFoundError', 'dev_voix_problem_missing']
 	] as const) {
-		test(`explains what to do when the microphone answers ${errorName}`, async ({
-			page
-		}, testInfo) => {
-			needsRecording(testInfo);
+		test(`explains what to do when the microphone answers ${errorName}`, async ({ page }) => {
 			await refuseMicrophone(page, errorName);
 			await openRecorder(page);
 
@@ -288,8 +285,7 @@ test.describe('voice recording page, with a microphone', () => {
 	test('records a take with the keyboard, keeps it across a reload and exports a valid archive', async ({
 		page,
 		baseURL
-	}, testInfo) => {
-		needsRecording(testInfo);
+	}) => {
 		const origin = new URL(baseURL ?? '').origin;
 		const outgoing: string[] = [];
 		page.on('request', (request) => {
@@ -359,8 +355,7 @@ test.describe('voice recording page, with a microphone', () => {
 		expect(outgoing).toEqual([]);
 	});
 
-	test('erases every take only after a confirmation', async ({ page }, testInfo) => {
-		needsRecording(testInfo);
+	test('erases every take only after a confirmation', async ({ page }) => {
 		await simulateMicrophone(page);
 		await openRecorder(page);
 		await recordTake(page);
@@ -393,48 +388,33 @@ test.describe('voice recording page, with a microphone', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`voice recording page, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('voice recording page, light and dark themes', () => {
+	test('has no axe violation for WCAG A and AA', async ({ page }) => {
+		await openRecorder(page);
 
-		test('has no axe violation for WCAG A and AA', async ({ page }) => {
-			await openRecorder(page);
-			await page.evaluate(() => document.fonts.ready);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-			expect(results.violations).toEqual([]);
-		});
-
-		test('has no axe violation with a refused export and a refused microphone', async ({
-			page
-		}) => {
-			await refuseMicrophone(page, 'NotAllowedError');
-			await openRecorder(page);
-			await page.getByTestId('record-button').click();
-			await expect(page.getByTestId('microphone-problem')).toBeVisible();
-			await page.getByTestId('export-button').click();
-			await expect(page.getByText(message('dev_voix_export_need_consent'))).toBeVisible();
-			await page.evaluate(() => document.fonts.ready);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-			expect(results.violations).toEqual([]);
-		});
-
-		test('has no axe violation once a take is recorded and the erase question is asked', async ({
-			page
-		}) => {
-			await simulateMicrophone(page);
-			await openRecorder(page);
-			await recordTake(page);
-			await button(page, 'dev_voix_clear_button').click();
-			await expect(button(page, 'dev_voix_clear_confirm')).toBeVisible();
-			await page.evaluate(() => document.fonts.ready);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-			expect(results.violations).toEqual([]);
-		});
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation with a refused export and a refused microphone', async ({ page }) => {
+		await refuseMicrophone(page, 'NotAllowedError');
+		await openRecorder(page);
+		await page.getByTestId('record-button').click();
+		await expect(page.getByTestId('microphone-problem')).toBeVisible();
+		await page.getByTestId('export-button').click();
+		await expect(page.getByText(message('dev_voix_export_need_consent'))).toBeVisible();
+
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation once a take is recorded and the erase question is asked', async ({
+		page
+	}) => {
+		await simulateMicrophone(page);
+		await openRecorder(page);
+		await recordTake(page);
+		await button(page, 'dev_voix_clear_button').click();
+		await expect(button(page, 'dev_voix_clear_confirm')).toBeVisible();
+
+		await expectNoAxeViolation(page);
+	});
+});

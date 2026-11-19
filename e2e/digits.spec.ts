@@ -1,16 +1,16 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { parseTextBank, textOf } from '../src/lib/engine/progression/banks';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
 
@@ -24,7 +24,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const LINE_BREAK = String.fromCharCode(10);
 const PLAYER_NAME = 'Lou';
 const PASSED_STARS: StarCount = 2;
@@ -177,7 +176,7 @@ function expectWarmUp(typed: readonly string[], lesson: Lesson) {
 }
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('the digits and @', () => {
@@ -208,8 +207,6 @@ test.describe('the digits and @', () => {
 	test('has no axe violation on the game of the digits lesson', async ({ page }) => {
 		await startLesson(page, DIGITS_LESSON);
 		await currentGroup(page);
-		await page.evaluate(() => document.fonts.ready);
-		const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-		expect(results.violations).toEqual([]);
+		await expectNoAxeViolation(page);
 	});
 });

@@ -1,9 +1,8 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { loadMessages, openPage, readJson } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import { expectNoAxeViolation, loadMessages, openPage, readJson } from './support';
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
+/** The trial page of the companion: drawings and objects, the same in every engine. */
 const PAGE_URL = '/dev/compagnon';
 
 interface Reward {
@@ -38,21 +37,23 @@ async function openCompanionPage(page: Page) {
 	await page.evaluate(() => document.fonts.ready);
 }
 
-test('shows the companion and a picture of every reward, owned and as a silhouette', async ({
-	page
-}) => {
-	await openCompanionPage(page);
+test(
+	'shows the companion and a picture of every reward, owned and as a silhouette',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		await openCompanionPage(page);
 
-	await expect(companion(page)).toBeVisible();
-	const owned = page.getByTestId('pictures-owned').getByRole('img');
-	const locked = page.getByTestId('pictures-locked').getByRole('img');
-	await expect(owned).toHaveCount(catalogue.rewards.length);
-	await expect(locked).toHaveCount(catalogue.rewards.length);
-	await expect(owned.first()).toHaveAccessibleName(catalogue.rewards[0]?.title ?? '');
-	await expect(page.locator('[data-silhouette]')).toHaveCount(catalogue.rewards.length);
-});
+		await expect(companion(page)).toBeVisible();
+		const owned = page.getByTestId('pictures-owned').getByRole('img');
+		const locked = page.getByTestId('pictures-locked').getByRole('img');
+		await expect(owned).toHaveCount(catalogue.rewards.length);
+		await expect(locked).toHaveCount(catalogue.rewards.length);
+		await expect(owned.first()).toHaveAccessibleName(catalogue.rewards[0]?.title ?? '');
+		await expect(page.locator('[data-silhouette]')).toHaveCount(catalogue.rewards.length);
+	}
+);
 
-test('changes the colour and the worn items of the companion', async ({ page }) => {
+test('changes the colour and the worn items of the companion', CHROMIUM_ONLY, async ({ page }) => {
 	await openCompanionPage(page);
 	if (!LAST_COLOR || !FIRST_ITEM || !SAME_SLOT_ITEM || !OTHER_SLOT_ITEM) {
 		throw new Error('The catalogue lacks colours or items');
@@ -75,7 +76,7 @@ test('changes the colour and the worn items of the companion', async ({ page }) 
 	await expect(companion(page)).not.toHaveAttribute('data-items');
 });
 
-test.describe('with reduced motion', () => {
+test.describe('with reduced motion', CHROMIUM_ONLY, () => {
 	test.use({ reducedMotion: 'reduce' });
 
 	test('plays each trick from the keyboard alone', async ({ page }) => {
@@ -94,15 +95,8 @@ test.describe('with reduced motion', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test('has no axe violation for WCAG A and AA, light and dark', async ({ page }) => {
+	await openCompanionPage(page);
 
-		test('has no axe violation for WCAG A and AA', async ({ page }) => {
-			await openCompanionPage(page);
-
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(results.violations).toEqual([]);
-		});
-	});
-}
+	await expectNoAxeViolation(page);
+});

@@ -24,7 +24,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 |---|---|---|
 | Vrais mots | P-04, P-05, P-08, P-16, P-22 | Fait (ADR-074) ; réserve d'échauffements en relecture chez le porteur |
 | Mesures justes | Q-04, Q-05, Q-15, P-06 | Fait (ADR-077, profil version 14) |
-| Tests e2e fiables | Q-06, Q-13 | À lancer (seul sur Playwright) |
+| Tests e2e fiables | Q-06, Q-13 | Fait (ADR-087) : 51 min au calme au lieu de 119 ; restent des échecs WebKit sous la charge d'un autre projet (poste : Avast, ports), et un défaut de l'espace adulte (bouton Retour du navigateur, lot « espace adulte ») |
 | Le jeu ne lâche pas l'enfant | E-01, E-02, E-03 d, E-12, E-23 | Fait (ADR-079) |
 | Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | Fait (ADR-080) |
 | Tout tient à l'écran | E-03, E-05, E-08, E-10, E-20 | Fait (ADR-085) ; restent « Réparer un message » au texte le plus grand avec un mot long, et un champ de leçon qui nomme les touches travaillées (leçons 26 à 30) |
@@ -259,3 +259,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-15** — Des parties qui durent (ADR-084) : la partie s'allonge avec l'allure de l'enfant (par groupes entiers, au plus 150 caractères), une phrase entière à chaque partie dès la leçon du point, « Durée d'une séance » réglée par l'adulte (pause au temps de frappe réelle), Retour arrière « Selon le monde » (le monde 6 fait effacer). Profil version 16. Les 33 phrases du nouvel ordre des leçons sont relues par le porteur. Leçons L-159 à L-161.
 - **2026-11-15** — Tout tient à l'écran (ADR-085) : sur un portable (1280 × 720, 1366 × 625), les huit jeux, le récit, la carte, l'avant-leçon et la cabane tiennent sans défiler ; barre du joueur collante, texte à taper sur deux lignes qui suivent la frappe, chiffres d'une main sur une ligne. Leçons L-162 à L-165.
 - **2026-11-16** — Bilan en étapes (ADR-086) : un moment à la fois (objet gagné, nom du compagnon, résultat), « Encore une partie pour apprivoiser V et B ? » sans verrou, partie aidée après deux parties difficiles, phrases du bilan fondées sur ce qui est mesuré.
+- **2026-11-19** — Tests de bout en bout plus courts et plus sûrs (ADR-087) : 769 exécutions au lieu de 1 548 (un moteur quand il suffit), récompenses réglées dans les tests, site servi comme GitHub Pages en IPv6 ; 51 min au calme au lieu de 119. Restent des échecs WebKit sous la charge d'un autre projet (poste). Leçons L-166 à L-169.

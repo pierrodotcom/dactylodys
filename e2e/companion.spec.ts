@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { parseRewardCatalogue, type RewardDefinition } from '../src/lib/engine/rewards';
 import type { StarCount } from '../src/lib/engine/progression/types';
@@ -9,14 +8,16 @@ import {
 	withProgress
 } from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	storedRecord,
 	throughStory,
 	type StoredFormat
@@ -25,8 +26,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAY_URL = '/jouer';
 const PRESS_BUDGET = 80;
 const STEP_TIMEOUT = 15_000;
@@ -131,7 +130,6 @@ async function typeToEnd(page: Page, endButton: string) {
 	const end = button(page, endButton);
 	for (;;) {
 		await page.keyboard.type(await currentGroup(page));
-		await page.keyboard.press('Enter');
 		const found: { over?: boolean } = {};
 		await expect(async () => {
 			if ((await end.isVisible()) || (await finale.isVisible())) found.over = true;
@@ -164,12 +162,6 @@ function stored(page: Page, profile: Profile) {
 	return storedRecord(page, profile) as Promise<Record<string, unknown> & Profile>;
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 /** A child who has passed the first lesson and holds what it earned. */
 function profileWithNecklace(name: string): Profile {
 	const passed = advancedProfile({ name, passed: passedThrough([FIRST]) });
@@ -194,7 +186,7 @@ function profileWithWords(name: string): Profile {
 }
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
 test.describe('companion and rewards', () => {
@@ -260,27 +252,31 @@ test.describe('companion and rewards', () => {
 		await expect(page.locator('.hero svg.companion')).toHaveAttribute('data-items', NECKLACE.artId);
 	});
 
-	test('lets the child answer later, and does not ask again during the visit', async ({ page }) => {
-		const child = advancedProfile({ name: 'Lou', passed: {} });
-		await reachMapAs(page, child);
-		await playLesson(page, FIRST);
-		await button(page, message('play_result_continue')).click();
-		await button(page, message('play_reward_name_later')).click();
-		await expect(
-			page.getByRole('heading', { name: message('play_reward_name_question') })
-		).toHaveCount(0);
-		await expect(page.locator('[data-result-step="result"]')).toBeVisible();
+	test(
+		'lets the child answer later, and does not ask again during the visit',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const child = advancedProfile({ name: 'Lou', passed: {} });
+			await reachMapAs(page, child);
+			await playLesson(page, FIRST);
+			await button(page, message('play_result_continue')).click();
+			await button(page, message('play_reward_name_later')).click();
+			await expect(
+				page.getByRole('heading', { name: message('play_reward_name_question') })
+			).toHaveCount(0);
+			await expect(page.locator('[data-result-step="result"]')).toBeVisible();
 
-		await page.locator('[data-result-replay]').click();
-		await throughStory(page, groupLabel(page));
-		await typeToEnd(page, message('play_result_map'));
-		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
-		await expect(
-			page.getByRole('heading', { name: message('play_reward_name_question') })
-		).toHaveCount(0);
-		await expect(page.locator('[data-result-step="result"]')).toBeVisible();
-		expect((await stored(page, child)).companion.name).toBe('');
-	});
+			await page.locator('[data-result-replay]').click();
+			await throughStory(page, groupLabel(page));
+			await typeToEnd(page, message('play_result_map'));
+			await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
+			await expect(
+				page.getByRole('heading', { name: message('play_reward_name_question') })
+			).toHaveCount(0);
+			await expect(page.locator('[data-result-step="result"]')).toBeVisible();
+			expect((await stored(page, child)).companion.name).toBe('');
+		}
+	);
 
 	test('opens the companion from the map: a name, a colour, an item taken off, and back to the map', async ({
 		page
@@ -342,108 +338,124 @@ test.describe('companion and rewards', () => {
 		);
 	});
 
-	test('keeps the companion in view while the child puts on an item far down the list', async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 1280, height: 720 });
-		const lessons = worlds.slice(0, 2).flatMap((world) => world.lessons);
-		await reachMapAs(page, advancedProfile({ name: 'Zia', passed: passedThrough(lessons) }));
-		await button(page, message('play_companion_open')).click();
-		await expect(heading(page, message('play_companion_title'))).toBeVisible();
+	test(
+		'keeps the companion in view while the child puts on an item far down the list',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await page.setViewportSize({ width: 1280, height: 720 });
+			const lessons = worlds.slice(0, 2).flatMap((world) => world.lessons);
+			await reachMapAs(page, advancedProfile({ name: 'Zia', passed: passedThrough(lessons) }));
+			await button(page, message('play_companion_open')).click();
+			await expect(heading(page, message('play_companion_title'))).toBeVisible();
 
-		const last = itemOf(lessons.at(-1)?.id ?? '');
-		await button(page, last.title).click();
-		await expect(bigCompanion(page)).toHaveAttribute('data-items', new RegExp(last.artId));
-		await expect(bigCompanion(page)).toBeInViewport();
-	});
-
-	test('gives a profile of version 4 what it has already earned, without announcing it', async ({
-		page
-	}) => {
-		const child = advancedProfile({ name: 'Ada', passed: passedThrough(firstWorld.lessons) });
-		await reachMapAs(page, child, 'version-4');
-
-		// Opening a profile never rewrites its record: what it earned is stored with the next play.
-		expect((await stored(page, child)).schemaVersion).toBe(4);
-
-		await button(page, message('play_companion_open')).click();
-		await expect(heading(page, message('play_companion_title'))).toBeVisible();
-		for (const lesson of firstWorld.lessons) {
-			await expect(button(page, itemOf(lesson.id).title)).toHaveAttribute('aria-pressed', 'false');
+			const last = itemOf(lessons.at(-1)?.id ?? '');
+			await button(page, last.title).click();
+			await expect(bigCompanion(page)).toHaveAttribute('data-items', new RegExp(last.artId));
+			await expect(bigCompanion(page)).toBeInViewport();
 		}
-		await button(page, message('play_companion_trick_show')).first().click();
-		await expect(bigCompanion(page)).toHaveAttribute('data-trick', FIRST_WORLD_SKILL?.artId ?? '');
-		await button(page, message('play_companion_back')).click();
+	);
 
-		await page.getByRole('button', { name: FIRST.title }).click();
-		await throughStory(page, heading(page, FIRST.title));
-		await expect(page.locator('[data-prize]')).toHaveCount(0);
-		await page.locator('button[data-proposed]').click();
-		await typeToEnd(page, message('play_result_map'));
-		await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
-		const earned = firstWorld.lessons.map((lesson) => itemOf(lesson.id).id);
-		await expect
-			.poll(async () => (await stored(page, child)).earnedRewardIds)
-			.toEqual(expect.arrayContaining([...earned, FIRST_WORLD_SKILL?.id]));
-	});
+	test(
+		'gives a profile of version 4 what it has already earned, without announcing it',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const child = advancedProfile({ name: 'Ada', passed: passedThrough(firstWorld.lessons) });
+			await reachMapAs(page, child, 'version-4');
 
-	test('asks for help on a key that became hard, plays the quest up to the thanks, then stops asking', async ({
-		page
-	}) => {
-		const child = profileWithFragileKey('Kim');
-		const key = FRAGILE_KEY.toLocaleUpperCase('fr');
-		await reachMapAs(page, child);
-		await expect(helpBubble(page, key)).toBeVisible();
+			// Opening a profile never rewrites its record: what it earned is stored with the next play.
+			expect((await stored(page, child)).schemaVersion).toBe(4);
 
-		await button(page, message('play_help_later')).click();
-		await expect(helpBubble(page, key)).toHaveCount(0);
-		await button(page, message('play_settings_open')).click();
-		await button(page, message('settings_back')).click();
-		await expect(helpBubble(page, key)).toBeVisible();
+			await button(page, message('play_companion_open')).click();
+			await expect(heading(page, message('play_companion_title'))).toBeVisible();
+			for (const lesson of firstWorld.lessons) {
+				await expect(button(page, itemOf(lesson.id).title)).toHaveAttribute(
+					'aria-pressed',
+					'false'
+				);
+			}
+			await button(page, message('play_companion_trick_show')).first().click();
+			await expect(bigCompanion(page)).toHaveAttribute(
+				'data-trick',
+				FIRST_WORLD_SKILL?.artId ?? ''
+			);
+			await button(page, message('play_companion_back')).click();
 
-		await activateByTab(page, button(page, message('play_help_yes')));
-		await typeToEnd(page, message('play_help_back'));
-		await expect(heading(page, message('play_help_thanks'))).toBeVisible();
-		await expect(page.locator('.photo')).toHaveCount(0);
-		await expect(page.getByText(/%/)).toHaveCount(0);
-		await expect(button(page, message('play_companion_open'))).toBeVisible();
+			await page.getByRole('button', { name: FIRST.title }).click();
+			await throughStory(page, heading(page, FIRST.title));
+			await expect(page.locator('[data-prize]')).toHaveCount(0);
+			await page.locator('button[data-proposed]').click();
+			await typeToEnd(page, message('play_result_map'));
+			await expect(page.getByRole('heading', { name: message('play_reward_new') })).toHaveCount(0);
+			const earned = firstWorld.lessons.map((lesson) => itemOf(lesson.id).id);
+			await expect
+				.poll(async () => (await stored(page, child)).earnedRewardIds)
+				.toEqual(expect.arrayContaining([...earned, FIRST_WORLD_SKILL?.id]));
+		}
+	);
 
-		await expect
-			.poll(async () => {
-				const record = await stored(page, child);
-				return {
-					lessons: record.progress.lessons,
-					attempts: (record.progress.chars[FRAGILE_KEY]?.attempts ?? 0) > FRAGILE.attempts,
-					helpQuest: record.helpQuest
-				};
-			})
-			.toEqual({
-				lessons: child.progress.lessons,
-				attempts: true,
-				helpQuest: { char: FRAGILE_KEY, lessonPlays: 1 }
-			});
+	test(
+		'asks for help on a key that became hard, plays the quest up to the thanks, then stops asking',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const child = profileWithFragileKey('Kim');
+			const key = FRAGILE_KEY.toLocaleUpperCase('fr');
+			await reachMapAs(page, child);
+			await expect(helpBubble(page, key)).toBeVisible();
 
-		await activateByTab(page, button(page, message('play_help_back')));
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-		await expect(helpBubble(page, key)).toHaveCount(0);
-	});
+			await button(page, message('play_help_later')).click();
+			await expect(helpBubble(page, key)).toHaveCount(0);
+			await button(page, message('play_settings_open')).click();
+			await button(page, message('settings_back')).click();
+			await expect(helpBubble(page, key)).toBeVisible();
 
-	test('leaves a help quest for the map without keeping anything', async ({ page }) => {
-		const child = profileWithFragileKey('Noa');
-		const key = FRAGILE_KEY.toLocaleUpperCase('fr');
-		await reachMapAs(page, child);
-		await button(page, message('play_help_yes')).click();
-		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
-		await page.keyboard.press('Escape');
-		await button(page, message('game_shared_quit')).click();
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-		await expect(helpBubble(page, key)).toBeVisible();
-		const record = await stored(page, child);
-		expect(record.helpQuest).toBeNull();
-		expect(record.progress.chars[FRAGILE_KEY]?.attempts).toBe(FRAGILE.attempts);
-	});
+			await activateByTab(page, button(page, message('play_help_yes')));
+			await typeToEnd(page, message('play_help_back'));
+			await expect(heading(page, message('play_help_thanks'))).toBeVisible();
+			await expect(page.locator('.photo')).toHaveCount(0);
+			await expect(page.getByText(/%/)).toHaveCount(0);
+			await expect(button(page, message('play_companion_open'))).toBeVisible();
 
-	test('offers no free practice without words of the adult', async ({ page }) => {
+			await expect
+				.poll(async () => {
+					const record = await stored(page, child);
+					return {
+						lessons: record.progress.lessons,
+						attempts: (record.progress.chars[FRAGILE_KEY]?.attempts ?? 0) > FRAGILE.attempts,
+						helpQuest: record.helpQuest
+					};
+				})
+				.toEqual({
+					lessons: child.progress.lessons,
+					attempts: true,
+					helpQuest: { char: FRAGILE_KEY, lessonPlays: 1 }
+				});
+
+			await activateByTab(page, button(page, message('play_help_back')));
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+			await expect(helpBubble(page, key)).toHaveCount(0);
+		}
+	);
+
+	test(
+		'leaves a help quest for the map without keeping anything',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const child = profileWithFragileKey('Noa');
+			const key = FRAGILE_KEY.toLocaleUpperCase('fr');
+			await reachMapAs(page, child);
+			await button(page, message('play_help_yes')).click();
+			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+			await page.keyboard.press('Escape');
+			await button(page, message('game_shared_quit')).click();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+			await expect(helpBubble(page, key)).toBeVisible();
+			const record = await stored(page, child);
+			expect(record.helpQuest).toBeNull();
+			expect(record.progress.chars[FRAGILE_KEY]?.attempts).toBe(FRAGILE.attempts);
+		}
+	);
+
+	test('offers no free practice without words of the adult', CHROMIUM_ONLY, async ({ page }) => {
 		await reachMapAs(page, advancedProfile({ name: 'Rio', passed: {} }));
 		await expect(button(page, message('play_free_open'))).toHaveCount(0);
 	});
@@ -485,76 +497,75 @@ test.describe('companion and rewards', () => {
 		await expect(button(page, message('play_free_open'))).toBeVisible();
 	});
 
-	test('leaves the free practice for the map from the choice of the game', async ({ page }) => {
-		await reachMapAs(page, profileWithWords('Lin'));
-		await button(page, message('play_free_open')).click();
-		await expect(heading(page, message('play_free_title'))).toBeVisible();
-		await page.keyboard.press('Escape');
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-	});
+	test(
+		'leaves the free practice for the map from the choice of the game',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, profileWithWords('Lin'));
+			await button(page, message('play_free_open')).click();
+			await expect(heading(page, message('play_free_title'))).toBeVisible();
+			await page.keyboard.press('Escape');
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+		}
+	);
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`companion and rewards, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('companion and rewards, light and dark themes', () => {
+	test('has no axe violation on the prize, the news, the name and the companion screen', async ({
+		page
+	}) => {
+		// Five screens, each audited in both themes.
+		test.slow();
+		await reachMapAs(page, advancedProfile({ name: 'Axel', passed: {} }));
+		await page.getByRole('button', { name: FIRST.title }).click();
+		await throughStory(page, page.locator('[data-prize]'));
+		await expectNoAxeViolation(page);
 
-		test('has no axe violation on the prize, the news, the name and the companion screen', async ({
-			page
-		}) => {
-			test.slow();
-			await reachMapAs(page, advancedProfile({ name: 'Axel', passed: {} }));
-			await page.getByRole('button', { name: FIRST.title }).click();
-			await throughStory(page, page.locator('[data-prize]'));
-			await expectNoAxeViolation(page);
+		await page.locator('button[data-proposed]').click();
+		await typeToEnd(page, message('play_result_map'));
+		await expect(heading(page, message('play_reward_new'))).toBeVisible();
+		await expectNoAxeViolation(page);
+		await button(page, message('play_result_continue')).click();
+		await expect(
+			page.getByRole('heading', { name: message('play_reward_name_question') })
+		).toBeVisible();
+		await expectNoAxeViolation(page);
+		await button(page, message('play_companion_name_submit')).click();
+		await expect(page.getByRole('alert').first()).toHaveText(
+			message('play_companion_name_error_empty')
+		);
+		await expectNoAxeViolation(page);
 
-			await page.locator('button[data-proposed]').click();
-			await typeToEnd(page, message('play_result_map'));
-			await expect(heading(page, message('play_reward_new'))).toBeVisible();
-			await expectNoAxeViolation(page);
-			await button(page, message('play_result_continue')).click();
-			await expect(
-				page.getByRole('heading', { name: message('play_reward_name_question') })
-			).toBeVisible();
-			await expectNoAxeViolation(page);
-			await button(page, message('play_companion_name_submit')).click();
-			await expect(page.getByRole('alert').first()).toHaveText(
-				message('play_companion_name_error_empty')
-			);
-			await expectNoAxeViolation(page);
-
-			await button(page, message('play_companion_open')).click();
-			await expect(heading(page, message('play_companion_title'))).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
-
-		test('has no axe violation on the help bubble and on the thanks', async ({ page }) => {
-			test.slow();
-			await reachMapAs(page, profileWithFragileKey('Ivy'));
-			await expect(helpBubble(page, FRAGILE_KEY.toLocaleUpperCase('fr'))).toBeVisible();
-			await expectNoAxeViolation(page);
-
-			await button(page, message('play_help_yes')).click();
-			await typeToEnd(page, message('play_help_back'));
-			await expect(heading(page, message('play_help_thanks'))).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
-
-		test('has no axe violation on the free practice, from the map to the well done', async ({
-			page
-		}) => {
-			test.slow();
-			await reachMapAs(page, profileWithWords('Eden'));
-			await expect(button(page, message('play_free_open'))).toBeVisible();
-			await expectNoAxeViolation(page);
-
-			await button(page, message('play_free_open')).click();
-			await expect(page.locator('button[data-proposed]')).toBeFocused();
-			await expectNoAxeViolation(page);
-
-			await page.locator('button[data-proposed]').click();
-			await typeToEnd(page, message('play_help_back'));
-			await expect(heading(page, message('play_free_done'))).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
+		await button(page, message('play_companion_open')).click();
+		await expect(heading(page, message('play_companion_title'))).toBeVisible();
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation on the help bubble and on the thanks', async ({ page }) => {
+		await reachMapAs(page, profileWithFragileKey('Ivy'));
+		await expect(helpBubble(page, FRAGILE_KEY.toLocaleUpperCase('fr'))).toBeVisible();
+		await expectNoAxeViolation(page);
+
+		await button(page, message('play_help_yes')).click();
+		await typeToEnd(page, message('play_help_back'));
+		await expect(heading(page, message('play_help_thanks'))).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation on the free practice, from the map to the well done', async ({
+		page
+	}) => {
+		await reachMapAs(page, profileWithWords('Eden'));
+		await expect(button(page, message('play_free_open'))).toBeVisible();
+		await expectNoAxeViolation(page);
+
+		await button(page, message('play_free_open')).click();
+		await expect(page.locator('button[data-proposed]')).toBeFocused();
+		await expectNoAxeViolation(page);
+
+		await page.locator('button[data-proposed]').click();
+		await typeToEnd(page, message('play_help_back'));
+		await expect(heading(page, message('play_free_done'))).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
+});

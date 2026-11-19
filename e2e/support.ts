@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { IDBFactory } from 'fake-indexeddb';
 import { readFileSync } from 'node:fs';
@@ -16,18 +17,59 @@ export async function waitForHydration(page: Page): Promise<void> {
 }
 
 /**
- * Rewards last a millisecond: a key skips a reward only once it has been seen, and a test that
- * types through a whole exercise must not wait for each one. The tokens are read when a timer is set.
+ * How long the reward of a finished group lasts in a test (audit Q-06):
+ * - `instant`: the next group, or the end of the game, comes at once, without a key. For a test that
+ *   types through a lesson: it never waits for a reward, and no key is lost to one.
+ * - `hold`: the reward stays until a key passes it (`passReward`). For a test that looks at a group
+ *   done, its bubble, its note or its scene: it is still there however slow the machine is.
  */
-export async function shortenRewards(page: Page): Promise<void> {
-	await page.addInitScript(() => {
+export type RewardPace = 'instant' | 'hold';
+
+/** Longer than any test: a held reward gives way to a key only. */
+const HELD_REWARD_MS = 600_000;
+
+const REWARD_TOKENS: Record<RewardPace, string> = {
+	instant: '1ms',
+	hold: `${HELD_REWARD_MS}ms`
+};
+
+/**
+ * Sets the pace of the rewards in every page the test opens from now on; the last call wins. The
+ * tokens are read when the game sets its timers: the delay before a key may pass a reward is
+ * always short, the reminder to look at the screen as long as the reward.
+ */
+export async function setRewards(page: Page, pace: RewardPace): Promise<void> {
+	const css =
+		`:root{--dd-duration-celebration:${REWARD_TOKENS[pace]};--dd-duration-reward-delay:1ms;` +
+		'--dd-duration-reward:1ms;--dd-duration-reminder:1ms}';
+	await page.addInitScript((tokens) => {
 		document.addEventListener('DOMContentLoaded', () => {
-			const style = document.createElement('style');
-			style.textContent =
-				':root{--dd-duration-reward-delay:1ms;--dd-duration-reward:1ms;--dd-duration-reminder:1ms}';
+			const id = 'e2e-rewards';
+			const style = document.getElementById(id) ?? document.createElement('style');
+			style.id = id;
+			style.textContent = tokens;
 			document.head.append(style);
 		});
-	});
+	}, css);
+}
+
+/** What the text to type says: the group and the next character, or that the group is done. */
+const TARGET_LABEL = '.target-text > .dd-visually-hidden';
+const REWARD_TIMEOUT = 15_000;
+
+/**
+ * With `hold` rewards: passes the reward of the group just typed with Enter, as a child would, and
+ * waits until it gives way to the next group or to the end of the game. A key passes a reward only
+ * once the reward has been seen: Enter is pressed again until it does.
+ */
+export async function passReward(page: Page): Promise<void> {
+	const done = loadMessages().templateRegex('ui_target_text_done');
+	const label = page.locator(TARGET_LABEL);
+	const rewarded = async () => (await label.allTextContents()).some((text) => done.test(text));
+	await expect(async () => {
+		if (await rewarded()) await page.keyboard.press('Enter');
+		expect(await rewarded()).toBe(false);
+	}).toPass({ timeout: REWARD_TIMEOUT });
 }
 
 const STORY_CONTINUE = '[data-story-continue]';
@@ -102,6 +144,35 @@ export async function throughResult(
 		await expect(result).toBeVisible({ timeout: 500 });
 	}).toPass({ timeout: RESULT_TIMEOUT });
 	return passed;
+}
+
+const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+const COLOR_SCHEMES = ['light', 'dark'] as const;
+
+/**
+ * axe on the screen as it is, in the light theme then in the dark one: the theme follows the system,
+ * so one walk through the screens checks both (audit Q-13). A failure names the theme. The colours
+ * of a button glide from one theme to the other: axe reads them once they have arrived.
+ * `as shown`: once, in the theme on screen (a theme the page forces, for one).
+ */
+export async function expectNoAxeViolation(
+	page: Page,
+	themes: 'light and dark' | 'as shown' = 'light and dark'
+): Promise<void> {
+	await page.evaluate(() => document.fonts.ready);
+	for (const colorScheme of themes === 'as shown' ? [null] : COLOR_SCHEMES) {
+		if (colorScheme !== null) await page.emulateMedia({ colorScheme });
+		await page.evaluate(() =>
+			Promise.all(
+				document
+					.getAnimations()
+					.filter((animation) => animation instanceof CSSTransition)
+					.map((animation) => animation.finished.catch(() => undefined))
+			)
+		);
+		const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+		expect(violations, `${colorScheme ?? 'shown'} theme`).toEqual([]);
+	}
 }
 
 export async function openPage(page: Page, url: string): Promise<void> {

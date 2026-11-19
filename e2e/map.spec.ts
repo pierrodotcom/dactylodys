@@ -1,9 +1,10 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import type { StarCount } from '../src/lib/engine/progression/types';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
@@ -17,8 +18,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PLAY_URL = '/jouer';
 const PASSED_STARS: StarCount = 2;
 /** How far, in pixels, the middle of the companion may sit from the middle of its lesson. */
@@ -115,14 +114,14 @@ test.describe('map walked with the arrows', () => {
 		await expect(page.getByText(message('play_map_keys_hint'))).toHaveCount(1);
 	});
 
-	test('shows no key hint while a single lesson is open', async ({ page }) => {
+	test('shows no key hint while a single lesson is open', CHROMIUM_ONLY, async ({ page }) => {
 		await reachMapAs(page, advancedProfile({ name: 'Noa', passed: {} }));
 
 		await expectChosen(page, FIRST);
 		await expect(page.locator('[data-keys-hint]')).toHaveCount(0);
 	});
 
-	test('shows the up and down keys once two lessons are open', async ({ page }) => {
+	test('shows the up and down keys once two lessons are open', CHROMIUM_ONLY, async ({ page }) => {
 		const hint = page.locator('[data-keys-hint]');
 		await reachMapAs(page, advancedProfile({ name: 'Ilo', passed: { [FIRST.id]: PASSED_STARS } }));
 
@@ -216,37 +215,34 @@ test.describe('map walked with the arrows', () => {
 		await expect(settings).toBeFocused();
 	});
 
-	test('places the companion at once with calm motion, from the profile setting', async ({
+	test(
+		'places the companion at once with calm motion, from the profile setting',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(
+				page,
+				profileOf('Calme', (profile) => ({
+					...profile,
+					settings: { ...profile.settings, motion: 'reduced' }
+				}))
+			);
+
+			await expect(walker(page)).toHaveAttribute('data-still');
+			await page.keyboard.press('Home');
+			await expect(walker(page)).toHaveCSS('transition-property', 'none');
+			await expectChosen(page, FIRST);
+		}
+	);
+
+	test('passes axe with the walking companion and the key hint, light and dark themes', async ({
 		page
 	}) => {
-		await reachMapAs(
-			page,
-			profileOf('Calme', (profile) => ({
-				...profile,
-				settings: { ...profile.settings, motion: 'reduced' }
-			}))
-		);
+		await reachMapAs(page, profileOf('Lumi'));
+		await page.keyboard.press('ArrowLeft');
+		await expectChosen(page, FIRST_OF_SECOND_WORLD);
 
-		await expect(walker(page)).toHaveAttribute('data-still');
-		await page.keyboard.press('Home');
-		await expect(walker(page)).toHaveCSS('transition-property', 'none');
-		await expectChosen(page, FIRST);
+		await expectNoAxeViolation(page);
 	});
-
-	for (const colorScheme of COLOR_SCHEMES) {
-		test(`passes axe with the walking companion and the key hint, ${colorScheme} theme`, async ({
-			page
-		}) => {
-			await page.emulateMedia({ colorScheme });
-			await reachMapAs(page, profileOf('Lumi'));
-			await page.keyboard.press('ArrowLeft');
-			await expectChosen(page, FIRST_OF_SECOND_WORLD);
-
-			await page.evaluate(() => document.fonts.ready);
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(results.violations).toEqual([]);
-		});
-	}
 });
 
 function worldOf(slug: string): World {
@@ -351,31 +347,33 @@ test.describe('the detours of the rare accents on the map', () => {
 	);
 	const numberOf = (lesson: Lesson) => lessons.filter((item) => !item.optional).indexOf(lesson) + 1;
 
-	test('opens the last world without them, and shows them as a way to go further', async ({
-		page
-	}) => {
-		await reachMapAs(page, child);
+	test(
+		'opens the last world without them, and shows them as a way to go further',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, child);
 
-		// The way goes on: the companion waits at the first lesson of the last world.
-		await expectChosen(page, post);
-		await expect(row(page, post)).toContainText(message('play_lesson_current'));
-		// No number is missing on the way, and a detour has none.
-		await expect(row(page, lastOnTheWay)).toContainText(
-			message('play_lesson_number', { number: numberOf(lastOnTheWay) })
-		);
-		await expect(row(page, post)).toContainText(
-			message('play_lesson_number', { number: numberOf(lastOnTheWay) + 1 })
-		);
-		for (const detour of [firstDetour, secondDetour]) {
-			await expect(row(page, detour)).toContainText(message('play_lesson_detour'));
-			await expect(row(page, detour)).not.toContainText(/Leçon \d/);
+			// The way goes on: the companion waits at the first lesson of the last world.
+			await expectChosen(page, post);
+			await expect(row(page, post)).toContainText(message('play_lesson_current'));
+			// No number is missing on the way, and a detour has none.
+			await expect(row(page, lastOnTheWay)).toContainText(
+				message('play_lesson_number', { number: numberOf(lastOnTheWay) })
+			);
+			await expect(row(page, post)).toContainText(
+				message('play_lesson_number', { number: numberOf(lastOnTheWay) + 1 })
+			);
+			for (const detour of [firstDetour, secondDetour]) {
+				await expect(row(page, detour)).toContainText(message('play_lesson_detour'));
+				await expect(row(page, detour)).not.toContainText(/Leçon \d/);
+			}
+			// Offered, never asked: the first one is open, as a wish; the second one waits for it.
+			await expect(lessonButton(page, firstDetour)).toBeVisible();
+			await expect(row(page, firstDetour)).toContainText(message('play_lesson_detour_open'));
+			await expect(row(page, firstDetour)).not.toContainText(message('play_lesson_current'));
+			await expect(row(page, secondDetour)).toContainText(message('play_lesson_locked'));
 		}
-		// Offered, never asked: the first one is open, as a wish; the second one waits for it.
-		await expect(lessonButton(page, firstDetour)).toBeVisible();
-		await expect(row(page, firstDetour)).toContainText(message('play_lesson_detour_open'));
-		await expect(row(page, firstDetour)).not.toContainText(message('play_lesson_current'));
-		await expect(row(page, secondDetour)).toContainText(message('play_lesson_locked'));
-	});
+	);
 
 	test('walks to a detour with the arrows and opens it, at the keyboard alone', async ({
 		page
@@ -395,16 +393,11 @@ test.describe('the detours of the rare accents on the map', () => {
 		await expectChosen(page, post);
 	});
 
-	for (const colorScheme of COLOR_SCHEMES) {
-		test(`passes axe on the map with an open detour, ${colorScheme} theme`, async ({ page }) => {
-			await page.emulateMedia({ colorScheme });
-			await reachMapAs(page, child);
-			await page.keyboard.press('ArrowUp');
-			await expectChosen(page, firstDetour);
+	test('passes axe on the map with an open detour, light and dark themes', async ({ page }) => {
+		await reachMapAs(page, child);
+		await page.keyboard.press('ArrowUp');
+		await expectChosen(page, firstDetour);
 
-			await page.evaluate(() => document.fonts.ready);
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(results.violations).toEqual([]);
-		});
-	}
+		await expectNoAxeViolation(page);
+	});
 });

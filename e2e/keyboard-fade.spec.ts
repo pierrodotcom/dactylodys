@@ -1,17 +1,19 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { toGraphemes } from '../src/lib/engine/graphemes';
 import type { ProgressState } from '../src/lib/engine/progression/types';
 import { updateSettings, withProgress } from '../src/lib/state/profile';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
+	passReward,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	storedRecord,
 	throughStory
 } from './support';
@@ -23,9 +25,6 @@ import {
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
-
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 
 const { message, templateRegex } = loadMessages();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
@@ -115,11 +114,13 @@ async function installChild(page: Page, profile: Profile) {
 	await reloadPage(page);
 }
 
+// A group done is looked at before the next one: the rewards stay until a key passes them.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 });
 
-test.describe('Keyboard that fades', () => {
+// What the keyboard drawn shows is decided by the game, whatever the engine (`keyboard-fade.test.ts`).
+test.describe('Keyboard that fades', CHROMIUM_ONLY, () => {
 	test('hides the letter of a key the child knows well and keeps the others written', async ({
 		page
 	}) => {
@@ -163,6 +164,7 @@ test.describe('Keyboard that fades', () => {
 			await page.keyboard.type([first, ...rest].join(''));
 			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 			// The next group keeps the letter written.
+			await passReward(page);
 			await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 			await expect(label(page, missed)).toBeVisible();
 			await expect(label(page, other)).toBeHidden();
@@ -211,20 +213,14 @@ test.describe('Keyboard that fades', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`Keyboard that fades, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('Keyboard that fades, light and dark themes', () => {
+	test('has no axe violation on a game with faded keys', async ({ page }) => {
+		await installChild(page, child(['f', 'j']));
+		await reachMap(page);
+		await startFirstLesson(page);
+		await expect(label(page, 'KeyF')).toBeHidden();
+		await expect(label(page, 'KeyJ')).toBeHidden();
 
-		test('has no axe violation on a game with faded keys', async ({ page }) => {
-			await installChild(page, child(['f', 'j']));
-			await reachMap(page);
-			await startFirstLesson(page);
-			await expect(label(page, 'KeyF')).toBeHidden();
-			await expect(label(page, 'KeyJ')).toBeHidden();
-
-			await page.evaluate(() => document.fonts.ready);
-			const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(results.violations).toEqual([]);
-		});
+		await expectNoAxeViolation(page);
 	});
-}
+});

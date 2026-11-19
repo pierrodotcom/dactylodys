@@ -1,9 +1,10 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { updateSettings } from '../src/lib/state/profile';
 import type { Profile, Settings } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
@@ -21,8 +22,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const LAPTOP = { width: 1280, height: 720 } as const;
 /** 1280 pixels at 400 % zoom: the width WCAG 1.4.10 asks for. */
 const NARROW = { width: 320, height: 640 } as const;
@@ -150,82 +149,86 @@ function expectOneVertical(values: readonly number[], expected: number) {
 	for (const value of values) expect(Math.abs(value - expected)).toBeLessThanOrEqual(PIXEL);
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
 test.describe('settings of the child on a laptop', () => {
 	test.use({ viewport: LAPTOP });
 
-	test('starts every group of choices on the same vertical, beside its name', async ({ page }) => {
-		await openChildSettings(page, child());
+	test(
+		'starts every group of choices on the same vertical, beside its name',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await openChildSettings(page, child());
 
-		const lines = await settingLines(page);
-		expect(lines.map((line) => line.name)).toEqual(CHILD_LINES);
-		const [first] = lines as [Line, ...Line[]];
-		expectOneVertical(
-			lines.map((line) => line.nameLeft),
-			first.nameLeft
-		);
-		expectOneVertical(
-			lines.map((line) => line.choicesLeft),
-			first.choicesLeft
-		);
-		expect(first.choicesLeft).toBeGreaterThan(first.nameLeft);
-		for (const line of lines) {
-			// Nothing is centred in its column, and the choices sit on the line of their name.
-			expect(Math.abs(line.firstLeft - line.choicesLeft)).toBeLessThanOrEqual(PIXEL);
-			expect(line.choicesTop).toBeLessThan(line.nameBottom);
+			const lines = await settingLines(page);
+			expect(lines.map((line) => line.name)).toEqual(CHILD_LINES);
+			const [first] = lines as [Line, ...Line[]];
+			expectOneVertical(
+				lines.map((line) => line.nameLeft),
+				first.nameLeft
+			);
+			expectOneVertical(
+				lines.map((line) => line.choicesLeft),
+				first.choicesLeft
+			);
+			expect(first.choicesLeft).toBeGreaterThan(first.nameLeft);
+			for (const line of lines) {
+				// Nothing is centred in its column, and the choices sit on the line of their name.
+				expect(Math.abs(line.firstLeft - line.choicesLeft)).toBeLessThanOrEqual(PIXEL);
+				expect(line.choicesTop).toBeLessThan(line.nameBottom);
+			}
+			expectOneVertical(await familyLefts(page), first.nameLeft);
 		}
-		expectOneVertical(await familyLefts(page), first.nameLeft);
-	});
+	);
 
-	test('names the families in order and fits in two screens at most', async ({ page }) => {
-		await openChildSettings(page, child());
+	test(
+		'names the families in order and fits in two screens at most',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await openChildSettings(page, child());
 
-		await expect(page.getByRole('heading', { level: 2 })).toHaveText(FAMILIES);
-		const height = await page.evaluate(() => document.documentElement.scrollHeight);
-		expect(height).toBeLessThanOrEqual(SCREENS_AT_MOST * LAPTOP.height);
-		// The sample sits right under the two settings it shows.
-		const names = (await settingLines(page)).map((line) => line.name);
-		expect(names.indexOf(message('settings_sample_label'))).toBe(
-			names.indexOf(message('settings_spacing_label')) + 1
-		);
-	});
+			await expect(page.getByRole('heading', { level: 2 })).toHaveText(FAMILIES);
+			const height = await page.evaluate(() => document.documentElement.scrollHeight);
+			expect(height).toBeLessThanOrEqual(SCREENS_AT_MOST * LAPTOP.height);
+			// The sample sits right under the two settings it shows.
+			const names = (await settingLines(page)).map((line) => line.name);
+			expect(names.indexOf(message('settings_sample_label'))).toBe(
+				names.indexOf(message('settings_spacing_label')) + 1
+			);
+		}
+	);
 
-	test('marks the chosen option with a check and a thick frame, not with a filled shape', async ({
-		page
-	}) => {
-		await openChildSettings(page, child({ soundEnabled: true }));
+	test(
+		'marks the chosen option with a check and a thick frame, not with a filled shape',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await openChildSettings(page, child({ soundEnabled: true }));
 
-		const look = (option: string) =>
-			choice(page, message('settings_sound_label'), option).evaluate((radio) => {
-				const label = radio.closest('label');
-				if (!label) throw new Error('A choice without its label');
-				const style = getComputedStyle(label);
-				return {
-					background: style.backgroundColor,
-					frame: Number.parseFloat(style.borderTopWidth),
-					check: label.querySelector('svg') !== null,
-					height: label.getBoundingClientRect().height
-				};
-			});
-		const chosen = await look(message('settings_on'));
-		const other = await look(message('settings_off'));
+			const look = (option: string) =>
+				choice(page, message('settings_sound_label'), option).evaluate((radio) => {
+					const label = radio.closest('label');
+					if (!label) throw new Error('A choice without its label');
+					const style = getComputedStyle(label);
+					return {
+						background: style.backgroundColor,
+						frame: Number.parseFloat(style.borderTopWidth),
+						check: label.querySelector('svg') !== null,
+						height: label.getBoundingClientRect().height
+					};
+				});
+			const chosen = await look(message('settings_on'));
+			const other = await look(message('settings_off'));
 
-		expect(chosen.check).toBe(true);
-		expect(other.check).toBe(false);
-		expect(chosen.frame).toBeGreaterThan(other.frame);
-		expect(chosen.background).toBe(other.background);
-		// Choosing does not make the option taller than its neighbours.
-		expect(Math.abs(chosen.height - other.height)).toBeLessThanOrEqual(PIXEL);
-		const heights = await page
-			.locator('[data-choices] label')
-			.evaluateAll((labels) => labels.map((label) => label.getBoundingClientRect().height));
-		expect(Math.min(...heights)).toBeGreaterThanOrEqual(TOUCH_TARGET);
-	});
+			expect(chosen.check).toBe(true);
+			expect(other.check).toBe(false);
+			expect(chosen.frame).toBeGreaterThan(other.frame);
+			expect(chosen.background).toBe(other.background);
+			// Choosing does not make the option taller than its neighbours.
+			expect(Math.abs(chosen.height - other.height)).toBeLessThanOrEqual(PIXEL);
+			const heights = await page
+				.locator('[data-choices] label')
+				.evaluateAll((labels) => labels.map((label) => label.getBoundingClientRect().height));
+			expect(Math.min(...heights)).toBeGreaterThanOrEqual(TOUCH_TARGET);
+		}
+	);
 
 	test('is walked with the keyboard alone: the way out, calm, then each setting in turn', async ({
 		page
@@ -309,36 +312,38 @@ test.describe('settings of the child on a laptop', () => {
 		await expect(page.locator('html')).not.toHaveAttribute('data-effects', 'off');
 	});
 
-	test('gives back a setting that followed the device, and nothing once a setting is changed by hand', async ({
-		page
-	}) => {
-		// The sounds are already cut: they stay cut once the rest is given back.
-		const profile = child({ motion: 'system', effects: true, soundEnabled: false });
-		await openChildSettings(page, profile);
-		const calm = button(page, message('settings_calm_button'));
-		const undo = page.locator('[data-calm-undo]');
+	test(
+		'gives back a setting that followed the device, and nothing once a setting is changed by hand',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			// The sounds are already cut: they stay cut once the rest is given back.
+			const profile = child({ motion: 'system', effects: true, soundEnabled: false });
+			await openChildSettings(page, profile);
+			const calm = button(page, message('settings_calm_button'));
+			const undo = page.locator('[data-calm-undo]');
 
-		await calm.click();
-		await expect(undo).toBeVisible();
-		await undo.click();
-		await expect
-			.poll(async () => (await storedRecord(page, profile))?.['settings'])
-			.toMatchObject({ motion: 'system', effects: true, soundEnabled: false });
+			await calm.click();
+			await expect(undo).toBeVisible();
+			await undo.click();
+			await expect
+				.poll(async () => (await storedRecord(page, profile))?.['settings'])
+				.toMatchObject({ motion: 'system', effects: true, soundEnabled: false });
 
-		await calm.click();
-		await expect(undo).toBeVisible();
-		await choice(page, message('settings_voice_label'), message('settings_off')).check();
-		await expect(undo).toHaveCount(0);
-		await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
+			await calm.click();
+			await expect(undo).toBeVisible();
+			await choice(page, message('settings_voice_label'), message('settings_off')).check();
+			await expect(undo).toHaveCount(0);
+			await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
 
-		// Everything is calm already: there is nothing to give back.
-		await calm.click();
-		await expect(page.locator('[data-calm-status]')).toHaveText(message('settings_calm_already'));
-		await expect(undo).toHaveCount(0);
-	});
+			// Everything is calm already: there is nothing to give back.
+			await calm.click();
+			await expect(page.locator('[data-calm-status]')).toHaveText(message('settings_calm_already'));
+			await expect(undo).toHaveCount(0);
+		}
+	);
 });
 
-test.describe('settings of the child at 320 pixels', () => {
+test.describe('settings of the child at 320 pixels', CHROMIUM_ONLY, () => {
 	test.use({ viewport: NARROW });
 
 	test('puts the choices under their name, both on the left edge, without scrolling sideways', async ({
@@ -364,7 +369,7 @@ test.describe('settings of the child at 320 pixels', () => {
 });
 
 test.describe('keyboard layout', () => {
-	test('is not among the settings of the child', async ({ page }) => {
+	test('is not among the settings of the child', CHROMIUM_ONLY, async ({ page }) => {
 		await openChildSettings(page, child());
 
 		await expect(group(page, message('settings_age_label'))).toBeVisible();
@@ -393,49 +398,47 @@ test.describe('keyboard layout', () => {
 			.toMatchObject({ layoutId: OTHER_LAYOUT });
 	});
 
-	test('keeps the lines of the adult on the same vertical, their explanation under the choices', async ({
+	test(
+		'keeps the lines of the adult on the same vertical, their explanation under the choices',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await page.setViewportSize(LAPTOP);
+			await openAdultSettings(page, child());
+
+			const lines = await settingLines(page);
+			const [first] = lines as [Line, ...Line[]];
+			expectOneVertical(
+				lines.map((line) => line.choicesLeft),
+				first.choicesLeft
+			);
+			const hint = page.getByText(message('settings_backspace_hint'));
+			const hintLeft = await hint.evaluate((element) => element.getBoundingClientRect().left);
+			expect(Math.abs(hintLeft - first.choicesLeft)).toBeLessThanOrEqual(PIXEL);
+			await expect(group(page, message('settings_backspace_label'))).toHaveAccessibleDescription(
+				message('settings_backspace_hint')
+			);
+		}
+	);
+});
+
+test.describe('settings, light and dark themes', () => {
+	test('has no axe violation on the settings of the child, calm and wide then narrow', async ({
 		page
 	}) => {
 		await page.setViewportSize(LAPTOP);
-		await openAdultSettings(page, child());
+		await openChildSettings(page, child({ motion: 'full' }));
+		await expectNoAxeViolation(page);
 
-		const lines = await settingLines(page);
-		const [first] = lines as [Line, ...Line[]];
-		expectOneVertical(
-			lines.map((line) => line.choicesLeft),
-			first.choicesLeft
-		);
-		const hint = page.getByText(message('settings_backspace_hint'));
-		const hintLeft = await hint.evaluate((element) => element.getBoundingClientRect().left);
-		expect(Math.abs(hintLeft - first.choicesLeft)).toBeLessThanOrEqual(PIXEL);
-		await expect(group(page, message('settings_backspace_label'))).toHaveAccessibleDescription(
-			message('settings_backspace_hint')
-		);
+		await button(page, message('settings_calm_button')).click();
+		await expect(page.locator('[data-calm-undo]')).toBeVisible();
+		await expectNoAxeViolation(page);
+
+		await page.setViewportSize(NARROW);
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation on the settings of a child in the adult space', async ({ page }) => {
+		await openAdultSettings(page, child());
+		await expectNoAxeViolation(page);
 	});
 });
-
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`settings, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
-
-		test('has no axe violation on the settings of the child, calm and wide then narrow', async ({
-			page
-		}) => {
-			await page.setViewportSize(LAPTOP);
-			await openChildSettings(page, child({ motion: 'full' }));
-			await expectNoAxeViolation(page);
-
-			await button(page, message('settings_calm_button')).click();
-			await expect(page.locator('[data-calm-undo]')).toBeVisible();
-			await expectNoAxeViolation(page);
-
-			await page.setViewportSize(NARROW);
-			await expectNoAxeViolation(page);
-		});
-
-		test('has no axe violation on the settings of a child in the adult space', async ({ page }) => {
-			await openAdultSettings(page, child());
-			await expectNoAxeViolation(page);
-		});
-	});
-}

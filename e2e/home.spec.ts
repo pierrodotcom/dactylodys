@@ -1,12 +1,11 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { linkedPaths, openPage } from './support';
+import { CHROMIUM_ONLY } from './engines';
+import { expectNoAxeViolation, linkedPaths, openPage } from './support';
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const COLOR_SCHEMES = ['light', 'dark'] as const;
 const MOTION_PREFERENCES = ['no-preference', 'reduce'] as const;
 
@@ -15,7 +14,7 @@ const messages: Record<string, string> = JSON.parse(
 );
 
 test.describe('home page', () => {
-	test('shows the title and the tagline in French', async ({ page }) => {
+	test('shows the title and the tagline in French', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, '/');
 
 		await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
@@ -24,7 +23,7 @@ test.describe('home page', () => {
 		await expect(page.getByText(messages.home_tagline ?? '')).toBeVisible();
 	});
 
-	test('opens the game from the big Play link', async ({ page }) => {
+	test('opens the game from the big Play link', CHROMIUM_ONLY, async ({ page }) => {
 		await openPage(page, '/');
 		const play = page.getByRole('link', { name: messages.home_play, exact: true });
 
@@ -47,25 +46,27 @@ test.describe('home page', () => {
 		await expect(page).toHaveURL(/\/jouer$/);
 	});
 
-	test('links to the game and the pages for adults only, and to no developer page', async ({
-		page
-	}) => {
-		await openPage(page, '/');
+	test(
+		'links to the game and the pages for adults only, and to no developer page',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await openPage(page, '/');
 
-		const paths = await linkedPaths(page);
+			const paths = await linkedPaths(page);
 
-		expect(paths).toEqual([
-			'/jouer',
-			'/pour-les-adultes',
-			'/pour-les-professionnels',
-			'/confidentialite',
-			'/accessibilite',
-			'/credits'
-		]);
-		expect(paths.filter((path) => path.startsWith('/dev'))).toEqual([]);
-	});
+			expect(paths).toEqual([
+				'/jouer',
+				'/pour-les-adultes',
+				'/pour-les-professionnels',
+				'/confidentialite',
+				'/accessibilite',
+				'/credits'
+			]);
+			expect(paths.filter((path) => path.startsWith('/dev'))).toEqual([]);
+		}
+	);
 
-	test('requests nothing from another origin', async ({ page, baseURL }) => {
+	test('requests nothing from another origin', CHROMIUM_ONLY, async ({ page, baseURL }) => {
 		const expectedOrigin = new URL(baseURL ?? '').origin;
 		const foreignRequests: string[] = [];
 		page.on('request', (request) => {
@@ -82,29 +83,31 @@ test.describe('home page', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	for (const reducedMotion of MOTION_PREFERENCES) {
-		test.describe(`home page, ${colorScheme} theme, motion ${reducedMotion}`, () => {
-			test.use({ colorScheme, reducedMotion });
+for (const reducedMotion of MOTION_PREFERENCES) {
+	test.describe(`home page, motion ${reducedMotion}`, () => {
+		test.use({ reducedMotion });
 
-			test('applies the requested preferences', async ({ page }) => {
-				await openPage(page, '/');
+		for (const colorScheme of COLOR_SCHEMES) {
+			test(
+				`applies the requested preferences, ${colorScheme} theme`,
+				CHROMIUM_ONLY,
+				async ({ page }) => {
+					await page.emulateMedia({ colorScheme });
+					await openPage(page, '/');
 
-				const applied = await page.evaluate(() => ({
-					colorScheme: getComputedStyle(document.documentElement).colorScheme,
-					reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
-				}));
-				expect(applied).toEqual({ colorScheme, reducedMotion: reducedMotion === 'reduce' });
-			});
+					const applied = await page.evaluate(() => ({
+						colorScheme: getComputedStyle(document.documentElement).colorScheme,
+						reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
+					}));
+					expect(applied).toEqual({ colorScheme, reducedMotion: reducedMotion === 'reduce' });
+				}
+			);
+		}
 
-			test('has no axe violation for WCAG A and AA', async ({ page }) => {
-				await openPage(page, '/');
-				await page.evaluate(() => document.fonts.ready);
+		test('has no axe violation for WCAG A and AA, light and dark', async ({ page }) => {
+			await openPage(page, '/');
 
-				const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-
-				expect(results.violations).toEqual([]);
-			});
+			await expectNoAxeViolation(page);
 		});
-	}
+	});
 }

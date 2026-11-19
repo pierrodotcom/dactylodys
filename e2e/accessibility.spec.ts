@@ -1,15 +1,17 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { GAMES } from '../src/lib/games/registry';
 import type { Profile } from '../src/lib/state/types';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
+	passReward,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	throughStory
 } from './support';
 
@@ -22,8 +24,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 /** 1280 pixels at 400 % zoom: the width WCAG 1.4.10 asks for. */
 const NARROW = { width: 320, height: 640 } as const;
 const LAPTOP = { width: 1280, height: 720 } as const;
@@ -155,17 +155,13 @@ async function activateByTab(page: Page, target: Locator) {
 	await page.keyboard.press('Enter');
 }
 
-async function expectNoAxeViolation(page: Page) {
-	await page.evaluate(() => document.fonts.ready);
-	const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-	expect(results.violations).toEqual([]);
-}
-
+// What a screen reader hears on a reward is listened to: the rewards stay until a key passes them.
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'hold');
 });
 
-test.describe('reflow at 320 pixels', () => {
+// A layout measured in one engine holds in the others (choice 21 of the owner, ADR-075).
+test.describe('reflow at 320 pixels', CHROMIUM_ONLY, () => {
 	test.use({ viewport: NARROW });
 
 	test('keeps every screen of the child within the width of the page', async ({ page }) => {
@@ -323,7 +319,7 @@ test.describe('adult space with the keyboard alone', () => {
 	});
 });
 
-test.describe('what a screen reader hears in a game', () => {
+test.describe('what a screen reader hears in a game', CHROMIUM_ONLY, () => {
 	test('says the text to type when it appears, the expected key after a mistake, and nothing on a right key', async ({
 		page
 	}) => {
@@ -343,7 +339,7 @@ test.describe('what a screen reader hears in a game', () => {
 		await expect(said).toHaveText(
 			message('game_hatching_announce_hatched', { cry: message('game_hatching_cry_1') })
 		);
-		await page.keyboard.press('Enter');
+		await passReward(page);
 		await expect(said).toHaveText(message('game_shared_announce_group', { text: SECOND_GROUP }));
 	});
 
@@ -354,36 +350,32 @@ test.describe('what a screen reader hears in a game', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`accessibility audit, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
-
-		test('has no axe violation at 320 pixels on the map, a game and the adult report', async ({
-			page
-		}) => {
-			test.slow();
-			await page.setViewportSize(NARROW);
-			await openMap(page);
-			await expectNoAxeViolation(page);
-			await startDevGame(page, 'hatching');
-			await expectNoAxeViolation(page);
-			await openAdultHome(page);
-			await button(page, 'Lou').click();
-			await expect(heading(page, message('adult_child_title', { name: 'Lou' }))).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
-
-		test('has no axe violation on the code form of the adult space, with a refused code', async ({
-			page
-		}) => {
-			await openAdultHome(page);
-			await button(page, message('adult_code_add')).click();
-			await expect(page.locator('[data-code-new]')).toBeFocused();
-			await expectNoAxeViolation(page);
-			await page.keyboard.type(SHORT_CODE);
-			await page.keyboard.press('Enter');
-			await expect(page.getByRole('alert')).toBeVisible();
-			await expectNoAxeViolation(page);
-		});
+test.describe('accessibility audit, light and dark themes', () => {
+	test('has no axe violation at 320 pixels on the map, a game and the adult report', async ({
+		page
+	}) => {
+		test.slow();
+		await page.setViewportSize(NARROW);
+		await openMap(page);
+		await expectNoAxeViolation(page);
+		await startDevGame(page, 'hatching');
+		await expectNoAxeViolation(page);
+		await openAdultHome(page);
+		await button(page, 'Lou').click();
+		await expect(heading(page, message('adult_child_title', { name: 'Lou' }))).toBeVisible();
+		await expectNoAxeViolation(page);
 	});
-}
+
+	test('has no axe violation on the code form of the adult space, with a refused code', async ({
+		page
+	}) => {
+		await openAdultHome(page);
+		await button(page, message('adult_code_add')).click();
+		await expect(page.locator('[data-code-new]')).toBeFocused();
+		await expectNoAxeViolation(page);
+		await page.keyboard.type(SHORT_CODE);
+		await page.keyboard.press('Enter');
+		await expect(page.getByRole('alert')).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
+});

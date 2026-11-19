@@ -1,18 +1,19 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
 import { exportBackup } from '../src/lib/state/backup';
 import { MAX_NAME_LENGTH } from '../src/lib/state/profile';
 import { STORAGE_ASKED_KEY } from '../src/lib/state/storage-persistence';
 import type { Profile } from '../src/lib/state/types';
 import { LAST_PLAYER_KEY } from '../src/routes/jouer/last-player';
+import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
 	openPage,
 	readJson,
 	reloadPage,
-	shortenRewards,
+	setRewards,
 	storedRecord,
 	throughStory
 } from './support';
@@ -26,8 +27,6 @@ import {
 /** WebKit is slow when two workers run at once: give the page time to react. */
 const expect = baseExpect.configure({ timeout: 15_000 });
 
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const COLOR_SCHEMES = ['light', 'dark'] as const;
 const NARROW = { width: 320, height: 640 } as const;
 const STEP_TIMEOUT = 15_000;
 /** The report of a child is a long page: its last rubric is far from its title for the Tab key. */
@@ -216,14 +215,17 @@ function persistRequests(page: Page): Promise<number> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await shortenRewards(page);
+	await setRewards(page, 'instant');
 });
 
+// The tab acted on is brought to the front first, as the click on it would: WebKit holds back the
+// animation frames of a tab behind, and every click on it waits for them.
 test.describe('the game and the adult space open in two tabs', () => {
 	test('keep the lesson played in one and what the adult entered in the other', async ({
 		page,
 		context
 	}) => {
+		// A whole lesson beside the adult space: about a minute on WebKit.
 		test.slow();
 		const child = newChild();
 		await reachMap(page, child);
@@ -235,10 +237,12 @@ test.describe('the game and the adult space open in two tabs', () => {
 		await openAdultHome(adult);
 		await openReport(adult, child);
 
+		await page.bringToFront();
 		await startLesson(page, FIRST);
 		await typeToResult(page);
 		await storedOnce(page, child, (record) => countOf(record, 'sessions') === 1);
 
+		await adult.bringToFront();
 		await adult.locator('[data-measure-words]').focus();
 		await adult.keyboard.type('14');
 		await adult.keyboard.press('Enter');
@@ -256,6 +260,7 @@ test.describe('the game and the adult space open in two tabs', () => {
 		expect(afterAdult.sessions[0]?.lessonId).toBe(FIRST.id);
 
 		// The next change of the game, made from its own copy, keeps what the adult entered.
+		await page.bringToFront();
 		await resultToMap(page);
 		await button(page, message('play_settings_open')).click();
 		await page
@@ -299,6 +304,7 @@ test.describe('the game and the adult space open in two tabs', () => {
 		page,
 		context
 	}) => {
+		// A whole lesson beside the adult space: about a minute on WebKit.
 		test.slow();
 		const child = newChild();
 		await reachMap(page, child);
@@ -307,6 +313,7 @@ test.describe('the game and the adult space open in two tabs', () => {
 		await openReport(adult, child);
 		await expect(adult.locator('[data-evolution-empty]')).toBeVisible();
 
+		await page.bringToFront();
 		await startLesson(page, FIRST);
 		await typeToResult(page);
 
@@ -398,37 +405,41 @@ test.describe('deleting a player in the adult space', () => {
 		).toBeVisible();
 	}
 
-	test('is never offered to the child: nothing on the screens of the game deletes a player', async ({
-		page
-	}) => {
-		await reachMap(page, lou);
-		await expect(page.locator('[data-child-delete], [data-child-delete-confirm]')).toHaveCount(0);
-		await button(page, message('play_change_player')).click();
-		await expect(heading(page, message('play_players_title'))).toBeVisible();
-		await expect(page.locator('[data-child-delete], [data-child-delete-confirm]')).toHaveCount(0);
-	});
+	test(
+		'is never offered to the child: nothing on the screens of the game deletes a player',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMap(page, lou);
+			await expect(page.locator('[data-child-delete], [data-child-delete-confirm]')).toHaveCount(0);
+			await button(page, message('play_change_player')).click();
+			await expect(heading(page, message('play_players_title'))).toBeVisible();
+			await expect(page.locator('[data-child-delete], [data-child-delete-confirm]')).toHaveCount(0);
+		}
+	);
 
-	test('names the player, says it is final, and changes nothing when the adult cancels', async ({
-		page
-	}) => {
-		await reachPlayers(page, [lou, ali]);
-		await openAdultHome(page);
-		await openRemoval(page, lou);
-		const removal = page.locator('[data-child-removal]');
-		await expect(removal).toContainText(message('adult_delete_what'));
-		await expect(removal).toContainText(message('adult_delete_final'));
-		await expect(removal).toContainText(message('adult_delete_backup_first'));
+	test(
+		'names the player, says it is final, and changes nothing when the adult cancels',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachPlayers(page, [lou, ali]);
+			await openAdultHome(page);
+			await openRemoval(page, lou);
+			const removal = page.locator('[data-child-removal]');
+			await expect(removal).toContainText(message('adult_delete_what'));
+			await expect(removal).toContainText(message('adult_delete_final'));
+			await expect(removal).toContainText(message('adult_delete_backup_first'));
 
-		// Escape, then the button at the top: both go back to the report, the profile untouched.
-		await page.keyboard.press('Escape');
-		await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
-		await page.locator('[data-child-delete]').click();
-		await button(page, message('adult_delete_cancel')).click();
-		await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
+			// Escape, then the button at the top: both go back to the report, the profile untouched.
+			await page.keyboard.press('Escape');
+			await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
+			await page.locator('[data-child-delete]').click();
+			await button(page, message('adult_delete_cancel')).click();
+			await expect(heading(page, message('adult_child_title', { name: lou.name }))).toBeVisible();
 
-		expect((await storedRecord(page, lou))?.['name']).toBe(lou.name);
-		expect((await storedRecord(page, ali))?.['name']).toBe(ali.name);
-	});
+			expect((await storedRecord(page, lou))?.['name']).toBe(lou.name);
+			expect((await storedRecord(page, ali))?.['name']).toBe(ali.name);
+		}
+	);
 
 	test('offers the backup first, then deletes the profile and its journal, by the keyboard alone', async ({
 		page
@@ -483,23 +494,28 @@ test.describe('deleting a player in the adult space', () => {
 		await expect(button(page, ali.name)).toBeVisible();
 	});
 
-	test('does not forget the last player when another one is deleted', async ({ page }) => {
-		await reachPlayers(page, [lou, ali]);
-		await page.evaluate(([key, id]) => localStorage.setItem(key, id), [
-			LAST_PLAYER_KEY,
-			lou.id
-		] as const);
-		await openAdultHome(page);
-		await openRemoval(page, ali);
-		await page.locator('[data-child-delete-confirm]').click();
-		await expect(page.locator('[data-children-status]')).toHaveText(
-			message('adult_delete_done', { name: ali.name })
-		);
-		expect(await page.evaluate((key) => localStorage.getItem(key), LAST_PLAYER_KEY)).toBe(lou.id);
-	});
+	test(
+		'does not forget the last player when another one is deleted',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachPlayers(page, [lou, ali]);
+			await page.evaluate(([key, id]) => localStorage.setItem(key, id), [
+				LAST_PLAYER_KEY,
+				lou.id
+			] as const);
+			await openAdultHome(page);
+			await openRemoval(page, ali);
+			await page.locator('[data-child-delete-confirm]').click();
+			await expect(page.locator('[data-children-status]')).toHaveText(
+				message('adult_delete_done', { name: ali.name })
+			);
+			expect(await page.evaluate((key) => localStorage.getItem(key), LAST_PLAYER_KEY)).toBe(lou.id);
+		}
+	);
 });
 
-test.describe('the storage of the browser', () => {
+// The browser that keeps the data, or not, is a stub: what is tested is what the game does with it.
+test.describe('the storage of the browser', CHROMIUM_ONLY, () => {
 	test('is said not guaranteed in the adult space, with the backup as the way to keep everything', async ({
 		page
 	}) => {
@@ -529,7 +545,6 @@ test.describe('the storage of the browser', () => {
 	test('is asked to be kept after the first finished lesson, never before, and only once', async ({
 		page
 	}) => {
-		test.slow();
 		await stubStorage(page, { persisted: false, grants: false });
 		const child = newChild();
 		await reachMap(page, child);
@@ -553,7 +568,7 @@ test.describe('the storage of the browser', () => {
 	});
 });
 
-test.describe('a failure of the game', () => {
+test.describe('a failure of the game', CHROMIUM_ONLY, () => {
 	test('tells the child the game could not start when no exercise can be made', async ({
 		page
 	}) => {
@@ -593,7 +608,7 @@ test.describe('a failure of the game', () => {
 	});
 });
 
-test.describe('a backup file', () => {
+test.describe('a backup file', CHROMIUM_ONLY, () => {
 	test('is refused unread when it is far too big to be one', async ({ page }) => {
 		const child = newChild();
 		await reachPlayers(page, [child]);
@@ -623,42 +638,45 @@ test.describe('a backup file', () => {
 test.describe('a long nickname at 320 pixels', () => {
 	test.use({ viewport: NARROW });
 
-	test('never makes a screen scroll sideways, in the game or in the adult space', async ({
-		page
-	}) => {
-		test.slow();
-		const child = advancedProfile({ name: LONG_NAME, passed: { [FIRST.id]: 2 } });
-		const found: Record<string, string[]> = {};
-		const check = async (screen: string) => {
-			const outside = await sticksOut(page);
-			if (outside.length > 0) found[screen] = outside;
-		};
+	test(
+		'never makes a screen scroll sideways, in the game or in the adult space',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			const child = advancedProfile({ name: LONG_NAME, passed: { [FIRST.id]: 2 } });
+			const found: Record<string, string[]> = {};
+			const check = async (screen: string) => {
+				const outside = await sticksOut(page);
+				if (outside.length > 0) found[screen] = outside;
+			};
 
-		await reachPlayers(page, [child, newChild('Lou')]);
-		await check('players');
-		await button(page, LONG_NAME).click();
-		await expect(heading(page, message('play_map_title'))).toBeVisible();
-		await expect(playerInTopBar(page)).toHaveText(LONG_NAME);
-		await check('map');
+			await reachPlayers(page, [child, newChild('Lou')]);
+			await check('players');
+			await button(page, LONG_NAME).click();
+			await expect(heading(page, message('play_map_title'))).toBeVisible();
+			await expect(playerInTopBar(page)).toHaveText(LONG_NAME);
+			await check('map');
 
-		await openAdultHome(page);
-		await check('adult home');
-		await openReport(page, child);
-		await check('report');
-		await page.locator('[data-child-settings]').click();
-		await expect(heading(page, message('adult_settings_title', { name: LONG_NAME }))).toBeVisible();
-		await check('settings of the child');
-		await page.keyboard.press('Escape');
-		await page.locator('[data-child-sheet]').click();
-		await expect(heading(page, message('adult_sheet_title', { name: LONG_NAME }))).toBeVisible();
-		await check('session sheet');
-		await page.keyboard.press('Escape');
-		await page.locator('[data-child-delete]').click();
-		await expect(heading(page, message('adult_delete_title', { name: LONG_NAME }))).toBeVisible();
-		await check('deletion');
+			await openAdultHome(page);
+			await check('adult home');
+			await openReport(page, child);
+			await check('report');
+			await page.locator('[data-child-settings]').click();
+			await expect(
+				heading(page, message('adult_settings_title', { name: LONG_NAME }))
+			).toBeVisible();
+			await check('settings of the child');
+			await page.keyboard.press('Escape');
+			await page.locator('[data-child-sheet]').click();
+			await expect(heading(page, message('adult_sheet_title', { name: LONG_NAME }))).toBeVisible();
+			await check('session sheet');
+			await page.keyboard.press('Escape');
+			await page.locator('[data-child-delete]').click();
+			await expect(heading(page, message('adult_delete_title', { name: LONG_NAME }))).toBeVisible();
+			await check('deletion');
 
-		expect(found).toEqual({});
-	});
+			expect(found).toEqual({});
+		}
+	);
 
 	test('stops the nickname of a new player at its longest, as it is typed', async ({ page }) => {
 		await reachPlayers(page, []);
@@ -671,53 +689,44 @@ test.describe('a long nickname at 320 pixels', () => {
 	});
 });
 
-for (const colorScheme of COLOR_SCHEMES) {
-	test.describe(`the data of the child, ${colorScheme} theme`, () => {
-		test.use({ colorScheme });
+test.describe('the data of the child, light and dark themes', () => {
+	test('has no axe violation on the nickname, the deletion and the list of the children', async ({
+		page
+	}) => {
+		// Five screens, each audited in both themes.
+		test.slow();
+		await stubStorage(page, { persisted: false, grants: false });
+		const lou = advancedProfile({ name: 'Lou', passed: { [FIRST.id]: 2 } });
+		await reachPlayers(page, [lou, newChild('Ali')]);
+		await openAdultHome(page);
+		await expect(page.locator('[data-storage-protection]')).toBeVisible();
+		await expectNoAxeViolation(page);
 
-		async function expectNoAxeViolation(page: Page) {
-			await page.evaluate(() => document.fonts.ready);
-			const scan = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
-			expect(scan.violations).toEqual([]);
-		}
+		await openReport(page, lou);
+		const identity = page.locator('[data-child-identity]');
+		await identity.locator('[data-child-name]').fill('');
+		await identity.locator('[data-child-rename]').click();
+		await expect(identity.getByRole('alert')).toHaveText(message('adult_rename_error_empty'));
+		await expectNoAxeViolation(page);
+		await identity.locator('[data-child-name]').fill('Zoé');
+		await identity.locator('[data-child-rename]').click();
+		await expect(identity.getByRole('status')).toHaveText(
+			message('adult_rename_done', { name: 'Zoé' })
+		);
+		await expectNoAxeViolation(page);
 
-		test('has no axe violation on the nickname, the deletion and the list of the children', async ({
-			page
-		}) => {
-			test.slow();
-			await stubStorage(page, { persisted: false, grants: false });
-			const lou = advancedProfile({ name: 'Lou', passed: { [FIRST.id]: 2 } });
-			await reachPlayers(page, [lou, newChild('Ali')]);
-			await openAdultHome(page);
-			await expect(page.locator('[data-storage-protection]')).toBeVisible();
-			await expectNoAxeViolation(page);
-
-			await openReport(page, lou);
-			const identity = page.locator('[data-child-identity]');
-			await identity.locator('[data-child-name]').fill('');
-			await identity.locator('[data-child-rename]').click();
-			await expect(identity.getByRole('alert')).toHaveText(message('adult_rename_error_empty'));
-			await expectNoAxeViolation(page);
-			await identity.locator('[data-child-name]').fill('Zoé');
-			await identity.locator('[data-child-rename]').click();
-			await expect(identity.getByRole('status')).toHaveText(
-				message('adult_rename_done', { name: 'Zoé' })
-			);
-			await expectNoAxeViolation(page);
-
-			await page.locator('[data-child-delete]').click();
-			await expect(heading(page, message('adult_delete_title', { name: 'Zoé' }))).toBeVisible();
-			await expectNoAxeViolation(page);
-			await page.locator('[data-child-delete-confirm]').click();
-			await expect(page.locator('[data-children-status]')).toHaveText(
-				message('adult_delete_done', { name: 'Zoé' })
-			);
-			await expectNoAxeViolation(page);
-		});
+		await page.locator('[data-child-delete]').click();
+		await expect(heading(page, message('adult_delete_title', { name: 'Zoé' }))).toBeVisible();
+		await expectNoAxeViolation(page);
+		await page.locator('[data-child-delete-confirm]').click();
+		await expect(page.locator('[data-children-status]')).toHaveText(
+			message('adult_delete_done', { name: 'Zoé' })
+		);
+		await expectNoAxeViolation(page);
 	});
-}
+});
 
-test.describe('two children, one nickname', () => {
+test.describe('two children, one nickname', CHROMIUM_ONLY, () => {
 	test('refuses to rename a child with the nickname of another child of the device', async ({
 		page
 	}) => {
