@@ -60,7 +60,13 @@ export type RewardCondition =
 			readonly chars: readonly string[];
 			readonly minAttempts: number;
 			readonly maxErrorRate: number;
-	  };
+	  }
+	/**
+	 * The grand tour `lessonId` is passed (`LessonDefinition.tour`, ADR-075 choice 3) and every key
+	 * its world brings on the way is acquired: `charMastery` with the `keyboardFade` rules of the
+	 * progression, the thresholds the adult's report reads, on the recent results of each key.
+	 */
+	| { readonly kind: 'tour-mastered'; readonly lessonId: string };
 
 /**
  * `item`: something the companion can wear; `skill`: something the companion has learned, shown

@@ -25,6 +25,8 @@ const PASSED_STARS: StarCount = 3;
 interface Lesson {
 	id: string;
 	title: string;
+	/** A grand tour (ADR-088) gives no object of its own. */
+	tour?: unknown;
 }
 
 const { message } = loadMessages();
@@ -35,7 +37,7 @@ const catalogue = parseRewardCatalogue(readJson('content/fr/rewards/azerty-decou
 const rules = readJson<{ places: string[]; decorations: Record<string, string[]> }>(
 	'content/common/hideout.json'
 );
-const firstWorld = worlds[0]?.lessons ?? [];
+const firstWorld = (worlds[0]?.lessons ?? []).filter((lesson) => lesson.tour === undefined);
 
 const PLACE_NAMES: Record<string, string> = {
 	ceiling: message('play_hideout_place_ceiling'),

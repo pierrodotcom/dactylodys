@@ -76,7 +76,11 @@ describe('the sheet for professionals', () => {
 	});
 
 	it('gives the Markdown sheet the course described by the page, with the figures of the data', () => {
-		const lessons = progression.worlds.reduce((count, world) => count + world.lessons.length, 0);
+		// The grand tours go over the lessons of their world: the course counts the lessons that teach.
+		const lessons = progression.worlds.reduce(
+			(count, world) => count + world.lessons.filter((lesson) => !('tour' in lesson)).length,
+			0
+		);
 		const path = (messages['pro_audience_path'] ?? '')
 			.replace('{lessons}', String(lessons))
 			.replace('{worlds}', String(progression.worlds.length));

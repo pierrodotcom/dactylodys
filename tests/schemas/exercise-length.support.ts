@@ -13,6 +13,7 @@ import { learnedChars, parseProgression } from '../../src/lib/engine/progression
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
 import { pacedTargetLength } from '../../src/lib/engine/progression/pace';
 import { seededRng } from '../../src/lib/engine/progression/test-support';
+import { writtenGroupsOf } from '../../src/lib/engine/progression/tour';
 import type {
 	AgeBand,
 	ExerciseContext,
@@ -136,13 +137,15 @@ export function checkPlaysThatLast(
 		...lesson.words,
 		...usableWords(words, [...learned], { ...limits, ageBand }).map((entry) => entry.text)
 	]);
-	const whole = new Set(
-		usablePhrases(phrases, [...learned], { maxLevel: limits.maxLevel, ageBand }).map((phrase) =>
+	const whole = new Set([
+		...usablePhrases(phrases, [...learned], { maxLevel: limits.maxLevel, ageBand }).map((phrase) =>
 			rules.phraseEnd === undefined
 				? phrase.text
 				: completePhrase(phrase.text, learned, rules.phraseEnd)
-		)
-	);
+		),
+		// A grand tour also types the warm-ups written for the lessons of its world.
+		...(lesson.tour === undefined ? [] : writtenGroupsOf(progression, lesson, learned))
+	]);
 	const hasText = lessonTexts(texts, lesson.id, ageBand).length > 0;
 	const grows = (name: (typeof PACE_NAMES)[number]) =>
 		pacedTargetLength(rules, lesson, steady(PACES[name])) > lesson.targetLength;

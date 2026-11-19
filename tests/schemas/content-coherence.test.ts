@@ -54,7 +54,8 @@ const CONDITION_KINDS = [
 	'lesson-stars',
 	'world-passed',
 	'world-stars',
-	'chars-mastered'
+	'chars-mastered',
+	'tour-mastered'
 ];
 const MIN_USABLE_WORDS = 8;
 const MIN_USABLE_PHRASES = 6;
@@ -308,12 +309,21 @@ describe('reward catalogue and progression together', () => {
 		expect(catalogue.progressionId).toBe(progression.id);
 	});
 
-	it.each(entries.map(({ lesson }) => lesson.id))(
+	it.each(entries.filter(({ lesson }) => lesson.tour === undefined).map(({ lesson }) => lesson.id))(
 		'gives %s exactly one item for passing it',
 		(id) => {
 			const rewards = ofKind('lesson-passed', 'lessonId', id);
 			expect(rewards).toHaveLength(1);
 			expect(rewards[0]?.kind).toBe('item');
+		}
+	);
+
+	it.each(entries.filter(({ lesson }) => lesson.tour !== undefined).map(({ lesson }) => lesson.id))(
+		'gives the grand tour %s no item, and its stamp for mastering its world (ADR-075)',
+		(id) => {
+			expect(ofKind('lesson-passed', 'lessonId', id)).toEqual([]);
+			const stamps = ofKind('tour-mastered', 'lessonId', id);
+			expect(stamps.map(({ kind }) => kind)).toEqual(['trophy']);
 		}
 	);
 

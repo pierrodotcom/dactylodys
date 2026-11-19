@@ -1,14 +1,15 @@
 <script lang="ts">
 	/*
-	 * A trophy in a 120 × 120 view box (lot R2): a medal with the symbol of its world, or keycaps
-	 * of the keyboard with the keys they are about, read from the catalogue (`keys`): three keys on
-	 * a podium for a row, a cluster of keys on a cushion for accents and punctuation. An unknown
+	 * A trophy in a 120 × 120 view box (lot R2): a medal with the symbol of its world, the stamp of
+	 * a grand tour (the same symbol inked on a card pinned up, ADR-075 choice 3), or keycaps of the
+	 * keyboard with the keys they are about, read from the catalogue (`keys`): three keys on a
+	 * podium for a row, a cluster of keys on a cushion for accents and punctuation. An unknown
 	 * `artId` draws nothing. Under an ancestor with `data-silhouette`, it is one flat shape with its
 	 * letters or symbol cut out.
 	 */
 	import type { Snippet } from 'svelte';
 	import { checkerPath, ovalPath, roundedStarPath, type XY } from './geometry';
-	import { TROPHY_ARTS } from './items';
+	import { TROPHY_ARTS, type TrophyWorld } from './items';
 
 	interface Props {
 		artId: string;
@@ -129,6 +130,32 @@
 	const ENVELOPE_HEART =
 		'M60 70.4C58.6 67.6 54.4 68 54.4 71C54.4 73.4 57.6 75.4 60 77.2C62.4 75.4 65.6 73.4 65.6 71C65.6 68 61.4 67.6 60 70.4Z';
 	const ENVELOPE_GLOSS = 'M46.6 76.2L51.6 79.8L50.8 80.8L45.8 77.2Z';
+
+	/* ---------- Stamp ---------- */
+
+	/** The pin the card hangs from: the hook of the hideout goes there. */
+	const PIN = { cx: 60, cy: 27 } as const;
+	/** The card hangs a little askew from its pin. */
+	const CARD_TILT = -6;
+	const CARD =
+		'M30 20L90 20Q96 20 96 26L96 106Q96 112 90 112L30 112Q24 112 24 106L24 26Q24 20 30 20Z';
+	const CARD_LIGHT = 'M28 28Q28 24 32 24L60 24L58 27L33 27Q31 27 31 29L31 60L28 62Z';
+	/** The inked ring, around the place of the symbol (its centre at 60, 82 on a medal). */
+	const STAMP = { cx: 60, cy: 72, outer: 30, inner: 25.6, rim: 22.4 } as const;
+	const STAMP_RING =
+		circlePath(STAMP.cx, STAMP.cy, STAMP.outer) + circlePath(STAMP.cx, STAMP.cy, STAMP.inner);
+	/** Little dots of ink around the ring, like the teeth of a rubber stamp. */
+	const STAMP_DOTS = Array.from({ length: 16 }, (_, i) => {
+		const a = (i * 2 * Math.PI) / 16;
+		return circlePath(
+			round(STAMP.cx + (STAMP.outer + 3.6) * Math.cos(a)),
+			round(STAMP.cy + (STAMP.outer + 3.6) * Math.sin(a)),
+			1.3
+		);
+	}).join('');
+	const PIN_HEAD = circlePath(PIN.cx, PIN.cy, 4.6);
+	const PIN_GLOSS = circlePath(PIN.cx - 1.4, PIN.cy - 1.4, 1.2);
+	const STAMP_GLINT = roundedStarPath(90, 44, 4.4, 1.2, 4, 0.15);
 
 	/* ---------- Keys ---------- */
 
@@ -273,6 +300,36 @@
 	<path class="glint line" {d} />
 {/snippet}
 
+<!-- The symbol of a world, around (60, 82): on a medal, and on a stamp. -->
+{#snippet emblem(world: TrophyWorld)}
+	{#if world === 'dinosaurs'}
+		<path class="symbol" d={FOOTPRINT} />
+		<path class="symbol-gloss" d={FOOTPRINT_GLOSS} />
+	{:else if world === 'kitchen'}
+		<path class="symbol" d={TOQUE} />
+		<path class="symbol-detail" d={TOQUE_DETAIL} />
+		<path class="symbol-gloss" d={TOQUE_GLOSS} />
+	{:else if world === 'zoo'}
+		<path class="symbol" d={PAW} />
+		<path class="symbol-gloss" d={PAW_GLOSS} />
+	{:else if world === 'stars'}
+		<path class="symbol" d={STAR} />
+		<path class="symbol" d={STAR_SPARK} />
+		<path class="symbol-gloss" d={STAR_GLOSS} />
+	{:else if world === 'post'}
+		<path class="symbol" d={ENVELOPE} />
+		<path class="symbol-detail" d={ENVELOPE_FOLDS} />
+		<path class="symbol-detail" d={ENVELOPE_HEART} />
+		<path class="symbol-gloss" d={ENVELOPE_GLOSS} />
+	{:else}
+		<path class="symbol" d={FLAG_POLE} />
+		<path class="symbol" d={FLAG_KNOB} />
+		<clipPath id="{uid}-flag-{world}"><path d={FLAG} /></clipPath>
+		<path class="symbol" d={FLAG} />
+		<path class="symbol-detail" clip-path="url(#{uid}-flag-{world})" d={FLAG_CHECKS} />
+	{/if}
+{/snippet}
+
 <g class="trophy" data-art={artId}>
 	{#if art?.kind === 'medal'}
 		{@const ribbon = `ribbon-${art.world}`}
@@ -316,36 +373,24 @@
 			lights: 'M42 76L58 60L64 62L46 82Z'
 		})}
 		<path class="open engraving" d={circlePath(MEDAL.cx, MEDAL.cy, MEDAL.field - 2.4)} />
-		<g class="emblem">
-			{#if art.world === 'dinosaurs'}
-				<path class="symbol" d={FOOTPRINT} />
-				<path class="symbol-gloss" d={FOOTPRINT_GLOSS} />
-			{:else if art.world === 'kitchen'}
-				<path class="symbol" d={TOQUE} />
-				<path class="symbol-detail" d={TOQUE_DETAIL} />
-				<path class="symbol-gloss" d={TOQUE_GLOSS} />
-			{:else if art.world === 'zoo'}
-				<path class="symbol" d={PAW} />
-				<path class="symbol-gloss" d={PAW_GLOSS} />
-			{:else if art.world === 'stars'}
-				<path class="symbol" d={STAR} />
-				<path class="symbol" d={STAR_SPARK} />
-				<path class="symbol-gloss" d={STAR_GLOSS} />
-			{:else if art.world === 'post'}
-				<path class="symbol" d={ENVELOPE} />
-				<path class="symbol-detail" d={ENVELOPE_FOLDS} />
-				<path class="symbol-detail" d={ENVELOPE_HEART} />
-				<path class="symbol-gloss" d={ENVELOPE_GLOSS} />
-			{:else}
-				<path class="symbol" d={FLAG_POLE} />
-				<path class="symbol" d={FLAG_KNOB} />
-				<clipPath id="{uid}-flag"><path d={FLAG} /></clipPath>
-				<path class="symbol" d={FLAG} />
-				<path class="symbol-detail" clip-path="url(#{uid}-flag)" d={FLAG_CHECKS} />
-			{/if}
-		</g>
+		<g class="emblem">{@render emblem(art.world)}</g>
 		{@render glint(GLINT)}
 		{@render glint(GLINT_SMALL)}
+	{:else if art?.kind === 'stamp'}
+		<!-- A card pinned up, a little askew, with the symbol of the world inked in a ring. -->
+		<g transform="rotate({CARD_TILT} {PIN.cx} {PIN.cy})">
+			{#snippet cardLight()}<path class="light" d={CARD_LIGHT} />{/snippet}
+			{@render piece('card', CARD, 'key-top', { shade: 2, deep: 0.8, rim: 0.8 }, cardLight)}
+			<path class="ink ribbon-{art.world}" d={STAMP_RING} fill-rule="evenodd" />
+			<path class="ink ribbon-{art.world}" d={STAMP_DOTS} />
+			<path class="open engraving" d={circlePath(STAMP.cx, STAMP.cy, STAMP.rim)} />
+			<g class="emblem" transform="translate(0 {STAMP.cy - MEDAL.cy})">
+				{@render emblem(art.world)}
+			</g>
+		</g>
+		{#snippet pinGloss()}<path class="glint" d={PIN_GLOSS} />{/snippet}
+		{@render piece('pin', PIN_HEAD, 'pin', { shade: 1.2, deep: 0.5, rim: 0.5 }, pinGloss)}
+		{@render glint(STAMP_GLINT)}
 	{:else if art?.kind === 'key'}
 		{#if isRow}
 			<!-- Three keys on a podium: the rows differ by their keys (porteur's choice, ADR-041). -->
@@ -460,7 +505,8 @@
 		fill: var(--dd-color-trophy-key-side);
 	}
 
-	.cushion {
+	.cushion,
+	.pin {
 		fill: var(--dd-color-trophy-key-lit);
 	}
 

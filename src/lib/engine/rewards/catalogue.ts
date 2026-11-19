@@ -139,10 +139,16 @@ function parseCondition(value: unknown, language: string, path: string): RewardC
 			};
 		case 'chars-mastered':
 			return parseCharsMastered(record, path);
+		case 'tour-mastered':
+			rejectUnknown(record, ['kind', 'lessonId'], path);
+			return {
+				kind: 'tour-mastered',
+				lessonId: expectId(record['lessonId'], 'lesson', language, `${path}.lessonId`)
+			};
 		default:
 			return fail(
 				`${path}.kind`,
-				'expected one of: lesson-passed, lesson-stars, world-passed, world-stars, chars-mastered'
+				'expected one of: lesson-passed, lesson-stars, world-passed, world-stars, chars-mastered, tour-mastered'
 			);
 	}
 }
@@ -268,6 +274,14 @@ function conditionProblems(
 				);
 			}
 			return problems;
+		}
+		case 'tour-mastered': {
+			const lesson = findLesson(progression, condition.lessonId);
+			if (lesson === undefined) return [`unknown lesson "${condition.lessonId}"`];
+			if (lesson.tour === undefined) return [`lesson "${condition.lessonId}" is not a grand tour`];
+			return progression.rules.keyboardFade === undefined
+				? ['the progression has no rules.keyboardFade: no key is ever acquired']
+				: [];
 		}
 	}
 }

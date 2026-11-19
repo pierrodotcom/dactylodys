@@ -38,6 +38,7 @@ interface Lesson {
 	id: string;
 	title: string;
 	newChars: string[];
+	tour?: unknown;
 }
 
 interface World {
@@ -46,9 +47,13 @@ interface World {
 }
 
 const { message, templateRegex } = loadMessages();
+// The lessons that give an item: a grand tour gives a stamp, once mastered (ADR-075, choice 3).
 const worlds = readJson<{ worlds: World[] }>(
 	'content/fr/progression/azerty-decouverte.json'
-).worlds;
+).worlds.map((world) => ({
+	...world,
+	lessons: world.lessons.filter((lesson) => lesson.tour === undefined)
+}));
 const catalogue = parseRewardCatalogue(readJson('content/fr/rewards/azerty-decouverte.json'));
 const firstWorld = worlds[0] ?? { id: '', lessons: [] };
 const [FIRST, SECOND] = firstWorld.lessons as [Lesson, Lesson];

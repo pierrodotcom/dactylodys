@@ -27,6 +27,8 @@
 		facts: PlayFacts;
 		plan: ResultPlan;
 		saveFailed: boolean;
+		/** This play opened the grand tour of its world: one sentence says so, nothing proposes it. */
+		tourOpened?: boolean;
 		/** Which dance the companion does, in the order of the lessons. */
 		dance: number;
 		/** The day of the play, written under the souvenir photo. */
@@ -48,6 +50,7 @@
 		facts,
 		plan,
 		saveFailed,
+		tourOpened = false,
 		dance,
 		date,
 		worldLessons,
@@ -171,6 +174,9 @@
 						<li>{m.play_result_tame({ key: keyText(summary.tameChar) })}</li>
 					{/if}
 				</ul>
+				{#if tourOpened}
+					<p class="tour" data-tour-open>{m.play_result_tour_open()}</p>
+				{/if}
 			</div>
 		</div>
 
@@ -283,6 +289,10 @@
 
 	.facts li:first-child {
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.tour {
+		color: var(--dd-color-text-secondary);
 	}
 
 	.warning {

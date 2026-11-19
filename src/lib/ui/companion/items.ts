@@ -131,17 +131,20 @@ export const TRICK_ARMS: Readonly<Record<string, ArmPose>> = {
 /** Every trick the companion can play (`skill` `artId`). */
 export const TRICKS = ['roar', 'juggle', 'handstand', 'float', 'cartwheel', 'wave'] as const;
 
+/** The worlds whose symbol a trophy shows. */
+export type TrophyWorld = 'dinosaurs' | 'kitchen' | 'zoo' | 'stars' | 'racing' | 'post';
+
 export type TrophyArt =
-	| {
-			readonly kind: 'medal';
-			readonly world: 'dinosaurs' | 'kitchen' | 'zoo' | 'stars' | 'racing' | 'post';
-	  }
+	/** A medal with the symbol of its world on a ribbon of its colour. */
+	| { readonly kind: 'medal'; readonly world: TrophyWorld }
+	/** The stamp of a grand tour: the symbol of its world, inked on a card pinned up. */
+	| { readonly kind: 'stamp'; readonly world: TrophyWorld }
 	| {
 			readonly kind: 'key';
 			readonly sign: 'top-row' | 'home-row' | 'bottom-row' | 'accents' | 'punctuation' | 'digits';
 	  };
 
-/** One drawing per `artId` of a trophy: a medal with the symbol of its world, or a key. */
+/** One drawing per `artId` of a trophy: a medal or a stamp with the symbol of its world, or a key. */
 export const TROPHY_ARTS: Readonly<Record<string, TrophyArt>> = {
 	'medal-dinosaurs': { kind: 'medal', world: 'dinosaurs' },
 	'medal-kitchen': { kind: 'medal', world: 'kitchen' },
@@ -149,6 +152,11 @@ export const TROPHY_ARTS: Readonly<Record<string, TrophyArt>> = {
 	'medal-stars': { kind: 'medal', world: 'stars' },
 	'medal-racing': { kind: 'medal', world: 'racing' },
 	'medal-post': { kind: 'medal', world: 'post' },
+	'stamp-dinosaurs': { kind: 'stamp', world: 'dinosaurs' },
+	'stamp-kitchen': { kind: 'stamp', world: 'kitchen' },
+	'stamp-stars': { kind: 'stamp', world: 'stars' },
+	'stamp-zoo': { kind: 'stamp', world: 'zoo' },
+	'stamp-racing': { kind: 'stamp', world: 'racing' },
 	'keys-home-row': { kind: 'key', sign: 'home-row' },
 	'keys-top-row': { kind: 'key', sign: 'top-row' },
 	'keys-bottom-row': { kind: 'key', sign: 'bottom-row' },

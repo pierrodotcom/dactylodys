@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { lessonIds, parseProgression } from '$lib/engine/progression/definition';
 import { PLAY_RULES, parsePlayRules } from './play-rules';
 
 const SESSION_LENGTHS = {
@@ -61,7 +62,13 @@ describe('parsePlayRules', () => {
 
 	it('ships easier words for the youngest, for longer (audit P-16)', () => {
 		expect(PLAY_RULES.wordLevels).toEqual({ '8-9': [1, 1, 2, 3], '10-12': [1, 2, 3] });
-		expect(PLAY_RULES.shortWords).toEqual({ beforeLesson: 12, maxLength: 7 });
+		expect(PLAY_RULES.shortWords).toEqual({ beforeLesson: 14, maxLength: 7 });
+		// Short words over the two first worlds, their grand tours included: up to the third world.
+		const progression = parseProgression(
+			JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
+		);
+		const third = progression.worlds[2]?.lessons[0]?.id;
+		expect(lessonIds(progression)[(PLAY_RULES.shortWords?.beforeLesson ?? 0) - 1]).toBe(third);
 	});
 
 	it('can turn the reminder to look at the screen off', () => {

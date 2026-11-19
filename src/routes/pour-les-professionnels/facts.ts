@@ -1,4 +1,4 @@
-import { lessonIds } from '$lib/engine/progression/definition';
+import { findLesson, lessonIds } from '$lib/engine/progression/definition';
 import type { ProgressionDefinition } from '$lib/engine/progression/types';
 import { breakFacts, type BreakFacts, type PlayRules } from '../jouer/play-rules';
 
@@ -25,7 +25,9 @@ export function professionalFacts(
 	const fade = progression.rules.keyboardFade;
 	if (!fade) throw new Error(`${progression.id}: the sheet for professionals needs keyboardFade`);
 	return {
-		lessons: lessonIds(progression).length,
+		// The lessons that teach: a grand tour only goes over those of its world (ADR-075, choice 3).
+		lessons: lessonIds(progression).filter((id) => findLesson(progression, id)?.tour === undefined)
+			.length,
 		worlds: progression.worlds.length,
 		unlockAccuracy: progression.rules.unlockAccuracy,
 		pause: breakFacts(playRules),

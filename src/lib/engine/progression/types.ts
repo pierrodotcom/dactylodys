@@ -129,6 +129,47 @@ export interface ProgressionRules {
 	readonly maxGroupCount?: number;
 	/** Words put side by side in a group added to an exercise that grows, at least 1. */
 	readonly extraWordsPerGroup?: number;
+	/**
+	 * How a grand tour is made (`LessonDefinition.tour`). Required by a progression that has one,
+	 * with `keyboardFade`, which says how well each key is mastered. Absent: no tour.
+	 */
+	readonly tour?: TourRules;
+}
+
+/**
+ * How the exercise of a grand tour is made: words and phrases only, those that hold the keys of
+ * its world first, the keys this child masters least more often. Data, never constants.
+ */
+export interface TourRules {
+	/** Keystrokes of the keys of its world an exercise of a tour holds at least (checked). */
+	readonly minWorldKeystrokes: number;
+	/**
+	 * How often a key of the world is asked, by how well this child masters it lately
+	 * (`charMastery` with `keyboardFade`; a key never typed is `learning`): in each round of the
+	 * tour, a key is asked this many times, at least 1. Equal weights give the same share to
+	 * every key of the world, whatever its frequency in the language.
+	 */
+	readonly keyWeights: Readonly<Record<TourKeyMastery, number>>;
+	/**
+	 * Share (above 0, up to 1) of the best score an entry must reach to be drawn, as for a warm-up
+	 * (`WordWarmUpRules.scoreShare`): under 1, two tours seldom hold the same entries.
+	 */
+	readonly scoreShare: number;
+}
+
+/** How a key of the world stands for the weights of a tour: `charMastery` without `new`. */
+export type TourKeyMastery = 'acquired' | 'learning' | 'fragile';
+
+/**
+ * The grand tour of a world (ADR-075, choice 3): an optional lesson (`optional`) that ends its
+ * world and brings no key, played and rewarded like a detour. Its exercise is made of words and
+ * phrases of what the child knows there, those that hold the keys of its world first, and the
+ * keys this child masters least more often (`ProgressionRules.tour`). It opens once the last
+ * lesson on the way of its world is passed; nothing waits for it.
+ */
+export interface LessonTour {
+	/** The world whose keys the tour goes over: the world it ends (checked by the parser). */
+	readonly worldId: string;
 }
 
 /** A warm-up made of words: data, never constants in the code. */
@@ -282,6 +323,11 @@ export interface LessonDefinition {
 	 * unlocks nothing. Absent: the lesson is on the way.
 	 */
 	readonly optional?: true;
+	/**
+	 * A grand tour (`LessonTour`): the last lesson of its world, a detour without new keys nor
+	 * suites, whose exercise goes over the keys of the world. Absent: an ordinary lesson.
+	 */
+	readonly tour?: LessonTour;
 }
 
 /** How a lesson of repairs plants its mistakes: data, never constants in the code. */

@@ -15,6 +15,7 @@
 	import {
 		findLesson,
 		freshChars,
+		isTour,
 		lessonIds,
 		lessonNumber
 	} from '$lib/engine/progression/definition';
@@ -118,6 +119,7 @@
 		prizeOfLesson,
 		recordHelpOutcome,
 		shouldAskName,
+		tourPrizes,
 		wearItem
 	} from './companion';
 	import CompanionPanel from './CompanionPanel.svelte';
@@ -210,6 +212,8 @@
 		readonly tame: readonly string[];
 		/** Typed at least as accurately as the play the ghost copies: a race is praised for that. */
 		readonly asAccurateAsGhost: boolean;
+		/** This play opened the grand tour of its world: one sentence says so, nothing more. */
+		readonly tourOpened: boolean;
 	}
 
 	interface HelpDoneView {
@@ -1011,7 +1015,8 @@
 			passed: unlocksNext,
 			close: isCloseToPassing(source.rules, RESULT_RULES.support, outcome.metrics.accuracy),
 			tame: [],
-			asAccurateAsGhost: false
+			asAccurateAsGhost: false,
+			tourOpened: false
 		};
 	}
 
@@ -1056,6 +1061,13 @@
 		const followingId = followingFor(next, lessonId);
 		const hasOpenNext = followingId !== null && isOpenFor(next, followingId);
 		const ids = lessonIds(source);
+		// The end of a world opens its grand tour: the result says it once, nothing proposes it.
+		const tour = worldOfLesson(source, lessonId)?.lessons.find(isTour);
+		const tourOpened =
+			tour !== undefined &&
+			tour.id !== lessonId &&
+			!isOpenFor(before, tour.id) &&
+			isOpenFor(next, tour.id);
 		result = {
 			lessonId,
 			stars: evaluation.stars,
@@ -1083,7 +1095,8 @@
 			tame: keysToTame(source, progress, lessonId, RESULT_RULES.consolidation),
 			// The ghost raced is the one of the profile before this play: a play passed replaces it.
 			asAccurateAsGhost:
-				outcome.race === 'child' && asAccurateAsGhost(before, lessonId, outcome.metrics.accuracy)
+				outcome.race === 'child' && asAccurateAsGhost(before, lessonId, outcome.metrics.accuracy),
+			tourOpened
 		};
 		return (current) => played(current).profile;
 	}
@@ -1314,6 +1327,7 @@
 			onstory={story ? () => go({ type: 'open-story-so-far' }) : undefined}
 			onfree={freeWords.length > 0 && freeWorld ? openFree : undefined}
 			onchangeplayer={changePlayer}
+			tourPrizes={tourPrizes(catalogue, owned)}
 		/>
 	{:else if screen.name === 'settings'}
 		<SettingsPanel
@@ -1393,6 +1407,7 @@
 				perfect: view.summary.total > 0 && view.summary.correct === view.summary.total
 			}}
 			saveFailed={view.saveFailed}
+			tourOpened={view.tourOpened}
 			dance={lessonIds(progression).indexOf(lessonId)}
 			date={new Date()}
 			worldLessons={worldOfLesson(progression, lessonId)?.lessons.length ?? 0}

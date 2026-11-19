@@ -148,6 +148,29 @@ export function prizeOfLesson(
 	return rewardsOfLesson(catalogue, lessonId).find((reward) => !owned.has(reward.id)) ?? null;
 }
 
+/** The reward a grand tour gives (`tour-mastered`), and whether the child owns it already. */
+export interface TourPrize {
+	readonly reward: RewardDefinition;
+	readonly owned: boolean;
+}
+
+/**
+ * The reward of each grand tour, by lesson, the first of the catalogue: the map announces it beside
+ * the tour, before it is won, and says once it is (ADR-075, choice 3).
+ */
+export function tourPrizes(
+	catalogue: RewardCatalogue | undefined,
+	owned: ReadonlySet<string>
+): ReadonlyMap<string, TourPrize> {
+	const prizes = new Map<string, TourPrize>();
+	for (const reward of catalogue?.rewards ?? []) {
+		const { condition } = reward;
+		if (condition.kind !== 'tour-mastered' || prizes.has(condition.lessonId)) continue;
+		prizes.set(condition.lessonId, { reward, owned: owned.has(reward.id) });
+	}
+	return prizes;
+}
+
 /**
  * The companion asks for its name after a passed lesson, as long as it has none, unless the child
  * said "later" during this visit: never a duty.

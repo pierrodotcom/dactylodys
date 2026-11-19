@@ -31,12 +31,16 @@ const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
 interface World {
 	id: string;
 	title: string;
-	lessons: { id: string; title: string }[];
+	lessons: { id: string; title: string; tour?: unknown }[];
 }
 
+// A grand tour counts for the adult once passed only, like a detour (ADR-075, choice 3).
 const worlds = readJson<{ worlds: World[] }>(
 	'content/fr/progression/azerty-decouverte.json'
-).worlds;
+).worlds.map((world) => ({
+	...world,
+	lessons: world.lessons.filter((lesson) => lesson.tour === undefined)
+}));
 const world = worlds[0];
 const ZOO = worlds[2] as World;
 const story = readJson<{ worlds: { worldId: string; opening: string }[] }>(

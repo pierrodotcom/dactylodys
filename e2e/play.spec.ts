@@ -81,6 +81,9 @@ interface Lesson {
 	newChars: string[];
 	words: string[];
 	unlocks: string[];
+	optional?: boolean;
+	/** The grand tour of a world: open, it says what it is rather than « À jouer » (ADR-075). */
+	tour?: { worldId: string };
 }
 
 interface World {
@@ -1653,10 +1656,15 @@ test.describe('play route', () => {
 		await expect(page.getByRole('alert')).toHaveCount(0);
 		expect((await storedRecord(page, legacy))?.['schemaVersion']).toBe(1);
 		const furthest = allLessons.findLastIndex((lesson) => lesson.id in LEGACY_LESSON_STARS);
+		/** A grand tour opens once the last lesson on the way of its world is passed (ADR-075). */
+		const wayPassed = (tour: Lesson) => {
+			const last = worldOf(tour.id).lessons.findLast((lesson) => lesson.optional !== true);
+			return last !== undefined && last.id in LEGACY_LESSON_STARS;
+		};
 		for (const [index, lesson] of allLessons.entries()) {
 			// A lesson passed by the first version stays open, and so does the whole way up to it,
 			// lessons inserted before it included (ADR-075): nothing is to play again to go on.
-			const open = index <= furthest + 1;
+			const open = lesson.tour === undefined ? index <= furthest + 1 : wayPassed(lesson);
 			const row = lessonRow(page, lesson);
 			const legacyStars = LEGACY_LESSON_STARS[lesson.id];
 			if (!open) {
@@ -1667,7 +1675,9 @@ test.describe('play route', () => {
 				await expect(row).toContainText(message('play_lesson_done'));
 			} else {
 				await expect(page.getByRole('button', { name: lesson.title })).toBeVisible();
-				await expect(row).toContainText(message('play_lesson_current'));
+				await expect(row).toContainText(
+					message(lesson.tour === undefined ? 'play_lesson_current' : 'play_lesson_tour_open')
+				);
 			}
 		}
 		expect(failures).toEqual([]);

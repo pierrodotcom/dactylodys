@@ -29,6 +29,7 @@ interface Lesson {
 	id: string;
 	title: string;
 	optional?: boolean;
+	tour?: { worldId: string };
 }
 
 interface World {
@@ -274,13 +275,15 @@ test.describe('a child on the way when the order of the lessons changed (ADR-075
 	 * first fourteen lessons, up to « y x », and was about to play « z w ».
 	 */
 	const zoo = worldOf('animaux').lessons;
+	// The grand tours came later (ADR-075, choice 3): the former order had none.
+	const taught = (world: World) => world.lessons.filter((lesson) => lesson.tour === undefined);
 	const formerFourteen = [
-		...worldOf('dinosaures').lessons,
-		...worldOf('cuisine').lessons,
+		...taught(worldOf('dinosaures')),
+		...taught(worldOf('cuisine')),
 		...zoo.slice(0, 3)
 	];
 	const aboutToPlay = zoo[3] as Lesson;
-	const stars = worldOf('espace').lessons;
+	const stars = taught(worldOf('espace'));
 	const child = passedProfile('Mila', formerFourteen);
 
 	test('finds everything it had, and knows what to play', async ({ page }) => {
@@ -339,6 +342,8 @@ test.describe('the detours of the rare accents on the map', () => {
 		Lesson
 	];
 	const lastOnTheWay = vehicles.lessons.filter((lesson) => !lesson.optional).at(-1) as Lesson;
+	/** The grand tour of the vehicles, open with the way: the arrows walk over it first. */
+	const tour = vehicles.lessons.find((lesson) => lesson.tour !== undefined) as Lesson;
 	const post = worldOf('poste').lessons[0] as Lesson;
 	/** Every lesson on the way up to the last one of the vehicles; no detour played. */
 	const child = passedProfile(
@@ -382,6 +387,8 @@ test.describe('the detours of the rare accents on the map', () => {
 		await expectChosen(page, post);
 
 		await page.keyboard.press('ArrowUp');
+		await expectChosen(page, tour);
+		await page.keyboard.press('ArrowUp');
 		await expectChosen(page, firstDetour);
 		await page.keyboard.press('Enter');
 		const title = page.getByRole('heading', { name: firstDetour.title });
@@ -395,6 +402,7 @@ test.describe('the detours of the rare accents on the map', () => {
 
 	test('passes axe on the map with an open detour, light and dark themes', async ({ page }) => {
 		await reachMapAs(page, child);
+		await page.keyboard.press('ArrowUp');
 		await page.keyboard.press('ArrowUp');
 		await expectChosen(page, firstDetour);
 

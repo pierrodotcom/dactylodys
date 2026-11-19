@@ -61,14 +61,36 @@ describe('worldSummaries', () => {
 			chars: {}
 		};
 		const [summary, ...others] = worldSummaries(progression, progress);
+		// Its grand tour, a detour, is not counted before it is passed.
+		const onTheWay = first.lessons.filter((each) => !isDetour(each)).length;
 		expect(summary).toMatchObject({
 			worldId: first.id,
-			lessonCount: first.lessons.length,
+			lessonCount: onTheWay,
 			lessonsPassed: 1,
 			stars: 2,
-			maxStars: first.lessons.length * 3
+			maxStars: onTheWay * 3
 		});
 		expect(others.every((world) => world.lessonsPassed === 0 && world.stars === 0)).toBe(true);
+	});
+
+	it('counts a grand tour like a detour: only once the child passed it (ADR-075, choice 3)', () => {
+		const [first] = progression.worlds;
+		const tour = first?.lessons.find((lesson) => lesson.tour !== undefined);
+		if (!first || !tour) throw new Error('no grand tour');
+		const passed: LessonProgress = { bestAccuracy: 92, stars: 2, attempts: 3, lastPlayedAt: 1 };
+		const onTheWay = first.lessons.filter((lesson) => !isDetour(lesson));
+		const wayDone = Object.fromEntries(onTheWay.map((lesson) => [lesson.id, passed]));
+		const summaryOf = (lessons: ProgressState['lessons']) =>
+			worldSummaries(progression, { lessons, chars: {} })[0];
+		expect(summaryOf(wayDone)?.lessonCount).toBe(onTheWay.length);
+		// Played but not passed: not counted yet.
+		const tried = { ...passed, bestAccuracy: 60, stars: 0 as const };
+		expect(summaryOf({ ...wayDone, [tour.id]: tried })?.lessonCount).toBe(onTheWay.length);
+		expect(summaryOf({ ...wayDone, [tour.id]: passed })).toMatchObject({
+			lessonCount: onTheWay.length + 1,
+			lessonsPassed: onTheWay.length + 1,
+			stars: (onTheWay.length + 1) * 2
+		});
 	});
 
 	it('counts a detour only once the child passed it: a way finished is never short of a lesson', () => {

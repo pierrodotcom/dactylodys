@@ -108,8 +108,11 @@ const phraseBank = parsePhraseBank(readJson(PHRASES_FILE));
 describe('learning order of the bank checks', () => {
 	it('is the order in which the progression introduces the characters', () => {
 		const progression = parseProgression(readJson(PROGRESSION_FILE));
+		// A grand tour brings no character: it goes over those of its world.
 		expect(STEPS).toEqual(
-			progression.worlds.flatMap((world) => world.lessons.map((lesson) => lesson.newChars))
+			progression.worlds.flatMap((world) =>
+				world.lessons.filter((lesson) => lesson.tour === undefined).map((lesson) => lesson.newChars)
+			)
 		);
 	});
 });
