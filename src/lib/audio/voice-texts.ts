@@ -53,7 +53,8 @@ const KINDS: readonly VoiceTextKind[] = [
 export const LOOK_REMINDER_ID = 'game.look-reminder';
 /**
  * Message keys of those reminders in `messages/<language>.json`, in the order the games say them
- * (audit P-20): the page and the import tool read them there.
+ * (audit P-20): the import tool reads them there; the page lists the same sentences, as the games
+ * show them (`LOOK_REMINDERS`, a test keeps the two in step).
  */
 export const LOOK_REMINDER_MESSAGES = [
 	'game_shared_look_reminder_touch',
