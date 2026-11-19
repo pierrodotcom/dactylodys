@@ -238,7 +238,7 @@ test.describe('result in steps', () => {
 		await page.locator('button[data-proposed]').click();
 		await typeToResult(page);
 
-		// 1. The item, alone: its title has the focus, « Le mettre » then « Continuer ».
+		// 1. The item, alone: its title has the focus, « Mettre » then « Continuer ».
 		await expect(step(page, 'reward')).toBeVisible();
 		await expect(heading(page, message('play_reward_new'))).toBeFocused();
 		await expect(step(page, 'name')).toHaveCount(0);

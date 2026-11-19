@@ -25,7 +25,7 @@ Chaque choix s'appuie sur une synthèse de la recherche publiée avec le projet.
 - **La précision avant la vitesse.** Une leçon se réussit à 80 % de frappes justes, quelle que soit la vitesse, et une erreur ne fait rien perdre. La vitesse vient d'un lien stable entre chaque touche et son doigt (Feit et al., 2016).
 - **Des séances courtes.** Une partie dure quelques minutes, un peu plus quand l'enfant tape vite ; le jeu propose lui-même une pause après 4 parties au début, puis après environ 8 minutes de frappe. La pratique répartie est le résultat le mieux établi pour apprendre à taper (Baddeley et Longman, 1978).
 - **Aucun mécanisme pour retenir l'enfant.** Pas de série de jours à tenir, pas de classement, pas de récompense au hasard, pas de notification. Les récompenses saluent une compétence acquise, jamais le temps passé (Deci et al., 1999 ; Radesky et al., 2022).
-- **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; une touche tapée juste s'efface, et revient quand l'enfant hésite ou se trompe. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
+- **Un clavier dessiné qui s'efface.** Il montre la touche et le doigt à utiliser ; une touche tapée juste s'efface, et revient quand l'enfant hésite ou se trompe. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
 - **Des réglages sensoriels séparés.** Sons, voix, mouvements, effets lumineux, taille et espacement du texte se règlent à part, ou tous ensemble avec « Tout calmer ». Pendant la frappe, seuls bougent la main qui montre le doigt et, si l'enfant la choisit, la course contre son fantôme (Pelham et al., 2011). Le bruit de fond doux, qui aide certains et en gêne d'autres, est coupé par défaut (Nigg et al., 2024).
 - **Le retour arrière, au choix de l'adulte.** Le jeu attend la bonne touche, sauf dans le monde des textes, où l'enfant efface lui-même ses erreurs, comme dans un vrai texte. Aucune étude ne tranche : vous pouvez choisir l'un ou l'autre partout.
 - **Un contenu selon l'âge.** Deux tranches, 8-9 ans et 10-12 ans, changent les mots et les textes, jamais la progression ni les seuils : un enfant rejette ce qui lui paraît fait pour plus petit (Nielsen Norman Group).
@@ -69,7 +69,7 @@ Vous êtes ergothérapeute ? Essayez le jeu une vingtaine de minutes, comme un e
 2. Le doigté : faut-il proposer un doigté à quatre ou six doigts ? Pour quels enfants, avec quelle répartition des touches ?
 3. La durée : une pause proposée après 4 parties au début, puis après environ 8 minutes de frappe, convient-elle aux enfants que vous suivez ?
 4. Les seuils : une leçon se réussit à 80 % de frappes justes. Est-ce trop exigeant, ou pas assez ?
-5. Le clavier à l'écran : la lettre d'une touche s'efface après 20 frappes récentes avec au plus 10 % d'erreurs. Est-ce trop tôt, ou trop tard ?
+5. Le clavier dessiné : la lettre d'une touche s'efface après 20 frappes récentes avec au plus 10 % d'erreurs. Est-ce trop tôt, ou trop tard ?
 6. Le bilan : quelles mesures vous seraient utiles pour suivre un enfant ? Lesquelles sont inutiles ?
 7. En cabinet ou en classe : que manque-t-il pour l'utiliser avec les enfants que vous suivez ?
 8. Les mots : une consigne du jeu ou une phrase de cette fiche est-elle à reprendre ?

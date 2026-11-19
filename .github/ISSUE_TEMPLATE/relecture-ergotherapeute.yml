@@ -32,7 +32,7 @@ body:
   - type: textarea
     id: fade
     attributes:
-      label: "Le clavier à l'écran : la lettre d'une touche s'efface après 20 frappes récentes avec au plus 10 % d'erreurs. Est-ce trop tôt, ou trop tard ?"
+      label: "Le clavier dessiné : la lettre d'une touche s'efface après 20 frappes récentes avec au plus 10 % d'erreurs. Est-ce trop tôt, ou trop tard ?"
   - type: textarea
     id: measures
     attributes:

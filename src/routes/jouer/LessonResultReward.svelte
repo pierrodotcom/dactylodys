@@ -33,7 +33,7 @@
 	async function wear() {
 		onwear(reward);
 		wornHere = true;
-		// "Le mettre" is gone: the keyboard goes on to the only way left, on the same screen.
+		// "Mettre" is gone: the keyboard goes on to the only way left, on the same screen.
 		await tick();
 		actions?.querySelector<HTMLElement>('[data-result-continue]')?.focus();
 	}
