@@ -323,9 +323,13 @@ for (const game of games) {
 					WRONG_KEY_CODE
 				);
 				expect(await game.probe(page)).toBe(before);
-				await expect(page.locator('main')).not.toContainText(
-					/%|\b(erreurs?|fautes?|score|vies?)\b/i
-				);
+				// No score is shown; the drawn keyboard prints its signs, « % » on the key « ù » (E-06).
+				const shown = await page.locator('main').evaluate((main) => {
+					const copy = main.cloneNode(true) as HTMLElement;
+					for (const keyboard of copy.querySelectorAll('.keyboard')) keyboard.remove();
+					return copy.textContent ?? '';
+				});
+				expect(shown).not.toMatch(/%|\b(erreurs?|fautes?|score|vies?)\b/i);
 
 				await page.keyboard.type(FIRST_CHAR);
 
