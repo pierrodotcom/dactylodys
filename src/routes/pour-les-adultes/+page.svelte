@@ -98,6 +98,7 @@
 			<li>{m.guide_tip_posture()}</li>
 			<li>{m.guide_tip_regular()}</li>
 			<li>{m.guide_tip_eyes()}</li>
+			<li>{m.guide_tip_fingers()}</li>
 			<li>{m.guide_tip_effort()}</li>
 			<li>{m.guide_tip_choice()}</li>
 		</ul>

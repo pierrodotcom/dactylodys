@@ -154,7 +154,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 17,
+			schemaVersion: 18,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -173,7 +173,8 @@ describe('createProfile', () => {
 			adultWords: [],
 			openedWorldIds: [],
 			keptOpenLessonIds: [],
-			hideout: {}
+			hideout: {},
+			charDays: {}
 		});
 	});
 
@@ -474,8 +475,16 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 16, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 18, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 17, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 19, /schemaVersion/],
+		['days of keys that are not a record', ['charDays'], 'none', /charDays/],
+		[
+			'a day of a key written otherwise',
+			['charDays'],
+			{ f: [{ day: '19/11', attempts: 1, errors: 0 }] },
+			/charDays/
+		],
+		['missing days of keys', ['charDays'], REMOVE, /charDays/],
 		[
 			'lessons kept open that are not a list',
 			['keptOpenLessonIds'],

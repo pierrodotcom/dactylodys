@@ -47,6 +47,37 @@ describe('parseGateNumbers', () => {
 	});
 });
 
+/*
+ * The gate keeps out a child who opens it by mistake, not an adult (E-09, choice 12 of ADR-075):
+ * short numbers, without the tens that French writes in three ways. « soixante-dix »,
+ * « quatre-vingts » and « quatre-vingt-dix » are « septante », « huitante » and « nonante » in
+ * Belgium and Switzerland, and they stop a parent who is dyslexic or dyscalculic.
+ */
+describe('the French numbers of the gate', () => {
+	const { numbers } = parseGateNumbers(
+		JSON.parse(readFileSync('content/fr/adult/gate-numbers.json', 'utf8'))
+	);
+	const TENS_WRITTEN_THREE_WAYS = [7, 8, 9];
+	const FORMS_WRITTEN_THREE_WAYS =
+		/soixante[- ]dix|soixante et onze|quatre[- ]vingt|septante|huitante|octante|nonante/;
+
+	it('are written with two or three digits', () => {
+		expect(numbers.length).toBeGreaterThanOrEqual(20);
+		for (const number of numbers) {
+			expect(number.value, number.words).toBeGreaterThanOrEqual(10);
+			expect(number.value, number.words).toBeLessThanOrEqual(999);
+		}
+	});
+
+	it('never have tens that French writes in three ways', () => {
+		for (const number of numbers) {
+			const tens = Math.floor(number.value / 10) % 10;
+			expect(TENS_WRITTEN_THREE_WAYS, `${number.value}`).not.toContain(tens);
+			expect(number.words).not.toMatch(FORMS_WRITTEN_THREE_WAYS);
+		}
+	});
+});
+
 describe('pickGateNumber', () => {
 	const { numbers } = parseGateNumbers(VALID);
 

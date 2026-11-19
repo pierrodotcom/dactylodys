@@ -21,6 +21,7 @@ import {
 import type { LayoutPlatform } from '../keyboard/types';
 import type {
 	AmbiencePreference,
+	CharDay,
 	CompanionChoice,
 	ErrorPolicyPreference,
 	HandwritingSample,
@@ -80,7 +81,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 17;
+export const PROFILE_SCHEMA_VERSION = 18;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -112,8 +113,10 @@ const PROFILE_KEYS = [
 	'adultWords',
 	'openedWorldIds',
 	'keptOpenLessonIds',
-	'hideout'
+	'hideout',
+	'charDays'
 ] as const satisfies readonly (keyof Profile)[];
+const CHAR_DAY_KEYS = ['day', 'attempts', 'errors'] as const satisfies readonly (keyof CharDay)[];
 const SESSION_KEYS = [
 	'lessonId',
 	'gameId',
@@ -257,7 +260,8 @@ export function createProfile(input: NewProfileInput): Profile {
 		adultWords: [],
 		openedWorldIds: [],
 		keptOpenLessonIds: [],
-		hideout: {}
+		hideout: {},
+		charDays: {}
 	};
 }
 
@@ -660,6 +664,36 @@ function parseHandwritingSample(data: unknown, path: string): HandwritingSample 
 	return { measuredAt, wordsPerMinute };
 }
 
+function parseCharDay(data: unknown, path: string): CharDay {
+	const record = expectRecord(data, path);
+	expectExactKeys(record, CHAR_DAY_KEYS, path);
+	const day = record['day'];
+	if (day !== null && !isLocalDay(day))
+		fail(`${path}.day`, 'expected a day written YYYY-MM-DD, or null');
+	const attempts = expectCount(record['attempts'], `${path}.attempts`);
+	if (attempts < 1) fail(`${path}.attempts`, 'expected at least 1');
+	const errors = expectCount(record['errors'], `${path}.errors`);
+	if (errors > attempts) fail(`${path}.errors`, `expected at most ${attempts}`);
+	return { day, attempts, errors };
+}
+
+/* The unknown day first, then the days sorted, each once: checked, never repaired. */
+function parseCharDays(data: unknown, path: string): CharDay[] {
+	const days: CharDay[] = [];
+	expectArray(data, path).forEach((raw, index) => {
+		const entry = parseCharDay(raw, `${path}[${index}]`);
+		const previous = days.at(-1);
+		if (
+			previous !== undefined &&
+			(entry.day === null || (previous.day !== null && entry.day <= previous.day))
+		) {
+			fail(`${path}[${index}].day`, 'expected the unknown day first, then days sorted, each once');
+		}
+		days.push(entry);
+	});
+	return days;
+}
+
 function parseUniqueIdentifiers(data: unknown, path: string): string[] {
 	const ids: string[] = [];
 	expectArray(data, path).forEach((raw, index) => {
@@ -722,6 +756,7 @@ export function parseProfile(data: unknown): Profile {
 			root['keptOpenLessonIds'],
 			'profile.keptOpenLessonIds'
 		),
-		hideout: parseRecordOf(root['hideout'], 'profile.hideout', expectIdentifier)
+		hideout: parseRecordOf(root['hideout'], 'profile.hideout', expectIdentifier),
+		charDays: parseRecordOf(root['charDays'], 'profile.charDays', parseCharDays)
 	};
 }

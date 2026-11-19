@@ -32,6 +32,7 @@ import {
 	asVersion15,
 	asVersion16,
 	withEveryKeyColoured,
+	withUndatedCharDays,
 	withUnknownLatency,
 	withWorldPolicy
 } from './test-support';
@@ -315,7 +316,9 @@ describe('planImport', () => {
 		});
 		expect(ready(planImport(exportBackup([timed], EXPORTED_AT), [])).importable).toEqual([timed]);
 		const old = backupOf({ profiles: [asVersion7(timed)] });
-		expect(ready(planImport(old, [])).importable).toEqual([withUnknownLatency(timed)]);
+		expect(ready(planImport(old, [])).importable).toEqual([
+			withUndatedCharDays(withUnknownLatency(timed))
+		]);
 	});
 
 	it('sets apart the children already on the device, with the profile each one would replace', () => {

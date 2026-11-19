@@ -13,12 +13,30 @@ export interface HesitationRules {
 	readonly minKeys: number;
 }
 
+/**
+ * When a key typed right counts as acquired for the adult (P-17): typed right on several days, not
+ * in one evening. Read on the days the profile keeps (`Profile.charDays`), which cover more.
+ */
+export interface AcquiredRules {
+	/** Keystrokes, at least, over the days kept. */
+	readonly minAttempts: number;
+	/** Different days, at least; the days of a profile older than version 18 count as one. */
+	readonly minDays: number;
+	/** Share of wrong keystrokes over the days kept, at most. */
+	readonly maxErrorRate: number;
+}
+
 /** Rules of the adult space: data, never constants in the code. */
 export interface AdultRules {
 	/** Digits of the optional code of the adult space. */
 	readonly codeLength: number;
-	/** When a key counts as acquired or fragile on the keyboard of the report. */
+	/**
+	 * When a key counts as typed right (`acquired` here), or fragile, on its recent results: the
+	 * threshold the game reads to fade a key (ADR-061), never shown as « acquired » to the adult.
+	 */
 	readonly mastery: MasteryRules;
+	/** When a key typed right counts as acquired. */
+	readonly acquired: AcquiredRules;
 	/** When an acquired key is listed as long to find. */
 	readonly hesitation: HesitationRules;
 	/** Most recent plays drawn and listed in the evolution. */
@@ -44,8 +62,9 @@ export interface AdultRules {
 }
 
 /*
- * The thresholds of an acquired key are those of the rewards that tame a key
- * (`chars-mastered` in the reward catalogues): the report and the rewards agree.
+ * The thresholds of a key typed right are those of the rewards that tame a key
+ * (`chars-mastered` in the reward catalogues): the report and the rewards agree. An acquired key
+ * asks for more (P-17): the days kept cover it (`CHAR_DAYS_RULES`, tested).
  */
 export const ADULT_RULES: AdultRules = {
 	codeLength: 4,
@@ -55,6 +74,7 @@ export const ADULT_RULES: AdultRules = {
 		fragileMinAttempts: 5,
 		fragileMinErrorRate: 0.2
 	},
+	acquired: { minAttempts: 40, minDays: 3, maxErrorRate: 0.1 },
 	hesitation: { minCorrect: 10, factor: 1.5, minKeys: 5 },
 	sessionsShown: 30,
 	weeksShown: 12,

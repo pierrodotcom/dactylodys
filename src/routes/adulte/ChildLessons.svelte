@@ -1,21 +1,49 @@
 <script lang="ts">
 	import { focusableWhileScrolling } from '$lib/ui/focus';
-	import type { ProgressionDefinition, ProgressState } from '$lib/engine/progression/types';
+	import type { ProgressionDefinition } from '$lib/engine/progression/types';
 	import { m } from '$lib/paraglide/messages.js';
+	import type { Profile } from '$lib/state/types';
+	import type { Formatters } from './format';
 	import { worldSummaries } from './report';
+	import { currentLesson } from './session-sheet';
 
 	interface Props {
+		profile: Profile;
 		progression: ProgressionDefinition | undefined;
-		progress: ProgressState;
+		format: Formatters;
 	}
 
-	let { progression, progress }: Props = $props();
+	let { profile, progression, format }: Props = $props();
 
-	const worlds = $derived(progression ? worldSummaries(progression, progress) : []);
+	const worlds = $derived(progression ? worldSummaries(progression, profile.progress) : []);
+	const lesson = $derived(currentLesson(progression, profile));
+	const lastPlay = $derived(profile.sessions.at(-1));
 </script>
 
-<section class="lessons" aria-labelledby="lessons-title" data-child-lessons>
-	<h2 id="lessons-title">{m.adult_lessons_title()}</h2>
+<!-- What the adult comes to read first: where the child is, then the lessons world by world. -->
+<section class="lessons" aria-labelledby="now-title" data-child-lessons>
+	<h2 id="now-title">{m.adult_report_now_title({ name: profile.name })}</h2>
+	{#if lesson || lastPlay}
+		<ul class="facts" data-report-now>
+			{#if lesson}
+				<li data-report-lesson>
+					{m.adult_sheet_now_lesson({
+						lesson: lesson.title,
+						number: lesson.number,
+						world: lesson.worldTitle
+					})}
+				</li>
+			{/if}
+			{#if lastPlay}
+				<li data-report-last-play>
+					{m.adult_report_last_play({
+						date: format.sessionDate(lastPlay.finishedAt, lastPlay.utcOffsetMinutes)
+					})}
+				</li>
+			{/if}
+		</ul>
+	{/if}
+	<h3 id="lessons-title">{m.adult_lessons_title()}</h3>
 	{#if progression}
 		<div
 			class="dd-table-scroll"
@@ -62,6 +90,17 @@
 
 	h2 {
 		font-size: var(--dd-font-size-xl);
+	}
+
+	h3 {
+		font-size: var(--dd-font-size-lg);
+	}
+
+	.facts {
+		display: grid;
+		gap: var(--dd-space-xs);
+		margin: 0;
+		padding-inline-start: var(--dd-space-lg);
 	}
 
 	table {

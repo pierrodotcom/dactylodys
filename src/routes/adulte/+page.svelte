@@ -2,6 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { navigating } from '$app/state';
 	import { findLesson } from '$lib/engine/progression/definition';
 	import { gameTitle } from '$lib/games/labels';
 	import { m } from '$lib/paraglide/messages.js';
@@ -91,13 +92,18 @@
 		return profiles.find((profile) => profile.id === current.id) ?? null;
 	});
 
+	// Back from a page for adults opened from here, the gate was passed already. Reached from the
+	// game or loaded, whatever the history, it was not: the space is closed (`adultSpace.arrive`).
+	// The page is made while the navigation that brings it is on its way: `navigating` says where
+	// the visit comes from.
+	const passedGate = adultSpace.arrive(navigating.from?.route.id ?? null);
+
 	onMount(async () => {
 		code = readAdultCode(ADULT_RULES.codeLength);
 		lastBackupAt = readLastBackupAt();
 		const now = Date.now();
 		today = localDay(now, utcOffsetAt(now));
-		// Back from a page for adults opened from here: the gate was passed already (`adultSpace`).
-		view = adultSpace.isOpen() ? { name: 'home' } : { name: 'gate' };
+		view = passedGate ? { name: 'home' } : { name: 'gate' };
 		notices = createProfileNotices();
 		notices.listen(() => void readAgain());
 		store = withNotices(createIndexedDbProfileStore(), notices);
@@ -138,8 +144,13 @@
 		});
 	}
 
-	/** Back on the player screen, nobody chosen: the last player is not opened again on its own. */
+	/**
+	 * Back on the player screen, nobody chosen: the last player is not opened again on its own. The
+	 * space closes here, not only in `beforeNavigate`: SvelteKit runs none for a navigation started
+	 * while another one is on its way (a page for adults still opening on a slow machine).
+	 */
 	function leave() {
+		adultSpace.close();
 		forgetLastPlayerId();
 		void goto(resolve('/jouer'));
 	}

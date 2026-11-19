@@ -304,6 +304,37 @@ function toVersion17(record: StoredRecord): StoredRecord {
 	};
 }
 
+/*
+ * Version 18 (P-17): the adult space tells a key typed right from an acquired one, typed right on
+ * several days. The days of the recent plays already kept (`recent`) are unknown: together, they
+ * make one day without a date. Nothing else changes: the child reads the same recent plays.
+ */
+function undatedDaysOf(totals: unknown): unknown[] {
+	const recent = isRecord(totals) ? totals['recent'] : undefined;
+	if (!Array.isArray(recent)) return [];
+	let attempts = 0;
+	let errors = 0;
+	for (const sample of recent) {
+		if (!isRecord(sample) || !isCount(sample['attempts']) || !isCount(sample['errors'])) continue;
+		attempts += sample['attempts'];
+		errors += sample['errors'];
+	}
+	return attempts > 0 ? [{ day: null, attempts, errors: Math.min(errors, attempts) }] : [];
+}
+
+function toVersion18(record: StoredRecord): StoredRecord {
+	const progress = record['progress'];
+	const chars = isRecord(progress) ? progress['chars'] : undefined;
+	const charDays = isRecord(chars)
+		? Object.fromEntries(
+				Object.entries(chars)
+					.map(([char, totals]) => [char, undatedDaysOf(totals)] as const)
+					.filter(([, days]) => days.length > 0)
+			)
+		: {};
+	return { charDays, ...record, schemaVersion: 18 };
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -321,7 +352,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[13, toVersion14],
 	[14, toVersion15],
 	[15, toVersion16],
-	[16, toVersion17]
+	[16, toVersion17],
+	[17, toVersion18]
 ]);
 
 function versionOf(record: StoredRecord): number {

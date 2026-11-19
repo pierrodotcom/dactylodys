@@ -122,9 +122,25 @@ export interface HandwritingSample {
 	readonly wordsPerMinute: number;
 }
 
+/**
+ * The keystrokes of one character on one day (version 18), for the adult: a key typed right on
+ * three days is not one typed right three times in one evening. Integers, `attempts >= 1`,
+ * `0 <= errors <= attempts`.
+ */
+export interface CharDay {
+	/**
+	 * The local day (`YYYY-MM-DD`) the keystrokes were stored on; `null` for those of the recent
+	 * plays a profile of version 17 or older had kept, whose days are unknown: together, they count
+	 * as one day.
+	 */
+	readonly day: string | null;
+	readonly attempts: number;
+	readonly errors: number;
+}
+
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 17;
+	readonly schemaVersion: 18;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;
@@ -182,6 +198,13 @@ export interface Profile {
 	 * there is left out, never deleted.
 	 */
 	readonly hideout: Readonly<Record<string, string>>;
+	/**
+	 * The most recent days on which each character was typed, oldest first, each day once (version
+	 * 18), keyed like `progress.chars`. Read by the adult space only, to tell an acquired key from
+	 * one typed right (P-17); nothing the child sees reads it. The store keeps it: each keystroke a
+	 * change adds to the results of a character counts on the day it is stored (`withNewCharDays`).
+	 */
+	readonly charDays: Readonly<Record<string, readonly CharDay[]>>;
 }
 
 /**
@@ -208,8 +231,10 @@ export interface ProfileStore {
 	save(profile: Profile): Promise<void>;
 	/**
 	 * Reads the profile and stores what `change` makes of it, in one step: whatever this page or
-	 * another one stored in between is kept. Resolves with the profile as it is now stored, `null`
-	 * when there is none under this id (nothing is created: a deleted profile does not come back).
+	 * another one stored in between is kept. The keystrokes the change adds to the results of the
+	 * keys count on the day it is stored (`Profile.charDays`, version 18): the store dates them.
+	 * Resolves with the profile as it is now stored, `null` when there is none under this id
+	 * (nothing is created: a deleted profile does not come back).
 	 * Rejects, nothing stored, when `change` throws, gives an invalid profile or another id, or when
 	 * the record cannot be opened.
 	 */

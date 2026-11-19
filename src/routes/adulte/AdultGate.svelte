@@ -47,12 +47,13 @@
 			<p>{m.adult_code_intro({ length: codeLength })}</p>
 			<label class="field">
 				<span>{m.adult_code_label()}</span>
+				<!-- A password manager may fill the code in: a way in that asks nothing to read (E-09). -->
 				<input
 					bind:this={input}
 					bind:value={answer}
 					type="password"
 					inputmode="numeric"
-					autocomplete="off"
+					autocomplete="current-password"
 					maxlength={codeLength}
 					data-adult-code
 				/>

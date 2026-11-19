@@ -1,12 +1,28 @@
+import { withNewCharDays } from './char-days';
+import { utcOffsetAt } from './journal';
 import { readProfile } from './migrations';
-import { parseProfile } from './profile';
+import { localDay, parseProfile } from './profile';
 import type { Profile, ProfileStore, UnreadableProfile } from './types';
 
 const DEFAULT_DATABASE_NAME = 'dactylodys';
 const DATABASE_VERSION = 1;
 const PROFILES_STORE = 'profiles';
 
-export interface IndexedDbProfileStoreOptions {
+/** The day a change is stored on: the keystrokes it adds count on it (`Profile.charDays`). */
+export type StoreDay = () => string;
+
+/** Today on this device, in its time zone. */
+function today(): string {
+	const now = Date.now();
+	return localDay(now, utcOffsetAt(now));
+}
+
+export interface MemoryProfileStoreOptions {
+	/** Injected so that a test chooses the day of each change; today on this device by default. */
+	readonly day?: StoreDay;
+}
+
+export interface IndexedDbProfileStoreOptions extends MemoryProfileStoreOptions {
 	readonly databaseName?: string;
 }
 
@@ -76,9 +92,15 @@ function assertUnreadable(existing: unknown, id: string): void {
 	}
 }
 
-/** What `change` makes of `current`, checked: a valid profile, still under the same id. */
-function changed(current: Profile, change: (current: Profile) => Profile): Profile {
-	const next = parseProfile(change(current));
+/**
+ * What `change` makes of `current`, checked: a valid profile, still under the same id. The
+ * keystrokes it adds count on `day` (`withNewCharDays`): the store dates what it keeps.
+ */
+function changed(current: Profile, change: (current: Profile) => Profile, day: StoreDay): Profile {
+	const proposed = change(current);
+	const next = parseProfile(
+		proposed === current ? proposed : withNewCharDays(current, proposed, day())
+	);
 	if (next.id !== current.id) {
 		throw new RangeError(`a change must keep the id of the profile "${current.id}"`);
 	}
@@ -97,7 +119,11 @@ function attempt<T>(work: () => T): Promise<T> {
  * `stored` stands for what an earlier visit left behind, in whatever format: it is read like the
  * records of a real database.
  */
-export function createMemoryProfileStore(stored: readonly unknown[] = []): ProfileStore {
+export function createMemoryProfileStore(
+	stored: readonly unknown[] = [],
+	options: MemoryProfileStoreOptions = {}
+): ProfileStore {
+	const day = options.day ?? today;
 	const records = new Map<unknown, unknown>();
 	for (const record of stored) {
 		const id = (record as { id?: unknown } | null | undefined)?.id;
@@ -118,7 +144,7 @@ export function createMemoryProfileStore(stored: readonly unknown[] = []): Profi
 				assertNotUnreadable(existing, id);
 				const current = readOne(existing);
 				if (current === null) return null;
-				const next = changed(current, change);
+				const next = changed(current, change, day);
 				records.set(id, next);
 				return parseProfile(next);
 			}),
@@ -176,6 +202,7 @@ export function createIndexedDbProfileStore(
 	options: IndexedDbProfileStoreOptions = {}
 ): IndexedDbProfileStore {
 	const databaseName = options.databaseName ?? DEFAULT_DATABASE_NAME;
+	const day = options.day ?? today;
 	let connection: Promise<IDBDatabase> | undefined;
 
 	function release() {
@@ -243,7 +270,7 @@ export function createIndexedDbProfileStore(
 				assertNotUnreadable(existing, id);
 				const current = readOne(existing);
 				if (current === null) return null;
-				const next = changed(current, apply);
+				const next = changed(current, apply, day);
 				await requestResult(store.put(next));
 				return next;
 			}),

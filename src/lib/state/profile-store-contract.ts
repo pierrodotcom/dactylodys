@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createProfile, updateSettings, withProgress } from './profile';
 import { UnreadableProfileError } from './stores';
-import { asVersion1, asVersion2 } from './test-support';
+import { asVersion1, asVersion2, withUndatedCharDays } from './test-support';
 import type { Profile, ProfileStore } from './types';
 
 function profileAt(id: string, createdAt: number, name = 'Léa'): Profile {
@@ -125,8 +125,10 @@ export function describeProfileStoreContract(
 				}
 			});
 			const store = await createStore([asVersion2(profile)]);
-			expect(await store.get('a')).toEqual(profile);
-			expect(await store.list()).toEqual([profile]);
+			// Its recent plays count as one day, whose date is unknown (version 18).
+			const read = withUndatedCharDays(profile);
+			expect(await store.get('a')).toEqual(read);
+			expect(await store.list()).toEqual([read]);
 			expect(await store.listUnreadable()).toEqual([]);
 		});
 
