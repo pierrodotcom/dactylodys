@@ -287,8 +287,12 @@ test.describe('a reduced fingering chosen by the adult', () => {
 		);
 		const hands = page.locator('.keyboard [data-hand-guide]');
 		await expect(hands.locator(`[data-active="${finger}"]`)).toHaveCount(1);
-		// The hand keeps its four fingers: those two index fingers do not use are folded.
+		// The hand keeps its four fingers: those two index fingers do not use are folded, filled
+		// fainter in the hand filled by default.
 		await expect(hands.locator('[data-folded]')).toHaveCount(6);
+		await expect(hands).toHaveAttribute('data-hand-drawing', 'filled');
+		await expect(hands.locator('[data-hand-fill="folded"] line')).toHaveCount(6);
+		await expect(hands.locator('[data-hand-fill="resting"] line')).toHaveCount(3);
 	});
 
 	test(

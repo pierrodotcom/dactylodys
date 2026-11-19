@@ -4,6 +4,7 @@
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
 	import { isReducedFingering } from '$lib/keyboard/fingering';
 	import type { Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
+	import type { HandDrawing } from '$lib/state/types';
 	import { sayInTurn } from '$lib/audio/voice-sequence';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { RewardDefinition } from '$lib/engine/rewards';
@@ -36,6 +37,8 @@
 		gameId: string;
 		/** What the hand on the keyboard shows in this lesson: here, the new keys one after the other. */
 		guide: GuideMode;
+		/** How the hands rest on the keyboard, as the child chose: filled or as a contour. */
+		handDrawing: HandDrawing;
 		/** Calm motion: the fingers light up, they do not move. */
 		still: boolean;
 		/** Says the instruction of the lesson as the screen opens, and again on demand. */
@@ -82,6 +85,7 @@
 		games,
 		gameId,
 		guide,
+		handDrawing,
 		still,
 		voice,
 		loadFailed,
@@ -240,6 +244,7 @@
 							showFingers={true}
 							{marked}
 							{hands}
+							{handDrawing}
 							{still}
 						/>
 					</div>

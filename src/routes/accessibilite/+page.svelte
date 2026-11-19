@@ -86,6 +86,7 @@
 			<ul>
 				<li>{m.a11y_setting_keyboard({ label: m.settings_keyboard_label() })}</li>
 				<li>{m.a11y_setting_hand({ label: m.settings_hand_label() })}</li>
+				<li>{m.a11y_setting_hand_drawing({ label: m.settings_hand_drawing_label() })}</li>
 				<li>{m.a11y_setting_keyboard_colors({ label: m.settings_keyboard_colors_label() })}</li>
 				<li>{m.a11y_setting_keyboard_fade({ label: m.settings_keyboard_fade_label() })}</li>
 				<li>{m.a11y_setting_backspace({ label: m.settings_backspace_label() })}</li>

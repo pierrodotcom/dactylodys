@@ -183,9 +183,14 @@ export function withNothingKeptOpen(profile: Profile): Profile {
 	return withWorldPolicy({ ...profile, keptOpenLessonIds: [] });
 }
 
+/** What a profile becomes once migrated from version 19 or older: the hand drawn is filled. */
+export function withFilledHand(profile: Profile): Profile {
+	return { ...profile, settings: { ...profile.settings, handDrawing: 'filled' } };
+}
+
 /**
  * What a profile becomes once migrated from version 17 or older: the days of its keys are unknown,
- * one day made of the recent plays of each key (P-17).
+ * one day made of the recent plays of each key (P-17), and the hand drawn is filled.
  */
 export function withUndatedCharDays(profile: Profile): Profile {
 	const charDays: Record<string, readonly CharDay[]> = {};
@@ -194,7 +199,7 @@ export function withUndatedCharDays(profile: Profile): Profile {
 		const errors = stats.recent.reduce((sum, sample) => sum + sample.errors, 0);
 		if (attempts > 0) charDays[char] = [{ day: null, attempts, errors }];
 	}
-	return { ...profile, charDays };
+	return withFilledHand({ ...profile, charDays });
 }
 
 /** What a profile becomes once migrated from version 16 or older: every key keeps its colour. */
@@ -205,12 +210,19 @@ export function withEveryKeyColoured(profile: Profile): Profile {
 	});
 }
 
+/** The record version 19 of the app stored: the same profile without the drawing of the hand. */
+export function asVersion19(profile: Profile): Record<string, unknown> {
+	const settings: Record<string, unknown> = { ...profile.settings };
+	delete settings['handDrawing'];
+	return { ...profile, schemaVersion: 19, settings };
+}
+
 /**
- * The record version 18 of the app stored: the same profile. Its fingering could only be ten
- * fingers then; a profile given with another one is kept as it is, as the step to version 19 does.
+ * The record version 18 of the app stored: version 19. Its fingering could only be ten fingers
+ * then; a profile given with another one is kept as it is, as the step to version 19 does.
  */
 export function asVersion18(profile: Profile): Record<string, unknown> {
-	return { ...profile, schemaVersion: 18 };
+	return { ...asVersion19(profile), schemaVersion: 18 };
 }
 
 /** The record version 17 of the app stored: the same profile without the days of its keys. */
@@ -222,9 +234,10 @@ export function asVersion17(profile: Profile): Record<string, unknown> {
 
 /** The record version 16 of the app stored: version 17 without the colours of the keyboard. */
 export function asVersion16(profile: Profile): Record<string, unknown> {
-	const settings: Record<string, unknown> = { ...profile.settings };
+	const stored = asVersion17(profile);
+	const settings: Record<string, unknown> = { ...(stored['settings'] as Record<string, unknown>) };
 	delete settings['keyboardColors'];
-	return { ...asVersion17(profile), schemaVersion: 16, settings };
+	return { ...stored, schemaVersion: 16, settings };
 }
 
 /**

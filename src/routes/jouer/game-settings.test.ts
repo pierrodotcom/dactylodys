@@ -83,6 +83,13 @@ describe('toGameSettings', () => {
 		).toBe('finger');
 	});
 
+	it('passes the drawing of the hand chosen by the child to the game, filled by default', () => {
+		expect(toGameSettings(base, false, NO_GUIDE).handDrawing).toBe('filled');
+		expect(toGameSettings({ ...base, handDrawing: 'outline' }, false, NO_GUIDE).handDrawing).toBe(
+			'outline'
+		);
+	});
+
 	it('passes the reminder to look at the screen through, and none unless given', () => {
 		const lookReminder = { firstAfterChars: 20, everyChars: 40 };
 		expect(toGameSettings(base, false, NO_GUIDE, lookReminder).lookReminder).toEqual(lookReminder);

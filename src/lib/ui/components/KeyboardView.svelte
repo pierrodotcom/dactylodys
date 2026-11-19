@@ -8,7 +8,7 @@
 		KeyPress,
 		LayoutDefinition
 	} from '$lib/keyboard/types';
-	import type { KeyboardColors } from '$lib/state/types';
+	import type { HandDrawing, KeyboardColors } from '$lib/state/types';
 	import type { Attachment } from 'svelte/attachments';
 	import HandGuide from './HandGuide.svelte';
 	import { colouredFingers, homeKeyCodes, modifierCodes } from './key-labels';
@@ -36,6 +36,8 @@
 			/** Shows the presses again and again, after a pause. */
 			readonly repeat?: boolean;
 		} | null;
+		/** How the hands rest, chosen by the child: filled, the default, or as a contour. */
+		handDrawing?: HandDrawing | undefined;
 		/** Calm motion for the hands: the finger lights up, it does not move. */
 		still?: boolean;
 		/** A music note flies out of this key: the group typed without a mistake ended on it. */
@@ -63,6 +65,7 @@
 		colors = 'all',
 		marked = [],
 		hands = null,
+		handDrawing = 'filled',
 		still = false,
 		noteCode = null,
 		mastery,
@@ -188,6 +191,7 @@
 				presses={hands.presses}
 				trigger={hands.trigger}
 				repeat={hands.repeat ?? false}
+				drawing={handDrawing}
 				{still}
 			/>
 		{/if}

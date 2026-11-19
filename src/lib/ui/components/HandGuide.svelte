@@ -11,7 +11,9 @@
 		type Point
 	} from '$lib/keyboard/hands';
 	import type { FingeringProfile, KeyboardGeometryDefinition, KeyPress } from '$lib/keyboard/types';
+	import type { HandDrawing } from '$lib/state/types';
 	import { readDurationToken, readEasingToken } from '../motion';
+	import { handFill } from './hand-fill';
 
 	interface Props {
 		geometry: KeyboardGeometryDefinition;
@@ -20,6 +22,8 @@
 		presses: readonly KeyPress[];
 		/** The presses are shown again each time it changes. */
 		trigger: string;
+		/** How the hands rest, as the child chose (version 20): filled, or only their contour. */
+		drawing: HandDrawing;
 		/** Calm motion: the finger lights up where it rests, it does not move. */
 		still: boolean;
 		/** Shows the presses again and again, after a pause, for a child whose eyes wander. */
@@ -31,12 +35,15 @@
 	const EASING_TOKEN = '--dd-easing-standard';
 	const PAUSE_TOKEN = '--dd-duration-guide-pause';
 	const OUTLINE_WIDTH = HAND_STROKES.finger + HAND_STROKES.outline * 2;
+	/** The inside reaches under the middle of the contour: no gap shows between the two. */
+	const FILL_WIDTH = HAND_STROKES.finger + HAND_STROKES.outline;
 
-	let { geometry, fingering, presses, trigger, still, repeat = false }: Props = $props();
+	let { geometry, fingering, presses, trigger, drawing, still, repeat = false }: Props = $props();
 
 	const uid = $props.id();
 	const maskId = `hands-inside-${uid}`;
 	const hands = $derived(restingHands(geometry, fingering));
+	const fill = $derived(handFill(hands, drawing));
 	const size = $derived(keyboardSize(geometry));
 	let moves = $state.raw<readonly FingerMove[]>([]);
 	const progress = new Tween(0);
@@ -114,7 +121,7 @@
 	}
 </script>
 
-<div class="hands" data-hand-guide data-still={still || undefined}>
+<div class="hands" data-hand-guide data-hand-drawing={drawing} data-still={still || undefined}>
 	<svg
 		viewBox="0 0 {size.width} {size.height}"
 		preserveAspectRatio="none"
@@ -122,9 +129,9 @@
 		aria-hidden="true"
 	>
 		<!--
-			The hands at rest are a contour, nothing inside: the letters of the home row stay as legible
-			as the others (E-11). The inside of the hands is cut out of their outline, whole, so that no
-			seam shows where a finger meets the palm.
+			The contour of the hands at rest: their inside is cut out of their outline, whole, so that no
+			seam shows where a finger meets the palm. In contour, nothing else: the letters of the home
+			row stay as legible as the others (E-11).
 		-->
 		<mask
 			id={maskId}
@@ -156,6 +163,40 @@
 				</g>
 			{/each}
 		</mask>
+		<!--
+			Filled, the default (version 20): the inside, under the contour, as the hands were first
+			drawn; a folded finger fainter, as its contour.
+		-->
+		{#if fill}
+			<g class="hand-fill folded" data-hand-fill="folded">
+				{#each fill.folded as shape (shape.finger)}
+					<line
+						x1={shape.base.x}
+						y1={shape.base.y}
+						x2={shape.tip.x}
+						y2={shape.tip.y}
+						stroke-width={FILL_WIDTH}
+						stroke-linecap="round"
+					/>
+				{/each}
+			</g>
+			<g class="hand-fill" data-hand-fill="resting">
+				{#each fill.palms as palm, index (index)}
+					<polygon points={pointsOf(palm)} stroke-width={FILL_WIDTH} stroke-linejoin="round" />
+				{/each}
+				{#each fill.fingers as shape (shape.finger)}
+					{@const tip = tipOf(shape)}
+					<line
+						x1={shape.base.x}
+						y1={shape.base.y}
+						x2={tip.x}
+						y2={tip.y}
+						stroke-width={FILL_WIDTH}
+						stroke-linecap="round"
+					/>
+				{/each}
+			</g>
+		{/if}
 		<g class="outline" mask="url(#{maskId})">
 			{#each hands as hand (hand.hand)}
 				<polygon
@@ -257,6 +298,13 @@
 	.hand-cut line {
 		fill: var(--dd-color-hand-mask-cut);
 		stroke: var(--dd-color-hand-mask-cut);
+	}
+
+	/* Its own name, as `hand-cut`: `.fill` is a common word for a drawing. */
+	.hand-fill polygon,
+	.hand-fill line {
+		fill: var(--dd-color-hand-fill);
+		stroke: var(--dd-color-hand-fill);
 	}
 
 	.outline polygon,

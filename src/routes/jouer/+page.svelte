@@ -1377,6 +1377,7 @@
 				games={gameOptions(world)}
 				gameId={gameFor(world, lessonId, profile)?.id ?? ''}
 				guide={guideFor(profile, lessonId).mode}
+				handDrawing={profile.settings.handDrawing}
 				still={isMotionReduced(profile.settings, systemPrefersReduced)}
 				{voice}
 				loadFailed={gameLoadFailed}

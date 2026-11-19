@@ -11,7 +11,7 @@ import type {
 	KeyCode,
 	LayoutDefinition
 } from '../keyboard/types';
-import type { KeyboardColors } from '../state/types';
+import type { HandDrawing, KeyboardColors } from '../state/types';
 
 /** What the hand drawn on the keyboard shows during the exercise, decided by the lesson. */
 export interface GameGuide {
@@ -60,6 +60,8 @@ export interface GameSettings {
 	 * that types keep their colour. Absent: every key.
 	 */
 	readonly keyboardColors?: KeyboardColors;
+	/** How the hand drawn rests (version 20): filled, or as a contour. Absent: filled. */
+	readonly handDrawing?: HandDrawing;
 }
 
 export interface GameOutcome {
