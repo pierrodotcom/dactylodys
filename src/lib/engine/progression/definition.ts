@@ -1,3 +1,5 @@
+import { LAYOUT_PLATFORMS } from '../../keyboard/layout';
+import type { LayoutPlatform } from '../../keyboard/types';
 import { toGraphemes } from '../graphemes';
 import type {
 	DrillPatternRules,
@@ -475,9 +477,62 @@ function parseMasteryRules(value: unknown, path: string): MasteryRules {
 	};
 }
 
+/** One sentence for each platform it names, at least one: a platform it does not name reads `intro`. */
+function parseIntroByPlatform(
+	value: unknown,
+	path: string
+): Partial<Record<LayoutPlatform, string>> {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, LAYOUT_PLATFORMS, path);
+	const intros = LAYOUT_PLATFORMS.flatMap((platform) =>
+		record[platform] === undefined
+			? []
+			: [[platform, expectString(record[platform], `${path}.${platform}`)] as const]
+	);
+	if (intros.length === 0) fail(path, 'expected an instruction for at least one platform');
+	return Object.fromEntries(intros);
+}
+
+/** The rules that make the wait of the hand follow the time of the child: all three, or none. */
+const PERSONAL_HESITATION = [
+	'hesitationFactor',
+	'hesitationMinKeys',
+	'hesitationMinCorrect'
+] as const;
+
+function parsePersonalHesitation(
+	record: Record<string, unknown>,
+	hesitationMs: number | undefined,
+	path: string
+): Pick<HandGuideRules, (typeof PERSONAL_HESITATION)[number]> {
+	const given = PERSONAL_HESITATION.filter((name) => record[name] !== undefined);
+	if (given.length === 0) return {};
+	const missing = PERSONAL_HESITATION.find((name) => record[name] === undefined);
+	if (missing !== undefined) {
+		fail(`${path}.${missing}`, `expected with ${given.join(', ')}: the three rules go together`);
+	}
+	if (hesitationMs === undefined || hesitationMs <= 0) {
+		fail(`${path}.hesitationFactor`, 'expected with a positive hesitationMs, the shortest wait');
+	}
+	const hesitationFactor = expectNumber(record['hesitationFactor'], `${path}.hesitationFactor`);
+	if (hesitationFactor < 1) fail(`${path}.hesitationFactor`, 'expected a number of at least 1');
+	return {
+		hesitationFactor,
+		hesitationMinKeys: expectAtLeastOne(record['hesitationMinKeys'], `${path}.hesitationMinKeys`),
+		hesitationMinCorrect: expectAtLeastOne(
+			record['hesitationMinCorrect'],
+			`${path}.hesitationMinCorrect`
+		)
+	};
+}
+
 function parseHandGuide(value: unknown, path: string): HandGuideRules {
 	const record = expectRecord(value, path);
-	rejectUnknown(record, ['everyKeyUntil', 'newKeysUntil', 'hesitationMs'], path);
+	rejectUnknown(
+		record,
+		['everyKeyUntil', 'newKeysUntil', 'hesitationMs', ...PERSONAL_HESITATION],
+		path
+	);
 	const everyKeyUntil = expectInteger(record['everyKeyUntil'], `${path}.everyKeyUntil`);
 	const newKeysUntil = expectInteger(record['newKeysUntil'], `${path}.newKeysUntil`);
 	if (everyKeyUntil < 0) fail(`${path}.everyKeyUntil`, 'expected an integer of at least 0');
@@ -491,7 +546,12 @@ function parseHandGuide(value: unknown, path: string): HandGuideRules {
 	if (hesitationMs !== undefined && hesitationMs < 0) {
 		fail(`${path}.hesitationMs`, 'expected an integer of at least 0');
 	}
-	return { everyKeyUntil, newKeysUntil, ...(hesitationMs === undefined ? {} : { hesitationMs }) };
+	return {
+		everyKeyUntil,
+		newKeysUntil,
+		...(hesitationMs === undefined ? {} : { hesitationMs }),
+		...parsePersonalHesitation(record, hesitationMs, path)
+	};
 }
 
 function parseMix(value: unknown, path: string): ExerciseMix {
@@ -770,6 +830,7 @@ function parseLesson(
 			'id',
 			'title',
 			'intro',
+			'introByPlatform',
 			'newChars',
 			'words',
 			'mix',
@@ -797,6 +858,10 @@ function parseLesson(
 	lessonIds.add(id);
 	const title = expectString(record['title'], `${path}.title`);
 	const intro = expectString(record['intro'], `${path}.intro`);
+	const introByPlatform =
+		record['introByPlatform'] === undefined
+			? undefined
+			: parseIntroByPlatform(record['introByPlatform'], `${path}.introByPlatform`);
 
 	const newChars = expectArray(record['newChars'], `${path}.newChars`).map((raw, i) => {
 		const char = expectGrapheme(raw, `${path}.newChars[${i}]`);
@@ -878,6 +943,7 @@ function parseLesson(
 		id,
 		title,
 		intro,
+		...(introByPlatform === undefined ? {} : { introByPlatform }),
 		newChars,
 		words,
 		mix,
@@ -1042,6 +1108,14 @@ export function findLesson(
 		if (lesson !== undefined) return lesson;
 	}
 	return undefined;
+}
+
+/**
+ * The instruction of a lesson, said and shown to a child whose layout is made for `platform`: the
+ * sentence written for that platform, else the common one (audit P-09).
+ */
+export function lessonIntro(lesson: LessonDefinition, platform: LayoutPlatform): string {
+	return lesson.introByPlatform?.[platform] ?? lesson.intro;
 }
 
 /** A detour: a lesson nothing waits for (`LessonDefinition.optional`). */

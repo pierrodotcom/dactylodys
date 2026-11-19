@@ -137,7 +137,7 @@
 	import { gameForLesson, gameOptions, selectedGame } from './game-choice';
 	import HelpThanks from './HelpThanks.svelte';
 	import { answerToBrowser, isPlayGuard, needsEntry, PLAY_GUARD, wayBackOf } from './history';
-	import { fadedKeysFor, isMotionReduced, toGameSettings } from './game-settings';
+	import { fadedKeysFor, hesitationFor, isMotionReduced, toGameSettings } from './game-settings';
 	import { SCENE_SCHEDULE } from './scenes';
 	import { findGame } from '$lib/games/registry';
 	import KeyboardCheck from './KeyboardCheck.svelte';
@@ -863,14 +863,17 @@
 		return focus === null ? [] : fadedFor(current, focus);
 	}
 
-	/** What the hand on the keyboard shows in this lesson, for this child; every key in an aided play. */
+	/**
+	 * What the hand on the keyboard shows in this lesson, for this child; every key in an aided play.
+	 * The wait before it helps a child who hesitates follows the time this child takes (P-07).
+	 */
 	function guideFor(current: Profile, lessonId: string, support: SupportLevel = 'none'): GameGuide {
 		if (!progression) return { mode: 'none', freshChars: [], hesitationMs: 0 };
 		const number = lessonIds(progression).indexOf(lessonId) + 1;
 		return {
 			mode: guideMode(progression.rules, number, current.settings.handGuide, support),
 			freshChars: freshChars(progression, lessonId),
-			hesitationMs: progression.rules.handGuide?.hesitationMs ?? 0
+			hesitationMs: hesitationFor(progression, current.progress, assets?.charIndex)
 		};
 	}
 

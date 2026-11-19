@@ -47,6 +47,7 @@ function keysOf(pattern: RegExp, text: string): string[] {
 const sectionTitles = keysOf(/<h2 id="[\w-]+">\{m\.(\w+)\(\)\}<\/h2>/g, source).map(message);
 const questionsBlock = /<ol data-review-questions>([\s\S]*?)<\/ol>/.exec(source)?.[1] ?? '';
 const questions = keysOf(/m\.(pro_review_q_\w+)\(/g, questionsBlock).map(message);
+const limitKeys = keysOf(/m\.(pro_limit_\w+)\(\)/g, source);
 
 describe('the sheet for professionals', () => {
 	it('has the same section titles in the game and in its Markdown version', () => {
@@ -63,6 +64,13 @@ describe('the sheet for professionals', () => {
 
 	it('asks the same questions in its Markdown version, with the same figures', () => {
 		const missing = questions.filter((question) => !sheet.includes(question));
+
+		expect(missing).toEqual([]);
+	});
+
+	it('lists the same known limits in its Markdown version, the Mac not tried among them', () => {
+		expect(limitKeys.map(message).some((limit) => limit.includes('Mac'))).toBe(true);
+		const missing = limitKeys.map(message).filter((limit) => !sheet.includes(limit));
 
 		expect(missing).toEqual([]);
 	});

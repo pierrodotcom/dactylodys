@@ -39,6 +39,15 @@ export interface LayoutDefinition {
 	readonly sources: readonly LayoutSource[];
 	readonly keys: Readonly<Record<KeyCode, KeyLevels>>;
 	readonly deadKeys: Readonly<Record<string, DeadKeyDefinition>>;
+	/**
+	 * For a character the layout writes in several ways (NFC character to its key presses), the way
+	 * the keyboard drawn shows: the one the instructions teach. On a Mac, « ê » is the dead key ^ then
+	 * E, as on a PC, rather than Option + E; « @ » is its own key rather than Option + « ` ».
+	 * `buildCharIndex` gives it first; it must be one of the ways the keys write the character
+	 * (checked). Absent, or for another character: the ways in one press first, in the order of the
+	 * keys, then those through a dead key.
+	 */
+	readonly preferred?: Readonly<Record<string, KeySequence>>;
 }
 
 export interface KeyPress {

@@ -15,7 +15,10 @@
 		"handGuide": {
 			"everyKeyUntil": 2,
 			"newKeysUntil": 39,
-			"hesitationMs": 3000
+			"hesitationMs": 3000,
+			"hesitationFactor": 2,
+			"hesitationMinKeys": 5,
+			"hesitationMinCorrect": 10
 		},
 		"starAlmostMargin": 3,
 		"storyPhraseEvery": 2,
@@ -683,6 +686,9 @@
 					"id": "fr.lesson.klaxon-question-exclamation",
 					"title": "Le klaxon rigolo",
 					"intro": "Maj et la virgule donnent le point d'interrogation, le point d'exclamation est tout à droite, les guillemets sur le 3.",
+					"introByPlatform": {
+						"mac": "Maj et la virgule donnent le point d'interrogation, le point d'exclamation est sur le 8, les guillemets sur le 3."
+					},
 					"newChars": ["?", "!", "\""],
 					"words": [],
 					"mix": {
@@ -707,6 +713,9 @@
 					"id": "fr.lesson.tiret-deux-points",
 					"title": "Le train aux wagons accrochés",
 					"intro": "Ton index droit monte au tiret, sur la rangée des chiffres, et ton annulaire droit descend aux deux-points.",
+					"introByPlatform": {
+						"mac": "Ton auriculaire droit monte au tiret, tout à droite des chiffres, et ton annulaire droit descend aux deux-points."
+					},
 					"newChars": ["-", ":"],
 					"words": [],
 					"mix": {
@@ -967,6 +976,9 @@
 					"id": "fr.lesson.adresse-du-dino",
 					"title": "L'adresse du dino",
 					"intro": "Sur un PC, l'arobase @ se tape avec AltGr, tenue par le pouce droit, et la touche du à.",
+					"introByPlatform": {
+						"mac": "Sur un Mac, l'arobase @ a sa propre touche, tout à gauche : ton auriculaire gauche la tape."
+					},
 					"newChars": ["@"],
 					"words": [],
 					"mix": {

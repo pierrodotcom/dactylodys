@@ -27,7 +27,7 @@ paths:
 
 1. La frappe est validée sur le **caractère produit**, lu uniquement dans `beforeinput`/`input` et la fin de composition, **jamais dans `key`**. `code` ne juge rien et ne désigne aucune touche à l'écran (ADR-082) : la touche attendue et son doigt viennent de la disposition, la touche fausse du caractère produit (`keyCodeForChar`). `code` ne sert qu'aux touches sans caractère (Retour arrière, Entrée, Tab, Échap, modificateurs) et à apparier `keydown` et `keyup`.
 2. Le moteur consomme des `NormalizedKeystroke`. Toute la complexité navigateur vit dans **un** normaliseur pur, `keyboard/input-adapter/` : il reçoit des `RawInputEvent` (copies en données simples des événements DOM) et n'accède jamais au DOM. Le branchement des écouteurs DOM est un adaptateur mince dans `src/lib/ui/keyboard-capture/`, qui ne contient aucune logique. C'est ce qui permet de rejouer les traces en Node.
-3. Une disposition est une donnée JSON : touche physique (`code`) → caractères par couche (base, Maj, AltGr, Maj+AltGr, touches mortes) → doigt assigné. Variantes PC et Mac séparées. Aucun `if (layout === 'azerty')` dans le code.
+3. Une disposition est une donnée JSON : touche physique (`code`) → caractères par couche (base, Maj, AltGr, Maj+AltGr, touches mortes) → doigt assigné. Variantes PC et Mac séparées. Aucun `if (layout === 'azerty')` dans le code. Quand un caractère s'obtient de plusieurs façons, la disposition dit laquelle montrer (`preferred`, ADR-090) : celle que la consigne enseigne (touche morte pour « ê » sur Mac comme sur PC, « @ » par sa touche sur Mac). Une consigne propre à une plate-forme est une donnée de la leçon (`introByPlatform`), lue selon la plate-forme de la disposition, jamais selon son nom.
 4. L'assignation des doigts est un **profil de doigté** distinct de la disposition (10 doigts, doigté réduit) pour permettre les adaptations recommandées par les ergothérapeutes.
 5. Toute disposition ajoutée est livrée avec des **traces réelles** enregistrées sur matériel (navigateur × OS) dans `tests/traces/`, rejouées en test. L'outil d'enregistrement fait partie du projet.
 6. Le moteur est déterministe : horloge et générateur aléatoire injectés.
@@ -53,6 +53,8 @@ Types : `src/lib/keyboard/types.ts`, `src/lib/keyboard/layout-ids.ts`, `src/lib/
 | `createSession(text, options?): SessionState` | `engine/session` | Découpe en graphèmes NFC |
 | `applyKeystroke(state, keystroke): SessionStep` | `engine/session` | Réducteur pur |
 | `computeMetrics(state, now?): SessionMetrics` | `engine/metrics` | Précision, vitesse, statistiques par caractère |
+
+Signes d'une touche (ADR-089, `keyboard/legend`, sans DOM) : `keyLegend`, `pressSign`, `extraSign` lisent les signes dans les niveaux de la disposition ; le clavier dessiné n'en écrit aucun lui-même.
 
 Mains dessinées (ADR-031, `keyboard/hands.ts`, sans DOM) : `keyBoxes(geometry)` et `keyboardSize(geometry)` en pas de touche (une touche et son espacement) ; `restingHands(geometry, fingering)` place les bouts de doigt sur `homeKeys` et les pouces sur la rangée d'espace ; `fingerMoves(geometry, fingering, press)` donne le doigt qui frappe puis ceux des modificateurs (`modifierCodes`, désormais dans `keyboard/fingering`).
 

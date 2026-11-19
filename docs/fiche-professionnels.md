@@ -25,7 +25,7 @@ Chaque choix s'appuie sur une synthèse de la recherche publiée avec le projet.
 - **La précision avant la vitesse.** Une leçon se réussit à 80 % de frappes justes, quelle que soit la vitesse, et une erreur ne fait rien perdre. La vitesse vient d'un lien stable entre chaque touche et son doigt (Feit et al., 2016).
 - **Des séances courtes.** Une partie dure quelques minutes, un peu plus quand l'enfant tape vite ; le jeu propose lui-même une pause après 4 parties au début, puis après environ 8 minutes de frappe. La pratique répartie est le résultat le mieux établi pour apprendre à taper (Baddeley et Longman, 1978).
 - **Aucun mécanisme pour retenir l'enfant.** Pas de série de jours à tenir, pas de classement, pas de récompense au hasard, pas de notification. Les récompenses saluent une compétence acquise, jamais le temps passé (Deci et al., 1999 ; Radesky et al., 2022).
-- **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; la lettre d'une touche bien acquise s'efface, et revient après une erreur. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
+- **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; une touche bien acquise s'efface, et revient quand l'enfant hésite ou se trompe. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
 - **Des réglages sensoriels séparés.** Sons, voix, mouvements, effets lumineux, taille et espacement du texte se règlent à part, ou tous ensemble avec « Tout calmer ». Rien ne bouge autour du texte pendant la frappe (Pelham et al., 2011). Le bruit de fond doux, qui aide certains et en gêne d'autres, est coupé par défaut (Nigg et al., 2024).
 - **Le retour arrière, au choix de l'adulte.** Le jeu attend la bonne touche, sauf dans le monde des textes, où l'enfant efface lui-même ses erreurs, comme dans un vrai texte. Aucune étude ne tranche : vous pouvez choisir l'un ou l'autre partout.
 - **Un contenu selon l'âge.** Deux tranches, 8-9 ans et 10-12 ans, changent les mots et les textes, jamais la progression ni les seuils : un enfant rejette ce qui lui paraît fait pour plus petit (Nielsen Norman Group).
@@ -55,7 +55,7 @@ Il ne dit pas si un enfant doit passer au clavier : cette décision reste celle 
 
 ## Limites connues et suites prévues
 
-- Le jeu existe en français, pour les claviers AZERTY de France. D'autres langues et dispositions sont prévues.
+- Le jeu existe en français, pour les claviers AZERTY de France (Mac pas encore vérifié sur un vrai Mac). D'autres langues et dispositions sont prévues.
 - Seul le doigté à dix doigts est proposé. Un doigté simplifié, à quatre ou six doigts, est à l'étude.
 - Une dictée, pour taper sans avoir à lire le modèle, est à l'étude.
 - Il se joue avec un vrai clavier ; il n'est pas jouable sans la vue.

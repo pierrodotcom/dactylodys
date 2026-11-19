@@ -29,6 +29,7 @@
 			<li>{m.a11y_limit_small_keys()}</li>
 			<li>{m.a11y_limit_hand()}</li>
 			<li>{m.a11y_limit_tab_title()}</li>
+			<li>{m.a11y_limit_mac()}</li>
 		</ul>
 	</section>
 

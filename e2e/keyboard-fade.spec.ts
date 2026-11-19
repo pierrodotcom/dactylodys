@@ -21,6 +21,8 @@ import {
 /**
  * The keyboard that fades key by key (ADR-057): a key the child knows well loses its letter on the
  * keyboard drawn in the games, and gets it back for the rest of the game after a mistake on it.
+ * Where the hand does not show it, it no longer lights when it is expected either, nor is its
+ * finger named; it lights again after a mistake on it, and while the child hesitates (audit P-07).
  */
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
@@ -38,6 +40,9 @@ const worlds = readJson<{ worlds: { lessons: Lesson[] }[] }>(
 	'content/fr/progression/azerty-decouverte.json'
 ).worlds;
 const FIRST = worlds[0]?.lessons[0] as Lesson;
+/** « Le nid du tricératops »: the hand shows its new keys, D and K, not F and J. */
+const THIRD = worlds[0]?.lessons[2] as Lesson;
+const BEFORE_THIRD_LESSONS = worlds[0]?.lessons.slice(0, 2) ?? [];
 const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
 	'content/fr/adult/gate-numbers.json'
 ).numbers;
@@ -45,17 +50,38 @@ const gateNumbers = readJson<{ numbers: { value: number; words: string }[] }>(
 const NAME = 'Sacha';
 /** Keys of the first lesson on AZERTY. */
 const KEY_OF: Readonly<Record<string, string>> = { f: 'KeyF', j: 'KeyJ' };
+const FINGER_OF: Readonly<Record<string, string>> = {
+	f: message('ui_finger_left_index'),
+	j: message('ui_finger_right_index')
+};
+/** What the child knows before the third lesson: its keys and those of the first two. */
+const BEFORE_THIRD = ['f', 'j', ' ', 'd', 'k'];
+/** Time of a slow child on each key: the hand waits twice as long, more than any test lasts. */
+const SLOW_KEY_MS = 30_000;
+/** A key the lessons never ask: a mistake. */
+const WRONG = 'x';
 
-/** A child who typed these characters often and without a mistake lately. */
-function child(known: readonly string[]): Profile {
-	const sample = { attempts: 30, errors: 0, latencyMs: null };
+/**
+ * A child who typed these characters often and without a mistake lately, taking `latencyMs`
+ * before each (`null`: not measured, the hand waits its shortest time), and passed these lessons.
+ */
+function child(
+	known: readonly string[],
+	latencyMs: number | null = null,
+	passed: readonly Lesson[] = []
+): Profile {
+	const sample = { attempts: 30, errors: 0, latencyMs };
+	const profile = advancedProfile({
+		name: NAME,
+		passed: Object.fromEntries(passed.map((lesson) => [lesson.id, 3 as const]))
+	});
 	const progress: ProgressState = {
-		lessons: {},
+		lessons: profile.progress.lessons,
 		chars: Object.fromEntries(
 			known.map((char) => [char, { attempts: 30, errors: 0, recent: [sample] }])
 		)
 	};
-	return withProgress(advancedProfile({ name: NAME, passed: {} }), progress);
+	return withProgress(profile, progress);
 }
 
 function button(page: Page, name: string) {
@@ -100,13 +126,50 @@ async function reachMap(page: Page) {
 	await expect(map).toBeVisible();
 }
 
-async function startFirstLesson(page: Page): Promise<string> {
-	await page.getByRole('button', { name: FIRST.title }).click();
-	await throughStory(page, heading(page, FIRST.title));
+async function startLesson(page: Page, lesson: Lesson): Promise<string> {
+	await page.getByRole('button', { name: lesson.title }).click();
+	await throughStory(page, heading(page, lesson.title));
 	await page.locator('button[data-proposed]').click();
 	await expect(page.locator('#game-input')).toBeFocused();
 	return currentGroup(page);
 }
+
+async function startFirstLesson(page: Page): Promise<string> {
+	return startLesson(page, FIRST);
+}
+
+function fingerHint(page: Page): Locator {
+	return page.locator('.text-zone .finger-hint');
+}
+
+function hintOf(char: string): string {
+	return message('ui_finger_hint', { key: char.toUpperCase(), finger: FINGER_OF[char] ?? '' });
+}
+
+function typedCells(page: Page): Locator {
+	return page.locator('.target-text').first().locator('.cell[data-state="done"]');
+}
+
+/**
+ * Types the text right, from group to group, up to the first character `wanted` accepts, and
+ * gives it: it is the character expected now. The rewards must be `instant`.
+ */
+async function typeUpTo(page: Page, wanted: (char: string) => boolean): Promise<string> {
+	for (;;) {
+		const chars = toGraphemes(await currentGroup(page));
+		const typed = await typedCells(page).count();
+		const at = chars.findIndex((char, index) => index >= typed && wanted(char));
+		if (at >= 0) {
+			await page.keyboard.type(chars.slice(typed, at).join(''));
+			return chars[at] ?? '';
+		}
+		await page.keyboard.type(chars.slice(typed).join(''));
+		// The next group comes at once: nothing of it is typed yet.
+		await expect(typedCells(page)).toHaveCount(0);
+	}
+}
+
+const isKnownKey = (char: string) => Object.hasOwn(KEY_OF, char);
 
 async function installChild(page: Page, profile: Profile) {
 	await openPage(page, '/jouer');
@@ -211,6 +274,55 @@ test.describe('Keyboard that fades', CHROMIUM_ONLY, () => {
 		await expect(label(page, 'KeyF')).toBeVisible();
 		await expect(label(page, 'KeyJ')).toBeVisible();
 	});
+});
+
+// The keys typed and judged: every engine (rule 11 of `.claude/rules/tests.md`).
+test.describe('Keyboard that fades, the key to type', () => {
+	test('leaves dark a key the child knows well, lights it after a mistake until the end of the game', async ({
+		page
+	}) => {
+		// Played from group to group without a reward to pass: the next one comes at once.
+		await setRewards(page, 'instant');
+		// A slow child: the hand waits longer than the test, the key never lights for a hesitation.
+		await installChild(page, child(BEFORE_THIRD, SLOW_KEY_MS, BEFORE_THIRD_LESSONS));
+		await reachMap(page);
+		await startLesson(page, THIRD);
+
+		const known = await typeUpTo(page, isKnownKey);
+		const code = KEY_OF[known] ?? '';
+		await expect(key(page, code)).toHaveAttribute('data-faded', 'true');
+		await expect(page.locator('.keyboard .key[data-target]')).toHaveCount(0);
+		await expect(fingerHint(page)).toHaveCount(0);
+
+		await page.keyboard.type(WRONG);
+		await expect(key(page, code)).toHaveAttribute('data-target', 'true');
+		await expect(fingerHint(page)).toHaveText(hintOf(known));
+
+		await page.keyboard.type(known);
+		// The next key the child knows well: the one missed lights at once, the other stays dark.
+		const next = await typeUpTo(page, isKnownKey);
+		await expect(page.locator('.keyboard .key[data-target]')).toHaveCount(next === known ? 1 : 0);
+		await expect(fingerHint(page)).toHaveCount(next === known ? 1 : 0);
+	});
+
+	// The wait itself is the logic of the game, the same whatever the engine.
+	test(
+		'lights a key the child knows well again while the child waits on it',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await setRewards(page, 'instant');
+			// Never timed: the hand waits its shortest time.
+			await installChild(page, child(BEFORE_THIRD, null, BEFORE_THIRD_LESSONS));
+			await reachMap(page);
+			await startLesson(page, THIRD);
+
+			const known = await typeUpTo(page, isKnownKey);
+			const target = key(page, KEY_OF[known] ?? '');
+			await expect(target).not.toHaveAttribute('data-target', 'true');
+			await expect(target).toHaveAttribute('data-target', 'true');
+			await expect(fingerHint(page)).toHaveText(hintOf(known));
+		}
+	);
 });
 
 test.describe('Keyboard that fades, light and dark themes', () => {

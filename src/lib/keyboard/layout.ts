@@ -13,7 +13,8 @@ import type {
 	ModifierLevel
 } from './types';
 
-const PLATFORMS: readonly LayoutPlatform[] = ['pc', 'mac'];
+/** The platforms a layout is made for: the keys and their modifiers differ from one to the other. */
+export const LAYOUT_PLATFORMS: readonly LayoutPlatform[] = ['pc', 'mac'];
 const GEOMETRIES: readonly KeyboardGeometry[] = ['iso', 'ansi'];
 const LEVELS: readonly ModifierLevel[] = ['base', 'shift', 'altgr', 'shiftAltgr'];
 const LAYOUT_ID_PATTERN = /^[a-z]{2,3}-[a-z]{2}-[a-z0-9]+-[a-z]+$/;
@@ -131,16 +132,74 @@ function parseDeadKey(value: unknown, path: string): DeadKeyDefinition {
 	};
 }
 
+function parsePress(
+	value: unknown,
+	keys: Readonly<Record<KeyCode, KeyLevels>>,
+	path: string
+): KeyPress {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['code', 'level'], path);
+	const code = expectString(record['code'], `${path}.code`);
+	if (!Object.hasOwn(keys, code)) fail(`${path}.code`, `no key "${code}" in keys`);
+	const level = expectOneOf(record['level'], LEVELS, `${path}.level`);
+	if (keys[code]?.[level] === undefined) {
+		fail(`${path}.level`, `key "${code}" has no ${level} level`);
+	}
+	return { code, level };
+}
+
+function sameWay(first: KeySequence, second: KeySequence): boolean {
+	return (
+		first.length === second.length &&
+		first.every((press, i) => press.code === second[i]?.code && press.level === second[i]?.level)
+	);
+}
+
+/** The way to show for each character written in several ways: one the keys really write. */
+function parsePreferred(
+	value: unknown,
+	layout: LayoutDefinition,
+	path: string
+): Record<string, KeySequence> {
+	const record = expectRecord(value, path);
+	const index = buildCharIndex(layout);
+	const preferred: Record<string, KeySequence> = {};
+	for (const [raw, rawWay] of Object.entries(record)) {
+		const char = expectGrapheme(raw, `${path} key "${raw}"`);
+		if (Object.hasOwn(preferred, char)) fail(path, `"${char}" is given twice`);
+		const wayPath = `${path}.${raw}`;
+		if (!Array.isArray(rawWay) || rawWay.length === 0) {
+			fail(wayPath, 'expected a non-empty list of key presses');
+		}
+		const way = rawWay.map((press, i) => parsePress(press, layout.keys, `${wayPath}[${i}]`));
+		if (!(index.get(char) ?? []).some((written) => sameWay(written, way))) {
+			fail(wayPath, `these key presses do not write "${char}"`);
+		}
+		preferred[char] = way;
+	}
+	return preferred;
+}
+
 export function parseLayout(data: unknown): LayoutDefinition {
 	const root = expectRecord(data, 'layout');
 	rejectUnknown(
 		root,
-		['schemaVersion', 'id', 'locale', 'platform', 'geometry', 'sources', 'keys', 'deadKeys'],
+		[
+			'schemaVersion',
+			'id',
+			'locale',
+			'platform',
+			'geometry',
+			'sources',
+			'keys',
+			'deadKeys',
+			'preferred'
+		],
 		'layout'
 	);
 	if (root['schemaVersion'] !== 1) fail('layout.schemaVersion', 'expected 1');
 
-	const platform = expectOneOf(root['platform'], PLATFORMS, 'layout.platform');
+	const platform = expectOneOf(root['platform'], LAYOUT_PLATFORMS, 'layout.platform');
 	const id = expectString(root['id'], 'layout.id');
 	if (!LAYOUT_ID_PATTERN.test(id) || !id.endsWith(`-${platform}`)) {
 		fail('layout.id', `expected <language>-<country>-<variant>-${platform}`);
@@ -182,7 +241,18 @@ export function parseLayout(data: unknown): LayoutDefinition {
 		if (!referenced.has(name)) fail(`layout.deadKeys.${name}`, 'dead key is never referenced');
 	}
 
-	return { schemaVersion: 1, id, locale, platform, geometry, sources, keys, deadKeys };
+	const layout: LayoutDefinition = {
+		schemaVersion: 1,
+		id,
+		locale,
+		platform,
+		geometry,
+		sources,
+		keys,
+		deadKeys
+	};
+	if (root['preferred'] === undefined) return layout;
+	return { ...layout, preferred: parsePreferred(root['preferred'], layout, 'layout.preferred') };
 }
 
 export function buildCharIndex(layout: LayoutDefinition): CharIndex {
@@ -227,6 +297,13 @@ export function buildCharIndex(layout: LayoutDefinition): CharIndex {
 				}
 			}
 		}
+	}
+
+	// The way the layout prefers comes first: the one the keyboard drawn shows.
+	for (const [char, way] of Object.entries(layout.preferred ?? {})) {
+		const ways = index.get(char.normalize('NFC'));
+		const at = ways?.findIndex((written) => sameWay(written, way)) ?? -1;
+		if (ways !== undefined && at > 0) ways.unshift(...ways.splice(at, 1));
 	}
 
 	return index;

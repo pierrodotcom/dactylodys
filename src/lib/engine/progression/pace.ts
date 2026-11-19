@@ -5,7 +5,8 @@ function known(paces: readonly number[]): number[] {
 	return paces.filter((pace) => Number.isFinite(pace) && pace > 0);
 }
 
-function median(values: readonly number[]): number {
+/** The middle value, or the mean of the two in the middle; 0 for none. */
+export function median(values: readonly number[]): number {
 	const sorted = [...values].sort((a, b) => a - b);
 	const middle = Math.floor(sorted.length / 2);
 	const upper = sorted[middle] ?? 0;

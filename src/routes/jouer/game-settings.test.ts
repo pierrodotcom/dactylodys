@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { emptyProgress } from '$lib/engine/progression/progress';
 import type { ProgressState } from '$lib/engine/progression/types';
 import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
 import { defaultSettings, updateSettings, createProfile } from '$lib/state/profile';
 import type { GameGuide } from '$lib/games/types';
 import azertyPc from '../../../layouts/fr-fr-azerty-pc.json';
 import { progressionFor } from './content';
-import { fadedKeysFor, isMotionReduced, toGameSettings } from './game-settings';
+import { fadedKeysFor, hesitationFor, isMotionReduced, toGameSettings } from './game-settings';
 
 const base = defaultSettings('pc');
 const NO_GUIDE: GameGuide = { mode: 'none', freshChars: [], hesitationMs: 0 };
@@ -101,6 +102,51 @@ describe('toGameSettings', () => {
 		);
 
 		expect(toGameSettings(profile.settings, false, NO_GUIDE).reducedMotion).toBe(true);
+	});
+});
+
+describe('hesitationFor (audit P-07)', () => {
+	const progression = progressionFor('fr-fr-azerty-pc');
+	if (progression === undefined) throw new Error('no progression for AZERTY PC');
+	const charIndex = buildCharIndex(parseLayout(azertyPc));
+	const rules = progression.rules.handGuide;
+	const shortest = rules?.hesitationMs ?? 0;
+
+	/** A child measured on enough keys, each with enough right keystrokes, this long before each. */
+	function measured(latencyMs: number): ProgressState {
+		const keys = [...'fjdkslei'].slice(0, rules?.hesitationMinKeys ?? 0);
+		const correct = rules?.hesitationMinCorrect ?? 0;
+		const sample = { attempts: correct, errors: 0, latencyMs };
+		return {
+			lessons: {},
+			chars: Object.fromEntries(
+				keys.map((char) => [char, { attempts: correct, errors: 0, recent: [sample] }])
+			)
+		};
+	}
+
+	it('follows the time of the progression: a shortest wait and a factor of the time of the child', () => {
+		expect(shortest).toBeGreaterThan(0);
+		expect(rules?.hesitationFactor).toBeGreaterThanOrEqual(1);
+	});
+
+	it('waits the shortest time for a child not measured yet', () => {
+		expect(hesitationFor(progression, emptyProgress(), charIndex)).toBe(shortest);
+	});
+
+	it('waits longer for a child who takes long on every key lately', () => {
+		const slow = shortest * 2;
+		expect(hesitationFor(progression, measured(slow), charIndex)).toBe(
+			slow * (rules?.hesitationFactor ?? 0)
+		);
+	});
+
+	it('never waits less than the shortest time for a quick child', () => {
+		expect(hesitationFor(progression, measured(shortest / 10), charIndex)).toBe(shortest);
+	});
+
+	it('waits the shortest time while the keys of the layout are not loaded', () => {
+		expect(hesitationFor(progression, measured(shortest * 2), undefined)).toBe(shortest);
 	});
 });
 

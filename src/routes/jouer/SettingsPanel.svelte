@@ -357,6 +357,7 @@
 					name="setting-layout"
 					options={LAYOUT_OPTIONS}
 					value={settings.layoutId}
+					hint={m.settings_layout_hint()}
 					onchange={(value) => change({ layoutId: value as LayoutId })}
 				/>
 			{/if}

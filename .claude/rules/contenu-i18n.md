@@ -31,3 +31,7 @@ paths:
 - Toute clé ajoutée l'est dans **toutes les langues actives** dans le même commit ; un test échoue sinon.
 - Nombres, durées et pluriels passent par les API `Intl`.
 - Le français est la langue source.
+
+## Pages imprimables (L-160, L-178)
+
+Un texte de la fiche des professionnels (`pro_*`), des guides pour les adultes (`guide_*`), de la fiche de séance (`adult_sheet_*`) ou du bilan imprimé change : `npm run build:e2e` puis `npx playwright test e2e/info-pages.spec.ts e2e/adult.spec.ts --project=chromium -g print` avant de commiter. La fiche des professionnels tient sur deux pages et reste identique à `docs/fiche-professionnels.md` ; la fiche de séance tient sur une page. Si la place manque, resserrer plutôt qu'ajouter.

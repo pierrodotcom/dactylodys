@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { lessonIntro } from '$lib/engine/progression/definition';
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
 	import type { Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
@@ -86,9 +87,13 @@
 	let race = $state(false);
 	let instruction: HTMLElement | undefined = $state();
 
+	// The sentence of the platform of the keyboard: a Mac has some keys elsewhere (P-09). Its own
+	// sentence is silent until it is recorded: the voice only says what was recorded.
+	const intro = $derived(lessonIntro(lesson, assets.layout.platform));
+
 	// The child does not read: the instruction is said once as the lesson opens.
 	$effect(() => {
-		const said = lesson.intro;
+		const said = intro;
 		const speaker = voice;
 		void speaker.speak(said);
 		return () => speaker.stop();
@@ -139,7 +144,7 @@
 						? m.play_lesson_detour()
 						: m.play_lesson_number({ number })}
 			</p>
-			<ListenButton text={lesson.intro} player={voice} />
+			<ListenButton text={intro} player={voice} />
 			{#if prize}
 				<div class="prize" data-prize={prize.id}>
 					<div class="prize-picture" aria-hidden="true">
@@ -155,7 +160,7 @@
 				</div>
 			{/if}
 		</div>
-		<p class="intro" bind:this={instruction}>{lesson.intro}</p>
+		<p class="intro" bind:this={instruction} data-intro>{intro}</p>
 
 		{#if shown}
 			<section class="keys" aria-labelledby="intro-keys-heading" data-intro-keys={shown.kind}>

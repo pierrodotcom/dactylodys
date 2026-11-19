@@ -1,3 +1,4 @@
+import type { LayoutPlatform } from '../../keyboard/types';
 import type { ErrorPolicy, SessionMetrics, SessionStart } from '../types';
 
 /** Returns a number in [0, 1). Injected so that exercise generation is reproducible. */
@@ -250,10 +251,22 @@ export interface HandGuideRules {
 	readonly everyKeyUntil: number;
 	readonly newKeysUntil: number;
 	/**
-	 * In the new-keys mode, milliseconds without a key after which the hand shows the expected one
-	 * anyway: a child who hesitates is helped. Absent or 0: never.
+	 * Milliseconds without a key after which a child who hesitates is helped: in the new-keys mode
+	 * the hand shows the expected key anyway, and a key that faded lights again, with or without
+	 * the hand (audit P-07). The shortest wait when the three rules below follow the time of the
+	 * child. Absent or 0: never.
 	 */
 	readonly hesitationMs?: number;
+	/**
+	 * The wait follows the child (audit P-07): `hesitationFactor` (at least 1) times the median time
+	 * this child takes before a right keystroke on the keys measured lately (ADR-056), never under
+	 * `hesitationMs`; a child who types slowly is not helped at every key. A key is measured once it
+	 * has `hesitationMinCorrect` recent right keystrokes; below `hesitationMinKeys` measured keys,
+	 * `hesitationMs` alone. The three go together, with `hesitationMs`. Absent: `hesitationMs` alone.
+	 */
+	readonly hesitationFactor?: number;
+	readonly hesitationMinKeys?: number;
+	readonly hesitationMinCorrect?: number;
 }
 
 /**
@@ -285,6 +298,12 @@ export interface LessonDefinition {
 	readonly title: string;
 	/** One short sentence said to the child before playing, e.g. where to put the fingers. */
 	readonly intro: string;
+	/**
+	 * The sentence for a platform whose keys are not where `intro` puts them (audit P-09): on a
+	 * Mac, « ! » is on the key 8 and « @ » has a key of its own. Read for the platform of the layout
+	 * of the child (`lessonIntro`); for a platform it does not name: `intro`. Absent: `intro` for all.
+	 */
+	readonly introByPlatform?: Readonly<Partial<Record<LayoutPlatform, string>>>;
 	/** Graphemes introduced by this lesson; a space is `" "`. */
 	readonly newChars: readonly string[];
 	/** Hand-picked words typable with the characters learned so far; may be empty. */
