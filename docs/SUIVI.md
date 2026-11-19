@@ -37,7 +37,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Textes et typographie | C-01 à C-07, C-09, C-10, C-11, C-13, C-15, C-16, C-17, P-20 (rappel compté en caractères), F4 et F8 de la relecture de l'ordre des leçons | À faire, en dernier : il donne la liste de la campagne de voix |
 | Crédits, hors-ligne, outillage | C-08, C-12, Q-07, Q-11, Q-10, Q-16, Q-19 à Q-21, Q-27, E-13, E-14 | Fait (ADR-078) ; reste Q-07 a-b-c (mise à jour du cache), trois règles typées dans `state/`, jetons inutilisés |
 | Espace adulte | E-09, E-13, E-14, E-15, P-17, P-23 | Fait (ADR-091, profil version 18) |
-| Consignes courtes et textes dits | P-12, P-13, P-19, C-07 (consignes) | À faire (code et textes ; enregistrements par le porteur) |
+| Consignes courtes et textes dits | P-12, P-13, P-19, C-07 (consignes) | Fait (ADR-092) ; reste la campagne de voix du porteur |
 | Doigtés réduits | § 5 de l'audit de pédagogie (deux index, six doigts) | À faire, après les consignes courtes |
 | Voix | P-01 et la liste du lot « textes » | Campagne du porteur, quand les textes sont figés |
 
@@ -264,3 +264,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-19** — Clavier dessiné lisible (ADR-089) : deux signes par touche (la touche allumée porte le signe demandé), clavier sombre, main guide en contour, couleurs forcées, petits textes agrandis, réglage « Le doigt qui tape ». Profil version 17. Leçons L-174 à L-176.
 - **2026-11-19** — L'aide qui s'efface et revient, un Mac qui dit vrai (ADR-090) : une touche maîtrisée ne s'allume plus, sauf après une faute ou une hésitation (délai propre à l'enfant) ; sur Mac, consignes et clavier dessiné disent la même chose, et le Mac est dit « pas encore vérifié ». Leçons L-177 et L-178.
 - **2026-11-19** — Espace adulte sûr et clair (ADR-091) : le bouton Retour du navigateur ne rouvre plus l'espace adulte sans barrière ; barrière à nombres courts ; bilan à sommaire, imprimable sur deux pages ; « acquise » après 40 frappes sur 3 jours ; pages pour les adultes justes (le jeu ne voit pas les doigts). Profil version 18. Leçons L-179 à L-181.
+- **2026-11-19** — Consignes courtes et textes dits (ADR-092) : 61 phrases courtes, une par touche, dites pendant que la main montre ; 75 messages (Floup, bilan, pause, vérification du clavier) peuvent être dits ; tout attend la campagne de voix (160 textes, environ 11 minutes). Leçons L-182 à L-186.
