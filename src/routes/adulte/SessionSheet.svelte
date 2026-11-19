@@ -165,9 +165,20 @@
 				<li data-sheet-length>{length}</li>
 				<li data-sheet-length-setting>{m.adult_sheet_during_length_setting()}</li>
 				<li>{m.adult_sheet_during_accuracy()}</li>
-				<li>{m.adult_sheet_during_eyes()}</li>
 				<li>{m.adult_sheet_during_role()}</li>
 				<li>{m.adult_sheet_during_errors({ name })}</li>
+			</ul>
+		</section>
+
+		<!-- The game judges the letter written, never the finger: what the adult sees is ticked here (P-23). -->
+		<section aria-labelledby="sheet-watch-title" data-sheet-watch>
+			<h2 id="sheet-watch-title">{m.adult_sheet_watch_title()}</h2>
+			<p>{m.adult_sheet_watch_intro()}</p>
+			<ul class="checks">
+				<li>{m.adult_sheet_watch_home()}</li>
+				<li>{m.adult_sheet_watch_return()}</li>
+				<li>{m.adult_sheet_watch_eyes()}</li>
+				<li>{m.adult_sheet_watch_shift()}</li>
 			</ul>
 		</section>
 
@@ -222,6 +233,28 @@
 		padding-inline-start: var(--dd-space-lg);
 	}
 
+	/* An empty box before each line, to tick with a pen. */
+	.checks {
+		padding-inline-start: 0;
+		list-style: none;
+	}
+
+	.checks li {
+		display: flex;
+		align-items: center;
+		gap: var(--dd-space-sm);
+	}
+
+	.checks li::before {
+		flex: none;
+		inline-size: var(--dd-size-icon);
+		block-size: var(--dd-size-icon);
+		border-width: var(--dd-border-width-thin);
+		border-style: solid;
+		border-color: var(--dd-color-border-strong);
+		content: '';
+	}
+
 	.footer {
 		padding-block-start: var(--dd-space-md);
 		border-block-start-width: var(--dd-border-width-thin);
@@ -274,6 +307,10 @@
 
 		ul {
 			gap: 0;
+		}
+
+		.checks li::before {
+			border-color: var(--dd-color-print-ink);
 		}
 
 		.footer {

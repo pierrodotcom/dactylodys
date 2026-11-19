@@ -142,7 +142,7 @@
 		}
 
 		.text {
-			gap: var(--dd-print-space-md);
+			gap: var(--dd-print-space-sm);
 			font-size: var(--dd-print-font-size-base);
 			line-height: var(--dd-print-line-height);
 		}

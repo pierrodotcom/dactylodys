@@ -573,6 +573,11 @@ test.describe('adult space', () => {
 		await expect(page.locator('[data-sheet-keys="hesitant"]')).toHaveText(
 			message('adult_sheet_keys_hesitant', { keys: 'L' })
 		);
+		// The game does not see the fingers: the adult watches them and ticks (P-23).
+		await expect(page.locator('[data-sheet-watch] li')).toHaveCount(4);
+		await expect(page.locator('[data-sheet-watch]')).toContainText(
+			message('adult_sheet_watch_intro')
+		);
 		await expect(page.locator('[data-sheet-length]')).toHaveText(
 			plural('adult_sheet_during_length_games', usualSession.earlyExercises, {
 				duration: `${usualSession.clockMinutes} minutes`

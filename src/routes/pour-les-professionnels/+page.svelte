@@ -90,7 +90,6 @@
 		<ul>
 			<li>{m.pro_use_players({ players: m.play_players_title() })}</li>
 			<li>{m.pro_use_space()}</li>
-			<li>{m.pro_use_tools()}</li>
 			<li>{m.pro_use_backup()}</li>
 			<li>{m.pro_use_layouts({ layouts })}</li>
 			<li>{m.pro_use_rhythm()}</li>
@@ -109,6 +108,7 @@
 	<section aria-labelledby="pro-limits">
 		<h2 id="pro-limits">{m.pro_limits_title()}</h2>
 		<ul>
+			<li>{m.pro_limit_fingers()}</li>
 			<li>{m.pro_limit_language()}</li>
 			<li>{m.pro_limit_fingering()}</li>
 			<li>{m.pro_limit_dictation()}</li>

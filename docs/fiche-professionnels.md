@@ -14,9 +14,9 @@ Il est pensé pour les enfants de 8 à 12 ans, en particulier ceux qui ont un TD
 
 L'objectif : taper au moins aussi vite que l'enfant écrit à la main, de façon lisible et sans regarder ses mains, soit souvent 10 à 15 mots par minute. La cible est propre à chaque enfant : l'adulte mesure sa vitesse à la main en une minute.
 
-C'est la condition retenue en ergothérapie pour que le clavier allège l'écriture au lieu d'ajouter une tâche (Freeman et al., 2005). Il y faut au moins 25 à 30 heures de pratique.
+C'est la condition retenue en ergothérapie pour que le clavier allège l'écriture au lieu d'ajouter une tâche (Freeman et al., 2005). Il y faut au moins 25 à 30 heures de pratique, dont le parcours des leçons ne couvre que quelques-unes.
 
-Le parcours compte 34 leçons en 6 mondes : F et J, les voyelles tôt pour taper de vrais mots, puis les lettres les plus courantes, les accents fréquents, les majuscules, la virgule et le point pour écrire de vraies phrases, les dernières lettres et le reste de la ponctuation, de petits textes utiles (une liste, un message, une recette), les chiffres et l'arobase, jusqu'à effacer une faute pour réparer un message. Deux de ces leçons sont facultatives : celles des accents rares (î, ô, û, ë, ï).
+Le parcours compte 34 leçons en 6 mondes : F et J, les voyelles tôt pour de vrais mots, les lettres courantes, les accents fréquents, les majuscules et la ponctuation pour de vraies phrases, de petits textes utiles, les chiffres et l'arobase, jusqu'à réparer un message. Deux leçons sont facultatives : les accents rares (î, ô, û, ë, ï).
 
 ## Les choix de conception et leurs raisons
 
@@ -26,7 +26,7 @@ Chaque choix s'appuie sur une synthèse de la recherche publiée avec le projet.
 - **Des séances courtes.** Une partie dure quelques minutes, un peu plus quand l'enfant tape vite ; le jeu propose lui-même une pause après 4 parties au début, puis après environ 8 minutes de frappe. La pratique répartie est le résultat le mieux établi pour apprendre à taper (Baddeley et Longman, 1978).
 - **Aucun mécanisme pour retenir l'enfant.** Pas de série de jours à tenir, pas de classement, pas de récompense au hasard, pas de notification. Les récompenses saluent une compétence acquise, jamais le temps passé (Deci et al., 1999 ; Radesky et al., 2022).
 - **Un clavier à l'écran qui s'efface.** Il montre la touche et le doigt à utiliser ; une touche tapée juste s'efface, et revient quand l'enfant hésite ou se trompe. Les yeux restent sur l'écran : taper sans regarder est d'abord plus lent, et l'on est tenté de regarder ses mains (Yechiam et al., 2003).
-- **Des réglages sensoriels séparés.** Sons, voix, mouvements, effets lumineux, taille et espacement du texte se règlent à part, ou tous ensemble avec « Tout calmer ». Rien ne bouge autour du texte pendant la frappe (Pelham et al., 2011). Le bruit de fond doux, qui aide certains et en gêne d'autres, est coupé par défaut (Nigg et al., 2024).
+- **Des réglages sensoriels séparés.** Sons, voix, mouvements, effets lumineux, taille et espacement du texte se règlent à part, ou tous ensemble avec « Tout calmer ». Pendant la frappe, seuls bougent la main qui montre le doigt et, si l'enfant la choisit, la course contre son fantôme (Pelham et al., 2011). Le bruit de fond doux, qui aide certains et en gêne d'autres, est coupé par défaut (Nigg et al., 2024).
 - **Le retour arrière, au choix de l'adulte.** Le jeu attend la bonne touche, sauf dans le monde des textes, où l'enfant efface lui-même ses erreurs, comme dans un vrai texte. Aucune étude ne tranche : vous pouvez choisir l'un ou l'autre partout.
 - **Un contenu selon l'âge.** Deux tranches, 8-9 ans et 10-12 ans, changent les mots et les textes, jamais la progression ni les seuils : un enfant rejette ce qui lui paraît fait pour plus petit (Nielsen Norman Group).
 - **Une fiche « séance type ».** Depuis le bilan d'un enfant, une page à imprimer reprend sa leçon, ses touches fragiles ou hésitantes et le déroulé d'une séance, à préparer ou à confier à la famille.
@@ -37,8 +37,7 @@ Les références complètes sont dans la [synthèse de recherche](../reports/Dac
 ## En séance ou en classe
 
 - Plusieurs enfants peuvent jouer sur le même poste : chacun a son profil, choisi sur l'écran « Qui joue ? ».
-- L'espace adulte s'ouvre depuis cet écran, derrière une petite barrière et, si vous le voulez, un code. Il donne le bilan de chaque enfant : leçons, touches tapées juste, acquises sur plusieurs jours ou fragiles, précision, vitesse et jours pratiqués, séance après séance.
-- Vous y trouvez aussi la fiche « séance type », les mesures pour tableur, une liste de mots à vous (ceux de la classe, par exemple) et de quoi ouvrir un monde d'avance.
+- L'espace adulte s'ouvre depuis cet écran, derrière une petite barrière et, si vous le voulez, un code. Il donne le bilan de chaque enfant (leçons, touches, précision, vitesse, jours pratiqués), la fiche « séance type », les mesures pour tableur, vos listes de mots et de quoi ouvrir un monde d'avance.
 - La sauvegarde se fait par fichier, pour un enfant ou pour tous : un profil peut ainsi passer d'un poste à l'autre, du cabinet à la maison par exemple.
 - Dispositions de clavier proposées : Français AZERTY (PC) et Français AZERTY (Mac).
 - Rythme conseillé : des séances courtes, trois à cinq fois par semaine ; leur durée se règle pour chaque enfant.
@@ -55,6 +54,7 @@ Il ne dit pas si un enfant doit passer au clavier : cette décision reste celle 
 
 ## Limites connues et suites prévues
 
+- Le jeu ne voit pas les doigts : il juge la lettre écrite, pas le doigté. Cacher les mains, coller des gommettes ou des repères en relief sont des pratiques courantes, à l'effet non démontré (Lefévère, 2007) : le jeu marche avec ou sans.
 - Le jeu existe en français, pour les claviers AZERTY de France (Mac pas encore vérifié sur un vrai Mac). D'autres langues et dispositions sont prévues.
 - Seul le doigté à dix doigts est proposé. Un doigté simplifié, à quatre ou six doigts, est à l'étude.
 - Une dictée, pour taper sans avoir à lire le modèle, est à l'étude.
