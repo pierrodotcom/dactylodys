@@ -5,6 +5,7 @@ import {
 	isDetour,
 	learnedChars,
 	lessonIds,
+	lessonIntro,
 	lessonNumber,
 	parseProgression,
 	reachableChars
@@ -177,6 +178,41 @@ describe('parseProgression', () => {
 			everyKeyUntil: 4,
 			newKeysUntil: 15,
 			hesitationMs: 2500
+		});
+	});
+
+	it('reads the optional wait of the hand that follows the time of the child (P-07)', () => {
+		const handGuide = {
+			everyKeyUntil: 2,
+			newKeysUntil: 39,
+			hesitationMs: 3000,
+			hesitationFactor: 2,
+			hesitationMinKeys: 5,
+			hesitationMinCorrect: 10
+		};
+		const parsed = parseProgression(variant((raw) => (raw.rules['handGuide'] = handGuide)));
+		expect(parsed.rules.handGuide).toEqual(handGuide);
+		const fractional = parseProgression(
+			variant((raw) => (raw.rules['handGuide'] = { ...handGuide, hesitationFactor: 1.5 }))
+		);
+		expect(fractional.rules.handGuide?.hesitationFactor).toBe(1.5);
+	});
+
+	it('reads the instruction of a lesson for one platform, absent by default (P-09)', () => {
+		expect(parseProgression(BASE).worlds[0]?.lessons[0]).not.toHaveProperty('introByPlatform');
+		const parsed = parseProgression(
+			variant((raw) => (lessonOf(raw, 0, 0)['introByPlatform'] = { mac: 'Intro A, Mac.' }))
+		);
+		expect(parsed.worlds[0]?.lessons[0]?.introByPlatform).toEqual({ mac: 'Intro A, Mac.' });
+		const both = parseProgression(
+			variant(
+				(raw) =>
+					(lessonOf(raw, 0, 0)['introByPlatform'] = { pc: 'Intro A, PC.', mac: 'Intro A, Mac.' })
+			)
+		);
+		expect(both.worlds[0]?.lessons[0]?.introByPlatform).toEqual({
+			pc: 'Intro A, PC.',
+			mac: 'Intro A, Mac.'
 		});
 	});
 
@@ -736,6 +772,81 @@ describe('parseProgression', () => {
 			/progression.rules.handGuide.speed: unknown property/
 		],
 		[
+			'a wait that follows the child without the keys it measures',
+			(raw) =>
+				(raw.rules['handGuide'] = {
+					everyKeyUntil: 1,
+					newKeysUntil: 2,
+					hesitationMs: 3000,
+					hesitationFactor: 2
+				}),
+			/progression\.rules\.handGuide\.hesitationMinKeys: .*go together/
+		],
+		[
+			'a wait that follows the child without the shortest wait',
+			(raw) =>
+				(raw.rules['handGuide'] = {
+					everyKeyUntil: 1,
+					newKeysUntil: 2,
+					hesitationFactor: 2,
+					hesitationMinKeys: 5,
+					hesitationMinCorrect: 10
+				}),
+			/progression\.rules\.handGuide\.hesitationFactor: .*hesitationMs/
+		],
+		[
+			'a factor of the time of the child under 1',
+			(raw) =>
+				(raw.rules['handGuide'] = {
+					everyKeyUntil: 1,
+					newKeysUntil: 2,
+					hesitationMs: 3000,
+					hesitationFactor: 0.5,
+					hesitationMinKeys: 5,
+					hesitationMinCorrect: 10
+				}),
+			/progression\.rules\.handGuide\.hesitationFactor: .*at least 1/
+		],
+		[
+			'a factor of the time of the child that is not a number',
+			(raw) =>
+				(raw.rules['handGuide'] = {
+					everyKeyUntil: 1,
+					newKeysUntil: 2,
+					hesitationMs: 3000,
+					hesitationFactor: '2',
+					hesitationMinKeys: 5,
+					hesitationMinCorrect: 10
+				}),
+			/progression\.rules\.handGuide\.hesitationFactor/
+		],
+		[
+			'no key to measure before the time of the child counts',
+			(raw) =>
+				(raw.rules['handGuide'] = {
+					everyKeyUntil: 1,
+					newKeysUntil: 2,
+					hesitationMs: 3000,
+					hesitationFactor: 2,
+					hesitationMinKeys: 0,
+					hesitationMinCorrect: 10
+				}),
+			/progression\.rules\.handGuide\.hesitationMinKeys: .*at least 1/
+		],
+		[
+			'a fractional number of right keystrokes that measures a key',
+			(raw) =>
+				(raw.rules['handGuide'] = {
+					everyKeyUntil: 1,
+					newKeysUntil: 2,
+					hesitationMs: 3000,
+					hesitationFactor: 2,
+					hesitationMinKeys: 5,
+					hesitationMinCorrect: 2.5
+				}),
+			/progression\.rules\.handGuide\.hesitationMinCorrect: .*integer/
+		],
+		[
 			'negative length slack',
 			(raw) => (raw.rules['lengthSlack'] = -1),
 			/progression.rules.lengthSlack.*at least 0/
@@ -813,6 +924,26 @@ describe('parseProgression', () => {
 			/lessons\[0\]\.speed: unknown property/
 		],
 		['empty lesson title', (raw) => (lessonOf(raw, 0, 0)['title'] = ''), /lessons\[0\]\.title/],
+		[
+			'an instruction for a platform no layout has',
+			(raw) => (lessonOf(raw, 0, 0)['introByPlatform'] = { linux: 'Intro A.' }),
+			/lessons\[0\]\.introByPlatform\.linux: unknown property/
+		],
+		[
+			'instructions by platform that name no platform',
+			(raw) => (lessonOf(raw, 0, 0)['introByPlatform'] = {}),
+			/lessons\[0\]\.introByPlatform: expected an instruction for at least one platform/
+		],
+		[
+			'an empty instruction for a platform',
+			(raw) => (lessonOf(raw, 0, 0)['introByPlatform'] = { mac: '' }),
+			/lessons\[0\]\.introByPlatform\.mac/
+		],
+		[
+			'instructions by platform that are a sentence',
+			(raw) => (lessonOf(raw, 0, 0)['introByPlatform'] = 'Intro A.'),
+			/lessons\[0\]\.introByPlatform: expected an object/
+		],
 		[
 			'new character made of two characters',
 			(raw) => (lessonOf(raw, 0, 0)['newChars'] = ['fj', 'd']),
@@ -1086,6 +1217,21 @@ describe('lesson accessors', () => {
 
 	it('refuses to compute the characters of an unknown lesson', () => {
 		expect(() => learnedChars(progression, 'fr.lesson.zzz')).toThrow(RangeError);
+	});
+
+	it('gives the instruction written for the platform of the layout, else the common one', () => {
+		const mac = parseProgression(
+			variant((raw) => (lessonOf(raw, 0, 0)['introByPlatform'] = { mac: 'Intro A, Mac.' }))
+		);
+		const lesson = findLesson(mac, 'fr.lesson.a');
+		if (lesson === undefined) throw new Error('lesson A is missing');
+
+		expect(lessonIntro(lesson, 'mac')).toBe('Intro A, Mac.');
+		expect(lessonIntro(lesson, 'pc')).toBe('Intro A.');
+		const common = findLesson(progression, 'fr.lesson.a');
+		if (common === undefined) throw new Error('lesson A is missing');
+		expect(lessonIntro(common, 'mac')).toBe('Intro A.');
+		expect(lessonIntro(common, 'pc')).toBe('Intro A.');
 	});
 
 	describe('with capitals', () => {
