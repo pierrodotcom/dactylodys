@@ -3,9 +3,12 @@
 	answer typed so far in the companion's. The text to type stays in the text zone of the game.
 -->
 <script lang="ts">
+	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import Companion from '$lib/ui/components/Companion.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import type { DecorOf } from '../shared/decor';
 	import { isRewarded, type GameView } from '../shared/game-view';
+	import { leaveFocusInField } from '../shared/leave-focus';
 	import Backdrop from './Backdrop.svelte';
 	import HostFigure from './HostFigure.svelte';
 	import { HOST_FRAME } from './shapes';
@@ -15,13 +18,18 @@
 	interface Props {
 		view: GameView;
 		decor?: DecorOf<'dialogue'>;
+		/** Says what Floup says, on demand, once it is recorded (audit P-12). */
+		voice?: VoicePlayer | undefined;
 	}
 
-	let { view, decor = 'garden' }: Props = $props();
+	let { view, decor = 'garden', voice }: Props = $props();
 
 	const rewarded = $derived(isRewarded(view));
 	const question = $derived(questionOf(QUESTIONS, view)?.() ?? '');
 	const reaction = $derived(reactionOf(REACTIONS, view)?.line() ?? '');
+	/** What Floup says now: the question while the answer is typed, then his reaction. */
+	const said = $derived(rewarded ? reaction : question);
+	const listenable = $derived(voice?.has(said) ?? false);
 	const face = $derived(hostFace(REACTIONS, view));
 	const answer = $derived(answerSoFar(view));
 	const sceneId = $derived(rewarded && view.scene.kind === 'scene' ? view.scene.id : undefined);
@@ -38,7 +46,7 @@
 >
 	<Backdrop {decor} />
 
-	<div class="host-line">
+	<div class="host-line" data-listen={listenable || undefined}>
 		{#if rewarded}
 			<p
 				class="bubble speech"
@@ -55,6 +63,12 @@
 				{question}
 				{@render tail('host')}
 			</p>
+		{/if}
+		{#if listenable && voice}
+			<!-- Beside the bubble, it leaves the keys in the field: the child goes on typing. -->
+			<span class="listen" data-floup-listen {@attach leaveFocusInField}>
+				<ListenButton text={said} player={voice} />
+			</span>
 		{/if}
 	</div>
 
@@ -133,6 +147,13 @@
 		font-size: var(--dd-font-size-base);
 		font-weight: var(--dd-font-weight-bold);
 		line-height: var(--dd-line-height-tight);
+	}
+
+	/* « Écouter » beside the bubble, once what Floup says is recorded. */
+	.host-line[data-listen] {
+		grid-template-columns: minmax(0, max-content) auto;
+		justify-content: start;
+		column-gap: var(--dd-space-sm);
 	}
 
 	/* Short of the right edge: the sky of the decor shows beside it. */

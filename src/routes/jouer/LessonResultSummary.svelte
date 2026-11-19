@@ -1,11 +1,14 @@
 <script lang="ts">
 	import type { SoundPlayer } from '$lib/audio';
+	import { sayInTurn } from '$lib/audio/voice-sequence';
+	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { StarCount } from '$lib/engine/progression/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import Button from '$lib/ui/components/Button.svelte';
 	import Companion from '$lib/ui/components/Companion.svelte';
 	import Confetti from '$lib/ui/components/Confetti.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import Stars from '$lib/ui/components/Stars.svelte';
 	import { readDurationToken } from '$lib/ui/motion';
@@ -38,6 +41,8 @@
 		/** Calm motion: the stars fade in, no confetti. */
 		still: boolean;
 		sounds: SoundPlayer;
+		/** Says what the result says, on demand, once it is recorded (audit P-12). */
+		voice: VoicePlayer;
 		onnext: () => void;
 		onreplay: () => void;
 		onmap: () => void;
@@ -56,6 +61,7 @@
 		worldLessons,
 		still,
 		sounds,
+		voice,
 		onnext,
 		onreplay,
 		onmap,
@@ -118,6 +124,18 @@
 		sentence === 'note' ? (NOTES[stars]?.() ?? '') : SENTENCES[sentence]()
 	);
 	const actions = $derived(resultActions(plan, facts));
+	const headline = $derived(HEADLINES[stars]?.() ?? '');
+	// « Écouter » says the title, the sentence and the news of the grand tour, one after the other.
+	const resultVoice = $derived(
+		sayInTurn(voice, {
+			text: sentenceText,
+			sentences: [headline, sentenceText, ...(tourOpened ? [m.play_result_tour_open()] : [])]
+		})
+	);
+	const breakText = m.play_break_suggest();
+	const breakVoice = $derived(
+		sayInTurn(voice, { text: breakText, sentences: [breakText, m.play_break_suggest_detail()] })
+	);
 
 	/**
 	 * The sentence of the replay that tames keys, cut where the keys go: they are drawn as keys,
@@ -135,11 +153,7 @@
 	});
 </script>
 
-<ScreenFrame
-	title={HEADLINES[stars]?.() ?? ''}
-	wide
-	back={{ label: m.play_result_map(), onclick: onmap }}
->
+<ScreenFrame title={headline} wide back={{ label: m.play_result_map(), onclick: onmap }}>
 	<div class="step" data-result-step="result">
 		<div class="summary">
 			<figure class="photo" data-still={still || undefined}>
@@ -155,13 +169,16 @@
 				<figcaption class="date">{m.play_result_photo_date({ date: photoDate })}</figcaption>
 			</figure>
 			<div class="details">
-				<p
-					class="sentence"
-					data-sentence={sentence}
-					data-race={sentence.startsWith('race-') ? facts.race : undefined}
-				>
-					{sentenceText}
-				</p>
+				<div class="said">
+					<ListenButton text={sentenceText} player={resultVoice} />
+					<p
+						class="sentence"
+						data-sentence={sentence}
+						data-race={sentence.startsWith('race-') ? facts.race : undefined}
+					>
+						{sentenceText}
+					</p>
+				</div>
 				{#if sentence === 'world-done' && !still}
 					<Parade count={worldLessons} />
 				{/if}
@@ -185,10 +202,13 @@
 		{/if}
 
 		{#if facts.suggestBreak}
-			<p class="break">
-				<strong>{m.play_break_suggest()}</strong>
-				<span>{m.play_break_suggest_detail()}</span>
-			</p>
+			<div class="said">
+				<ListenButton text={breakText} player={breakVoice} />
+				<p class="break">
+					<strong>{breakText}</strong>
+					<span>{m.play_break_suggest_detail()}</span>
+				</p>
+			</div>
 		{/if}
 
 		<div class="actions">
@@ -272,6 +292,15 @@
 		gap: var(--dd-space-sm);
 		justify-items: center;
 		max-inline-size: var(--dd-size-panel-max);
+	}
+
+	/* « Écouter » beside what it says, once recorded: the step keeps its height on a laptop. */
+	.said {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-sm) var(--dd-space-md);
 	}
 
 	.sentence {

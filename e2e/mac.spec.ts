@@ -52,7 +52,12 @@ function lessonOf(char: string): Lesson {
 const AT = lessonOf('@');
 /** « Le klaxon rigolo »: on a Mac, « ! » is on the key 8; its PC sentence is recorded. */
 const EXCLAMATION = lessonOf('!');
-/** « Le chapeau du pilote »: the same sentence on every keyboard, recorded. */
+/**
+ * « La girafe au long cou »: the same sentence on every keyboard, recorded; its short sentences are
+ * not yet, so the whole one is said.
+ */
+const SAME_EVERYWHERE = lessonOf('g');
+/** « Le chapeau du pilote »: every lesson before it is open, the two above with them. */
 const CIRCUMFLEX = lessonOf('ê');
 
 /** A child on a Mac who passed every lesson before this one. */
@@ -123,8 +128,8 @@ test.describe('A child on a Mac', CHROMIUM_ONLY, () => {
 		const listen = page.getByRole('button', { name: message('ui_listen_start') });
 		await reachMap(page, macChildBefore(CIRCUMFLEX));
 
-		await openIntro(page, CIRCUMFLEX);
-		await expect(intro(page)).toHaveText(CIRCUMFLEX.intro);
+		await openIntro(page, SAME_EVERYWHERE);
+		await expect(intro(page)).toHaveText(SAME_EVERYWHERE.intro);
 		await expect(listen).toBeVisible();
 
 		await button(page, message('play_intro_back')).click();

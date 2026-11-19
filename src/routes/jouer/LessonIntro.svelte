@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { lessonIntro } from '$lib/engine/progression/definition';
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
 	import type { Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
+	import { sayInTurn } from '$lib/audio/voice-sequence';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
@@ -11,11 +13,12 @@
 	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import { revealBelow } from '$lib/ui/focus';
+	import { readDurationToken } from '$lib/ui/motion';
 	import { isOne } from '$lib/ui/plural';
 	import type { KeyboardAssets } from './assets';
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
-	import { headingCount, introLines, introShown, type IntroLine } from './intro-keys';
+	import { headingCount, introLines, introShown, introSteps, type IntroLine } from './intro-keys';
 	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
@@ -65,6 +68,9 @@
 	};
 	/** Between the characters of one line: they are read one by one, like the keys. */
 	const KEY_SEPARATOR = ' ';
+	/** How long the hand takes to show one key (`HandGuide`): out, held, back. */
+	const MOVE_TOKEN = '--dd-duration-guide-move';
+	const HOLD_TOKEN = '--dd-duration-guide-hold';
 
 	let {
 		lesson,
@@ -91,14 +97,6 @@
 	// sentence is silent until it is recorded: the voice only says what was recorded.
 	const intro = $derived(lessonIntro(lesson, assets.layout.platform));
 
-	// The child does not read: the instruction is said once as the lesson opens.
-	$effect(() => {
-		const said = intro;
-		const speaker = voice;
-		void speaker.speak(said);
-		return () => speaker.stop();
-	});
-
 	// The new keys, else what the data of the lesson says it works (capitals, Backspace), else none.
 	const shown = $derived(introShown(lesson, fresh, assets.charIndex, assets.fingering));
 	const presses = $derived(shown?.keys ?? []);
@@ -111,11 +109,53 @@
 		return one ? m.play_intro_practice_one() : m.play_intro_practice_other();
 	});
 	const noTarget: KeyPress | null = null;
-	const hands = $derived(
-		guide === 'none' || presses.length === 0
-			? null
-			: { presses: presses.map((entry) => entry.press), trigger: lesson.id, repeat: true }
+	const handShown = $derived(guide !== 'none' && presses.length > 0);
+
+	/** The short sentence being said: the hand shows its key alone; `null`: every key in turn. */
+	let step = $state<number | null>(null);
+	/** Counts the times the short sentences start: the hand starts over with them. */
+	let round = $state(0);
+	const steps = $derived(introSteps(lesson, presses));
+	// Read from the lesson alone: the voice starts over only when the lesson or the voice changes.
+	const sentences = $derived((lesson.steps ?? []).map((item) => item.text));
+	// Once its short sentences are all recorded, the instruction is said one at a time, each while
+	// the hand shows its key (audit P-13): a sentence never ends before the hand is back. Until then,
+	// the whole sentence, as before.
+	const speaker = $derived(
+		sayInTurn(voice, {
+			text: intro,
+			sentences,
+			onsentence: (index) => {
+				if (index === 0) round += 1;
+				step = index;
+			},
+			minSentenceMs: handShown
+				? readDurationToken(MOVE_TOKEN) * 2 + readDurationToken(HOLD_TOKEN)
+				: 0
+		})
 	);
+	const stepPress = $derived(step === null ? null : (steps[step]?.press ?? null));
+	const stepChar = $derived(step === null ? undefined : steps[step]?.char);
+
+	// The child does not read: the instruction is said once as the lesson opens. What the sentences
+	// change on screen while they are said never says them again.
+	$effect(() => {
+		const said = intro;
+		const saying = speaker;
+		untrack(() => void saying.speak(said));
+		return () => saying.stop();
+	});
+
+	const hands = $derived.by(() => {
+		if (!handShown) return null;
+		if (step !== null) {
+			return {
+				presses: stepPress === null ? [] : [stepPress],
+				trigger: `${lesson.id}#${round}#${step}`
+			};
+		}
+		return { presses: presses.map((entry) => entry.press), trigger: lesson.id, repeat: true };
+	});
 
 	function handLine(line: Extract<IntroLine, { kind: 'hand' }>): string {
 		return HAND_LINES[line.level]({
@@ -144,7 +184,7 @@
 						? m.play_lesson_detour()
 						: m.play_lesson_number({ number })}
 			</p>
-			<ListenButton text={intro} player={voice} />
+			<ListenButton text={intro} player={speaker} />
 			{#if prize}
 				<div class="prize" data-prize={prize.id}>
 					<div class="prize-picture" aria-hidden="true">
@@ -163,7 +203,12 @@
 		<p class="intro" bind:this={instruction} data-intro>{intro}</p>
 
 		{#if shown}
-			<section class="keys" aria-labelledby="intro-keys-heading" data-intro-keys={shown.kind}>
+			<section
+				class="keys"
+				aria-labelledby="intro-keys-heading"
+				data-intro-keys={shown.kind}
+				data-intro-step={stepChar}
+			>
 				<!--
 					Beside the keyboard: the title of the keys, the fingers, and the sentence of the world under
 					them. The keyboard is a picture only (screen readers skip it): the title comes first for them.

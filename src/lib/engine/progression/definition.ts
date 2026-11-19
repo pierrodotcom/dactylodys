@@ -6,6 +6,7 @@ import type {
 	ExerciseMix,
 	HandGuideRules,
 	LessonDefinition,
+	LessonStep,
 	LessonTour,
 	LessonUnlock,
 	MasteryRules,
@@ -23,6 +24,11 @@ import type {
 const SPACE = ' ';
 /** Enter: the only control character a lesson can bring, typed at the end of a line. */
 export const LINE_BREAK = '\n';
+/**
+ * Stands for the key that erases (Backspace) where a lesson names the keys it works: never typed,
+ * it is the key of a sentence of the instruction of a lesson of repairs (`LessonStep.char`).
+ */
+export const ERASE_CHAR = '\b';
 const SLUG = '[a-z0-9]+(?:-[a-z0-9]+)*';
 const SLUG_PATTERN = new RegExp(`^${SLUG}$`);
 const LAYOUT_ID_PATTERN = /^[a-z]{2,3}-[a-z]{2}-[a-z0-9]+-[a-z]+$/;
@@ -493,6 +499,47 @@ function parseIntroByPlatform(
 	return Object.fromEntries(intros);
 }
 
+/**
+ * The keys a sentence of the instruction may show: those the lesson brings, the capitals it
+ * unlocks, and the key that erases in a lesson of repairs. A lesson that works none has no steps.
+ */
+function stepKeys(
+	newChars: readonly string[],
+	capitals: readonly string[],
+	repairs: boolean
+): ReadonlySet<string> {
+	return new Set([...newChars, ...capitals, ...(repairs ? [ERASE_CHAR] : [])]);
+}
+
+/** Printable in a message: a space, a line break or the key that erases is named by its escape. */
+function shownChar(char: string): string {
+	return JSON.stringify(char);
+}
+
+/** One sentence per key or gesture, in the order they are said; two identical sentences are one. */
+function parseSteps(value: unknown, keys: ReadonlySet<string>, path: string): LessonStep[] {
+	const raw = expectArray(value, path);
+	if (raw.length === 0) fail(path, 'expected at least one sentence');
+	if (keys.size === 0) fail(path, 'a lesson that shows no key has no sentence to say with it');
+	const said = new Set<string>();
+	return raw.map((item, i) => {
+		const itemPath = `${path}[${i}]`;
+		const record = expectRecord(item, itemPath);
+		rejectUnknown(record, ['char', 'text'], itemPath);
+		const char = typeof record['char'] === 'string' ? record['char'].normalize('NFC') : '';
+		if (!keys.has(char)) {
+			fail(
+				`${itemPath}.char`,
+				`expected a key of the lesson: ${[...keys].map(shownChar).join(', ')}`
+			);
+		}
+		const text = expectString(record['text'], `${itemPath}.text`);
+		if (said.has(text)) fail(`${itemPath}.text`, `duplicate sentence "${text}"`);
+		said.add(text);
+		return { char, text };
+	});
+}
+
 /** The rules that make the wait of the hand follow the time of the child: all three, or none. */
 const PERSONAL_HESITATION = [
 	'hesitationFactor',
@@ -831,6 +878,7 @@ function parseLesson(
 			'title',
 			'intro',
 			'introByPlatform',
+			'steps',
 			'newChars',
 			'words',
 			'mix',
@@ -938,12 +986,24 @@ function parseLesson(
 		record['repair'] === undefined
 			? undefined
 			: parseRepair(record['repair'], min, `${path}.repair`);
+	const unlockedCapitals = unlocks.includes('uppercase')
+		? [...known].filter((char) => CAPITAL_PATTERN.test(char))
+		: [];
+	const steps =
+		record['steps'] === undefined
+			? undefined
+			: parseSteps(
+					record['steps'],
+					stepKeys(newChars, unlockedCapitals, repair !== undefined),
+					`${path}.steps`
+				);
 
 	const parsed: LessonDefinition = {
 		id,
 		title,
 		intro,
 		...(introByPlatform === undefined ? {} : { introByPlatform }),
+		...(steps === undefined ? {} : { steps }),
 		newChars,
 		words,
 		mix,

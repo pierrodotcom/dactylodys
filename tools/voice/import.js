@@ -111,6 +111,7 @@ async function main() {
 	const { readWavHeader } = await import('../../src/lib/audio/voice-signal.ts');
 	const { LOOK_REMINDER_ID, LOOK_REMINDER_MESSAGE, voiceLocale, voiceTexts } =
 		await import('../../src/lib/audio/voice-texts.ts');
+	const { spokenMessages } = await import('../../src/lib/audio/voice-messages.ts');
 	const { updateAttributions } = await import('./lib/attributions.ts');
 	const { planImport, renderReport, serializeManifest } = await import('./lib/import-plan.ts');
 
@@ -126,18 +127,20 @@ async function main() {
 		sounds.set(clip.key, wav);
 	}
 
-	// The reminder said by the games is listed by the page too: without it, --prune would delete its clip.
+	// The reminder and the messages said by the games are listed by the page too: without them,
+	// --prune would delete their clips.
 	const messages = readJson(join(REPO_ROOT, 'messages', `${recordings.locale}.json`));
 	const reminders =
 		typeof messages[LOOK_REMINDER_MESSAGE] === 'string'
 			? [{ id: LOOK_REMINDER_ID, text: messages[LOOK_REMINDER_MESSAGE] }]
 			: [];
+	const spoken = spokenMessages(messages);
 	const texts = new Map();
 	for (const source of readJson(join(TOOL_DIR, 'config.json')).sources) {
 		const progression = readJson(join(REPO_ROOT, source.progression));
 		if (voiceLocale(progression) !== recordings.locale) continue;
 		const story = source.story ? readJson(join(REPO_ROOT, source.story)) : undefined;
-		for (const text of voiceTexts(progression, story, reminders)) {
+		for (const text of voiceTexts(progression, story, reminders, spoken)) {
 			if (!texts.has(text.key)) texts.set(text.key, text);
 		}
 	}

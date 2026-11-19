@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
+	import { sayInTurn } from '$lib/audio/voice-sequence';
+	import type { VoicePlayer } from '$lib/audio/voice-types';
+	import { leaveFocusInField } from '$lib/games/shared/leave-focus';
 	import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
 	import { createInputNormalizer } from '$lib/keyboard/input-adapter';
 	import { loadLayout } from '$lib/keyboard/registry';
@@ -8,6 +11,7 @@
 	import Button from '$lib/ui/components/Button.svelte';
 	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
 	import Companion from '$lib/ui/components/Companion.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import { focusOnMount } from '$lib/ui/focus';
 	import KeyboardCaptureField from '$lib/ui/keyboard-capture/KeyboardCaptureField.svelte';
@@ -26,13 +30,15 @@
 	interface Props {
 		layoutId: LayoutId;
 		codes: readonly string[];
+		/** Says what each step asks and tells, on demand, once it is recorded (audit P-12). */
+		voice: VoicePlayer;
 		/** Remembers the layout the child chose. */
 		onlayout: (layoutId: LayoutId) => Promise<void>;
 		ondone: () => void;
 		onchangeplayer: () => void;
 	}
 
-	let { layoutId, codes, onlayout, ondone, onchangeplayer }: Props = $props();
+	let { layoutId, codes, voice, onlayout, ondone, onchangeplayer }: Props = $props();
 
 	const INPUT_ID = 'keyboard-check-input';
 	const WAY_OUT = '[data-screen-back] button';
@@ -57,6 +63,17 @@
 	const ready = $derived(check?.outcome === 'match');
 	const askAdult = $derived(check !== null && needsAdultHelp(check));
 	const resultTitle = $derived(ready ? m.play_check_ok_title() : m.play_check_diff_title());
+	// « Écouter » says the title of the result, what it means, then what to ask an adult.
+	const resultVoice = $derived(
+		sayInTurn(voice, {
+			text: resultTitle,
+			sentences: [
+				resultTitle,
+				ready ? m.play_check_ok_text() : m.play_check_diff_text(),
+				...(askAdult ? [m.play_check_diff_adult()] : [])
+			]
+		})
+	);
 	// The way out is at the top of the three steps, and Escape takes it (ADR-046).
 	const back = $derived({ label: m.play_change_player(), onclick: onchangeplayer });
 
@@ -118,6 +135,7 @@
 
 {#if check === null}
 	<ScreenFrame title={m.play_check_title()} {back}>
+		<ListenButton text={m.play_check_layout_intro()} player={voice} />
 		<p class="intro">{m.play_check_layout_intro()}</p>
 		<ChoiceGroup
 			legend={m.play_check_layout_legend()}
@@ -152,9 +170,19 @@
 					<span>{step.label}</span>
 				</span>
 			</div>
+			{#if voice.has(m.play_check_prompt_spoken())}
+				<span {@attach leaveFocusInField}>
+					<ListenButton text={m.play_check_prompt_spoken()} player={voice} />
+				</span>
+			{/if}
 			<p class="intro">{m.play_check_prompt_hint()}</p>
 			{#if capsLock}
 				<p class="notice" aria-hidden="true" data-caps-lock>{m.game_shared_caps_lock()}</p>
+				{#if voice.has(m.game_shared_caps_lock())}
+					<span {@attach leaveFocusInField}>
+						<ListenButton text={m.game_shared_caps_lock()} player={voice} />
+					</span>
+				{/if}
 			{/if}
 			<!-- Before the field: Tab reaches it from the way out, and goes back to the field from it. -->
 			<Button variant="quiet" onclick={skipKey}>{m.play_check_not_found()}</Button>
@@ -170,6 +198,8 @@
 		{#if !askAdult}
 			<Companion mood={ready ? 'cheer' : 'happy'} />
 		{/if}
+		<!-- Outside what the button of the screen reads: « Écouter » is not part of the result. -->
+		<ListenButton text={resultTitle} player={resultVoice} />
 		<!-- The screen opens on its button: what happened is read with it. -->
 		<p id={RESULT_TITLE_ID} hidden>{resultTitle}</p>
 		<div class="result" id={RESULT_TEXT_ID}>

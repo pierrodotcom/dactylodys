@@ -1,9 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { voiceKey } from '../src/lib/audio/voice-key';
+import { spokenMessages } from '../src/lib/audio/voice-messages';
 import { parseVoiceRecordings } from '../src/lib/audio/voice-recordings';
 import { readWavHeader } from '../src/lib/audio/voice-signal';
-import { inRecordingOrder, LOOK_REMINDER_ID, voiceTexts } from '../src/lib/audio/voice-texts';
+import {
+	inRecordingOrder,
+	LOOK_REMINDER_ID,
+	parseVoiceOrigin,
+	voiceTexts
+} from '../src/lib/audio/voice-texts';
 import { readZipEntry } from '../src/lib/audio/zip-test-support';
 import { parseProgression } from '../src/lib/engine/progression/definition';
 import { parseStory } from '../src/lib/engine/story';
@@ -34,9 +40,12 @@ const { message } = loadMessages();
 const config = readJson<{ sampleRate: number }>('content/common/voice.json');
 const story = parseStory(readJson('content/fr/story/azerty-decouverte.json'));
 const TEXTS = inRecordingOrder(
-	voiceTexts(parseProgression(readJson('content/fr/progression/azerty-decouverte.json')), story, [
-		{ id: LOOK_REMINDER_ID, text: message('game_shared_look_reminder') }
-	])
+	voiceTexts(
+		parseProgression(readJson('content/fr/progression/azerty-decouverte.json')),
+		story,
+		[{ id: LOOK_REMINDER_ID, text: message('game_shared_look_reminder') }],
+		spokenMessages(readJson<Record<string, string>>('messages/fr.json'))
+	)
 );
 const TOTAL = TEXTS.length;
 const FIRST = TEXTS[0]!;
@@ -193,16 +202,26 @@ test.describe('voice recording page', CHROMIUM_ONLY, () => {
 		await expect(page.getByTestId('voice-text')).toHaveText(first?.ending ?? '');
 	});
 
-	test('stops at both ends of the list of texts', async ({ page }) => {
+	test('stops at both ends of the list of texts, the optional whole instructions last', async ({
+		page
+	}) => {
+		// Short sentences, instructions of a Mac and messages of the game are listed (P-12, P-13).
+		const kinds = TEXTS.map((text) => parseVoiceOrigin(text.origin)?.kind);
+		expect(kinds).toContain('step');
+		expect(kinds).toContain('intro-mac');
+		expect(kinds.indexOf('message')).toBeGreaterThan(kinds.lastIndexOf('line'));
+		expect(TEXTS.at(-1)?.fallback).toBe(true);
 		await openRecorder(page);
 
 		await expect(button(page, 'dev_voix_previous')).toBeDisabled();
-		for (let position = 2; position <= TOTAL; position++) {
-			await button(page, 'dev_voix_next').click();
-			await expect(positionHeading(page, position)).toBeVisible();
-		}
+		await expect(page.getByTestId('voice-fallback')).toHaveCount(0);
+		// Some two hundred texts: Enter on « Texte suivant », which keeps the focus, goes through them.
+		await button(page, 'dev_voix_next').focus();
+		for (let position = 2; position <= TOTAL; position++) await page.keyboard.press('Enter');
+		await expect(positionHeading(page, TOTAL)).toBeVisible();
 		await expect(button(page, 'dev_voix_next')).toBeDisabled();
 		await expect(page.getByTestId('voice-text')).toHaveText(TEXTS[TOTAL - 1]!.text);
+		await expect(page.getByTestId('voice-fallback')).toHaveText(message('dev_voix_fallback_note'));
 	});
 
 	test('gives every control a touch target of at least 48 pixels', async ({ page }) => {

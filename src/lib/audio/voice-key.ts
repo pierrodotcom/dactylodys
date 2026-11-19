@@ -13,10 +13,26 @@ export const VOICE_KEY_PATTERN = /^[0-9a-f]{16}$/;
 
 const encoder = new TextEncoder();
 
+/**
+ * Typography the voice does not hear: a curly apostrophe is said like a straight one, a no-break
+ * space like a space. A text whose typography is corrected keeps its recording (ADR-092).
+ */
+const UNHEARD_TYPOGRAPHY: readonly (readonly [RegExp, string])[] = [
+	[/[\u2018\u2019\u02bc]/gu, "'"],
+	[/[\u00a0\u202f]/gu, ' ']
+];
+
+function heard(text: string): string {
+	return UNHEARD_TYPOGRAPHY.reduce(
+		(current, [pattern, plain]) => current.replace(pattern, plain),
+		text.normalize('NFC').trim()
+	);
+}
+
 /** The name of the clip that says this text: the same for every way of writing the same sentence. */
 export function voiceKey(text: string): string {
 	let hash = OFFSET_BASIS;
-	for (const byte of encoder.encode(text.normalize('NFC').trim())) {
+	for (const byte of encoder.encode(heard(text))) {
 		hash = BigInt.asUintN(HASH_BITS, (hash ^ BigInt(byte)) * PRIME);
 	}
 	return hash.toString(HEX_RADIX).padStart(KEY_LENGTH, '0');

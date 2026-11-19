@@ -31,6 +31,14 @@ describe('voiceKey', () => {
 		expect(voiceKey('foobar')).toBe('85944171f73967e8');
 	});
 
+	it('gives the same key whatever the apostrophe or the space the typography uses (ADR-092)', () => {
+		expect(voiceKey('Qu\u2019est-ce que c\u2019est\u00a0?')).toBe(
+			voiceKey("Qu'est-ce que c'est ?")
+		);
+		expect(voiceKey('Hum\u202f!')).toBe(voiceKey('Hum !'));
+		expect(voiceKey('l\u02bcarbre')).toBe(voiceKey("l'arbre"));
+	});
+
 	it('keeps giving the same key to a sentence with accents', () => {
 		expect(voiceKey('Sur la rangée des chiffres, ton index droit tape È.')).toBe(
 			'0e2e0f1ee3f37b45'

@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { parseVoiceConfig } from '$lib/audio/voice-config';
+	import {
+		SPOKEN_MESSAGE_GROUPS,
+		spokenMessages,
+		type SpokenMessageGroupId
+	} from '$lib/audio/voice-messages';
 	import { VOICE_CREDIT_MAX_LENGTH } from '$lib/audio/voice-recordings';
 	import { processTake } from '$lib/audio/voice-signal';
 	import {
@@ -18,6 +23,9 @@
 	import { isOne } from '$lib/ui/plural';
 	import configData from '../../../../content/common/voice.json';
 	import progressionData from '../../../../content/fr/progression/azerty-decouverte.json';
+	// Only the messages the voice says (`npm run generate`), the same `tools/voice/import.js` reads:
+	// the whole file would put the texts of the internal trial pages in the published code.
+	import messagesData from '$lib/generated/spoken-messages.fr.json';
 	import { STORY } from '../../jouer/story';
 	import { buildVoiceArchive, recordedTexts } from './archive';
 	import {
@@ -42,18 +50,34 @@
 
 	const config = parseVoiceConfig(configData);
 	const progression = parseProgression(progressionData);
-	// The story of the shipped progression; its openings and endings come first (ADR-042).
+	// The story of the shipped progression; its openings and endings come first (ADR-042), the
+	// messages of the interface after the lines of the lessons (audit P-12).
 	const texts = inRecordingOrder(
-		voiceTexts(progression, STORY.progressionId === progression.id ? STORY : undefined, [
-			{ id: LOOK_REMINDER_ID, text: m.game_shared_look_reminder() }
-		])
+		voiceTexts(
+			progression,
+			STORY.progressionId === progression.id ? STORY : undefined,
+			[{ id: LOOK_REMINDER_ID, text: m.game_shared_look_reminder() }],
+			spokenMessages(messagesData)
+		)
 	);
+	const MESSAGE_PLACES: Readonly<Record<SpokenMessageGroupId, () => string>> = {
+		'game.dialogue': m.dev_voix_message_dialogue,
+		'play.result': m.dev_voix_message_result,
+		'play.help': m.dev_voix_message_help,
+		'play.break': m.dev_voix_message_break,
+		'play.check': m.dev_voix_message_check,
+		'game.caps-lock': m.dev_voix_message_caps_lock
+	};
 	const titles = new Map([
 		...progression.worlds.flatMap((world): [string, string][] => [
 			[world.id, world.title],
 			...world.lessons.map((lesson): [string, string] => [lesson.id, lesson.title])
 		]),
-		[LOOK_REMINDER_ID, m.dev_voix_reminder_look()]
+		[LOOK_REMINDER_ID, m.dev_voix_reminder_look()],
+		...SPOKEN_MESSAGE_GROUPS.map((group): [string, string] => [
+			group.id,
+			MESSAGE_PLACES[group.id]()
+		])
 	]);
 
 	const MS_PER_SECOND = 1000;
@@ -64,10 +88,14 @@
 	const CANCEL_CLEAR_BUTTON_ID = 'voix-clear-cancel';
 	const ORIGIN_LABELS: Readonly<Record<VoiceTextKind, (params: { title: string }) => string>> = {
 		intro: m.dev_voix_origin_intro,
+		'intro-pc': m.dev_voix_origin_intro_pc,
+		'intro-mac': m.dev_voix_origin_intro_mac,
+		step: m.dev_voix_origin_step,
 		opening: m.dev_voix_origin_opening,
 		line: m.dev_voix_origin_line,
 		ending: m.dev_voix_origin_ending,
-		reminder: m.dev_voix_origin_reminder
+		reminder: m.dev_voix_origin_reminder,
+		message: m.dev_voix_origin_message
 	};
 	const PROBLEM_MESSAGES: Readonly<Record<MicrophoneProblem, () => string>> = {
 		insecure: m.dev_voix_problem_insecure,
@@ -356,6 +384,9 @@
 					{m.dev_voix_position({ position: position + 1, total: texts.length })}
 				</h2>
 				<p class="origin">{originLabel(current.origin)}</p>
+				{#if current.fallback}
+					<p class="origin" data-testid="voice-fallback">{m.dev_voix_fallback_note()}</p>
+				{/if}
 				<p class="text" lang={progression.locale} data-testid="voice-text">{current.text}</p>
 				<p class="take" data-testid="take-status" data-recorded={currentTake !== undefined}>
 					<span aria-hidden="true">{currentTake ? MARKS.recorded : MARKS.missing}</span>

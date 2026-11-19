@@ -6,6 +6,7 @@
 	import Button from '$lib/ui/components/Button.svelte';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import TargetText from '$lib/ui/components/TargetText.svelte';
 	import { focusOnMount, focusSoon } from '$lib/ui/focus';
 	import KeyboardCaptureField from '$lib/ui/keyboard-capture/KeyboardCaptureField.svelte';
@@ -22,6 +23,7 @@
 	import { viewOf, type GameView } from './game-view';
 	import { shellAnnouncement, typingAnnouncement, type TypingWords } from './announce';
 	import { pauseRequests } from './pause-request';
+	import { leaveFocusInField } from './leave-focus';
 	import { spokenGrapheme } from '$lib/ui/components/spoken';
 	import { isGuided } from '$lib/engine/progression/guide';
 	import { isLookReminderDue, needsCapsLockHelp } from './help';
@@ -176,6 +178,7 @@
 			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
 	);
 	const lookReminderText = m.game_shared_look_reminder();
+	const capsLockText = m.game_shared_caps_lock();
 	// The one live region of the game: its reward, else the text to type or the key expected after a
 	// mistake, then the help about Caps Lock. The reminder to look at the screen is left to the
 	// recorded voice: each thing is heard once. Empty until the game is on screen: a live region
@@ -462,7 +465,17 @@
 						{:else if away}
 							<p class="notice" data-keep-typing>{m.game_shared_keep_typing()}</p>
 						{:else if capsHelp}
-							<p class="notice">{m.game_shared_caps_lock()}</p>
+							{#if voice?.has(capsLockText)}
+								<!-- Once recorded, the help can be heard (audit P-12); the keys stay in the field. -->
+								<div class="caps-help">
+									<p class="notice">{capsLockText}</p>
+									<span {@attach leaveFocusInField}>
+										<ListenButton text={capsLockText} player={voice} />
+									</span>
+								</div>
+							{:else}
+								<p class="notice">{capsLockText}</p>
+							{/if}
 						{/if}
 					</div>
 					<!-- Said by the announcement of the game already, which names the character to erase. -->
@@ -662,6 +675,12 @@
 		background-color: var(--dd-color-surface-sunken);
 		font-weight: var(--dd-font-weight-bold);
 		line-height: var(--dd-line-height-tight);
+	}
+
+	.caps-help {
+		display: flex;
+		align-items: center;
+		gap: var(--dd-space-sm);
 	}
 
 	/* The hint, the reminder and the Caps Lock notice share one cell, as tall as the tallest. */

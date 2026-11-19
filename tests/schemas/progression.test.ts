@@ -143,6 +143,66 @@ describe('instructions by platform (audit P-09)', () => {
 	);
 });
 
+describe('instructions said one short sentence at a time (audit P-13)', () => {
+	/** A sentence said to a child who reads little and keeps one instruction at a time. */
+	const MAX_STEP_WORDS = 8;
+	/** A word holds a letter or a digit: « l'accent » is one, a colon alone none. */
+	const WORD = /[\p{L}\p{N}]/u;
+	const DIGIT = /^\p{N}$/u;
+	const messages = JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>;
+	/**
+	 * The names of the fingers, as the screen writes them (« auriculaire gauche », « doigt au
+	 * choix »): the sentence says where the key is, the screen says the finger, from the fingering.
+	 */
+	const fingerNames = Object.entries(messages)
+		.filter(([key]) => /^ui_finger_(left_|right_)?[a-z]+$/.test(key) && key !== 'ui_finger_hint')
+		.map(([, name]) => name.split(' ')[0]?.toLowerCase() ?? '');
+	const namesAFinger = new RegExp(`(?<!\\p{L})(${fingerNames.join('|')})s?(?!\\p{L})`, 'iu');
+
+	const stepped = FILES.flatMap((file) =>
+		parseProgression(file.data)
+			.worlds.flatMap((world) => world.lessons)
+			.map((lesson) => [`${file.path} ${lesson.id}`, lesson] as const)
+	);
+
+	it('read the names of the fingers from the messages', () => {
+		expect(fingerNames).toEqual(
+			expect.arrayContaining(['auriculaire', 'annulaire', 'majeur', 'index', 'pouce', 'doigt'])
+		);
+	});
+
+	it.each(stepped)('%s says each sentence in a few words, never naming a finger', (_id, lesson) => {
+		for (const step of lesson.steps ?? []) {
+			const words = step.text.split(/\s+/u).filter((word) => WORD.test(word));
+			expect(words.length, step.text).toBeLessThanOrEqual(MAX_STEP_WORDS);
+			expect(step.text, step.text).not.toMatch(namesAFinger);
+			expect(step.text).toMatch(/[.!?]$/);
+			expect(step.text).not.toMatch(/[.!?]\s+\S/);
+		}
+	});
+
+	it.each(stepped)(
+		'%s gives every new key its own sentence, the digits of a row sharing their gesture',
+		(_id, lesson) => {
+			const named = new Set((lesson.steps ?? []).map((step) => step.char));
+			for (const char of lesson.newChars.filter((item) => !DIGIT.test(item))) {
+				expect(named.has(char), JSON.stringify(char)).toBe(true);
+			}
+			const worked =
+				lesson.newChars.length > 0 ||
+				lesson.unlocks.includes('uppercase') ||
+				lesson.repair !== undefined;
+			expect((lesson.steps?.length ?? 0) > 0, 'a lesson that shows keys says them').toBe(worked);
+		}
+	);
+
+	it('never says the same sentence for two keys of the course', () => {
+		const sentences = stepped.flatMap(([, lesson]) => (lesson.steps ?? []).map((s) => s.text));
+		expect(sentences.length).toBeGreaterThan(0);
+		expect(new Set(sentences).size).toBe(sentences.length);
+	});
+});
+
 describe('progression layouts', () => {
 	it.each(FILES.map((file) => [file.path, file] as const))(
 		'%s only targets layouts that exist',

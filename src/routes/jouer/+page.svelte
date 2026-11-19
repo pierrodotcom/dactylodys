@@ -1314,6 +1314,7 @@
 		<KeyboardCheck
 			layoutId={profile.settings.layoutId}
 			codes={PLAY_RULES.keyboardCheckCodes}
+			{voice}
 			onlayout={chooseKeyboardLayout}
 			ondone={finishKeyboardCheck}
 			onchangeplayer={changePlayer}
@@ -1325,6 +1326,7 @@
 			helpKey={helpQuest
 				? keyLabel(helpQuest.char, m.ui_key_space(), getLocale(), m.ui_key_enter())
 				: null}
+			{voice}
 			onopen={openLesson}
 			onhelp={startHelp}
 			onstory={story ? () => go({ type: 'open-story-so-far' }) : undefined}
@@ -1416,6 +1418,7 @@
 			worldLessons={worldOfLesson(progression, lessonId)?.lessons.length ?? 0}
 			still={isMotionReduced(profile.settings, systemPrefersReduced)}
 			{sounds}
+			{voice}
 			rewards={view.rewards}
 			{wornIds}
 			askName={view.askName}
@@ -1450,12 +1453,13 @@
 			onback={() => go({ type: 'back-to-map' })}
 		/>
 	{:else if screen.name === 'break'}
-		<BreakScreen onreturn={() => go({ type: 'back-to-map' })} />
+		<BreakScreen {voice} onreturn={() => go({ type: 'back-to-map' })} />
 	{:else if screen.name === 'help-done' && helpDone}
 		{@const done = helpDone}
 		<HelpThanks
 			dance={done.dance}
 			saveFailed={done.saveFailed}
+			{voice}
 			onmap={() => go({ type: 'back-to-map' })}
 		>
 			{#snippet news()}
@@ -1476,6 +1480,7 @@
 			title={m.play_free_done()}
 			dance={done.dance}
 			saveFailed={done.saveFailed}
+			{voice}
 			onmap={() => go({ type: 'back-to-map' })}
 		>
 			{#snippet news()}

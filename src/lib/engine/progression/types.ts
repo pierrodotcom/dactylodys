@@ -304,6 +304,13 @@ export interface LessonDefinition {
 	 * of the child (`lessonIntro`); for a platform it does not name: `intro`. Absent: `intro` for all.
 	 */
 	readonly introByPlatform?: Readonly<Partial<Record<LayoutPlatform, string>>>;
+	/**
+	 * The instruction said one short sentence at a time, each while the hand shows its key (audit
+	 * P-13), on every platform: a sentence says where the key is or what gesture to make, never which
+	 * finger, which the screen names from the fingering. `intro` stays the written instruction, and
+	 * is said whole while a sentence has no recording. Absent: `intro` is said whole.
+	 */
+	readonly steps?: readonly LessonStep[];
 	/** Graphemes introduced by this lesson; a space is `" "`. */
 	readonly newChars: readonly string[];
 	/** Hand-picked words typable with the characters learned so far; may be empty. */
@@ -347,6 +354,15 @@ export interface LessonDefinition {
 	 * suites, whose exercise goes over the keys of the world. Absent: an ordinary lesson.
 	 */
 	readonly tour?: LessonTour;
+}
+
+/**
+ * One sentence of the instruction of a lesson, said while the hand shows the key of `char`: a
+ * character the lesson brings, a capital it unlocks, or `ERASE_CHAR` in a lesson of repairs.
+ */
+export interface LessonStep {
+	readonly char: string;
+	readonly text: string;
 }
 
 /** How a lesson of repairs plants its mistakes: data, never constants in the code. */

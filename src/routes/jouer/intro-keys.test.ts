@@ -12,7 +12,7 @@ import { buildCharIndex, parseLayout } from '$lib/keyboard/layout';
 import azertyMac from '../../../layouts/fr-fr-azerty-mac.json';
 import azertyPc from '../../../layouts/fr-fr-azerty-pc.json';
 import tenFingers from '../../../layouts/fingering/ten-fingers-iso.json';
-import { headingCount, introKeys, introLines, introShown } from './intro-keys';
+import { headingCount, introKeys, introLines, introShown, introSteps } from './intro-keys';
 
 const progression = parseProgression(
 	JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
@@ -120,6 +120,49 @@ describe('introShown', () => {
 			if (shown?.kind === 'new') expect(lessonOf(id).newChars.length, id).toBeGreaterThan(0);
 		}
 	});
+});
+
+describe('introSteps', () => {
+	it('gives each short sentence the key the hand shows, in the order they are said', () => {
+		const [, charIndex] = layouts[0];
+		const lesson: LessonDefinition = {
+			...lessonOf('fr.lesson.oeufs-f-j'),
+			steps: [
+				{ char: 'j', text: 'J, à droite.' },
+				{ char: 'f', text: 'F, à gauche.' }
+			]
+		};
+		const shown = introShown(lesson, freshChars(progression, lesson.id), charIndex, fingering);
+		expect(introSteps(lesson, shown?.keys ?? [])).toEqual([
+			{ char: 'j', text: 'J, à droite.', press: { code: 'KeyJ', level: 'base' } },
+			{ char: 'f', text: 'F, à gauche.', press: { code: 'KeyF', level: 'base' } }
+		]);
+	});
+
+	it('says a sentence whose key is not shown with the hand at rest', () => {
+		const lesson: LessonDefinition = {
+			...lessonOf('fr.lesson.oeufs-f-j'),
+			steps: [{ char: 'f', text: 'F, à gauche.' }]
+		};
+		expect(introSteps(lesson, [])).toEqual([{ char: 'f', text: 'F, à gauche.', press: null }]);
+		expect(introSteps(lessonOf('fr.lesson.message-t-rex'), [])).toEqual([]);
+	});
+
+	it.each(layouts)(
+		'finds the key of every short sentence of the shipped lessons among those shown (%s)',
+		(_name, charIndex) => {
+			const stepped = lessonIds(progression)
+				.map(lessonOf)
+				.filter((lesson) => (lesson.steps?.length ?? 0) > 0);
+			expect(stepped.length).toBeGreaterThan(0);
+			for (const lesson of stepped) {
+				const shown = introShown(lesson, freshChars(progression, lesson.id), charIndex, fingering);
+				for (const step of introSteps(lesson, shown?.keys ?? [])) {
+					expect(step.press, `${lesson.id}: ${step.text}`).not.toBeNull();
+				}
+			}
+		}
+	);
 });
 
 describe('introLines', () => {
