@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { toGhostRun } from '../engine/ghost/ghost';
 import type { GhostRun } from '../engine/ghost/types';
 import type { CharSample, ProgressState, StarCount } from '../engine/progression/types';
+import { FINGERING_PROFILE_IDS } from '../keyboard/layout-ids';
 import {
 	createProfile,
 	markCalibrated,
@@ -88,7 +89,7 @@ export const progressArb: fc.Arbitrary<ProgressState> = fc.record({
 export const settingsPatchArb: fc.Arbitrary<Partial<Settings>> = fc.record(
 	{
 		layoutId: fc.constantFrom('fr-fr-azerty-pc', 'fr-fr-azerty-mac'),
-		fingeringProfileId: fc.constant('ten-fingers-iso'),
+		fingeringProfileId: fc.constantFrom(...FINGERING_PROFILE_IDS),
 		soundEnabled: fc.boolean(),
 		voiceEnabled: fc.boolean(),
 		theme: fc.constantFrom('system', 'light', 'dark'),

@@ -36,6 +36,7 @@ import {
 	asVersion15,
 	asVersion16,
 	asVersion17,
+	asVersion18,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
 	withEveryKeyColoured,
@@ -1340,6 +1341,65 @@ describe('version 18: the days of each key, for the adult (P-17)', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const once = parseProfile(migrateProfile(toJson(asVersion17(profile))));
+				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
+			})
+		);
+	});
+});
+
+describe('version 19: the fingering the adult chooses (ADR-075, choice 6)', () => {
+	const base = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+
+	it('describes version 18 as the same profile, which only knew ten fingers', () => {
+		const stored = asVersion18(base);
+		expect(stored['schemaVersion']).toBe(18);
+		expect(stored['settings']).toMatchObject({ fingeringProfileId: 'ten-fingers-iso' });
+	});
+
+	it('keeps ten fingers, the only fingering there was, and nothing else changes', () => {
+		const migrated = parseProfile(migrateProfile(toJson(asVersion18(base))));
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
+		expect(migrated.settings.fingeringProfileId).toBe('ten-fingers-iso');
+		expect(migrated).toEqual(base);
+	});
+
+	it('gives ten fingers to a record that lost its choice', () => {
+		const stored = asVersion18(base);
+		const settings: Json = { ...(stored['settings'] as Json) };
+		delete settings['fingeringProfileId'];
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.settings.fingeringProfileId).toBe('ten-fingers-iso');
+	});
+
+	it('keeps a fingering the record already holds', () => {
+		const stored = asVersion18(base);
+		const settings = { ...(stored['settings'] as Json), fingeringProfileId: 'two-index-iso' };
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.settings.fingeringProfileId).toBe('two-index-iso');
+	});
+
+	it('passes on a damaged choice for the parser to refuse', () => {
+		const stored = asVersion18(base);
+		for (const odd of ['two', 1, null]) {
+			const settings = { ...(stored['settings'] as Json), fingeringProfileId: odd };
+			expect(readProfile({ ...stored, settings }).ok).toBe(false);
+		}
+		expect(readProfile({ ...stored, settings: 'none' }).ok).toBe(false);
+	});
+
+	it('changes nothing else in any version 18 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion18(profile))));
+				expect(migrated).toEqual(profile);
+			})
+		);
+	});
+
+	it('gives the same profile from a backup of version 18 read again', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const once = parseProfile(migrateProfile(toJson(asVersion18(profile))));
 				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
 			})
 		);

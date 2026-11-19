@@ -335,6 +335,23 @@ function toVersion18(record: StoredRecord): StoredRecord {
 	return { charDays, ...record, schemaVersion: 18 };
 }
 
+/*
+ * Version 19 (ADR-075, choice 6): the adult may choose a reduced fingering, two index fingers or six
+ * fingers. Every profile kept ten fingers, the only fingering there was, written here for a record
+ * that would lack it. Nothing else changes; an app of version 18, which does not know the reduced
+ * fingerings, reads a profile that has one as more recent, never as damaged.
+ */
+function toVersion19(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings)
+			? { fingeringProfileId: 'ten-fingers-iso', ...settings }
+			: settings,
+		schemaVersion: 19
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -353,7 +370,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[14, toVersion15],
 	[15, toVersion16],
 	[16, toVersion17],
-	[17, toVersion18]
+	[17, toVersion18],
+	[18, toVersion19]
 ]);
 
 function versionOf(record: StoredRecord): number {

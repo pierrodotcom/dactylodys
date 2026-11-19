@@ -28,6 +28,11 @@ export type KeyboardColors = 'all' | 'finger';
 
 export interface Settings {
 	readonly layoutId: LayoutId;
+	/**
+	 * Which finger types each key. Chosen by the adult only, with the occupational therapist (version
+	 * 19, ADR-075, choice 6): ten fingers by default, or a reduced fingering. Progress does not depend
+	 * on it: changing it keeps everything.
+	 */
 	readonly fingeringProfileId: FingeringProfileId;
 	readonly soundEnabled: boolean;
 	/** Spoken instructions, apart from the sounds of the game. */
@@ -140,7 +145,7 @@ export interface CharDay {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 18;
+	readonly schemaVersion: 19;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

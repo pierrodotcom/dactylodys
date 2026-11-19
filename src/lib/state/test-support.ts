@@ -205,9 +205,17 @@ export function withEveryKeyColoured(profile: Profile): Profile {
 	});
 }
 
+/**
+ * The record version 18 of the app stored: the same profile. Its fingering could only be ten
+ * fingers then; a profile given with another one is kept as it is, as the step to version 19 does.
+ */
+export function asVersion18(profile: Profile): Record<string, unknown> {
+	return { ...profile, schemaVersion: 18 };
+}
+
 /** The record version 17 of the app stored: the same profile without the days of its keys. */
 export function asVersion17(profile: Profile): Record<string, unknown> {
-	const stored: Record<string, unknown> = { ...profile, schemaVersion: 17 };
+	const stored: Record<string, unknown> = { ...asVersion18(profile), schemaVersion: 17 };
 	delete stored['charDays'];
 	return stored;
 }
