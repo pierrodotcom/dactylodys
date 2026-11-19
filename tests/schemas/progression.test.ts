@@ -10,6 +10,7 @@ import {
 import { listProgressionFiles } from '../../src/lib/engine/progression/test-support';
 import { buildCharIndex, findUnproducible, parseLayout } from '../../src/lib/keyboard/layout';
 import { LAYOUT_IDS } from '../../src/lib/keyboard/layout-ids';
+import type { CharIndex, LayoutPlatform } from '../../src/lib/keyboard/types';
 import { ADULT_RULES } from '../../src/routes/adulte/adult-rules';
 import type {
 	LessonDefinition,
@@ -87,15 +88,56 @@ describe('progression files', () => {
 	);
 
 	it.each(FILES.map((file) => [file.path, file] as const))(
-		'%s introduces each lesson with one short sentence',
+		'%s introduces each lesson with one short sentence, on every platform',
 		(_path, file) => {
 			for (const world of parseProgression(file.data).worlds) {
 				for (const lesson of world.lessons) {
-					expect(lesson.intro).toMatch(/[.!?]$/);
-					expect(lesson.intro).not.toMatch(/[.!?]\s+\S/);
-					expect(lesson.intro.length).toBeLessThanOrEqual(120);
-					expect(lesson.intro.toLowerCase()).not.toContain('bébé');
+					for (const intro of [lesson.intro, ...Object.values(lesson.introByPlatform ?? {})]) {
+						expect(intro).toMatch(/[.!?]$/);
+						expect(intro).not.toMatch(/[.!?]\s+\S/);
+						expect(intro.length).toBeLessThanOrEqual(120);
+						expect(intro.toLowerCase()).not.toContain('bébé');
+					}
 				}
+			}
+		}
+	);
+});
+
+describe('instructions by platform (audit P-09)', () => {
+	const layoutOf = (layoutId: string) =>
+		parseLayout(JSON.parse(readFileSync(`${LAYOUTS_DIR}/${layoutId}.json`, 'utf8')));
+
+	it.each(FILES.map((file) => [file.path, file] as const))(
+		'%s writes an instruction only for the platform of one of its layouts',
+		(_path, file) => {
+			const progression = parseProgression(file.data);
+			const platforms = new Set(progression.layoutIds.map((id) => layoutOf(id).platform));
+			for (const lesson of progression.worlds.flatMap((world) => world.lessons)) {
+				for (const platform of Object.keys(lesson.introByPlatform ?? {})) {
+					expect(platforms.has(platform as LayoutPlatform), `${lesson.id} ${platform}`).toBe(true);
+				}
+			}
+		}
+	);
+
+	it.each(FILES.map((file) => [file.path, file] as const))(
+		'%s writes an instruction of its own where a new key is pressed otherwise on another layout',
+		(_path, file) => {
+			const progression = parseProgression(file.data);
+			const indexes = progression.layoutIds.map((id) => buildCharIndex(layoutOf(id)));
+			const pressed = (index: CharIndex, char: string) =>
+				JSON.stringify(index.get(char)?.[0] ?? null);
+			const differing = progression.worlds
+				.flatMap((world) => world.lessons)
+				.filter((lesson) =>
+					lesson.newChars.some((char) =>
+						indexes.some((index) => pressed(index, char) !== pressed(indexes[0] ?? index, char))
+					)
+				);
+			expect(differing.length).toBeGreaterThan(0);
+			for (const lesson of differing) {
+				expect(Object.keys(lesson.introByPlatform ?? {}).length, lesson.id).toBeGreaterThan(0);
 			}
 		}
 	);
