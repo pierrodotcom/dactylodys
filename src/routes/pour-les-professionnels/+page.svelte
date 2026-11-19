@@ -110,7 +110,6 @@
 		<h2 id="pro-limits">{m.pro_limits_title()}</h2>
 		<ul>
 			<li>{m.pro_limit_language()}</li>
-			<li>{m.pro_limit_mac()}</li>
 			<li>{m.pro_limit_fingering()}</li>
 			<li>{m.pro_limit_dictation()}</li>
 			<li>{m.pro_limit_keyboard()}</li>
