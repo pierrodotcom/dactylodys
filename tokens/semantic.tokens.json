@@ -2578,6 +2578,10 @@
 		},
 		"press": {
 			"$value": 0.97
+		},
+		"key-sign": {
+			"$description": "A sign of a key that prints two, as a share of the side of the key: two hold one above the other on the keyboard of a game and on the smaller one before a lesson (E-06).",
+			"$value": 0.34
 		}
 	},
 	"shadow": {
@@ -2946,6 +2950,10 @@
 		},
 		"guide": {
 			"$value": 20
+		},
+		"target": {
+			"$description": "The key to press and its modifiers, above the hand that shows them: the finger never hides the sign asked for (E-06).",
+			"$value": 30
 		},
 		"sticky": {
 			"$value": 100

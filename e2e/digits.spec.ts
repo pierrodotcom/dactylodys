@@ -149,6 +149,8 @@ async function playToResult(page: Page, lesson: Lesson, modifier: 'shift' | 'alt
 			const { code, level } = keyOf(first);
 			expect(level).toBe(modifier);
 			await expect(gameKey(page, code)).toHaveAttribute('data-target', 'true');
+			// The key lit carries the sign asked for (E-06): « 1 » on « & 1 », « @ » on the key « à ».
+			await expect(gameKey(page, code)).toContainText(first);
 			const modifiers = page.locator('.keyboard .key[data-modifier]');
 			await expect(modifiers).toHaveCount(1);
 			const modifierCode = await modifiers.getAttribute('data-code');
