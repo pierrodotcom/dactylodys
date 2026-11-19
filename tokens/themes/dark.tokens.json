@@ -176,6 +176,39 @@
 				"$value": "{color.red.900}"
 			}
 		},
+		"finger": {
+			"$description": "Darker colours of the fingers, with a light letter: the keyboard no longer dazzles in the dark theme, and the fingers stay apart for every vision (E-07).",
+			"left-pinky": {
+				"$value": "{color.turquoise.800}"
+			},
+			"left-ring": {
+				"$value": "{color.lavender.800}"
+			},
+			"left-middle": {
+				"$value": "{color.gold.800}"
+			},
+			"left-index": {
+				"$value": "{color.clay.900}"
+			},
+			"left-thumb": {
+				"$value": "{color.sunflower.700}"
+			},
+			"right-thumb": {
+				"$value": "{color.violet.900}"
+			},
+			"right-index": {
+				"$value": "{color.sage.800}"
+			},
+			"right-middle": {
+				"$value": "{color.mint.700}"
+			},
+			"right-ring": {
+				"$value": "{color.ocean.900}"
+			},
+			"right-pinky": {
+				"$value": "{color.jade.700}"
+			}
+		},
 		"key": {
 			"surface": {
 				"$value": "{color.charcoal.700}"
@@ -186,8 +219,25 @@
 			"text": {
 				"$value": "{color.brown.50}"
 			},
+			"text-on-finger": {
+				"$value": "{color.brown.50}"
+			},
 			"target-outline": {
 				"$value": "{color.brown.50}"
+			},
+			"halo": {
+				"$value": "{color.charcoal.900}"
+			}
+		},
+		"help": {
+			"surface": {
+				"$value": "{color.charcoal.700}"
+			},
+			"text": {
+				"$value": "{color.brown.50}"
+			},
+			"border": {
+				"$value": "{color.brown.400}"
 			}
 		},
 		"oops": {
@@ -249,9 +299,6 @@
 			}
 		},
 		"hand": {
-			"fill": {
-				"$value": "{color.charcoal.700}"
-			},
 			"outline": {
 				"$value": "{color.brown.50}"
 			},

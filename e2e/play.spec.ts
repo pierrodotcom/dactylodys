@@ -576,7 +576,13 @@ test.describe('play route', () => {
 			/^Key[A-Z]$/
 		);
 		await expect(page.getByRole('img', { name: message('ui_companion_oops') })).toBeVisible();
-		await expect(page.locator('main')).not.toContainText(/%|\b(erreurs?|fautes?|score|vies?)\b/i);
+		// No score is shown; the drawn keyboard prints its signs, « % » on the key « ù » (E-06).
+		const shown = await page.locator('main').evaluate((main) => {
+			const copy = main.cloneNode(true) as HTMLElement;
+			for (const keyboard of copy.querySelectorAll('.keyboard')) keyboard.remove();
+			return copy.textContent ?? '';
+		});
+		expect(shown).not.toMatch(/%|\b(erreurs?|fautes?|score|vies?)\b/i);
 
 		// The mistake is marked on the key that writes the letter on the drawn keyboard, not on the
 		// physical key the browser reports: an American keyboard writes q where an AZERTY one has A.
@@ -1353,6 +1359,12 @@ test.describe('play route', () => {
 			).homeKeys;
 			await expect(hands.locator('[data-finger]')).toHaveCount(Object.keys(homeKeys).length);
 			await expect(hands.locator('[data-active]')).toHaveCount(1);
+			// At rest, a contour: the inside of the hands is cut out, the home letters stay clear; only
+			// the finger that shows the key is filled (E-11).
+			await expect(hands.locator('g[mask] [data-finger]')).toHaveCount(
+				Object.keys(homeKeys).length
+			);
+			await expect(hands.locator('[data-active] .active-fill')).toHaveCount(1);
 			await page.keyboard.type(await currentGroup(page));
 			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 		}

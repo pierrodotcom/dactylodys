@@ -30,6 +30,8 @@ import {
 	asVersion4,
 	asVersion7,
 	asVersion15,
+	asVersion16,
+	withEveryKeyColoured,
 	withUnknownLatency,
 	withWorldPolicy
 } from './test-support';
@@ -285,6 +287,18 @@ describe('planImport', () => {
 		expect(noe?.settings).toMatchObject({ errorPolicy: 'backspace', sessionLength: 'normal' });
 	});
 
+	it('reads a backup of version 16: every key keeps the colour of its finger', () => {
+		const text = backupOf({ profiles: [asVersion16(LEA)] });
+		const [lea] = ready(planImport(text, [])).importable;
+		expect(lea).toEqual(withEveryKeyColoured(LEA));
+		expect(lea?.settings.keyboardColors).toBe('all');
+	});
+
+	it('keeps the soberer keyboard of a child through a backup and its import', () => {
+		const sober = updateSettings(NOE, { keyboardColors: 'finger' });
+		const text = exportBackup([sober], EXPORTED_AT);
+		expect(ready(planImport(text, [])).importable).toEqual([sober]);
+	});
 	it('keeps the time of the recent plays, and reads a version 7 profile without it', () => {
 		const timed = withProgress(LEA, {
 			lessons: {},

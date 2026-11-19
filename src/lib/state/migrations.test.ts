@@ -34,8 +34,10 @@ import {
 	asVersion13,
 	asVersion14,
 	asVersion15,
+	asVersion16,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
+	withEveryKeyColoured,
 	withKeyboardFade,
 	withNothingKeptOpen,
 	withRetryPolicy,
@@ -256,10 +258,11 @@ describe('migrateProfile', () => {
 	it('brings a version 4 profile to the current version with nothing lost', () => {
 		expect(parseProfile(migrateProfile(STORED_BY_VERSION_4))).toEqual({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 16,
+			schemaVersion: PROFILE_SCHEMA_VERSION,
 			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
+				keyboardColors: 'all',
 				errorPolicy: 'world',
 				sessionLength: 'normal',
 				keyboardFade: true,
@@ -341,10 +344,11 @@ describe('migrateProfile', () => {
 		expect(asVersion2(profileOfVersion2())).toEqual(STORED_BY_VERSION_2);
 		const profileOfVersion4 = parseProfile({
 			...STORED_BY_VERSION_4,
-			schemaVersion: 16,
+			schemaVersion: PROFILE_SCHEMA_VERSION,
 			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
+				keyboardColors: 'all',
 				errorPolicy: 'world',
 				sessionLength: 'normal',
 				keyboardFade: true,
@@ -389,6 +393,7 @@ describe('migrateProfile', () => {
 					...profile.settings,
 					voiceEnabled: true,
 					handGuide: 'auto',
+					keyboardColors: 'all',
 					errorPolicy: 'world',
 					sessionLength: 'normal',
 					keyboardFade: true,
@@ -409,6 +414,7 @@ describe('migrateProfile', () => {
 					settings: {
 						...profile.settings,
 						handGuide: 'auto',
+						keyboardColors: 'all',
 						errorPolicy: 'world',
 						sessionLength: 'normal',
 						keyboardFade: true,
@@ -446,6 +452,7 @@ describe('migrateProfile', () => {
 					settings: {
 						...profile.settings,
 						handGuide: 'auto',
+						keyboardColors: 'all',
 						errorPolicy: 'world',
 						sessionLength: 'normal',
 						keyboardFade: true,
@@ -571,7 +578,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion10(profile))));
 				expect(migrated).toEqual(withSensoryDefaults(profile));
-				expect(migrated.schemaVersion).toBe(16);
+				expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 				expect(migrated.settings.effects).toBe(true);
 				expect(migrated.settings.ambience).toBe('none');
 			})
@@ -583,7 +590,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion11(profile))));
 				expect(migrated).toEqual(withYoungerAgeBand(profile));
-				expect(migrated.schemaVersion).toBe(16);
+				expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 				expect(migrated.settings.ageBand).toBe('8-9');
 			})
 		);
@@ -594,7 +601,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion12(profile))));
 				expect(migrated).toEqual(withEmptyHideout(profile));
-				expect(migrated.schemaVersion).toBe(16);
+				expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 				expect(migrated.hideout).toEqual({});
 			})
 		);
@@ -605,7 +612,7 @@ describe('migrateProfile', () => {
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion13(profile))));
 				expect(migrated).toEqual(withUnmarkedSessions(profile));
-				expect(migrated.schemaVersion).toBe(16);
+				expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 				expect(migrated.sessions.every((session) => !Object.hasOwn(session, 'speedRule'))).toBe(
 					true
 				);
@@ -645,7 +652,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion11(current);
 		const settings = { ...(stored['settings'] as Json), ageBand: '10-12' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.settings.ageBand).toBe('10-12');
 	});
 
@@ -654,7 +661,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion10(current);
 		const settings = { ...(stored['settings'] as Json), effects: false, ambience: 'soft-noise' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.settings.effects).toBe(false);
 		expect(migrated.settings.ambience).toBe('soft-noise');
 	});
@@ -664,7 +671,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion9(current);
 		const settings = { ...(stored['settings'] as Json), keyboardFade: false };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.settings.keyboardFade).toBe(false);
 	});
 
@@ -673,7 +680,7 @@ describe('migrateProfile', () => {
 		const stored = asVersion8(current);
 		const settings = { ...(stored['settings'] as Json), errorPolicy: 'backspace' };
 		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.settings.errorPolicy).toBe('backspace');
 	});
 
@@ -696,7 +703,7 @@ describe('migrateProfile', () => {
 			}
 		};
 		const migrated = parseProfile(migrateProfile(stored));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.progress.chars).toEqual({
 			f: {
 				attempts: 50,
@@ -949,7 +956,7 @@ describe('version 15: the lessons changed order (ADR-075)', () => {
 
 	it('keeps no lesson open for a child who passed none', () => {
 		const migrated = parseProfile(migrateProfile(asVersion14(base)));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.keptOpenLessonIds).toEqual([]);
 		expect(parseProfile(migrateProfile(storedWith({}))).keptOpenLessonIds).toEqual([]);
 	});
@@ -1060,7 +1067,7 @@ describe('version 16: the worlds decide for the mistakes, the adult sets the ses
 
 	it('lets the worlds decide where the game waited for the right key', () => {
 		const migrated = parseProfile(migrateProfile(storedWith('retry')));
-		expect(migrated.schemaVersion).toBe(16);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.settings.errorPolicy).toBe('world');
 	});
 
@@ -1181,6 +1188,56 @@ describe('version 16: the children on their way lose nothing (ADR-081)', () => {
 				}
 			}),
 			{ numRuns: 60 }
+		);
+	});
+});
+
+describe('version 17: the colours of the keyboard drawn (ADR-075, choice 14)', () => {
+	const base = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+
+	it('describes version 16 without the colours of the keyboard', () => {
+		const stored = asVersion16(updateSettings(base, { keyboardColors: 'finger' }));
+		expect(stored['schemaVersion']).toBe(16);
+		expect(stored['settings']).not.toHaveProperty('keyboardColors');
+	});
+
+	it('keeps every key in the colour of its finger, as before', () => {
+		const migrated = parseProfile(migrateProfile(asVersion16(base)));
+		expect(migrated.schemaVersion).toBe(17);
+		expect(migrated.settings.keyboardColors).toBe('all');
+	});
+
+	it('keeps the choice of a record that already holds it', () => {
+		const stored = asVersion16(base);
+		const settings = { ...(stored['settings'] as Json), keyboardColors: 'finger' };
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.settings.keyboardColors).toBe('finger');
+	});
+
+	it('passes on a damaged choice for the parser to refuse', () => {
+		const stored = asVersion16(base);
+		for (const odd of ['some', 1, null]) {
+			const settings = { ...(stored['settings'] as Json), keyboardColors: odd };
+			expect(readProfile({ ...stored, settings }).ok).toBe(false);
+		}
+		expect(readProfile({ ...stored, settings: 'none' }).ok).toBe(false);
+	});
+
+	it('changes nothing else in any version 16 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion16(profile))));
+				expect(migrated).toEqual(withEveryKeyColoured(profile));
+			})
+		);
+	});
+
+	it('gives the same profile from a backup of version 16 read again', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const once = parseProfile(migrateProfile(toJson(asVersion16(profile))));
+				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
+			})
 		);
 	});
 });

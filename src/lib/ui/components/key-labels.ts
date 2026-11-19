@@ -1,49 +1,47 @@
-import { modifierCodes } from '$lib/keyboard/fingering';
+import { fingerForKey, modifierCodes } from '$lib/keyboard/fingering';
+import { keyLegend, pressSign } from '$lib/keyboard/legend';
 import type {
+	Finger,
 	FingeringProfile,
 	KeyCode,
-	KeyOutput,
 	KeyPress,
 	LayoutDefinition
 } from '$lib/keyboard/types';
+import type { KeyboardColors } from '$lib/state/types';
 
 const INDEX_FINGERS = ['left-index', 'right-index'] as const;
 
-function outputText(layout: LayoutDefinition, output: KeyOutput | undefined): string | null {
-	if (output === undefined) return null;
-	if (typeof output === 'string') return output;
-	return Object.hasOwn(layout.deadKeys, output.dead)
-		? (layout.deadKeys[output.dead]?.standalone ?? null)
-		: null;
-}
-
 /**
  * Character printed on a physical key of a real keyboard: capital letters, the isolated sign
- * for a dead key, an empty string for Space. `null` when the layout does not define the key.
+ * for a dead key, an empty string for Space; the sign without Shift for a key that prints two
+ * (`keyLegend` gives both). `null` when the layout does not define the key.
  */
 export function keyLabel(layout: LayoutDefinition, code: KeyCode): string | null {
-	if (!Object.hasOwn(layout.keys, code)) return null;
-	const levels = layout.keys[code];
-	const base = outputText(layout, levels?.base ?? levels?.shift);
-	if (base === null) return null;
-	if (base === ' ') return '';
-	const shifted = outputText(layout, levels?.shift);
-	const isLetterKey =
-		typeof levels?.base === 'string' &&
-		shifted !== null &&
-		shifted !== base &&
-		shifted === base.toLocaleUpperCase(layout.locale);
-	return isLetterKey ? shifted : base;
+	return keyLegend(layout, code)?.base ?? null;
 }
 
 /** Character produced by a key press, as shown to the child (base level uses the printed label). */
 export function pressLabel(layout: LayoutDefinition, press: KeyPress): string | null {
-	if (press.level === 'base') return keyLabel(layout, press.code);
-	if (!Object.hasOwn(layout.keys, press.code)) return null;
-	return outputText(layout, layout.keys[press.code]?.[press.level]);
+	return press.level === 'base' ? keyLabel(layout, press.code) : pressSign(layout, press);
 }
 
 export { modifierCodes };
+
+/**
+ * The fingers whose keys keep their colour on the keyboard drawn (ADR-075, choice 14): every finger
+ * (`null`) with `all`; with `finger`, the one that presses the key to type and those on its
+ * modifiers, none between two keys.
+ */
+export function colouredFingers(
+	colors: KeyboardColors,
+	target: KeyPress | null,
+	fingering: FingeringProfile
+): ReadonlySet<Finger> | null {
+	if (colors === 'all') return null;
+	if (target === null) return new Set();
+	const pressed = [target.code, ...modifierCodes(target, fingering)];
+	return new Set(pressed.flatMap((code) => fingerForKey(fingering, code) ?? []));
+}
 
 /** Home keys marked on a real keyboard: the ones under the two index fingers (F and J on AZERTY). */
 export function homeKeyCodes(fingering: FingeringProfile): KeyCode[] {

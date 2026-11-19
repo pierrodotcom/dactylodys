@@ -61,6 +61,15 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	})),
 	{ foreground: 'color.key.text', background: 'color.key.surface', min: TEXT_MIN },
 	{ foreground: 'color.key.border', background: 'color.surface.sunken', min: NON_TEXT_MIN },
+	// Audit E-07: the frame of the key to type and that of a mistake show on every colour of finger,
+	// on a key without colour, and against the thin edge of the other tone between frame and key.
+	...[...FINGER_COLORS, 'color.key.surface', 'color.key.halo'].flatMap((background) =>
+		['color.key.target-outline', 'color.oops.outline'].map((foreground) => ({
+			foreground,
+			background,
+			min: NON_TEXT_MIN
+		}))
+	),
 	...SURFACES.map((background) => ({
 		foreground: 'color.key.target-outline',
 		background,
@@ -110,6 +119,13 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	{ foreground: 'color.bubble.text', background: 'color.bubble.surface', min: TEXT_MIN },
 	// The bubble keeps its light surface in the dark theme: its outline is drawn on that surface.
 	{ foreground: 'color.bubble.border', background: 'color.bubble.surface', min: NON_TEXT_MIN },
+	// The help of the map follows the theme (E-07): its text, and its outline on the page.
+	{ foreground: 'color.help.text', background: 'color.help.surface', min: TEXT_MIN },
+	...['color.help.surface', 'color.surface.base'].map((background) => ({
+		foreground: 'color.help.border',
+		background,
+		min: NON_TEXT_MIN
+	})),
 	// A printed page keeps dark ink on light paper, whatever the theme of the screen.
 	{ foreground: 'color.print.text', background: 'color.print.surface', min: BODY_TEXT_MIN },
 	{ foreground: 'color.print.border', background: 'color.print.surface', min: NON_TEXT_MIN },
@@ -122,17 +138,6 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 	{
 		foreground: 'color.dialogue.answer-border',
 		background: 'color.dialogue.answer-surface',
-		min: NON_TEXT_MIN
-	},
-	// The group carried by the object of the river, the keys typed and those still to type.
-	...['color.river.label-text', 'color.river.label-pending'].map((foreground) => ({
-		foreground,
-		background: 'color.river.label-surface',
-		min: TEXT_MIN
-	})),
-	{
-		foreground: 'color.river.label-border',
-		background: 'color.river.label-surface',
 		min: NON_TEXT_MIN
 	}
 ];

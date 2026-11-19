@@ -247,6 +247,37 @@ test.describe('the hideout', () => {
 		}
 	);
 
+	test(
+		'writes the whole name of the object set down in a place, on two lines if needed',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await page.setViewportSize({ width: 1280, height: 720 });
+			const placed = catalogue.rewards
+				.filter((reward) => reward.kind === 'item' && rules.decorations[reward.artId]?.length)
+				.reduce((longest, reward) =>
+					reward.title.length > longest.title.length ? reward : longest
+				);
+			const place = rules.decorations[placed.artId]?.[0] ?? '';
+			const child = advancedProfile({ name: 'Noa', passed: {} });
+			await reachMapAs(page, {
+				...child,
+				earnedRewardIds: [placed.id],
+				hideout: { [place]: placed.id }
+			});
+			await openHideout(page);
+
+			// Cut by an ellipsis before (E-22): the name of the object is now whole.
+			const name = placeButton(page, place).locator('.place-object');
+			await expect(name).toHaveText(placed.title);
+			const cut = await name.evaluate(
+				(element) =>
+					element.scrollWidth > element.clientWidth + 1 ||
+					element.scrollHeight > element.clientHeight + 1
+			);
+			expect(cut).toBe(false);
+		}
+	);
+
 	test('offers the hideout from the map only', CHROMIUM_ONLY, async ({ page }) => {
 		await reachMapAs(page, firstWorldDone('Sacha'));
 		await expect(button(page, message('play_hideout_open'))).toBeVisible();

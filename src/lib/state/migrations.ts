@@ -291,6 +291,19 @@ function toVersion16(record: StoredRecord): StoredRecord {
 	};
 }
 
+/*
+ * Version 17 (ADR-075, choice 14): every key of the keyboard drawn keeps the colour of its finger,
+ * as before, until the child chooses the soberer keyboard. Nothing else changes.
+ */
+function toVersion17(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { keyboardColors: 'all', ...settings } : settings,
+		schemaVersion: 17
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -307,7 +320,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[12, toVersion13],
 	[13, toVersion14],
 	[14, toVersion15],
-	[15, toVersion16]
+	[15, toVersion16],
+	[16, toVersion17]
 ]);
 
 function versionOf(record: StoredRecord): number {

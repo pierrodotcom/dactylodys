@@ -58,6 +58,7 @@ const CHILD_LINES = [
 	'settings_sample_label',
 	'settings_keyboard_label',
 	'settings_hand_label',
+	'settings_keyboard_colors_label',
 	'settings_age_label'
 ].map((key) => message(key));
 

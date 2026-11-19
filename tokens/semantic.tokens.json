@@ -107,11 +107,16 @@
 			},
 			"target-outline": {
 				"$value": "{color.text.primary}"
+			},
+			"halo": {
+				"$description": "The other tone of the frame of a key (the key to type, a mistake): a thin edge between the key and its frame, of the opposite lightness, so that the frame shows on any colour (E-07).",
+				"$value": "{color.cream.50}"
 			}
 		},
 		"oops": {
 			"outline": {
-				"$value": "{color.amber.700}"
+				"$description": "The frame of a mistake: it stands out from every colour of finger (E-07).",
+				"$value": "{color.amber.800}"
 			}
 		},
 		"print": {
@@ -514,9 +519,26 @@
 				"$value": "{color.brown.900}"
 			}
 		},
-		"hand": {
-			"fill": {
+		"help": {
+			"$description": "The bubble of the companion that offers help on the map: it follows the theme, unlike the bubbles drawn in the scenes of the games (E-07).",
+			"surface": {
 				"$value": "{color.cream.50}"
+			},
+			"text": {
+				"$value": "{color.brown.900}"
+			},
+			"border": {
+				"$value": "{color.brown.900}"
+			}
+		},
+		"hand": {
+			"mask-keep": {
+				"$description": "What a mask keeps: the outline of the hands, around their inside (E-11). Light of the mask, never themed.",
+				"$value": "{color.mono.white}"
+			},
+			"mask-cut": {
+				"$description": "What a mask cuts out: the inside of the hands at rest, so that they are a contour. Shade of the mask, never themed.",
+				"$value": "{color.mono.black}"
 			},
 			"outline": {
 				"$value": "{color.brown.900}"
@@ -1594,18 +1616,6 @@
 			"crate-plank": {
 				"$value": "{color.brown.600}"
 			},
-			"label-surface": {
-				"$value": "{color.cream.50}"
-			},
-			"label-text": {
-				"$value": "{color.brown.900}"
-			},
-			"label-pending": {
-				"$value": "{color.brown.550}"
-			},
-			"label-border": {
-				"$value": "{color.brown.900}"
-			},
 			"leaf": {
 				"$value": "{color.green.300}"
 			},
@@ -2578,6 +2588,10 @@
 		},
 		"press": {
 			"$value": 0.97
+		},
+		"key-sign": {
+			"$description": "A sign of a key that prints two, as a share of the side of the key: two hold one above the other on the keyboard of a game and on the smaller one before a lesson (E-06).",
+			"$value": 0.34
 		}
 	},
 	"shadow": {
@@ -2947,6 +2961,10 @@
 		"guide": {
 			"$value": 20
 		},
+		"target": {
+			"$description": "The key to press and its modifiers, above the hand that shows them: the finger never hides the sign asked for (E-06).",
+			"$value": 30
+		},
 		"sticky": {
 			"$value": 100
 		},
@@ -2973,6 +2991,19 @@
 		},
 		"xl": {
 			"$value": "80rem"
+		}
+	},
+	"system-color": {
+		"$description": "The colours of the system in a forced-colours mode (the contrast themes of Windows): the palette the person chose, never a colour of the design. Read only under @media (forced-colors: active) (E-21).",
+		"$type": "systemColor",
+		"canvas": {
+			"$value": "Canvas"
+		},
+		"canvas-text": {
+			"$value": "CanvasText"
+		},
+		"highlight": {
+			"$value": "Highlight"
 		}
 	},
 	"print": {

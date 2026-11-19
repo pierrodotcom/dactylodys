@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fingerForKey } from '$lib/keyboard/fingering';
+	import { extraSign, keyLegend } from '$lib/keyboard/legend';
 	import type {
 		FingeringProfile,
 		KeyboardGeometryDefinition,
@@ -7,9 +8,10 @@
 		KeyPress,
 		LayoutDefinition
 	} from '$lib/keyboard/types';
+	import type { KeyboardColors } from '$lib/state/types';
 	import type { Attachment } from 'svelte/attachments';
 	import HandGuide from './HandGuide.svelte';
-	import { homeKeyCodes, keyLabel, modifierCodes } from './key-labels';
+	import { colouredFingers, homeKeyCodes, modifierCodes } from './key-labels';
 	import { keyName } from './names';
 
 	interface Props {
@@ -19,6 +21,12 @@
 		target: KeyPress | null;
 		wrongCode: KeyCode | null;
 		showFingers: boolean;
+		/**
+		 * With `showFingers`, which keys keep the colour of their finger (ADR-075, choice 14): every
+		 * key, or only those of the finger that presses the key to type and of the one on its
+		 * modifier, the others plain. Their place and the hand still say the finger.
+		 */
+		colors?: KeyboardColors | undefined;
 		/** Further keys to highlight like the target, e.g. the new keys of a lesson. */
 		marked?: readonly KeyCode[];
 		/** Hands drawn over the keys, showing these presses in turn; `null`: no hands. */
@@ -52,6 +60,7 @@
 		target,
 		wrongCode,
 		showFingers,
+		colors = 'all',
 		marked = [],
 		hands = null,
 		still = false,
@@ -91,15 +100,20 @@
 	const fadedKeys = $derived(new Set(faded));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
 	const modifiers = $derived(new Set(target === null ? [] : modifierCodes(target, fingering)));
+	const coloured = $derived(colouredFingers(colors, target, fingering));
+	// The sign AltGr writes, on the key to press only: « @ » on the key « à » of a PC (E-06).
+	const extra = $derived(target === null ? null : extraSign(layout, target));
 	const rows = $derived(
 		geometry.rows.map((row) => ({
 			offset: row.offset,
 			keys: row.keys.map((key) => {
-				const label = keyLabel(layout, key.code) ?? keyName(key.code) ?? '';
+				const legend = keyLegend(layout, key.code);
+				const label = legend?.base ?? keyName(key.code) ?? '';
 				return {
 					code: key.code,
 					width: key.width,
 					label,
+					shifted: legend?.shifted ?? null,
 					isLong: label.length > 1,
 					finger: fingerForKey(fingering, key.code)
 				};
@@ -116,18 +130,36 @@
 					<span class="slot" data-width={row.offset}></span>
 				{/if}
 				{#each row.keys as key (key.code)}
+					{@const added = target?.code === key.code ? extra : null}
 					<span
 						class="key"
 						data-code={key.code}
 						data-width={key.width}
-						data-finger={(showFingers && key.finger) || undefined}
+						data-finger={(showFingers &&
+							key.finger !== null &&
+							(coloured === null || coloured.has(key.finger)) &&
+							key.finger) ||
+							undefined}
 						data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
 						data-modifier={modifiers.has(key.code) || undefined}
 						data-wrong={wrongCode === key.code || undefined}
 						data-mastery={mastery?.get(key.code)}
 						data-faded={fadedKeys.has(key.code) || undefined}
 					>
-						<span class="label" data-long={key.isLong || undefined}>{key.label}</span>
+						<!-- Two signs as on the real key: the one with Shift above the one without (E-06). -->
+						<span
+							class="label"
+							data-long={key.isLong || undefined}
+							data-signs={key.shifted !== null || added !== null || undefined}
+						>
+							{#if key.shifted !== null}
+								<span class="sign" data-sign="shift">{key.shifted}</span>
+							{/if}
+							<span class="sign" data-sign="base">{key.label}</span>
+							{#if added !== null}
+								<span class="sign" data-sign="extra">{added}</span>
+							{/if}
+						</span>
 						{#if homeKeys.has(key.code)}
 							<span class="home-mark"></span>
 						{/if}
@@ -320,6 +352,36 @@
 		font-size: var(--dd-font-size-key-small);
 	}
 
+	/*
+	 * Two signs, or the sign AltGr adds to the key to press: smaller signs, sized on the key so that
+	 * they hold on the smaller keyboard before a lesson as well. The keys keep their size (ADR-085).
+	 */
+	.label[data-signs] {
+		display: grid;
+		grid-template-columns: auto;
+		column-gap: var(--dd-space-xs);
+		place-items: center;
+		font-size: calc(var(--dd-size-key-unit) * var(--dd-scale-key-sign));
+	}
+
+	.sign[data-sign='shift'] {
+		grid-area: 1 / 1;
+	}
+
+	.sign[data-sign='base'] {
+		grid-area: 2 / 1;
+	}
+
+	/* A key that prints one sign keeps it in its middle, the sign of AltGr beside it. */
+	.sign[data-sign='base']:first-child {
+		grid-row: 1 / 3;
+	}
+
+	/* Where a real keyboard prints it: down, on the right. */
+	.sign[data-sign='extra'] {
+		grid-area: 2 / 2;
+	}
+
 	.home-mark {
 		align-self: end;
 		inline-size: var(--dd-size-key-home-mark);
@@ -373,9 +435,15 @@
 		background-color: var(--dd-color-finger-right-pinky);
 	}
 
+	/*
+	 * Above the hand that shows them: the finger never hides the sign asked for (E-06). A frame of
+	 * two tones, a line and a thin edge of the opposite lightness between it and the key: it shows on
+	 * every colour of finger, in both themes (E-07).
+	 */
 	.key[data-target],
 	.key[data-modifier] {
-		z-index: var(--dd-z-index-raised);
+		z-index: var(--dd-z-index-target);
+		border-color: var(--dd-color-key-halo);
 		outline-style: solid;
 		outline-width: var(--dd-border-width-target);
 		outline-color: var(--dd-color-key-target-outline);
@@ -401,9 +469,18 @@
 
 	.key[data-wrong] {
 		z-index: var(--dd-z-index-raised);
+		border-color: var(--dd-color-key-halo);
 		outline-style: dashed;
 		outline-width: var(--dd-border-width-target);
 		outline-color: var(--dd-color-oops-outline);
 		outline-offset: 0;
+	}
+
+	/* Forced colours of the system: the key to press keeps a frame in the colour of a selection (E-21). */
+	@media (forced-colors: active) {
+		.key[data-target],
+		.key[data-modifier] {
+			outline-color: var(--dd-system-color-highlight);
+		}
 	}
 </style>

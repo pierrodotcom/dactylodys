@@ -106,13 +106,16 @@
 		background-color: var(--dd-color-dialogue-sky);
 	}
 
-	/* Two lines of room for the question, so that nothing below moves from one to the next. */
+	/*
+	 * Three lines of room for what Floup says, in large letters: it is the heart of the game, never
+	 * the smallest text of the screen (E-22), and nothing below moves from one question to the next.
+	 */
 	.host-line {
 		position: relative;
 		display: grid;
 		align-items: end;
 		min-block-size: calc(
-			var(--dd-font-size-base) * var(--dd-line-height-tight) * 2 + var(--dd-space-sm) * 2 +
+			var(--dd-font-size-lg) * var(--dd-line-height-tight) * 3 + var(--dd-space-sm) * 2 +
 				var(--dd-border-width-thick) * 2
 		);
 	}
@@ -136,6 +139,7 @@
 	.host-line .speech {
 		justify-self: start;
 		max-inline-size: var(--dd-size-dialogue-question-max);
+		font-size: var(--dd-font-size-lg);
 	}
 
 	.cast {

@@ -115,12 +115,3 @@ export function objectOf<T>(list: readonly T[], view: GameView, index: number): 
 export function probeOf(view: GameView): number {
 	return isRewarded(view) ? view.group.length : view.position;
 }
-
-/** How far the label of a group has to move sideways to stay inside the scene, around `x`. */
-export function labelShift(x: number, width: number, margin: number): number {
-	const half = width / 2;
-	const low = margin + half - x;
-	const high = SCENE.width - margin - half - x;
-	if (low > high) return (low + high) / 2;
-	return Math.min(Math.max(0, low), high);
-}

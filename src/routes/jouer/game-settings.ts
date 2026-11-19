@@ -51,6 +51,7 @@ export function toGameSettings(
 		// A surprise scene is a light effect (ADR-057): without effects, the plain entrance shows.
 		scenes: settings.effects ? scenes : [],
 		fadedKeys,
-		ageBand: settings.ageBand
+		ageBand: settings.ageBand,
+		keyboardColors: settings.keyboardColors
 	};
 }

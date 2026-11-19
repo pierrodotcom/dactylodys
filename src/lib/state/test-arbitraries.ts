@@ -96,6 +96,7 @@ export const settingsPatchArb: fc.Arbitrary<Partial<Settings>> = fc.record(
 		textSpacing: fc.constantFrom('normal', 'wide', 'wider'),
 		showKeyboard: fc.boolean(),
 		handGuide: fc.constantFrom('auto', 'always', 'off'),
+		keyboardColors: fc.constantFrom('all', 'finger'),
 		errorPolicy: fc.constantFrom('world', 'backspace', 'retry'),
 		sessionLength: fc.constantFrom('short', 'normal', 'long'),
 		keyboardFade: fc.boolean(),

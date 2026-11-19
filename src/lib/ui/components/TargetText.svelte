@@ -216,6 +216,29 @@
 		animation-timing-function: var(--dd-easing-standard);
 	}
 
+	/*
+	 * Forced colours of the system (the contrast themes of Windows) paint every frame: a frame on each
+	 * letter would make them all look expected (E-21). Only the character to type keeps one, thick,
+	 * in the colour of a selection; a mistake keeps its dashes.
+	 */
+	@media (forced-colors: active) {
+		.cell {
+			border-color: var(--dd-system-color-canvas);
+		}
+
+		.cell[data-state='current'] {
+			border-color: var(--dd-system-color-highlight);
+			outline-style: solid;
+			outline-width: var(--dd-border-width-thick);
+			outline-color: var(--dd-system-color-highlight);
+		}
+
+		.cell[data-state='wrong'],
+		.cell[data-error] {
+			border-color: var(--dd-system-color-canvas-text);
+		}
+	}
+
 	@keyframes shake {
 		0%,
 		100% {

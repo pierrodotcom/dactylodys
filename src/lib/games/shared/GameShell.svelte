@@ -488,6 +488,7 @@
 				{target}
 				wrongCode={game.wrongCode}
 				showFingers={true}
+				colors={settings.keyboardColors}
 				{hands}
 				still={settings.reducedMotion}
 				{noteCode}

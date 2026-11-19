@@ -27,10 +27,8 @@
 
 	const rewarded = $derived(isRewarded(view));
 	const objects = $derived(riverObjects(view));
-	const typing = $derived(view.phase === 'typing');
 	const sceneId = $derived(rewarded && view.scene.kind === 'scene' ? view.scene.id : undefined);
 	const quip = $derived(pickCyclic(QUIPS, view.rewardIndex)?.(ageBand) ?? '');
-	const label = $derived({ text: view.group, typed: view.position });
 </script>
 
 <div
@@ -49,13 +47,7 @@
 		{#each objects as object (object.index)}
 			{@const art = objectOf(OBJECT_ARTS, view, object.index)}
 			{#if art}
-				<Floater
-					{art}
-					place={object.place}
-					role={object.role}
-					still={view.reducedMotion}
-					label={typing && object.role === 'docked' ? label : undefined}
-				/>
+				<Floater {art} place={object.place} role={object.role} still={view.reducedMotion} />
 			{/if}
 		{/each}
 		{#if sceneId}
