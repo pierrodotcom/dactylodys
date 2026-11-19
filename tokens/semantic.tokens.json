@@ -107,11 +107,16 @@
 			},
 			"target-outline": {
 				"$value": "{color.text.primary}"
+			},
+			"halo": {
+				"$description": "The other tone of the frame of a key (the key to type, a mistake): a thin edge between the key and its frame, of the opposite lightness, so that the frame shows on any colour (E-07).",
+				"$value": "{color.cream.50}"
 			}
 		},
 		"oops": {
 			"outline": {
-				"$value": "{color.amber.700}"
+				"$description": "The frame of a mistake: it stands out from every colour of finger (E-07).",
+				"$value": "{color.amber.800}"
 			}
 		},
 		"print": {
@@ -504,6 +509,18 @@
 			}
 		},
 		"bubble": {
+			"surface": {
+				"$value": "{color.cream.50}"
+			},
+			"text": {
+				"$value": "{color.brown.900}"
+			},
+			"border": {
+				"$value": "{color.brown.900}"
+			}
+		},
+		"help": {
+			"$description": "The bubble of the companion that offers help on the map: it follows the theme, unlike the bubbles drawn in the scenes of the games (E-07).",
 			"surface": {
 				"$value": "{color.cream.50}"
 			},

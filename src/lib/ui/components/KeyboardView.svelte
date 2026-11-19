@@ -423,9 +423,14 @@
 	}
 
 	/* Above the hand that shows them: the finger never hides the sign asked for (E-06). */
+	/*
+	 * A frame of two tones, a line and a thin edge of the opposite lightness between it and the key:
+	 * it shows on every colour of finger, in both themes (E-07).
+	 */
 	.key[data-target],
 	.key[data-modifier] {
 		z-index: var(--dd-z-index-target);
+		border-color: var(--dd-color-key-halo);
 		outline-style: solid;
 		outline-width: var(--dd-border-width-target);
 		outline-color: var(--dd-color-key-target-outline);
@@ -451,6 +456,7 @@
 
 	.key[data-wrong] {
 		z-index: var(--dd-z-index-raised);
+		border-color: var(--dd-color-key-halo);
 		outline-style: dashed;
 		outline-width: var(--dd-border-width-target);
 		outline-color: var(--dd-color-oops-outline);

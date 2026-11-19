@@ -331,10 +331,10 @@
 		padding: var(--dd-space-md) var(--dd-space-lg);
 		border-width: var(--dd-border-width-thick);
 		border-style: solid;
-		border-color: var(--dd-color-bubble-border);
+		border-color: var(--dd-color-help-border);
 		border-radius: var(--dd-radius-lg);
-		background-color: var(--dd-color-bubble-surface);
-		color: var(--dd-color-bubble-text);
+		background-color: var(--dd-color-help-surface);
+		color: var(--dd-color-help-text);
 	}
 
 	.ask {
