@@ -163,7 +163,7 @@
 					stroke-width={OUTLINE_WIDTH}
 					stroke-linejoin="round"
 				/>
-				{#each hand.fingers as shape (shape.finger)}
+				{#each hand.fingers.filter((shape) => !shape.folded) as shape (shape.finger)}
 					{@const tip = tipOf(shape)}
 					<line
 						x1={shape.base.x}
@@ -177,11 +177,31 @@
 				{/each}
 			{/each}
 		</g>
-		<!-- Only the finger that shows a key is filled. -->
+		<!--
+			A reduced fingering (ADR-075, choice 6): the fingers it does not use are folded, short and
+			faded. The hand keeps its shape and shows what to do with them; they never show a key.
+		-->
+		<g class="outline folded" mask="url(#{maskId})">
+			{#each hands as hand (hand.hand)}
+				{#each hand.fingers.filter((shape) => shape.folded) as shape (shape.finger)}
+					<line
+						x1={shape.base.x}
+						y1={shape.base.y}
+						x2={shape.tip.x}
+						y2={shape.tip.y}
+						stroke-width={OUTLINE_WIDTH}
+						stroke-linecap="round"
+						data-finger={shape.finger}
+						data-folded
+					/>
+				{/each}
+			{/each}
+		</g>
+		<!-- Only the finger that shows a key is filled; it says which finger it is. -->
 		{#each hands as hand (hand.hand)}
 			{#each hand.fingers.filter(isActive) as shape (shape.finger)}
 				{@const tip = tipOf(shape)}
-				<g class="active" data-active>
+				<g class="active" data-active={shape.finger}>
 					<line
 						class="active-outline"
 						x1={shape.base.x}
@@ -244,6 +264,10 @@
 	.active-outline {
 		fill: var(--dd-color-hand-outline);
 		stroke: var(--dd-color-hand-outline);
+	}
+
+	.folded {
+		opacity: var(--dd-opacity-hand-folded);
 	}
 
 	.active-fill {
