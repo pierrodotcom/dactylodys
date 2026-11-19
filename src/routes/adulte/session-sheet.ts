@@ -68,7 +68,8 @@ function focusOf(progression: ProgressionDefinition | undefined, profile: Profil
 	);
 }
 
-function currentLesson(
+/** The lesson the child plays now, as the map proposes it; also said at the top of the report. */
+export function currentLesson(
 	progression: ProgressionDefinition | undefined,
 	profile: Profile
 ): SheetLesson | null {

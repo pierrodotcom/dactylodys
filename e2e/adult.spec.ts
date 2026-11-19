@@ -94,6 +94,38 @@ function preparedChild(name: string): Profile {
 	};
 }
 
+/** The day of the play `index` of `session`, as the device wrote it. */
+function dayOfSession(index: number): string {
+	return new Date(Date.parse('2026-10-20T15:00:00Z') + index * 86_400_000)
+		.toISOString()
+		.slice(0, 10);
+}
+
+/**
+ * A child who played a lot: the most plays the report shows, every list of keys long, a speed at
+ * the hand and words of the adult. Its report must still print on two pages.
+ */
+function busyChild(name: string): Profile {
+	const base = preparedChild(name);
+	const keys = [...'qsdfghjklmazertyuiopwxcvbn'];
+	const chars = Object.fromEntries(
+		keys.map((char, index) => [char, index % 5 === 0 ? sample(30, 15) : sample(30, index % 3)])
+	);
+	const plays = Array.from({ length: 30 }, (_, index) =>
+		session(index, 80 + (index % 20), 30 + index)
+	);
+	return {
+		...base,
+		progress: { ...base.progress, chars },
+		charDays: Object.fromEntries(
+			keys.filter((_, index) => index % 2 === 0).map((char) => [char, THREE_DAYS])
+		),
+		sessions: plays,
+		practiceDays: plays.map((_, index) => dayOfSession(index)),
+		handwritingSamples: [{ measuredAt: Date.parse('2026-10-25T10:00:00Z'), wordsPerMinute: 12 }],
+		adultWords: ['lune', 'vélo', 'train']
+	};
+}
 /**
  * A child whose two first plays were measured from the first key of each group, and the three
  * last ones from the moment each group could be typed: 61 characters per minute at the median.
@@ -142,6 +174,9 @@ function sheetChild(name: string): Profile {
 		}
 	};
 }
+
+/** Two A4 pages, both sides of one sheet: the report of the profiles tried prints on them (E-15). */
+const MAX_REPORT_PAGES = 2;
 
 /** The pages of a PDF file: one `/Type /Page` object each (`/Pages` is their parent). */
 function pdfPageCount(pdf: Buffer): number {
@@ -348,6 +383,100 @@ test.describe('adult space', () => {
 		);
 	});
 
+	test(
+		'leads from the contents of the report to each of its sections, to read first and act after',
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachPlayers(page);
+			await enterAdultSpace(page);
+			await passGate(page);
+			await openReport(page, lou);
+
+			const links = page.locator('[data-report-contents]').getByRole('link');
+			const targets = await links.evaluateAll((all) =>
+				all.map((link) => (link as HTMLAnchorElement).hash.slice(1))
+			);
+			expect(targets).toEqual([
+				'now-title',
+				'keys-title',
+				'evolution-title',
+				'target-title',
+				'child-sheet-title',
+				'worlds-title',
+				'words-title',
+				'child-settings-title',
+				'child-files-title',
+				'child-identity-title'
+			]);
+			// The sections come in the order of the contents: what is read, then what is done.
+			const sections = await page
+				.locator('[data-child-report] h2[id]')
+				.evaluateAll((all) => all.map((title) => title.id));
+			expect(sections.filter((id) => targets.includes(id))).toEqual(targets);
+			await expect(page.locator('[data-report-lesson]')).toHaveText(
+				message('adult_sheet_now_lesson', {
+					lesson: SECOND?.title ?? '',
+					number: 2,
+					world: world?.title ?? ''
+				})
+			);
+
+			for (const [index, target] of targets.entries()) {
+				await links.nth(index).focus();
+				await page.keyboard.press('Enter');
+				await expect(page.locator(`#${target}`), target).toBeInViewport();
+			}
+		}
+	);
+
+	test('prints the report of a child on two pages at most, without its buttons nor its fields', async ({
+		page,
+		browserName
+	}) => {
+		const busy = busyChild('Sam');
+		await reachPlayers(page, [lou, busy]);
+		await enterAdultSpace(page);
+		await passGate(page);
+
+		for (const child of [lou, busy]) {
+			await openReport(page, child);
+			await page.evaluate(() => {
+				const counted = window as unknown as { printed: number };
+				counted.printed = 0;
+				window.print = () => {
+					counted.printed += 1;
+				};
+			});
+			await page.locator('[data-report-print]').focus();
+			await page.keyboard.press('Enter');
+			await expect
+				.poll(() => page.evaluate(() => (window as unknown as { printed: number }).printed))
+				.toBe(1);
+
+			await page.emulateMedia({ media: 'print' });
+			const report = page.locator('[data-child-report]');
+			await expect(report.locator('button').filter({ visible: true })).toHaveCount(0);
+			await expect(
+				report.locator(':is(input, textarea, select, summary, a)').filter({ visible: true })
+			).toHaveCount(0);
+			await expect(page.locator('[data-screen-back]')).toBeHidden();
+			await expect(report.locator('[data-chart]').filter({ visible: true })).toHaveCount(0);
+			await expect(report.locator('[data-print-sessions] tbody tr')).toHaveCount(
+				child.sessions.length
+			);
+			await expect(report.locator('[data-report-printed]')).toBeVisible();
+			await expect(report.locator('[data-keys="acquired"]')).toBeVisible();
+			// A PDF follows the emulated media: it is made while the page is still emulated as printed.
+			if (browserName === 'chromium') {
+				const pages = pdfPageCount(await page.pdf({ format: 'A4' }));
+				expect(pages, child.name).toBeGreaterThan(0);
+				expect(pages, child.name).toBeLessThanOrEqual(MAX_REPORT_PAGES);
+			}
+			await page.emulateMedia({ media: null });
+			await page.keyboard.press('Escape');
+			await expect(page.locator('[data-adult-home]')).toBeVisible();
+		}
+	});
 	test(
 		'gives the speed in characters per minute too, and says since when it counts the reading time',
 		CHROMIUM_ONLY,
@@ -815,6 +944,21 @@ test.describe('adult space, light and dark themes', () => {
 		await expectNoAxeViolation(page);
 	});
 
+	test('has no axe violation on the report of a busy child, its contents and its keys', async ({
+		page
+	}) => {
+		const busy = busyChild('Sam');
+		await reachPlayers(page, [busy]);
+		await enterAdultSpace(page);
+		await passGate(page);
+		await openReport(page, busy);
+		for (const summary of await page.getByText(message('adult_table_show')).all()) {
+			await summary.click();
+		}
+		await expect(page.locator('[data-keys="typed-right"]')).toBeVisible();
+		await expect(page.locator('[data-chart-dates]').first()).toBeVisible();
+		await expectNoAxeViolation(page);
+	});
 	test('has no axe violation on the report of a child whose speed changed of measure', async ({
 		page
 	}) => {
