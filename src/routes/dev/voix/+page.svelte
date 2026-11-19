@@ -23,8 +23,9 @@
 	import { isOne } from '$lib/ui/plural';
 	import configData from '../../../../content/common/voice.json';
 	import progressionData from '../../../../content/fr/progression/azerty-decouverte.json';
-	// The messages as `tools/voice/import.js` reads them: both list the same sentences.
-	import messagesData from '../../../../messages/fr.json';
+	// Only the messages the voice says (`npm run generate`), the same `tools/voice/import.js` reads:
+	// the whole file would put the texts of the internal trial pages in the published code.
+	import messagesData from '$lib/generated/spoken-messages.fr.json';
 	import { STORY } from '../../jouer/story';
 	import { buildVoiceArchive, recordedTexts } from './archive';
 	import {
