@@ -12,7 +12,7 @@
 		"10-12": [1, 2, 3]
 	},
 	"shortWords": {
-		"beforeLesson": 12,
+		"beforeLesson": 14,
 		"maxLength": 7
 	},
 	"bankLoadTimeoutMs": 3000,

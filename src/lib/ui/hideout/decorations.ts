@@ -83,6 +83,15 @@ const ROW_KEYS: DecorationArt = {
 	scale: TROPHY_SCALE
 };
 const SIGN_KEYS: DecorationArt = { ...ROW_KEYS, frame: [8, 25, 103, 92], anchor: [60, 117] };
+/** The stamp of a grand tour: its card hangs from its pin (`TrophyArt`). */
+const STAMP: DecorationArt = {
+	source: 'trophy',
+	mount: 'hang',
+	frame: [22, 15, 84, 102],
+	anchor: [60, 27],
+	holder: 'none',
+	scale: TROPHY_SCALE
+};
 
 /** One way of setting down each object of the catalogue, by `artId` (tested). */
 export const DECORATION_ARTS: Readonly<Record<string, DecorationArt>> = {
@@ -290,6 +299,11 @@ export const DECORATION_ARTS: Readonly<Record<string, DecorationArt>> = {
 	'medal-stars': MEDAL,
 	'medal-racing': MEDAL,
 	'medal-post': MEDAL,
+	'stamp-dinosaurs': STAMP,
+	'stamp-kitchen': STAMP,
+	'stamp-stars': STAMP,
+	'stamp-zoo': STAMP,
+	'stamp-racing': STAMP,
 	'keys-home-row': ROW_KEYS,
 	'keys-top-row': ROW_KEYS,
 	'keys-bottom-row': ROW_KEYS,

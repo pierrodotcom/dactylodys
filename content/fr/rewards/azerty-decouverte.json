@@ -595,6 +595,61 @@
 			}
 		},
 		{
+			"id": "fr.reward.stamp-dinosaurs",
+			"kind": "trophy",
+			"title": "Le tampon des dinosaures",
+			"description": "Réussis le grand tour des dinosaures, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "stamp-dinosaurs",
+			"condition": {
+				"kind": "tour-mastered",
+				"lessonId": "fr.lesson.grand-tour-dinosaures"
+			}
+		},
+		{
+			"id": "fr.reward.stamp-kitchen",
+			"kind": "trophy",
+			"title": "Le tampon des gourmands",
+			"description": "Réussis le grand tour de la cuisine, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "stamp-kitchen",
+			"condition": {
+				"kind": "tour-mastered",
+				"lessonId": "fr.lesson.grand-tour-cuisine"
+			}
+		},
+		{
+			"id": "fr.reward.stamp-stars",
+			"kind": "trophy",
+			"title": "Le tampon des étoiles",
+			"description": "Réussis le grand tour des étoiles, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "stamp-stars",
+			"condition": {
+				"kind": "tour-mastered",
+				"lessonId": "fr.lesson.grand-tour-espace"
+			}
+		},
+		{
+			"id": "fr.reward.stamp-zoo",
+			"kind": "trophy",
+			"title": "Le tampon du zoo",
+			"description": "Réussis le grand tour du zoo, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "stamp-zoo",
+			"condition": {
+				"kind": "tour-mastered",
+				"lessonId": "fr.lesson.grand-tour-animaux"
+			}
+		},
+		{
+			"id": "fr.reward.stamp-racing",
+			"kind": "trophy",
+			"title": "Le tampon des bolides",
+			"description": "Réussis le grand tour des bolides, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"artId": "stamp-racing",
+			"condition": {
+				"kind": "tour-mastered",
+				"lessonId": "fr.lesson.grand-tour-vehicules"
+			}
+		},
+		{
 			"id": "fr.reward.keys-home-row",
 			"kind": "trophy",
 			"title": "La rangée du milieu apprivoisée",

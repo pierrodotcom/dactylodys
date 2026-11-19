@@ -65,11 +65,14 @@ describe('content by age group', () => {
 		});
 	});
 
-	it('keeps the words short before the twelfth lesson', () => {
+	it('keeps the words short in the first two worlds, their grand tours included', () => {
 		const ids = lessonIds(progression);
-		ids.forEach((id, index) => {
+		const firstWorlds = new Set(
+			progression.worlds.slice(0, 2).flatMap((world) => world.lessons.map((lesson) => lesson.id))
+		);
+		ids.forEach((id) => {
 			const { maxWordLength } = wordLimits(PLAY_RULES, progression, id, '8-9');
-			expect(maxWordLength, id).toBe(index + 1 < 12 ? 7 : undefined);
+			expect(maxWordLength, id).toBe(firstWorlds.has(id) ? 7 : undefined);
 		});
 	});
 

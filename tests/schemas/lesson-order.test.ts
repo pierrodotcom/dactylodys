@@ -63,7 +63,10 @@ const SEEDS = 20;
 const lessons = progression.worlds.flatMap((world) => world.lessons);
 const way = lessons.filter((lesson) => !isDetour(lesson));
 
-/** The worlds as they followed one another in version 14 of the profile, every lesson on the way. */
+/**
+ * The worlds as they followed one another in version 14 of the profile, every lesson on the way;
+ * the grand tours came later (ADR-075, choice 3).
+ */
 const FORMER_WORLDS = [
 	'fr.world.dinosaures',
 	'fr.world.cuisine',
@@ -77,15 +80,20 @@ const former: ProgressionDefinition = {
 	worlds: FORMER_WORLDS.map((id) => {
 		const world = progression.worlds.find((candidate) => candidate.id === id);
 		if (world === undefined) throw new Error(`no world ${id}`);
-		const onTheWay = world.lessons.map((lesson): LessonDefinition => {
-			const copy: { -readonly [K in keyof LessonDefinition]: LessonDefinition[K] } = { ...lesson };
-			delete copy.optional;
-			return copy;
-		});
+		const onTheWay = world.lessons
+			.filter((lesson) => lesson.tour === undefined)
+			.map((lesson): LessonDefinition => {
+				const copy: { -readonly [K in keyof LessonDefinition]: LessonDefinition[K] } = {
+					...lesson
+				};
+				delete copy.optional;
+				return copy;
+			});
 		return { ...world, lessons: onTheWay };
 	})
 };
 const FORMER_IDS = lessonIds(former);
+const TOUR_IDS = lessons.filter((lesson) => lesson.tour !== undefined).map((lesson) => lesson.id);
 
 function passedIn(progress: ProgressState, lessonId: string): boolean {
 	return isLessonPassed(progression.rules, progress, lessonId);
@@ -172,7 +180,8 @@ const openedArb = fc.subarray(FORMER_WORLDS);
 
 describe('a profile of the former order, once migrated', () => {
 	it('knows the former order by the same lessons, and the same worlds', () => {
-		expect([...FORMER_IDS].sort()).toEqual(lessonIds(progression).sort());
+		const taught = lessonIds(progression).filter((id) => !TOUR_IDS.includes(id));
+		expect([...FORMER_IDS].sort()).toEqual(taught.sort());
 		expect(FORMER_IDS.slice(11, 19)).toEqual([
 			'fr.lesson.girafe-g-h',
 			'fr.lesson.vache-v-b',

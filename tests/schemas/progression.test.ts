@@ -130,7 +130,10 @@ describe('progression layouts', () => {
 describe('azerty-decouverte', () => {
 	const file = FILES.find((candidate) => candidate.slug === 'azerty-decouverte');
 	const progression = parseProgression(file?.data);
-	const lessons = progression.worlds.flatMap((world) => world.lessons);
+	const everyLesson = progression.worlds.flatMap((world) => world.lessons);
+	// The lessons that teach: the grand tours (ADR-075, choice 3) only go over them.
+	const lessons = everyLesson.filter((lesson) => lesson.tour === undefined);
+	const tours = everyLesson.filter((lesson) => lesson.tour !== undefined);
 
 	it('targets both French AZERTY layouts', () => {
 		expect(progression.layoutIds).toEqual(['fr-fr-azerty-pc', 'fr-fr-azerty-mac']);
@@ -146,7 +149,7 @@ describe('azerty-decouverte', () => {
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 2, newKeysUntil: 34, hesitationMs: 3000 },
+			handGuide: { everyKeyUntil: 2, newKeysUntil: 39, hesitationMs: 3000 },
 			starAlmostMargin: 3,
 			storyPhraseEvery: 2,
 			textGroupLength: 24,
@@ -172,8 +175,34 @@ describe('azerty-decouverte', () => {
 			paceRecentPlays: 5,
 			paceMinPlays: 3,
 			maxGroupCount: 12,
-			extraWordsPerGroup: 2
+			extraWordsPerGroup: 2,
+			// A grand tour asks a key the child types badly three times as often as an acquired one.
+			tour: {
+				minWorldKeystrokes: 4,
+				keyWeights: { acquired: 1, learning: 2, fragile: 3 },
+				scoreShare: 0.6
+			}
 		});
+	});
+
+	it('ends each world of keys with its grand tour, a detour without key nor number (ADR-075)', () => {
+		const ended = progression.worlds.filter((world) =>
+			world.lessons.some((lesson) => lesson.tour !== undefined)
+		);
+		expect(ended.map((world) => world.id)).toEqual(progression.worlds.slice(0, 5).map((w) => w.id));
+		for (const world of ended) {
+			const tour = world.lessons.at(-1);
+			expect(tour?.tour).toEqual({ worldId: world.id });
+			expect(tour?.optional).toBe(true);
+			expect(tour?.newChars).toEqual([]);
+			expect(tour?.mix.drills).toBe(0);
+			expect(lessonNumber(progression, tour?.id ?? '')).toBeNull();
+			// The words picked by hand for the keys of the world, gathered for its tour.
+			const picked = world.lessons.filter((lesson) => lesson !== tour).flatMap((l) => l.words);
+			expect([...(tour?.words ?? [])].sort()).toEqual([...new Set(picked)].sort());
+		}
+		// One sentence for every tour: a single recording for the voice.
+		expect(new Set(tours.map((tour) => tour.intro)).size).toBe(1);
 	});
 
 	it('reviews a key as weak exactly where the report of the adult space calls it fragile', () => {
@@ -214,7 +243,9 @@ describe('azerty-decouverte', () => {
 
 	it('introduces the keys in the agreed order', () => {
 		expect(
-			progression.worlds.map((world) => world.lessons.map((lesson) => lesson.newChars))
+			progression.worlds.map((world) =>
+				world.lessons.filter((lesson) => lesson.tour === undefined).map((lesson) => lesson.newChars)
+			)
 		).toEqual([
 			[['f', 'j'], [' '], ['d', 'k'], ['s', 'l'], ['e', 'i'], ['r', 'u']],
 			[
@@ -283,7 +314,8 @@ describe('azerty-decouverte', () => {
 		expect(ids[first - 1]).toBe('fr.lesson.grandes-majuscules');
 		// The lessons that moved kept their identifier, their world and their title.
 		const stars = progression.worlds.find((world) => world.id === 'fr.world.espace');
-		expect(stars?.lessons.map((lesson) => lesson.title)).toEqual([
+		const taughtThere = stars?.lessons.filter((lesson) => lesson.tour === undefined) ?? [];
+		expect(taughtThere.map((lesson) => lesson.title)).toEqual([
 			'Le café de la Lune',
 			'La comète pressée',
 			'Les géantes de la galaxie',
@@ -295,7 +327,9 @@ describe('azerty-decouverte', () => {
 		const detours = lessons.filter((lesson) => lesson.optional === true);
 		expect(detours.map((lesson) => lesson.newChars.join(''))).toEqual(['îôû', 'ëï']);
 		const world = progression.worlds.find((candidate) => candidate.id === 'fr.world.vehicules');
-		expect(world?.lessons.slice(-2)).toEqual(detours);
+		// Only the grand tour of the world comes after them.
+		expect(world?.lessons.slice(-3, -1)).toEqual(detours);
+		expect(world?.lessons.at(-1)?.tour).toEqual({ worldId: world?.id });
 		// Nothing on the way counts on them: neither a key, nor a capital, nor the hand guide.
 		for (const lesson of lessons.filter((candidate) => candidate.optional !== true)) {
 			const learned = learnedChars(progression, lesson.id);
@@ -313,7 +347,8 @@ describe('azerty-decouverte', () => {
 	});
 
 	it('guides the hand up to the last lesson that brings a key, Backspace included (ADR-068)', () => {
-		const last = lessons.findLastIndex(
+		// The hand counts every lesson in order, the grand tours included (`lessonIds`).
+		const last = everyLesson.findLastIndex(
 			(lesson) => lesson.newChars.length > 0 || lesson.repair !== undefined
 		);
 		expect(progression.rules.handGuide?.newKeysUntil).toBe(last + 1);

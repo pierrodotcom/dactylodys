@@ -14,7 +14,7 @@
 		"lengthSlack": 12,
 		"handGuide": {
 			"everyKeyUntil": 2,
-			"newKeysUntil": 34,
+			"newKeysUntil": 39,
 			"hesitationMs": 3000
 		},
 		"starAlmostMargin": 3,
@@ -94,7 +94,16 @@
 		"paceRecentPlays": 5,
 		"paceMinPlays": 3,
 		"maxGroupCount": 12,
-		"extraWordsPerGroup": 2
+		"extraWordsPerGroup": 2,
+		"tour": {
+			"minWorldKeystrokes": 4,
+			"keyWeights": {
+				"acquired": 1,
+				"learning": 2,
+				"fragile": 3
+			},
+			"scoreShare": 0.6
+		}
 	},
 	"worlds": [
 		{
@@ -250,6 +259,64 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.grand-tour-dinosaures",
+					"title": "La balade des dinos",
+					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"newChars": [],
+					"words": [
+						"je",
+						"de",
+						"il",
+						"le",
+						"les",
+						"des",
+						"se",
+						"ses",
+						"si",
+						"elle",
+						"elles",
+						"ils",
+						"fil",
+						"fils",
+						"sel",
+						"ski",
+						"dis",
+						"elfe",
+						"lisse",
+						"sur",
+						"dur",
+						"rue",
+						"rues",
+						"ruse",
+						"jure",
+						"lire",
+						"rire",
+						"dire",
+						"ride",
+						"jus",
+						"lui",
+						"leur",
+						"fleur",
+						"lieu",
+						"seul",
+						"fier",
+						"luire"
+					],
+					"mix": {
+						"drills": 0,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"optional": true,
+					"tour": {
+						"worldId": "fr.world.dinosaures"
+					}
 				}
 			]
 		},
@@ -351,6 +418,45 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.grand-tour-cuisine",
+					"title": "Le grand festin",
+					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"newChars": [],
+					"words": [
+						"qui",
+						"que",
+						"quoi",
+						"quand",
+						"quatre",
+						"queue",
+						"l'été",
+						"l'épée",
+						"l'idée",
+						"l'école",
+						"l'épice",
+						"j'ai",
+						"c'est",
+						"l'ami",
+						"d'ici",
+						"l'eau",
+						"s'il",
+						"qu'il"
+					],
+					"mix": {
+						"drills": 0,
+						"words": 3,
+						"phrases": 1
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"optional": true,
+					"tour": {
+						"worldId": "fr.world.cuisine"
+					}
 				}
 			]
 		},
@@ -440,6 +546,38 @@
 							["Là ; ici.", "Lui ; elle."]
 						]
 					}
+				},
+				{
+					"id": "fr.lesson.grand-tour-espace",
+					"title": "La ronde des planètes",
+					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"newChars": [],
+					"words": [
+						"à",
+						"là",
+						"déjà",
+						"où",
+						"ça",
+						"reçu",
+						"déçu",
+						"maçon",
+						"leçon",
+						"façon",
+						"français"
+					],
+					"mix": {
+						"drills": 0,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"optional": true,
+					"tour": {
+						"worldId": "fr.world.espace"
+					}
 				}
 			]
 		},
@@ -512,6 +650,26 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6]
+				},
+				{
+					"id": "fr.lesson.grand-tour-animaux",
+					"title": "La visite du zoo",
+					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"newChars": [],
+					"words": ["garçon", "glaçon", "voilà", "kiwi", "clown", "wapiti", "zoo", "zéro", "onze"],
+					"mix": {
+						"drills": 0,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"optional": true,
+					"tour": {
+						"worldId": "fr.world.animaux"
+					}
 				}
 			]
 		},
@@ -639,6 +797,26 @@
 						]
 					},
 					"optional": true
+				},
+				{
+					"id": "fr.lesson.grand-tour-vehicules",
+					"title": "Le tour de piste",
+					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"newChars": [],
+					"words": [],
+					"mix": {
+						"drills": 0,
+						"words": 2,
+						"phrases": 5
+					},
+					"unlocks": [],
+					"groupCount": 8,
+					"targetLength": 35,
+					"groupLength": [4, 6],
+					"optional": true,
+					"tour": {
+						"worldId": "fr.world.vehicules"
+					}
 				}
 			]
 		},

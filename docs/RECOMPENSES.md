@@ -94,6 +94,10 @@ Touches apprivoisées (sur les **dernières** frappes de chaque touche : au moin
 56. **Les accents** (é è à ç ù ê â î ô û ë ï)
 57. **La ponctuation** (, . ? ! - : et l'apostrophe)
 
+Tampons des grands tours (ajout du lot « grand tour », choix n° 3 de l'ADR-075) : à la fin des mondes 1 à 5, un grand tour facultatif revoit les touches du monde. Le tampon du monde se gagne en **réussissant son grand tour quand toutes les touches que le monde apprend sont acquises** (même définition que l'espace adulte et le clavier qui s'efface : au moins 20 frappes récentes, au plus 1 erreur sur 10). Il est annoncé sur la carte, à côté du tour, et sur l'écran du tour ; il ne dépend ni du temps ni du nombre de parties, et reste acquis si une touche redevient fragile.
+
+- Le tampon des dinosaures · des gourmands · des étoiles · du zoo · des bolides : un seul dessin, une carte épinglée avec le symbole de la médaille du monde dans un cercle d'encre de sa couleur ; dans la cabane, il se pend au mur ou aux patères comme les médailles.
+
 ## F. Sur le bilan
 
 58. Une carte « **Nouveau !** » montre le compagnon avec l'objet gagné : « Tu as gagné : la toque de chef ! » et un bouton « **Le mettre** » (il le porte tout de suite). Plusieurs récompenses d'un coup : une carte chacune, l'une après l'autre.

@@ -13,9 +13,14 @@ import {
 	usablePhrases,
 	usableWords
 } from '../../src/lib/engine/progression/banks';
-import { learnedChars, parseProgression } from '../../src/lib/engine/progression/definition';
+import {
+	learnedChars,
+	parseProgression,
+	reachableChars
+} from '../../src/lib/engine/progression/definition';
 import { generateExercise } from '../../src/lib/engine/progression/exercise';
 import { seededRng } from '../../src/lib/engine/progression/test-support';
+import { writtenGroupsOf } from '../../src/lib/engine/progression/tour';
 import type {
 	AgeBand,
 	Exercise,
@@ -97,9 +102,14 @@ interface Sorted {
 	readonly suites: readonly string[];
 }
 
-/** Every group the warm-up written for a lesson can hold: those written and their alternatives. */
+/**
+ * Every group the warm-up written for a lesson can hold: those written and their alternatives; for
+ * a grand tour, those of every lesson of its world (`writtenGroupsOf`).
+ */
 function writtenOf(lesson: LessonDefinition): string[] {
-	return [...(lesson.warmUp ?? []), ...(lesson.warmUpReserve?.alternatives ?? []).flat()];
+	const own = [...(lesson.warmUp ?? []), ...(lesson.warmUpReserve?.alternatives ?? []).flat()];
+	if (lesson.tour === undefined) return own;
+	return [...own, ...writtenGroupsOf(progression, lesson, reachableChars(progression, lesson.id))];
 }
 
 function sort(lesson: LessonDefinition, ageBand: AgeBand, exercise: Exercise): Sorted {
@@ -150,8 +160,10 @@ describe('what the child types, over the shipped content', () => {
 
 	it('has enough words to do without suites from the eighth lesson, for every age group', () => {
 		const enough = rules.suiteFreeMinWords ?? Number.POSITIVE_INFINITY;
+		// The grand tours have no suite at all: the lessons that teach are counted.
+		const taught = entries.filter(({ lesson }) => lesson.tour === undefined);
 		for (const ageBand of AGE_BANDS) {
-			const counts = entries.map(({ lesson }) => wordsOf(lesson, ageBand).size);
+			const counts = taught.map(({ lesson }) => wordsOf(lesson, ageBand).size);
 			counts.slice(0, 4).forEach((count) => expect(count).toBe(0));
 			counts.slice(7).forEach((count, index) => {
 				expect(count, `lesson ${index + 8}, ${ageBand}`).toBeGreaterThanOrEqual(enough);
