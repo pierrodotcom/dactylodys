@@ -49,15 +49,29 @@ const KINDS: readonly VoiceTextKind[] = [
 	'message'
 ];
 
-/** Where the reminder to look at the screen comes from, in the list of the texts to record. */
+/** Where the reminders to look at the screen come from, in the list of the texts to record. */
 export const LOOK_REMINDER_ID = 'game.look-reminder';
-/** Message key of that reminder in `messages/<language>.json`: the page and the import tool read it there. */
-export const LOOK_REMINDER_MESSAGE = 'game_shared_look_reminder';
+/**
+ * Message keys of those reminders in `messages/<language>.json`, in the order the games say them
+ * (audit P-20): the page and the import tool read them there.
+ */
+export const LOOK_REMINDER_MESSAGES = [
+	'game_shared_look_reminder_touch',
+	'game_shared_look_reminder'
+] as const;
 
 /** A sentence of the games that the voice says, apart from the content: `id` names where it comes from. */
 export interface VoiceReminder {
 	readonly id: string;
 	readonly text: string;
+}
+
+/** The reminders to look at the screen, read from the messages of one language. */
+export function lookReminders(messages: Readonly<Record<string, unknown>>): VoiceReminder[] {
+	return LOOK_REMINDER_MESSAGES.flatMap((key) => {
+		const text = messages[key];
+		return typeof text === 'string' ? [{ id: LOOK_REMINDER_ID, text }] : [];
+	});
 }
 
 export function voiceOrigin(id: string, kind: VoiceTextKind): string {

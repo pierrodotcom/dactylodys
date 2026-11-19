@@ -1,4 +1,5 @@
 import { parseWordLimitRules, type WordLimitRules } from '$lib/engine/progression/word-limits';
+import type { LookReminderRule } from '$lib/games/types';
 import type { KeyCode } from '$lib/keyboard/types';
 import { SESSION_LENGTHS } from '$lib/state/profile';
 import type { SessionLength } from '$lib/state/types';
@@ -40,10 +41,10 @@ export interface PlayRules extends WordLimitRules {
 	 */
 	readonly ghostPaceFactor: number;
 	/**
-	 * Every so many groups, between two groups, the child is reminded to look at the screen rather
-	 * than at the keys; 0: never.
+	 * When the child is reminded, between two groups, to look at the screen rather than at the keys:
+	 * after so many characters typed, whatever the length of the groups (audit P-20).
 	 */
-	readonly lookReminderEveryGroups: number;
+	readonly lookReminder: LookReminderRule;
 	/**
 	 * Physical keys the child is asked to press to check the keyboard. They are chosen
 	 * where the layouts the game supports differ from other common ones (A, Z and M on AZERTY).
@@ -73,6 +74,25 @@ function expectMinutes(value: unknown, path: string): number {
 		fail(path, 'expected a positive number');
 	}
 	return value;
+}
+
+function expectAtLeastOne(value: unknown, path: string): number {
+	if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+		fail(path, 'expected an integer of at least 1');
+	}
+	return value;
+}
+
+function parseLookReminder(data: unknown, path: string): LookReminderRule {
+	if (!isRecord(data)) fail(path, 'expected an object');
+	for (const name of Object.keys(data)) {
+		if (!['firstAfterChars', 'everyChars'].includes(name))
+			fail(`${path}.${name}`, 'unknown property');
+	}
+	return {
+		firstAfterChars: expectAtLeastOne(data['firstAfterChars'], `${path}.firstAfterChars`),
+		everyChars: expectAtLeastOne(data['everyChars'], `${path}.everyChars`)
+	};
 }
 
 function parseSessionLength(data: unknown, path: string): SessionLengthRules {
@@ -107,7 +127,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 				'shortWords',
 				'bankLoadTimeoutMs',
 				'ghostPaceFactor',
-				'lookReminderEveryGroups',
+				'lookReminder',
 				'keyboardCheckCodes'
 			].includes(name)
 		) {
@@ -164,14 +184,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 		fail('playRules.ghostPaceFactor', 'expected a number above 0 and up to 1');
 	}
 
-	const lookReminderEveryGroups = data['lookReminderEveryGroups'];
-	if (
-		typeof lookReminderEveryGroups !== 'number' ||
-		!Number.isSafeInteger(lookReminderEveryGroups) ||
-		lookReminderEveryGroups < 0
-	) {
-		fail('playRules.lookReminderEveryGroups', 'expected an integer of at least 0');
-	}
+	const lookReminder = parseLookReminder(data['lookReminder'], 'playRules.lookReminder');
 
 	const rawCodes = data['keyboardCheckCodes'];
 	if (!Array.isArray(rawCodes) || rawCodes.length === 0) {
@@ -191,7 +204,7 @@ export function parsePlayRules(data: unknown): PlayRules {
 		...wordLimitRules,
 		bankLoadTimeoutMs,
 		ghostPaceFactor,
-		lookReminderEveryGroups,
+		lookReminder,
 		keyboardCheckCodes: codes
 	};
 }

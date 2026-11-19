@@ -135,6 +135,17 @@ describe('shellAnnouncement', () => {
 		expect(shellAnnouncement('type fj', notices)).toBe('press a letter');
 	});
 
+	it('adds the reminder to look at the screen after the reward, when no voice says it', () => {
+		expect(
+			shellAnnouncement('a dino hatched', { ...NOTHING, reminder: 'look at the screen' })
+		).toBe('a dino hatched look at the screen');
+		expect(shellAnnouncement('a dino hatched', { ...NOTHING, reminder: null })).toBe(
+			'a dino hatched'
+		);
+		const away = { away: 'press a letter', reminder: 'look at the screen', capsLock: null };
+		expect(shellAnnouncement('a dino hatched', away)).toBe('press a letter');
+	});
+
 	it('adds the Caps Lock help after the expected key, in the same sentence of the same region', () => {
 		expect(shellAnnouncement('expected f', { ...NOTHING, capsLock: 'caps lock is on' })).toBe(
 			'expected f caps lock is on'

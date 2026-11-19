@@ -1229,7 +1229,7 @@
 				current.settings,
 				systemPrefersReduced,
 				guide,
-				PLAY_RULES.lookReminderEveryGroups,
+				PLAY_RULES.lookReminder,
 				unlockedScenes(
 					SCENE_SCHEDULE,
 					activeGameId,

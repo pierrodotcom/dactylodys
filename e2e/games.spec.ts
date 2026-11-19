@@ -831,7 +831,10 @@ test.describe('reminder to look at the screen', CHROMIUM_ONLY, () => {
 	test('says it kindly, and does not move the keyboard when it appears', async ({ page }) => {
 		const tops: number[] = [];
 		await reachReminder(page, tops);
-		await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
+		// The first reminder of the first play gives the way, by touch (audit P-20).
+		await expect(page.locator('[data-look-reminder]')).toHaveText(
+			message('game_shared_look_reminder_touch')
+		);
 
 		// Measured once the page has laid the reminder out: a poll would take the first, unmoved value.
 		await page.evaluate(
@@ -842,7 +845,7 @@ test.describe('reminder to look at the screen', CHROMIUM_ONLY, () => {
 
 	test('stays long enough to be read: a key does not remove it', async ({ page }) => {
 		await reachReminder(page, []);
-		const reminder = page.getByText(message('game_shared_look_reminder'));
+		const reminder = page.locator('[data-look-reminder]');
 		await expect(reminder).toBeVisible();
 
 		await page.keyboard.press('Enter');

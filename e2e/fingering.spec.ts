@@ -254,7 +254,7 @@ test.describe('a reduced fingering chosen by the adult', () => {
 		await expect(twoIndex).toBeChecked();
 		await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
 		await expect(page.locator('[data-fingering-changed]')).toHaveText(
-			message('settings_fingering_changed')
+			message('settings_fingering_changed_two_index')
 		);
 		await expect
 			.poll(async () => (await storedRecord(page, profile))?.['settings'])

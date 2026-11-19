@@ -30,7 +30,7 @@
 	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import TargetText from '$lib/ui/components/TargetText.svelte';
-	import { AMBIENCE_LABELS, FINGERING_LABELS, LAYOUT_LABELS } from './labels';
+	import { AMBIENCE_LABELS, FINGERING_LABELS, LAYOUT_LABELS, fingeringChangeNote } from './labels';
 	import { PLAY_RULES } from './play-rules';
 
 	interface Props {
@@ -153,7 +153,7 @@
 	let beforeCalm = $state.raw<Partial<Settings> | null>(null);
 	let restored = $state(false);
 	/** The adult changed the fingering on this screen: one sentence says what it does to the child. */
-	let fingeringChanged = $state(false);
+	let fingeringNote = $state('');
 
 	function calmEverything() {
 		const { patch, changes } = calmDown(settings);
@@ -379,8 +379,9 @@
 					value={settings.fingeringProfileId}
 					hint={m.settings_fingering_hint()}
 					onchange={(value) => {
-						fingeringChanged = true;
-						change({ fingeringProfileId: value as FingeringProfileId });
+						const to = value as FingeringProfileId;
+						fingeringNote = fingeringChangeNote(settings.fingeringProfileId, to);
+						change({ fingeringProfileId: to });
 					}}
 				/>
 				<!--
@@ -391,7 +392,7 @@
 				<div class="line">
 					<div class="name"></div>
 					<p class="about note" aria-live="polite" data-fingering-changed>
-						{fingeringChanged ? m.settings_fingering_changed() : ''}
+						{fingeringNote}
 					</p>
 				</div>
 			{/if}

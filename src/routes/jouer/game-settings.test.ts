@@ -35,11 +35,13 @@ describe('toGameSettings', () => {
 	});
 
 	it('takes what the route found for the lesson played', () => {
-		expect(toGameSettings(base, false, NO_GUIDE, 0, [], [], 'backspace').errorPolicy).toBe(
+		expect(toGameSettings(base, false, NO_GUIDE, undefined, [], [], 'backspace').errorPolicy).toBe(
 			'backspace'
 		);
 		const always = { ...base, errorPolicy: 'backspace' as const };
-		expect(toGameSettings(always, false, NO_GUIDE, 0, [], [], 'retry').errorPolicy).toBe('retry');
+		expect(toGameSettings(always, false, NO_GUIDE, undefined, [], [], 'retry').errorPolicy).toBe(
+			'retry'
+		);
 	});
 
 	it.each([
@@ -56,15 +58,17 @@ describe('toGameSettings', () => {
 
 	it('shows the surprise scenes with the light effects, and none without them', () => {
 		const scenes = ['comet', 'gift'];
-		expect(toGameSettings(base, false, NO_GUIDE, 0, scenes).scenes).toEqual(scenes);
+		expect(toGameSettings(base, false, NO_GUIDE, undefined, scenes).scenes).toEqual(scenes);
 		const calm = { ...base, effects: false, motion: 'full' as const };
-		expect(toGameSettings(calm, false, NO_GUIDE, 0, scenes).scenes).toEqual([]);
-		expect(toGameSettings(calm, false, NO_GUIDE, 0, scenes).reducedMotion).toBe(false);
+		expect(toGameSettings(calm, false, NO_GUIDE, undefined, scenes).scenes).toEqual([]);
+		expect(toGameSettings(calm, false, NO_GUIDE, undefined, scenes).reducedMotion).toBe(false);
 	});
 
 	it('fades no key unless the route says which', () => {
 		expect(toGameSettings(base, false, NO_GUIDE).fadedKeys).toEqual([]);
-		expect(toGameSettings(base, false, NO_GUIDE, 0, [], ['KeyF']).fadedKeys).toEqual(['KeyF']);
+		expect(toGameSettings(base, false, NO_GUIDE, undefined, [], ['KeyF']).fadedKeys).toEqual([
+			'KeyF'
+		]);
 	});
 
 	it('passes the age group of the child to the game, for its bubbles', () => {
@@ -77,6 +81,12 @@ describe('toGameSettings', () => {
 		expect(
 			toGameSettings({ ...base, keyboardColors: 'finger' }, false, NO_GUIDE).keyboardColors
 		).toBe('finger');
+	});
+
+	it('passes the reminder to look at the screen through, and none unless given', () => {
+		const lookReminder = { firstAfterChars: 20, everyChars: 40 };
+		expect(toGameSettings(base, false, NO_GUIDE, lookReminder).lookReminder).toEqual(lookReminder);
+		expect(toGameSettings(base, false, NO_GUIDE)).not.toHaveProperty('lookReminder');
 	});
 
 	it('passes the guide of the lesson through', () => {

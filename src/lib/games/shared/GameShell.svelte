@@ -20,13 +20,15 @@
 		type GameAction,
 		type GameState
 	} from './game-state';
-	import { viewOf, type GameView } from './game-view';
+	import { pickCyclic, viewOf, type GameView } from './game-view';
 	import { shellAnnouncement, typingAnnouncement, type TypingWords } from './announce';
 	import { pauseRequests } from './pause-request';
 	import { leaveFocusInField } from './leave-focus';
 	import { spokenGrapheme } from '$lib/ui/components/spoken';
+	import { toGraphemes } from '$lib/engine/graphemes';
 	import { isGuided } from '$lib/engine/progression/guide';
-	import { isLookReminderDue, needsCapsLockHelp } from './help';
+	import { lookReminderDue, needsCapsLockHelp } from './help';
+	import { LOOK_REMINDERS } from './look-reminders';
 	import { targetKeyPress } from './target';
 	import { fadedKeysShown, litTarget } from './keyboard-fade';
 	import { ghostShare, raceWinner } from '$lib/engine/ghost/race';
@@ -173,20 +175,30 @@
 	const faded = $derived(fadedKeysShown(fadedAtStart, charIndex, game.missedChars));
 	// The key expected is one the child knows well: it stays dark until the child hesitates (P-07).
 	const fadedTarget = $derived(target !== null && faded.includes(target.code));
-	const lookReminder = $derived(
-		phase === 'celebrating' &&
-			isLookReminderDue(view.completed, view.total, settings.lookReminderEvery)
+	// The reminder to look at the screen comes after so many characters typed (audit P-20); the two
+	// sentences take turns, from one reminder to the next and from one play to the next.
+	const groupLengths = untrack(() => exercise.groups.map((group) => toGraphemes(group).length));
+	const lookReminderIndex = $derived(
+		phase === 'celebrating'
+			? lookReminderDue(groupLengths, view.completed, settings.lookReminder)
+			: null
 	);
-	const lookReminderText = m.game_shared_look_reminder();
+	const lookReminder = $derived(lookReminderIndex !== null);
+	const lookReminderText = $derived(
+		lookReminderIndex === null
+			? ''
+			: (pickCyclic(LOOK_REMINDERS, playCount + lookReminderIndex)?.() ?? '')
+	);
 	const capsLockText = m.game_shared_caps_lock();
 	// The one live region of the game: its reward, else the text to type or the key expected after a
-	// mistake, then the help about Caps Lock. The reminder to look at the screen is left to the
-	// recorded voice: each thing is heard once. Empty until the game is on screen: a live region
-	// only speaks what changes after it appeared.
+	// mistake, then the reminder to look at the screen when the recorded voice does not say it, then
+	// the help about Caps Lock: each thing is heard once. Empty until the game is on screen: a live
+	// region only speaks what changes after it appeared.
 	const announcement = $derived(
 		speaking
 			? shellAnnouncement(announce(view) || typingAnnouncement(view, TYPING_WORDS), {
 					away: away ? m.game_shared_keep_typing() : null,
+					reminder: lookReminder && !voice?.has(lookReminderText) ? lookReminderText : null,
 					capsLock: capsHelp ? m.game_shared_caps_lock() : null
 				})
 			: ''
@@ -453,7 +465,7 @@
 					{/if}
 					<div class="notes">
 						{#if lookReminder}
-							<p class="look-reminder" data-reward data-reward-variant="1">
+							<p class="look-reminder" data-reward data-reward-variant="1" data-look-reminder>
 								<svg class="eyes" viewBox="0 0 48 24" focusable="false" aria-hidden="true">
 									<ellipse cx="12" cy="12" rx="10" ry="8" />
 									<ellipse cx="36" cy="12" rx="10" ry="8" />

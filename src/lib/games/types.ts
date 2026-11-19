@@ -26,14 +26,23 @@ export interface GameGuide {
 	readonly hesitationMs: number;
 }
 
+/**
+ * When the child is reminded to look at the screen, between two groups (audit P-20): once
+ * `firstAfterChars` characters are typed, then every `everyChars` more (integers of at least 1).
+ */
+export interface LookReminderRule {
+	readonly firstAfterChars: number;
+	readonly everyChars: number;
+}
+
 /** The sounds are switched on and off by the `SoundPlayer` given to the game (`GameProps.sounds`), not here. */
 export interface GameSettings {
 	readonly reducedMotion: boolean;
 	readonly showKeyboard: boolean;
 	readonly errorPolicy: ErrorPolicy;
 	readonly guide: GameGuide;
-	/** Every so many groups, the child is reminded to look at the screen; 0: never. */
-	readonly lookReminderEvery: number;
+	/** When the child is reminded to look at the screen; absent: never. */
+	readonly lookReminder?: LookReminderRule;
 	/** The surprise scenes of this game the child has unlocked, in order (ADR-032). */
 	readonly scenes: readonly string[];
 	/**

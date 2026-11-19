@@ -8,8 +8,7 @@ import { spokenMessages } from '$lib/audio/voice-messages';
 import { parseVoiceManifest } from '$lib/audio/voice-player';
 import { encodeWav, readWavHeader } from '$lib/audio/voice-signal';
 import {
-	LOOK_REMINDER_ID,
-	LOOK_REMINDER_MESSAGE,
+	lookReminders,
 	parseVoiceOrigin,
 	voiceTexts,
 	type VoiceText
@@ -37,10 +36,10 @@ const TEXTS = voiceTexts(
 	parseStory(JSON.parse(readFileSync('content/fr/story/azerty-decouverte.json', 'utf8')))
 );
 const MESSAGES = JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>;
-/** The reminder to look at the screen, as the page lists it: read from the messages. */
-const REMINDER: VoiceText = voiceTexts(readProgression(), undefined, [
-	{ id: LOOK_REMINDER_ID, text: MESSAGES[LOOK_REMINDER_MESSAGE] as string }
-]).at(-1) as VoiceText;
+/** A reminder to look at the screen, as the page lists it: read from the messages. */
+const REMINDER: VoiceText = voiceTexts(readProgression(), undefined, lookReminders(MESSAGES)).at(
+	-1
+) as VoiceText;
 /** The messages of the interface the voice says (audit P-12), as the page lists them. */
 const SPOKEN = voiceTexts(readProgression(), undefined, [], spokenMessages(MESSAGES)).filter(
 	(text) => parseVoiceOrigin(text.origin)?.kind === 'message'
@@ -136,14 +135,16 @@ describe('tools/voice/import.js', { timeout: TOOL_TEST_TIMEOUT_MS }, () => {
 		expect(attributions).toContain('Police Atkinson Hyperlegible Next');
 		expect(report).toContain('2 enregistrements importés dans static/voice/fr.');
 		expect(report).toContain('Format : WAV.');
-		// Every text of the page: those of the lessons, the reminder and the messages of the games.
+		// Every text of the page: those of the lessons, the reminders and the messages of the games.
+		const reminders = lookReminders(MESSAGES).length;
+		expect(reminders).toBe(2);
 		expect(report).toContain(
-			`Textes sans enregistrement : ${TEXTS.length + 1 + SPOKEN.length - 2}`
+			`Textes sans enregistrement : ${TEXTS.length + reminders + SPOKEN.length - 2}`
 		);
 		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");
 	});
 
-	it('knows the reminder of the games, so that pruning never removes its clip', () => {
+	it('knows the reminders of the games, so that pruning never removes their clips', () => {
 		const report = runImport(writeArchive([REMINDER], ''), '--prune');
 		expect(Object.keys(manifest().clips)).toEqual([REMINDER.key]);
 		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");

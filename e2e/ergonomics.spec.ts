@@ -46,10 +46,10 @@ const progressionWorlds = readJson<{ worlds: { lessons: Lesson[] }[] }>(
 const firstWorld = progressionWorlds[0];
 const FIRST = firstWorld?.lessons[0] as Lesson;
 const GROUP_LABEL = templateRegex('ui_target_text_label');
-/** The reminder to look at the screen comes after this many groups (`lookReminderEveryGroups`). */
-const REMINDER_EVERY = readJson<{ lookReminderEveryGroups: number }>(
+/** The reminder to look at the screen comes once this many characters are typed (audit P-20). */
+const FIRST_REMINDER_AFTER = readJson<{ lookReminder: { firstAfterChars: number } }>(
 	'content/common/play-rules.json'
-).lookReminderEveryGroups;
+).lookReminder.firstAfterChars;
 
 const CHECK_KEYS = keyboardCheckKeys();
 
@@ -363,7 +363,7 @@ for (const worldIndex of [1, 2]) {
 }
 
 // The fifth lesson of the kitchen proposes the tower, whose text zone is the narrowest, and its
-// game always has more groups than the reminder waits for (it never shows after the last one).
+// game always has more characters than the reminder waits for (it never shows after the last group).
 test(
 	'does not move the keyboard when the reminder to look at the screen shows',
 	CHROMIUM_ONLY,
@@ -395,20 +395,24 @@ test(
 				await document.fonts.ready;
 				await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 			});
+		const graphemes = new Intl.Segmenter('fr', { granularity: 'grapheme' });
 		let top: number | undefined;
-		for (let group = 1; group <= REMINDER_EVERY; group++) {
+		let typed = 0;
+		for (;;) {
 			await expect(label).toHaveText(GROUP_LABEL);
-			if (group === REMINDER_EVERY) {
+			const text = GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? '';
+			typed += [...graphemes.segment(text)].length;
+			// The group after which the reminder comes: the keyboard is measured before it.
+			const last = typed >= FIRST_REMINDER_AFTER;
+			if (last) {
 				await settled();
 				top = (await keyboard.boundingBox())?.y;
 			}
-			await page.keyboard.type(
-				GROUP_LABEL.exec((await label.textContent()) ?? '')?.groups?.['text'] ?? ''
-			);
-			if (group === REMINDER_EVERY) break;
+			await page.keyboard.type(text);
+			if (last) break;
 			await passReward(page);
 		}
-		await expect(page.getByText(message('game_shared_look_reminder'))).toBeVisible();
+		await expect(page.locator('[data-look-reminder]')).toBeVisible();
 		// Measured once the page has laid the reminder out: a poll would take the first, unmoved value.
 		await settled();
 		expect((await keyboard.boundingBox())?.y).toBe(top);

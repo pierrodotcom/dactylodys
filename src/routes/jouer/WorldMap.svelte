@@ -30,8 +30,8 @@
 		/** The key the companion asks help for, as named to the child; `null`: no help quest. */
 		helpKey: string | null;
 		/**
-		 * Says the request of the companion, on demand, once it is recorded (audit P-12): its own
-		 * sentence, which names no key, so that one recording does for every key.
+		 * Says the request of the companion, on demand, once it is recorded (audit P-12): the sentence
+		 * shown names no key, so that one recording does for every key; the key is drawn beside it.
 		 */
 		voice: VoicePlayer;
 		onopen: (lessonId: string) => void;
@@ -161,9 +161,18 @@
 				>
 			{/if}
 			{#if asking && helpKey !== null}
-				<section class="help" aria-labelledby="help-ask" {@attach revealInView}>
-					<ListenButton text={m.play_help_ask_spoken()} player={voice} />
-					<p id="help-ask" class="ask">{m.play_help_ask({ key: helpKey })}</p>
+				<!-- The sentence is the one the voice says; the key lost is drawn beside it, and named with it. -->
+				<section
+					class="help"
+					aria-labelledby="help-ask help-key"
+					data-help-ask
+					{@attach revealInView}
+				>
+					<ListenButton text={m.play_help_ask()} player={voice} />
+					<div class="ask-line">
+						<p id="help-ask" class="ask">{m.play_help_ask()}</p>
+						<kbd id="help-key" class="key lost-key" data-help-key>{helpKey}</kbd>
+					</div>
 					<div class="help-actions">
 						<Button onclick={onhelp}>{m.play_help_yes()}</Button>
 						<Button variant="secondary" onclick={postponeHelp}>{m.play_help_later()}</Button>
@@ -349,6 +358,22 @@
 	.ask {
 		font-size: var(--dd-font-size-xl);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	.ask-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--dd-space-md);
+	}
+
+	/* The key lost, as large as the sentence it goes with. */
+	.key.lost-key {
+		min-inline-size: var(--dd-size-key-unit);
+		min-block-size: var(--dd-size-key-unit);
+		padding: var(--dd-space-xs) var(--dd-space-md);
+		font-size: var(--dd-font-size-xl);
 	}
 
 	.help-actions {

@@ -6,7 +6,7 @@ import { parseVoiceRecordings } from '../src/lib/audio/voice-recordings';
 import { readWavHeader } from '../src/lib/audio/voice-signal';
 import {
 	inRecordingOrder,
-	LOOK_REMINDER_ID,
+	lookReminders,
 	parseVoiceOrigin,
 	voiceTexts
 } from '../src/lib/audio/voice-texts';
@@ -43,7 +43,7 @@ const TEXTS = inRecordingOrder(
 	voiceTexts(
 		parseProgression(readJson('content/fr/progression/azerty-decouverte.json')),
 		story,
-		[{ id: LOOK_REMINDER_ID, text: message('game_shared_look_reminder') }],
+		lookReminders(readJson<Record<string, string>>('messages/fr.json')),
 		spokenMessages(readJson<Record<string, string>>('messages/fr.json'))
 	)
 );

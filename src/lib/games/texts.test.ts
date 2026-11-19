@@ -1,10 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { LOOK_REMINDER_MESSAGES } from '$lib/audio/voice-texts';
 import { QUESTIONS, REACTIONS } from './dialogue/texts';
+import { CRIES } from './hatching/texts';
 import { DISH_TEMPLATES, QUIPS } from './recipe/texts';
 import { OBJECT_ARTS } from './river/shapes';
 import { OBJECT_NAMES, QUIPS as RIVER_QUIPS } from './river/texts';
 import { GREETINGS } from './rocket/texts';
+import { LOOK_REMINDERS } from './shared/look-reminders';
 import { QUIPS as TRAIN_QUIPS } from './train/texts';
 
 const messages = JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>;
@@ -14,6 +17,7 @@ function numbered(prefix: string): string[] {
 }
 
 describe.each([
+	['game_hatching_cry_', CRIES.length],
 	['game_rocket_greeting_', GREETINGS.length],
 	['game_recipe_quip_', QUIPS.length],
 	['game_recipe_dish_', DISH_TEMPLATES.length],
@@ -80,18 +84,40 @@ describe('the lists of lines', () => {
 	});
 });
 
+describe('the reminders to look at the screen (audit P-20)', () => {
+	it('are the sentences the voice records, in the order the games say them', () => {
+		expect(LOOK_REMINDERS.map((reminder) => reminder())).toEqual(
+			LOOK_REMINDER_MESSAGES.map((key) => messages[key])
+		);
+		expect(LOOK_REMINDERS.length).toBeGreaterThanOrEqual(2);
+	});
+
+	it('are whole sentences, without an emoticon a reader cannot read', () => {
+		for (const key of LOOK_REMINDER_MESSAGES) {
+			expect(messages[key]).toMatch(/[.!?]$/u);
+			expect(messages[key]).not.toMatch(/[;:]-?[()]/u);
+		}
+	});
+});
+
 describe('the variants for the older children', () => {
 	const OLDER = '_older';
 	const variants = Object.keys(messages).filter((key) => key.endsWith(OLDER));
 	const lists: readonly (readonly [string, readonly ((band?: '8-9' | '10-12') => string)[]])[] = [
+		['game_hatching_cry_', CRIES],
 		['game_rocket_greeting_', GREETINGS],
 		['game_train_quip_', TRAIN_QUIPS],
 		['game_river_quip_', RIVER_QUIPS]
 	];
+	/**
+	 * What only the little ones say (audit C-16): a bubble of a game that says it has a variant for
+	 * the 10-12 year olds, which does not.
+	 */
+	const BABY_TALK = /(?<!\p{L})(coucou|piou|youpi|tchou|tut tut|miam)(?!\p{L})/iu;
 
 	it('are few, each the variant of a sentence that exists, and say something else', () => {
 		expect(variants.length).toBeGreaterThan(0);
-		expect(variants.length).toBeLessThanOrEqual(10);
+		expect(variants.length).toBeLessThanOrEqual(12);
 		for (const key of variants) {
 			const base = key.slice(0, -OLDER.length);
 			expect(messages[base]).toBeDefined();
@@ -118,5 +144,14 @@ describe('the variants for the older children', () => {
 			list.map((_, index) => `${prefix}${index + 1}${OLDER}`)
 		);
 		for (const key of variants) expect(reached).toContain(key);
+	});
+
+	it('spare the 10-12 year olds the words of the little ones, in every game', () => {
+		const said = (key: string) => messages[`${key}${OLDER}`] ?? messages[key] ?? '';
+		const bubbles = Object.keys(messages).filter(
+			(key) => key.startsWith('game_') && !key.endsWith(OLDER)
+		);
+		expect(bubbles.filter((key) => BABY_TALK.test(messages[key] ?? '')).length).toBeGreaterThan(0);
+		expect(bubbles.filter((key) => BABY_TALK.test(said(key)))).toEqual([]);
 	});
 });

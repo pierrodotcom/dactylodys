@@ -155,8 +155,11 @@ async function playLesson(page: Page, lesson: Lesson) {
 	await typeToEnd(page, message('play_result_map'));
 }
 
+/** The request of the companion: the sentence the voice says, the key lost drawn beside it. */
 function helpBubble(page: Page, key: string) {
-	return page.getByText(message('play_help_ask', { key }));
+	return page
+		.getByRole('region', { name: `${message('play_help_ask')} ${key}`, exact: true })
+		.filter({ has: page.locator('[data-help-key]', { hasText: key }) });
 }
 
 function bigCompanion(page: Page) {
