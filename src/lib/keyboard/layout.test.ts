@@ -188,6 +188,105 @@ describe('buildCharIndex', () => {
 	});
 });
 
+/** « ê » two ways (AltGr + E, or the dead key then E), « @ » on two keys (AltGr + 1, or its own key). */
+function twoWays(preferred?: unknown): Record<string, unknown> {
+	return makeLayout({
+		keys: {
+			KeyA: { base: 'a', shift: 'A' },
+			KeyE: { base: 'e', shift: 'E', altgr: 'ê' },
+			Space: { base: ' ' },
+			BracketLeft: { base: { dead: 'circumflex' } },
+			Digit1: { base: '1', altgr: '@' },
+			IntlBackslash: { base: '@' }
+		},
+		...(preferred === undefined ? {} : { preferred })
+	});
+}
+
+const DEAD_CIRCUMFLEX = { code: 'BracketLeft', level: 'base' } as const;
+const KEY_E = { code: 'KeyE', level: 'base' } as const;
+
+describe('preferred ways', () => {
+	it('shows first, without a preference, the direct ways in the order of the keys', () => {
+		const index = buildCharIndex(parseLayout(twoWays()));
+		expect(index.get('ê')?.[0]).toEqual([{ code: 'KeyE', level: 'altgr' }]);
+		expect(index.get('@')?.[0]).toEqual([{ code: 'Digit1', level: 'altgr' }]);
+	});
+
+	it('shows first the way the layout prefers, the other ways after it in their order', () => {
+		const layout = parseLayout(
+			twoWays({
+				ê: [DEAD_CIRCUMFLEX, KEY_E],
+				'@': [{ code: 'IntlBackslash', level: 'base' }]
+			})
+		);
+		const index = buildCharIndex(layout);
+		expect(index.get('ê')).toEqual([[DEAD_CIRCUMFLEX, KEY_E], [{ code: 'KeyE', level: 'altgr' }]]);
+		expect(index.get('@')).toEqual([
+			[{ code: 'IntlBackslash', level: 'base' }],
+			[{ code: 'Digit1', level: 'altgr' }]
+		]);
+		// The characters the layout has no preference for keep their ways.
+		expect(index.get('a')).toEqual([[{ code: 'KeyA', level: 'base' }]]);
+		expect(index.get('â')).toEqual([[DEAD_CIRCUMFLEX, { code: 'KeyA', level: 'base' }]]);
+	});
+
+	it('keeps the preference of the layout, under the NFC form of its character', () => {
+		const layout = parseLayout(twoWays({ ê: [DEAD_CIRCUMFLEX, KEY_E] }));
+		expect(layout.preferred).toEqual({ ê: [DEAD_CIRCUMFLEX, KEY_E] });
+		expect(buildCharIndex(layout).get('ê')?.[0]).toEqual([DEAD_CIRCUMFLEX, KEY_E]);
+	});
+
+	it('leaves the preference out of a layout that has none', () => {
+		expect(parseLayout(twoWays())).not.toHaveProperty('preferred');
+	});
+
+	it('changes nothing for a preferred way that is already the first one', () => {
+		const layout = parseLayout(twoWays({ a: [{ code: 'KeyA', level: 'base' }] }));
+		expect(buildCharIndex(layout).get('a')).toEqual([[{ code: 'KeyA', level: 'base' }]]);
+	});
+
+	it.each([
+		['not an object', ['ê'], 'layout.preferred: expected an object'],
+		['a way that is not a list', { ê: 'KeyE' }, 'layout.preferred.ê'],
+		['an empty way', { ê: [] }, 'layout.preferred.ê'],
+		[
+			'a key press with an unknown property',
+			{ '@': [{ code: 'IntlBackslash', level: 'base', finger: 1 }] },
+			'layout.preferred.@[0].finger'
+		],
+		[
+			'a key the layout does not have',
+			{ '@': [{ code: 'Backquote', level: 'base' }] },
+			'layout.preferred.@[0].code'
+		],
+		[
+			'an unknown level',
+			{ '@': [{ code: 'IntlBackslash', level: 'option' }] },
+			'layout.preferred.@[0].level'
+		],
+		[
+			'a level the key does not have',
+			{ '@': [{ code: 'IntlBackslash', level: 'shift' }] },
+			'layout.preferred.@[0].level'
+		],
+		[
+			'keys that write another character',
+			{ ê: [{ code: 'KeyE', level: 'base' }] },
+			'layout.preferred.ê'
+		],
+		['a character no key writes', { ß: [{ code: 'KeyE', level: 'base' }] }, 'layout.preferred.ß'],
+		['several characters', { êa: [DEAD_CIRCUMFLEX, KEY_E] }, 'layout.preferred key "êa"'],
+		[
+			'a character given twice',
+			{ ê: [DEAD_CIRCUMFLEX, KEY_E], ê: [DEAD_CIRCUMFLEX, KEY_E] },
+			'layout.preferred'
+		]
+	])('rejects a preference with %s, with the faulty path', (_name, preferred, path) => {
+		expect(() => parseLayout(twoWays(preferred))).toThrow(path);
+	});
+});
+
 describe('keyCodeForChar', () => {
 	const index = buildCharIndex(parseLayout(makeLayout()));
 
@@ -211,6 +310,14 @@ describe('keyCodeForChar', () => {
 
 	it('looks the character up in its NFC form', () => {
 		expect(keyCodeForChar(index, 'e\u0302')).toBe('KeyE');
+	});
+
+	it('gives the key of the way the layout prefers', () => {
+		const preferring = buildCharIndex(
+			parseLayout(twoWays({ '@': [{ code: 'IntlBackslash', level: 'base' }] }))
+		);
+
+		expect(keyCodeForChar(preferring, '@')).toBe('IntlBackslash');
 	});
 
 	// Caps Lock writes capitals no key of the layout writes with Shift.

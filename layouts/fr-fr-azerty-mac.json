@@ -141,5 +141,28 @@
 				"O": "Õ"
 			}
 		}
+	},
+	"preferred": {
+		"ê": [
+			{ "code": "BracketLeft", "level": "base" },
+			{ "code": "KeyE", "level": "base" }
+		],
+		"î": [
+			{ "code": "BracketLeft", "level": "base" },
+			{ "code": "KeyI", "level": "base" }
+		],
+		"ô": [
+			{ "code": "BracketLeft", "level": "base" },
+			{ "code": "KeyO", "level": "base" }
+		],
+		"ë": [
+			{ "code": "BracketLeft", "level": "shift" },
+			{ "code": "KeyE", "level": "base" }
+		],
+		"ï": [
+			{ "code": "BracketLeft", "level": "shift" },
+			{ "code": "KeyI", "level": "base" }
+		],
+		"@": [{ "code": "IntlBackslash", "level": "base" }]
 	}
 }
