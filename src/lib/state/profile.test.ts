@@ -129,7 +129,7 @@ describe('defaultSettings', () => {
 		expect(defaultSettings('mac').layoutId).toBe('fr-fr-azerty-mac');
 	});
 
-	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons, every key in its colour, the worlds deciding for the mistakes, a session of the usual length, the known keys fading, the light effects on, no background sound and the words of the 8-9 year olds', () => {
+	it('uses the ten-finger profile, sound and voice on, system look, medium text, a visible keyboard, the hand of the lessons drawn filled, every key in its colour, the worlds deciding for the mistakes, a session of the usual length, the known keys fading, the light effects on, no background sound and the words of the 8-9 year olds', () => {
 		expect(defaultSettings('pc')).toEqual({
 			layoutId: 'fr-fr-azerty-pc',
 			fingeringProfileId: 'ten-fingers-iso',
@@ -141,6 +141,7 @@ describe('defaultSettings', () => {
 			textSpacing: 'normal',
 			showKeyboard: true,
 			handGuide: 'auto',
+			handDrawing: 'filled',
 			keyboardColors: 'all',
 			errorPolicy: 'world',
 			sessionLength: 'normal',
@@ -155,7 +156,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 19,
+			schemaVersion: 20,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -482,8 +483,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 18, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 20, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 19, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 21, /schemaVersion/],
 		['days of keys that are not a record', ['charDays'], 'none', /charDays/],
 		[
 			'a day of a key written otherwise',
@@ -530,6 +531,8 @@ describe('parseProfile', () => {
 		['an unknown text scale', ['settings', 'textScale'], 'sm', /textScale/],
 		['an unknown text spacing', ['settings', 'textSpacing'], 'tight', /textSpacing/],
 		['a non-boolean keyboard flag', ['settings', 'showKeyboard'], null, /showKeyboard/],
+		['an unknown drawing of the hand', ['settings', 'handDrawing'], 'empty', /handDrawing/],
+		['a missing drawing of the hand', ['settings', 'handDrawing'], REMOVE, /handDrawing/],
 		['unknown colours of keys', ['settings', 'keyboardColors'], 'none', /keyboardColors/],
 		['missing colours of keys', ['settings', 'keyboardColors'], REMOVE, /keyboardColors/],
 		['an unknown error policy', ['settings', 'errorPolicy'], 'skip', /settings\.errorPolicy/],

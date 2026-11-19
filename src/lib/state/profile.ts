@@ -24,6 +24,7 @@ import type {
 	CharDay,
 	CompanionChoice,
 	ErrorPolicyPreference,
+	HandDrawing,
 	HandwritingSample,
 	HelpQuestRecord,
 	KeyboardColors,
@@ -52,6 +53,7 @@ const DEFAULT_SETTINGS_COMMON = {
 	textSpacing: 'normal',
 	showKeyboard: true,
 	handGuide: 'auto',
+	handDrawing: 'filled',
 	keyboardColors: 'all',
 	errorPolicy: 'world',
 	sessionLength: 'normal',
@@ -64,6 +66,8 @@ const DEFAULT_SETTINGS_COMMON = {
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
 const MOTIONS = ['system', 'reduced', 'full'] as const satisfies readonly MotionPreference[];
 const HAND_GUIDES = ['auto', 'always', 'off'] as const satisfies readonly HandGuidePreference[];
+/** In the order the child reads them: filled first, the default. */
+export const HAND_DRAWINGS = ['filled', 'outline'] as const satisfies readonly HandDrawing[];
 export const KEYBOARD_COLORS = ['all', 'finger'] as const satisfies readonly KeyboardColors[];
 const ERROR_POLICIES = [
 	'world',
@@ -81,7 +85,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 19;
+export const PROFILE_SCHEMA_VERSION = 20;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -149,6 +153,7 @@ const SETTINGS_KEYS = [
 	'textSpacing',
 	'showKeyboard',
 	'handGuide',
+	'handDrawing',
 	'keyboardColors',
 	'errorPolicy',
 	'sessionLength',
@@ -439,6 +444,7 @@ function parseSettings(data: unknown, path: string): Settings {
 		textSpacing: expectOneOf(record['textSpacing'], TEXT_SPACINGS, `${path}.textSpacing`),
 		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
 		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`),
+		handDrawing: expectOneOf(record['handDrawing'], HAND_DRAWINGS, `${path}.handDrawing`),
 		keyboardColors: expectOneOf(
 			record['keyboardColors'],
 			KEYBOARD_COLORS,

@@ -37,9 +37,11 @@ import {
 	asVersion16,
 	asVersion17,
 	asVersion18,
+	asVersion19,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
 	withEveryKeyColoured,
+	withFilledHand,
 	withKeyboardFade,
 	withNothingKeptOpen,
 	withRetryPolicy,
@@ -267,6 +269,7 @@ describe('migrateProfile', () => {
 			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
+				handDrawing: 'filled',
 				keyboardColors: 'all',
 				errorPolicy: 'world',
 				sessionLength: 'normal',
@@ -356,6 +359,7 @@ describe('migrateProfile', () => {
 			keptOpenLessonIds: [],
 			settings: {
 				...STORED_BY_VERSION_4.settings,
+				handDrawing: 'outline',
 				keyboardColors: 'all',
 				errorPolicy: 'world',
 				sessionLength: 'normal',
@@ -403,6 +407,7 @@ describe('migrateProfile', () => {
 					...profile.settings,
 					voiceEnabled: true,
 					handGuide: 'auto',
+					handDrawing: 'filled',
 					keyboardColors: 'all',
 					errorPolicy: 'world',
 					sessionLength: 'normal',
@@ -1391,7 +1396,7 @@ describe('version 19: the fingering the adult chooses (ADR-075, choice 6)', () =
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion18(profile))));
-				expect(migrated).toEqual(profile);
+				expect(migrated).toEqual(withFilledHand(profile));
 			})
 		);
 	});
@@ -1400,6 +1405,57 @@ describe('version 19: the fingering the adult chooses (ADR-075, choice 6)', () =
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const once = parseProfile(migrateProfile(toJson(asVersion18(profile))));
+				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
+			})
+		);
+	});
+});
+
+describe('version 20: the drawing of the hand the child chooses', () => {
+	const base = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+
+	it('describes version 19 without the drawing of the hand', () => {
+		const stored = asVersion19(updateSettings(base, { handDrawing: 'outline' }));
+		expect(stored['schemaVersion']).toBe(19);
+		expect(stored['settings']).not.toHaveProperty('handDrawing');
+	});
+
+	it('gives every child the filled hand, as before the hand became a contour', () => {
+		const migrated = parseProfile(migrateProfile(toJson(asVersion19(base))));
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
+		expect(migrated.settings.handDrawing).toBe('filled');
+		expect(migrated).toEqual(base);
+	});
+
+	it('keeps the choice of a record that already holds it', () => {
+		const stored = asVersion19(base);
+		const settings = { ...(stored['settings'] as Json), handDrawing: 'outline' };
+		const migrated = parseProfile(migrateProfile({ ...stored, settings }));
+		expect(migrated.settings.handDrawing).toBe('outline');
+	});
+
+	it('passes on a damaged choice for the parser to refuse', () => {
+		const stored = asVersion19(base);
+		for (const odd of ['empty', 1, null]) {
+			const settings = { ...(stored['settings'] as Json), handDrawing: odd };
+			expect(readProfile({ ...stored, settings }).ok).toBe(false);
+		}
+		expect(readProfile({ ...stored, settings: 'none' }).ok).toBe(false);
+	});
+
+	it('changes nothing else in any version 19 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion19(profile))));
+				expect(migrated).toEqual(withFilledHand(profile));
+			})
+		);
+	});
+
+	it('gives the same profile from a backup of version 19 read again', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const once = parseProfile(migrateProfile(toJson(asVersion19(profile))));
 				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
 			})
 		);

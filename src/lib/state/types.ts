@@ -25,6 +25,12 @@ export type SessionLength = 'short' | 'normal' | 'long';
  * on a modifier), the others plain.
  */
 export type KeyboardColors = 'all' | 'finger';
+/**
+ * How the hand drawn on the keyboard rests (version 20): `filled`, filled and pale, as it was
+ * first drawn; `outline`, only its contour, so that the letters under it stay as legible as the
+ * others (E-11). The finger that shows a key is filled either way.
+ */
+export type HandDrawing = 'filled' | 'outline';
 
 export interface Settings {
 	readonly layoutId: LayoutId;
@@ -46,6 +52,8 @@ export interface Settings {
 	readonly showKeyboard: boolean;
 	/** The hand drawn on the keyboard: as the lessons go, always, never. */
 	readonly handGuide: HandGuidePreference;
+	/** Chosen by the child (version 20): the hand drawn filled, the default, or as a contour. */
+	readonly handDrawing: HandDrawing;
 	/** Chosen by the child (version 17): which keys of the keyboard drawn keep their colour. */
 	readonly keyboardColors: KeyboardColors;
 	/**
@@ -145,7 +153,7 @@ export interface CharDay {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 19;
+	readonly schemaVersion: 20;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

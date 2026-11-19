@@ -352,6 +352,20 @@ function toVersion19(record: StoredRecord): StoredRecord {
 	};
 }
 
+/*
+ * Version 20: the child chooses how the hand drawn on the keyboard rests. Every profile gets it
+ * filled, as it was first drawn, written here; the contour stays one choice away. Nothing else
+ * changes.
+ */
+function toVersion20(record: StoredRecord): StoredRecord {
+	const settings = record['settings'];
+	return {
+		...record,
+		settings: isRecord(settings) ? { handDrawing: 'filled', ...settings } : settings,
+		schemaVersion: 20
+	};
+}
+
 /** Keyed by the version a step starts from; each step leads to the version just after. */
 const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[FIRST_SCHEMA_VERSION, toVersion2],
@@ -371,7 +385,8 @@ const MIGRATIONS: ReadonlyMap<number, Migration> = new Map([
 	[15, toVersion16],
 	[16, toVersion17],
 	[17, toVersion18],
-	[18, toVersion19]
+	[18, toVersion19],
+	[19, toVersion20]
 ]);
 
 function versionOf(record: StoredRecord): number {

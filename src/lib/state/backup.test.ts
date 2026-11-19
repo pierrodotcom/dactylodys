@@ -32,6 +32,7 @@ import {
 	asVersion15,
 	asVersion16,
 	asVersion18,
+	asVersion19,
 	withEveryKeyColoured,
 	withUndatedCharDays,
 	withUnknownLatency,
@@ -318,6 +319,21 @@ describe('planImport', () => {
 		const text = exportBackup([twoIndex, sixFingers], EXPORTED_AT);
 		expect(ready(planImport(text, [])).importable).toEqual([twoIndex, sixFingers]);
 	});
+
+	it('reads a backup of version 19: every child has the filled hand', () => {
+		const contour = updateSettings(NOE, { handDrawing: 'outline' });
+		const text = backupOf({ profiles: [asVersion19(LEA), asVersion19(contour)] });
+		const imported = ready(planImport(text, [])).importable;
+		expect(imported).toEqual([LEA, NOE]);
+		expect(imported.map((profile) => profile.settings.handDrawing)).toEqual(['filled', 'filled']);
+	});
+
+	it('keeps the hand in contour a child chose through a backup and its import', () => {
+		const contour = updateSettings(LEA, { handDrawing: 'outline' });
+		const text = exportBackup([contour, NOE], EXPORTED_AT);
+		expect(ready(planImport(text, [])).importable).toEqual([contour, NOE]);
+	});
+
 	it('keeps the time of the recent plays, and reads a version 7 profile without it', () => {
 		const timed = withProgress(LEA, {
 			lessons: {},
