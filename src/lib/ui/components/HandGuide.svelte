@@ -136,7 +136,7 @@
 		>
 			<rect class="keep" x="0" y="0" width={size.width} height={size.height} />
 			{#each hands as hand (hand.hand)}
-				<g class="cut">
+				<g class="hand-cut">
 					<polygon
 						points={pointsOf(hand.palm)}
 						stroke-width={HAND_STROKES.finger}
@@ -232,8 +232,9 @@
 		fill: var(--dd-color-hand-mask-keep);
 	}
 
-	.cut polygon,
-	.cut line {
+	/* Its own name: a game draws `.cut` too (the cuts of the recipe), and the tests look for them. */
+	.hand-cut polygon,
+	.hand-cut line {
 		fill: var(--dd-color-hand-mask-cut);
 		stroke: var(--dd-color-hand-mask-cut);
 	}
