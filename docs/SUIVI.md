@@ -29,7 +29,7 @@ Mis à jour à la fin de chaque lot. Garder court : ce qui est terminé depuis p
 | Données de l'enfant | Q-01, Q-02, Q-08, Q-14, Q-22, E-16 | Fait (ADR-080) |
 | Tout tient à l'écran | E-03, E-05, E-08, E-10, E-20 | Fait (ADR-085) ; restent « Réparer un message » au texte le plus grand avec un mot long, et un champ de leçon qui nomme les touches travaillées (leçons 26 à 30) |
 | Bilan en étapes | E-04, P-03 (correction 2), P-11, P-21 | Fait (ADR-086) ; E-19 (trois écrans très longs sans repères) : reste |
-| Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24 | À faire |
+| Clavier dessiné lisible | E-06, E-07, E-11 (capture au porteur), E-21, E-22, E-24 | Fait (ADR-089, profil version 17) |
 | L'aide qui s'efface, le Mac | P-07 (corrections 1 et 2), P-09, phrase « pas encore vérifié sur un vrai Mac » | À faire |
 | Vérification du clavier, Mac | Q-03, touche fausse déduite du caractère, « Réessayer », Q-09, Q-17, Q-31 | Fait (ADR-076, ADR-082) ; reste : essais sur un vrai Mac (Q7), phrase « pas encore vérifié sur un vrai Mac » près du choix du clavier (avec les réglages rangés) |
 | Réglages rangés | Demande du porteur du 2026-11-14 (boutons alignés, familles), E-16, E-17, E-18, pseudo unique (demande du 2026-11-15) | Fait (ADR-083) |
@@ -261,3 +261,4 @@ Garde-fous tenus : au moins un mot par exercice quand la leçon en annonce, mini
 - **2026-11-16** — Bilan en étapes (ADR-086) : un moment à la fois (objet gagné, nom du compagnon, résultat), « Encore une partie pour apprivoiser V et B ? » sans verrou, partie aidée après deux parties difficiles, phrases du bilan fondées sur ce qui est mesuré.
 - **2026-11-19** — Tests de bout en bout plus courts et plus sûrs (ADR-087) : 769 exécutions au lieu de 1 548 (un moteur quand il suffit), récompenses réglées dans les tests, site servi comme GitHub Pages en IPv6 ; 51 min au calme au lieu de 119. Restent des échecs WebKit sous la charge d'un autre projet (poste). Leçons L-166 à L-169.
 - **2026-11-19** — Grand tour de fin de monde (ADR-088) : une étape facultative et rejouable à la fin des mondes 1 à 5, qui fait retaper les mots du monde en insistant sur les touches qui résistent à l'enfant ; le tampon du monde récompense la maîtrise. Leçons L-170 à L-172.
+- **2026-11-19** — Clavier dessiné lisible (ADR-089) : deux signes par touche (la touche allumée porte le signe demandé), clavier sombre, main guide en contour, couleurs forcées, petits textes agrandis, réglage « Le doigt qui tape ». Profil version 17. Leçons L-174 à L-176.
