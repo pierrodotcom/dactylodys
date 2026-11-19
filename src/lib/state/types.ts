@@ -231,8 +231,10 @@ export interface ProfileStore {
 	save(profile: Profile): Promise<void>;
 	/**
 	 * Reads the profile and stores what `change` makes of it, in one step: whatever this page or
-	 * another one stored in between is kept. Resolves with the profile as it is now stored, `null`
-	 * when there is none under this id (nothing is created: a deleted profile does not come back).
+	 * another one stored in between is kept. The keystrokes the change adds to the results of the
+	 * keys count on the day it is stored (`Profile.charDays`, version 18): the store dates them.
+	 * Resolves with the profile as it is now stored, `null` when there is none under this id
+	 * (nothing is created: a deleted profile does not come back).
 	 * Rejects, nothing stored, when `change` throws, gives an invalid profile or another id, or when
 	 * the record cannot be opened.
 	 */

@@ -200,9 +200,10 @@
 		background-color: var(--dd-color-surface-raised);
 	}
 
+	/* Two columns side by side when they fit, one under the other on a narrow screen (320 pixels). */
 	.columns {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(var(--dd-size-control-min), 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(var(--dd-size-control-min), 100%), 1fr));
 		gap: var(--dd-space-md) var(--dd-space-xl);
 	}
 
