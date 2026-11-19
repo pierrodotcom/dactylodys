@@ -18,7 +18,11 @@ export interface GameGuide {
 	readonly mode: GuideMode;
 	/** The characters the lesson brings, shown in the `new-keys` mode. */
 	readonly freshChars: readonly string[];
-	/** Milliseconds without a key after which the new-keys mode shows the expected key; 0: never. */
+	/**
+	 * Milliseconds without a key after which the expected key shows again: the hand in the new-keys
+	 * mode, the light and the finger hint of a faded key. The delay of this child (`hesitationFor`:
+	 * at least `hesitationMs` of the rules, more for a child who is slow on every key); 0: never.
+	 */
 	readonly hesitationMs: number;
 }
 
