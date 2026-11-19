@@ -81,6 +81,19 @@ export function fingerForKey(profile: FingeringProfile, code: KeyCode): Finger |
 	return Object.hasOwn(profile.fingers, code) ? (profile.fingers[code] ?? null) : null;
 }
 
+/** The fingers of the two hands, thumbs aside. */
+const HAND_FINGERS = FINGERS.filter((finger) => !finger.endsWith('-thumb'));
+
+/**
+ * A reduced fingering (ADR-075, choice 6): one of the eight fingers, thumbs aside, types no key. What
+ * is written for ten fingers, such as the instruction of a lesson, may then name a finger it leaves
+ * folded.
+ */
+export function isReducedFingering(profile: FingeringProfile): boolean {
+	const used = new Set(Object.values(profile.fingers));
+	return HAND_FINGERS.some((finger) => !used.has(finger));
+}
+
 const SHIFT_BY_OPPOSITE_HAND = { left: 'ShiftRight', right: 'ShiftLeft' } as const;
 const DEFAULT_SHIFT = 'ShiftLeft';
 const ALTGR = 'AltRight';

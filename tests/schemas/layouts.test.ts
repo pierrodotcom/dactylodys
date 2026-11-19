@@ -1,8 +1,15 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fingerForKey, parseFingeringProfile } from '../../src/lib/keyboard/fingering';
+import {
+	fingerForKey,
+	isReducedFingering,
+	modifierCodes,
+	parseFingeringProfile
+} from '../../src/lib/keyboard/fingering';
+import { parseGeometry } from '../../src/lib/keyboard/geometry';
 import { buildCharIndex, findUnproducible, parseLayout } from '../../src/lib/keyboard/layout';
 import { FINGERING_PROFILE_IDS, LAYOUT_IDS } from '../../src/lib/keyboard/layout-ids';
+import type { Finger, FingeringProfile } from '../../src/lib/keyboard/types';
 
 const LAYOUTS_DIR = 'layouts';
 const FINGERING_DIR = 'layouts/fingering';
@@ -229,14 +236,17 @@ describe('fingering coverage', () => {
 		'Tab',
 		'CapsLock'
 	];
-	const HOME_KEYS = ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Space'];
+	const profileCases = fingeringProfiles.map((profile) => [profile.id, profile] as const);
 
-	it.each(fingeringProfiles.map((profile) => [profile.id, profile] as const))(
+	function sameGeometry(profile: FingeringProfile) {
+		return layouts.filter((layout) => layout.geometry === profile.geometry);
+	}
+
+	it.each(profileCases)(
 		'assigns a finger to every key of every %s-compatible layout',
 		(_id, profile) => {
-			const sameGeometry = layouts.filter((layout) => layout.geometry === profile.geometry);
-			expect(sameGeometry.length).toBeGreaterThan(0);
-			for (const layout of sameGeometry) {
+			expect(sameGeometry(profile).length).toBeGreaterThan(0);
+			for (const layout of sameGeometry(profile)) {
 				for (const code of Object.keys(layout.keys)) {
 					expect(fingerForKey(profile, code), `${layout.id} ${code}`).not.toBeNull();
 				}
@@ -245,15 +255,126 @@ describe('fingering coverage', () => {
 		}
 	);
 
-	it.each(fingeringProfiles.map((profile) => [profile.id, profile] as const))(
-		'puts the thumb on Space and the eight resting fingers on their home keys in %s',
+	// A finger with keys rests somewhere, and a finger without a resting place has no key: the hand
+	// drawn shows it folded, never on a key (ADR-075, choice 6).
+	it.each(profileCases)(
+		'gives a home key to every finger it uses, and no key to any other, in %s',
+		(_id, profile) => {
+			const used = [...new Set(Object.values(profile.fingers))].sort();
+			expect(Object.keys(profile.homeKeys).sort()).toEqual(used);
+		}
+	);
+
+	it.each(profileCases)(
+		'rests the index fingers on F and J and the right thumb on Space in %s',
 		(_id, profile) => {
 			expect(fingerForKey(profile, 'Space')).toBe('right-thumb');
-			expect(Object.values(profile.homeKeys).sort()).toEqual([...HOME_KEYS].sort());
+			expect(profile.homeKeys['right-thumb']).toBe('Space');
 			expect(profile.homeKeys['left-index']).toBe('KeyF');
 			expect(profile.homeKeys['right-index']).toBe('KeyJ');
 		}
 	);
+
+	it.each(profileCases)(
+		'holds Shift with the hand that does not type the key, a finger it uses, in %s',
+		(_id, profile) => {
+			for (const layout of sameGeometry(profile)) {
+				for (const code of Object.keys(layout.keys)) {
+					const [shift = ''] = modifierCodes({ code, level: 'shift' }, profile);
+					const holding = fingerForKey(profile, shift);
+					expect(holding, `${layout.id} ${code}`).not.toBeNull();
+					expect(handOf(holding), `${layout.id} ${code}`).not.toBe(
+						handOf(fingerForKey(profile, code))
+					);
+				}
+			}
+		}
+	);
+});
+
+function handOf(finger: Finger | null): string | undefined {
+	return finger?.split('-')[0];
+}
+
+function fingeringOf(id: string): FingeringProfile {
+	const profile = fingeringProfiles.find((candidate) => candidate.id === id);
+	if (!profile) throw new Error(`Expected the fingering profile ${id}`);
+	return profile;
+}
+
+/** The keys of each row of the drawing, from left to right. */
+const GEOMETRY_ROWS = parseGeometry(readJson('layouts/geometry/iso-105.json')).rows.map((row) =>
+	row.keys.map((key) => key.code)
+);
+const TEN = fingeringOf('ten-fingers-iso');
+
+describe('the fingering with ten fingers', () => {
+	it('uses the eight fingers and the right thumb: it is not a reduced one', () => {
+		expect(Object.keys(TEN.homeKeys)).toHaveLength(9);
+		expect(isReducedFingering(TEN)).toBe(false);
+	});
+});
+
+describe('the fingering with two index fingers (ADR-075, choice 6)', () => {
+	const TWO = fingeringOf('two-index-iso');
+
+	it('types with the two index fingers and the right thumb, nothing else', () => {
+		expect([...new Set(Object.values(TWO.fingers))].sort()).toEqual([
+			'left-index',
+			'right-index',
+			'right-thumb'
+		]);
+		expect(isReducedFingering(TWO)).toBe(true);
+	});
+
+	it('cuts the keyboard between T and Y, G and H, B and N', () => {
+		const cut = (left: string, right: string) => [TWO.fingers[left], TWO.fingers[right]];
+		expect(cut('KeyT', 'KeyY')).toEqual(['left-index', 'right-index']);
+		expect(cut('KeyG', 'KeyH')).toEqual(['left-index', 'right-index']);
+		expect(cut('KeyB', 'KeyN')).toEqual(['left-index', 'right-index']);
+	});
+
+	it('gives each key to the index of the hand that types it with ten fingers, the thumb its keys', () => {
+		expect(Object.keys(TWO.fingers).sort()).toEqual(Object.keys(TEN.fingers).sort());
+		for (const [code, finger] of Object.entries(TEN.fingers)) {
+			const expected = finger.endsWith('thumb') ? finger : `${handOf(finger)}-index`;
+			expect(TWO.fingers[code], code).toBe(expected);
+		}
+	});
+
+	it('never puts a key of the left index right of a key of the right index in a row', () => {
+		for (const row of GEOMETRY_ROWS) {
+			const hands = row
+				.map((code) => TWO.fingers[code])
+				.filter((finger) => finger !== undefined && !finger.endsWith('thumb'))
+				.map((finger) => handOf(finger ?? null));
+			const firstRight = hands.indexOf('right');
+			if (firstRight >= 0) expect(hands.slice(firstRight), row.join(' ')).not.toContain('left');
+		}
+	});
+});
+
+describe('the fingering with six fingers (ADR-075, choice 6)', () => {
+	const SIX = fingeringOf('six-fingers-iso');
+
+	it('uses no little finger', () => {
+		const fingers = [...Object.values(SIX.fingers), ...Object.keys(SIX.homeKeys)];
+		expect(fingers.filter((finger) => finger.endsWith('pinky'))).toEqual([]);
+		expect(isReducedFingering(SIX)).toBe(true);
+	});
+
+	it('gives the keys of a little finger to the ring finger of its hand, and keeps the others', () => {
+		expect(Object.keys(SIX.fingers).sort()).toEqual(Object.keys(TEN.fingers).sort());
+		for (const [code, finger] of Object.entries(TEN.fingers)) {
+			expect(SIX.fingers[code], code).toBe(finger.replace('-pinky', '-ring'));
+		}
+	});
+
+	it('rests the ring, middle and index fingers where ten fingers rest them', () => {
+		for (const [finger, code] of Object.entries(SIX.homeKeys)) {
+			expect(TEN.homeKeys[finger as Finger], finger).toBe(code);
+		}
+	});
 });
 
 describe('French text on the shipped layouts', () => {

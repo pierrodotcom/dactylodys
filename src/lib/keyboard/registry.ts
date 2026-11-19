@@ -17,7 +17,9 @@ const LAYOUT_LOADERS: Readonly<Record<LayoutId, JsonLoader>> = {
 };
 
 const FINGERING_LOADERS: Readonly<Record<FingeringProfileId, JsonLoader>> = {
-	'ten-fingers-iso': () => import('../../../layouts/fingering/ten-fingers-iso.json')
+	'ten-fingers-iso': () => import('../../../layouts/fingering/ten-fingers-iso.json'),
+	'six-fingers-iso': () => import('../../../layouts/fingering/six-fingers-iso.json'),
+	'two-index-iso': () => import('../../../layouts/fingering/two-index-iso.json')
 };
 
 const GEOMETRY_LOADERS: Readonly<Record<GeometryId, JsonLoader>> = {
