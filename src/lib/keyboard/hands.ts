@@ -26,10 +26,15 @@ export interface KeyBox {
 
 export interface FingerShape {
 	readonly finger: Finger;
-	/** Where the fingertip rests. */
+	/** Where the fingertip rests; for a folded finger, the end of the short part that shows. */
 	readonly tip: Point;
 	/** The knuckle the finger grows from. */
 	readonly base: Point;
+	/**
+	 * A finger of a reduced fingering, which rests on no key (ADR-075, choice 6): drawn folded,
+	 * short and faded, so that a hand never shows two fingers only. It never shows a key.
+	 */
+	readonly folded: boolean;
 }
 
 export interface HandShape {
@@ -70,10 +75,14 @@ const SHAPE = {
 	/** A key the finger already rests on is shown by a little press downwards. */
 	pressDip: 0.3,
 	/** How close to the edge of a wide key the finger goes. */
-	edgeMargin: 0.5
+	edgeMargin: 0.5,
+	/** The part of its length a folded finger shows, from its knuckle towards where it would rest. */
+	fold: 0.4
 } as const;
 
 const FINGER_ORDER: readonly Exclude<FingerName, 'thumb'>[] = ['pinky', 'ring', 'middle', 'index'];
+/** Where the index stands in `FINGER_ORDER`: the other fingers rest one key further out each. */
+const INDEX_PLACE = FINGER_ORDER.length - 1;
 const HANDS: readonly Hand[] = ['left', 'right'];
 
 /** Every key of the drawing with its place, in key pitches. */
@@ -107,37 +116,53 @@ function inward(hand: Hand): number {
 	return hand === 'left' ? 1 : -1;
 }
 
+function homeBox(
+	finger: Finger,
+	boxes: ReadonlyMap<KeyCode, KeyBox>,
+	fingering: FingeringProfile
+): KeyBox | undefined {
+	const code = fingering.homeKeys[finger];
+	return code === undefined ? undefined : boxes.get(code);
+}
+
+/** The point `share` of the way from `from` to `to`. */
+function between(from: Point, to: Point, share: number): Point {
+	return { x: from.x + (to.x - from.x) * share, y: from.y + (to.y - from.y) * share };
+}
+
 function handShape(
 	hand: Hand,
 	boxes: ReadonlyMap<KeyCode, KeyBox>,
 	fingering: FingeringProfile
 ): HandShape | null {
 	const side = inward(hand);
-	const fingers: FingerShape[] = [];
-	for (const name of FINGER_ORDER) {
+	const indexBox = homeBox(`${hand}-index`, boxes, fingering);
+	if (indexBox === undefined) return null;
+	// Each of the four fingers is drawn: on its home key, or folded where it would rest, one key
+	// further out than its neighbour towards the index, so that the hand keeps its shape.
+	const fingers: FingerShape[] = FINGER_ORDER.map((name, place) => {
 		const finger: Finger = `${hand}-${name}`;
-		const code = fingering.homeKeys[finger];
-		const box = code === undefined ? undefined : boxes.get(code);
-		if (box === undefined) continue;
-		const tip = box.center;
-		fingers.push({
-			finger,
-			tip,
-			base: { x: tip.x + side * SHAPE.fan[name], y: tip.y + SHAPE.knuckleDrop }
-		});
-	}
-	const outer = fingers[0];
-	const index = fingers.find((shape) => shape.finger === `${hand}-index`);
+		const box = homeBox(finger, boxes, fingering);
+		const rest = box?.center ?? {
+			x: indexBox.center.x - side * (INDEX_PLACE - place),
+			y: indexBox.center.y
+		};
+		const base = { x: rest.x + side * SHAPE.fan[name], y: rest.y + SHAPE.knuckleDrop };
+		const folded = box === undefined;
+		return { finger, tip: folded ? between(base, rest, SHAPE.fold) : rest, base, folded };
+	});
+	const [outer] = fingers;
+	const index = fingers[INDEX_PLACE];
 	if (outer === undefined || index === undefined) return null;
 
 	// Only a thumb with a home key is drawn: two thumbs on the space bar left a child unsure which one presses it.
-	const thumbKey = fingering.homeKeys[`${hand}-thumb`];
-	const thumbBox = thumbKey === undefined ? undefined : boxes.get(thumbKey);
+	const thumbBox = homeBox(`${hand}-thumb`, boxes, fingering);
 	if (thumbBox !== undefined) {
 		fingers.push({
 			finger: `${hand}-thumb`,
 			tip: { x: index.tip.x + side * SHAPE.thumbReach, y: thumbBox.center.y },
-			base: { x: index.base.x, y: index.base.y + SHAPE.thumbRootDrop }
+			base: { x: index.base.x, y: index.base.y + SHAPE.thumbRootDrop },
+			folded: false
 		});
 	}
 
@@ -154,7 +179,10 @@ function handShape(
 	};
 }
 
-/** The two hands at rest: each fingertip on its home key, a thumb only where the fingering puts one. */
+/**
+ * The two hands at rest: each fingertip on its home key, a finger without one folded, a thumb only
+ * where the fingering puts one.
+ */
 export function restingHands(
 	geometry: KeyboardGeometryDefinition,
 	fingering: FingeringProfile
@@ -189,7 +217,9 @@ export function fingerMoves(
 	const boxes = keyBoxes(geometry);
 	const tips = new Map(
 		restingHands(geometry, fingering).flatMap((hand) =>
-			hand.fingers.map((shape) => [shape.finger, shape.tip] as const)
+			hand.fingers
+				.filter((shape) => !shape.folded)
+				.map((shape) => [shape.finger, shape.tip] as const)
 		)
 	);
 	return [press.code, ...modifierCodes(press, fingering)].flatMap((code) => {

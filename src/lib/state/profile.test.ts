@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GhostRun } from '../engine/ghost/types';
 import type { ProgressState } from '../engine/progression/types';
+import { FINGERING_PROFILE_IDS } from '../keyboard/layout-ids';
 import {
 	createProfile,
 	defaultSettings,
@@ -154,7 +155,7 @@ describe('defaultSettings', () => {
 describe('createProfile', () => {
 	it('builds an uncalibrated profile with empty progress and injected id and date', () => {
 		expect(sampleProfile()).toEqual({
-			schemaVersion: 18,
+			schemaVersion: 19,
 			id: 'p-1',
 			name: 'Léa',
 			createdAt: 1_700_000_000_000,
@@ -464,6 +465,12 @@ describe('parseProfile', () => {
 		expect(parseProfile(mutate(['companion', 'name'], '')).companion.name).toBe('');
 	});
 
+	it.each(FINGERING_PROFILE_IDS)('accepts the fingering %s, which the adult may choose', (id) => {
+		expect(parseProfile(mutate(['settings', 'fingeringProfileId'], id)).settings).toMatchObject({
+			fingeringProfileId: id
+		});
+	});
+
 	it.each([
 		['null', null],
 		['a string', 'profile'],
@@ -475,8 +482,8 @@ describe('parseProfile', () => {
 
 	it.each<[string, string[], unknown, RegExp]>([
 		['the first schema version', ['schemaVersion'], 1, /schemaVersion/],
-		['the schema version before', ['schemaVersion'], 17, /schemaVersion/],
-		['the schema version after', ['schemaVersion'], 19, /schemaVersion/],
+		['the schema version before', ['schemaVersion'], 18, /schemaVersion/],
+		['the schema version after', ['schemaVersion'], 20, /schemaVersion/],
 		['days of keys that are not a record', ['charDays'], 'none', /charDays/],
 		[
 			'a day of a key written otherwise',
@@ -509,6 +516,12 @@ describe('parseProfile', () => {
 		['missing settings', ['settings'], REMOVE, /profile\.settings/],
 		['an unknown layout', ['settings', 'layoutId'], 'xx-xx-qwerty-pc', /layoutId/],
 		['an unknown fingering profile', ['settings', 'fingeringProfileId'], 'two', /fingering/],
+		[
+			'a missing fingering profile',
+			['settings', 'fingeringProfileId'],
+			REMOVE,
+			/settings\.fingeringProfileId/
+		],
 		['a non-boolean sound flag', ['settings', 'soundEnabled'], 1, /soundEnabled/],
 		['a non-boolean voice flag', ['settings', 'voiceEnabled'], 'on', /voiceEnabled/],
 		['a missing voice flag', ['settings', 'voiceEnabled'], REMOVE, /settings\.voiceEnabled/],

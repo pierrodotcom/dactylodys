@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fingerForKey, parseFingeringProfile } from './fingering';
+import { fingerForKey, isReducedFingering, parseFingeringProfile } from './fingering';
 
 function makeProfile(overrides: Record<string, unknown> = {}): Record<string, unknown> {
 	return {
@@ -72,5 +72,38 @@ describe('fingerForKey', () => {
 	it('does not read inherited object properties', () => {
 		expect(fingerForKey(profile, 'constructor')).toBeNull();
 		expect(fingerForKey(profile, 'toString')).toBeNull();
+	});
+});
+
+describe('isReducedFingering', () => {
+	const EIGHT_FINGERS = {
+		KeyA: 'left-pinky',
+		KeyS: 'left-ring',
+		KeyD: 'left-middle',
+		KeyF: 'left-index',
+		KeyJ: 'right-index',
+		KeyK: 'right-middle',
+		KeyL: 'right-ring',
+		Semicolon: 'right-pinky'
+	};
+	const homeKeysOf = (fingers: Record<string, string>) =>
+		Object.fromEntries(Object.entries(fingers).map(([code, finger]) => [finger, code]));
+
+	it('is false when each of the eight fingers has a key, whatever the thumbs do', () => {
+		const fingers = { ...EIGHT_FINGERS, Space: 'right-thumb' };
+		expect(isReducedFingering(parseFingeringProfile(makeProfile({ fingers, homeKeys: {} })))).toBe(
+			false
+		);
+		const noThumb = parseFingeringProfile(
+			makeProfile({ fingers: EIGHT_FINGERS, homeKeys: homeKeysOf(EIGHT_FINGERS) })
+		);
+		expect(isReducedFingering(noThumb)).toBe(false);
+	});
+
+	it('is true as soon as one finger of a hand has no key, thumbs aside', () => {
+		const fingers: Record<string, string> = { ...EIGHT_FINGERS, Space: 'right-thumb' };
+		delete fingers['Semicolon'];
+		const withoutPinky = parseFingeringProfile(makeProfile({ fingers, homeKeys: {} }));
+		expect(isReducedFingering(withoutPinky)).toBe(true);
 	});
 });

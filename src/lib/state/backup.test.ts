@@ -31,6 +31,7 @@ import {
 	asVersion7,
 	asVersion15,
 	asVersion16,
+	asVersion18,
 	withEveryKeyColoured,
 	withUndatedCharDays,
 	withUnknownLatency,
@@ -299,6 +300,23 @@ describe('planImport', () => {
 		const sober = updateSettings(NOE, { keyboardColors: 'finger' });
 		const text = exportBackup([sober], EXPORTED_AT);
 		expect(ready(planImport(text, [])).importable).toEqual([sober]);
+	});
+
+	it('reads a backup of version 18: every child keeps ten fingers', () => {
+		const text = backupOf({ profiles: [asVersion18(LEA), asVersion18(NOE)] });
+		const imported = ready(planImport(text, [])).importable;
+		expect(imported).toEqual([LEA, NOE]);
+		expect(imported.map((profile) => profile.settings.fingeringProfileId)).toEqual([
+			'ten-fingers-iso',
+			'ten-fingers-iso'
+		]);
+	});
+
+	it('keeps the fingering the adult chose through a backup and its import', () => {
+		const twoIndex = updateSettings(LEA, { fingeringProfileId: 'two-index-iso' });
+		const sixFingers = updateSettings(NOE, { fingeringProfileId: 'six-fingers-iso' });
+		const text = exportBackup([twoIndex, sixFingers], EXPORTED_AT);
+		expect(ready(planImport(text, [])).importable).toEqual([twoIndex, sixFingers]);
 	});
 	it('keeps the time of the recent plays, and reads a version 7 profile without it', () => {
 		const timed = withProgress(LEA, {

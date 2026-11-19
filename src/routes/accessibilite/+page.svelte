@@ -90,6 +90,7 @@
 				<li>{m.a11y_setting_keyboard_fade({ label: m.settings_keyboard_fade_label() })}</li>
 				<li>{m.a11y_setting_backspace({ label: m.settings_backspace_label() })}</li>
 				<li>{m.a11y_setting_layout({ label: m.settings_layout_label() })}</li>
+				<li>{m.a11y_setting_fingering({ label: m.settings_fingering_label() })}</li>
 			</ul>
 		</section>
 		<section aria-labelledby="a11y-family-player" data-settings-family="player">

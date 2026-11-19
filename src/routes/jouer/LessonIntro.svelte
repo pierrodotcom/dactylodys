@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import { lessonIntro } from '$lib/engine/progression/definition';
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
+	import { isReducedFingering } from '$lib/keyboard/fingering';
 	import type { Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
 	import { sayInTurn } from '$lib/audio/voice-sequence';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
@@ -19,6 +20,7 @@
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
 	import { headingCount, introLines, introShown, introSteps, type IntroLine } from './intro-keys';
+	import { introText, silencing } from './intro-text';
 	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
@@ -96,6 +98,11 @@
 	// The sentence of the platform of the keyboard: a Mac has some keys elsewhere (P-09). Its own
 	// sentence is silent until it is recorded: the voice only says what was recorded.
 	const intro = $derived(lessonIntro(lesson, assets.layout.platform));
+	// A reduced fingering (ADR-075, choice 6): the instruction, written for ten fingers, may name a
+	// finger the child leaves folded. The screen shows the short sentences instead, and the voice
+	// never says the instruction whole: only the short sentences, once they are all recorded.
+	const written = $derived(introText(lesson, assets.layout.platform, assets.fingering));
+	const reduced = $derived(isReducedFingering(assets.fingering));
 
 	// The new keys, else what the data of the lesson says it works (capitals, Backspace), else none.
 	const shown = $derived(introShown(lesson, fresh, assets.charIndex, assets.fingering));
@@ -122,7 +129,7 @@
 	// the hand shows its key (audit P-13): a sentence never ends before the hand is back. Until then,
 	// the whole sentence, as before.
 	const speaker = $derived(
-		sayInTurn(voice, {
+		sayInTurn(reduced ? silencing(voice, intro) : voice, {
 			text: intro,
 			sentences,
 			onsentence: (index) => {
@@ -200,7 +207,16 @@
 				</div>
 			{/if}
 		</div>
-		<p class="intro" bind:this={instruction} data-intro>{intro}</p>
+		{#if written.kind === 'steps'}
+			<!-- One short sentence a line, as the voice says them. -->
+			<ul class="intro intro-steps" bind:this={instruction} data-intro-steps>
+				{#each written.sentences as sentence (sentence)}
+					<li>{sentence}</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="intro" bind:this={instruction} data-intro>{written.text}</p>
+		{/if}
 
 		{#if shown}
 			<section
@@ -321,6 +337,15 @@
 	.intro {
 		font-size: var(--dd-font-size-lg);
 		text-align: center;
+	}
+
+	.intro-steps {
+		display: grid;
+		gap: var(--dd-space-xs);
+		justify-items: center;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
 	.notice {

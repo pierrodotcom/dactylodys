@@ -10,18 +10,33 @@ import {
 	keyboardSize,
 	restingHands,
 	tipAt,
+	type FingerShape,
 	type Point
 } from './hands';
-import type { ModifierLevel } from './types';
+import { FINGERING_PROFILE_IDS } from './layout-ids';
+import type { FingeringProfile, ModifierLevel } from './types';
 
 const geometry = parseGeometry(
 	JSON.parse(readFileSync('layouts/geometry/iso-105.json', 'utf8')) as unknown
 );
-const fingering = parseFingeringProfile(
-	JSON.parse(readFileSync('layouts/fingering/ten-fingers-iso.json', 'utf8')) as unknown
-);
+
+function readFingering(id: string): FingeringProfile {
+	return parseFingeringProfile(
+		JSON.parse(readFileSync(`layouts/fingering/${id}.json`, 'utf8')) as unknown
+	);
+}
+
+const PROFILES = FINGERING_PROFILE_IDS.map(readFingering);
+const PROFILE_CASES = PROFILES.map((profile) => [profile.id, profile] as const);
+const fingering = readFingering('ten-fingers-iso');
+const twoIndex = readFingering('two-index-iso');
+const sixFingers = readFingering('six-fingers-iso');
 const boxes = keyBoxes(geometry);
 const LEVELS: readonly ModifierLevel[] = ['base', 'shift', 'altgr', 'shiftAltgr'];
+const FOUR_FINGERS = ['pinky', 'ring', 'middle', 'index'] as const;
+
+const length = (shape: FingerShape) =>
+	Math.hypot(shape.tip.x - shape.base.x, shape.tip.y - shape.base.y);
 
 describe('keyBoxes and keyboardSize', () => {
 	it('places the keys of a row one after the other, in key pitches', () => {
@@ -56,6 +71,7 @@ describe('restingHands', () => {
 					expect(shape.tip).toEqual(boxes.get(home)?.center);
 				}
 				expect(shape.base.y).toBeGreaterThan(shape.tip.y);
+				expect(shape.folded).toBe(false);
 			}
 		}
 	});
@@ -88,39 +104,43 @@ describe('restingHands', () => {
 		expect(thumbs.map((shape) => shape.finger)).toEqual(['left-thumb']);
 	});
 
-	it('leaves the bottom row readable at rest: no finger on the middle of a letter, the palm below', () => {
-		// A letter is drawn in the middle of its key: measured on the screen, about 0.12 key pitch
-		// above and below its centre, with a margin.
-		const glyphHeight = 0.16;
-		const halfStroke = HAND_STROKES.finger / 2 + HAND_STROKES.outline;
-		const bottomRow = geometry.rows[3]?.keys ?? [];
-		const letters = bottomRow
-			.map((key) => boxes.get(key.code))
-			.filter((box) => box !== undefined && box.right - box.left === 1)
-			.map((box) => box?.center as Point);
-		expect(letters.length).toBeGreaterThanOrEqual(10);
+	it.each(PROFILE_CASES)(
+		'leaves the bottom row readable at rest in %s: no finger on the middle of a letter, the palm below',
+		(_id, profile) => {
+			// A letter is drawn in the middle of its key: measured on the screen, about 0.12 key pitch
+			// above and below its centre, with a margin.
+			const glyphHeight = 0.16;
+			const halfStroke = HAND_STROKES.finger / 2 + HAND_STROKES.outline;
+			const bottomRow = geometry.rows[3]?.keys ?? [];
+			const letters = bottomRow
+				.map((key) => boxes.get(key.code))
+				.filter((box) => box !== undefined && box.right - box.left === 1)
+				.map((box) => box?.center as Point);
+			expect(letters.length).toBeGreaterThanOrEqual(10);
 
-		const distance = (point: Point, from: Point, to: Point) => {
-			const dx = to.x - from.x;
-			const dy = to.y - from.y;
-			const length = dx * dx + dy * dy;
-			const along = length === 0 ? 0 : ((point.x - from.x) * dx + (point.y - from.y) * dy) / length;
-			const t = Math.max(0, Math.min(1, along));
-			return Math.hypot(point.x - (from.x + t * dx), point.y - (from.y + t * dy));
-		};
-		for (const hand of hands) {
-			for (const letter of letters) {
-				const middle = [-1, 0, 1].map((sy) => ({ x: letter.x, y: letter.y + sy * glyphHeight }));
-				for (const shape of hand.fingers) {
-					for (const point of middle) {
-						expect(distance(point, shape.base, shape.tip)).toBeGreaterThan(halfStroke);
+			const distance = (point: Point, from: Point, to: Point) => {
+				const dx = to.x - from.x;
+				const dy = to.y - from.y;
+				const length = dx * dx + dy * dy;
+				const along =
+					length === 0 ? 0 : ((point.x - from.x) * dx + (point.y - from.y) * dy) / length;
+				const t = Math.max(0, Math.min(1, along));
+				return Math.hypot(point.x - (from.x + t * dx), point.y - (from.y + t * dy));
+			};
+			for (const hand of restingHands(geometry, profile)) {
+				for (const letter of letters) {
+					const middle = [-1, 0, 1].map((sy) => ({ x: letter.x, y: letter.y + sy * glyphHeight }));
+					for (const shape of hand.fingers) {
+						for (const point of middle) {
+							expect(distance(point, shape.base, shape.tip)).toBeGreaterThan(halfStroke);
+						}
 					}
 				}
+				const palmTop = Math.min(...hand.palm.map((point) => point.y)) - halfStroke;
+				expect(palmTop).toBeGreaterThan((letters[0]?.y ?? 0) + glyphHeight);
 			}
-			const palmTop = Math.min(...hand.palm.map((point) => point.y)) - halfStroke;
-			expect(palmTop).toBeGreaterThan((letters[0]?.y ?? 0) + glyphHeight);
 		}
-	});
+	);
 
 	it('gives each hand a palm of four corners under its knuckles', () => {
 		for (const hand of hands) {
@@ -136,6 +156,79 @@ describe('restingHands', () => {
 		expect(restingHands(geometry, { ...fingering, homeKeys }).map((hand) => hand.hand)).toEqual([
 			'right'
 		]);
+	});
+});
+
+describe('restingHands with a reduced fingering (ADR-075, choice 6)', () => {
+	const tenHands = restingHands(geometry, fingering);
+
+	it.each(PROFILE_CASES)(
+		'draws the four fingers of each hand in %s, never a hand of two',
+		(_id, profile) => {
+			const hands = restingHands(geometry, profile);
+			expect(hands.map((hand) => hand.hand)).toEqual(['left', 'right']);
+			for (const hand of hands) {
+				const fingers = hand.fingers
+					.filter((shape) => !shape.finger.endsWith('thumb'))
+					.map((shape) => shape.finger);
+				expect(fingers).toEqual(FOUR_FINGERS.map((name) => `${hand.hand}-${name}`));
+			}
+		}
+	);
+
+	it.each(PROFILE_CASES)('folds exactly the fingers that have no key in %s', (_id, profile) => {
+		const used = new Set(Object.values(profile.fingers));
+		for (const hand of restingHands(geometry, profile)) {
+			for (const shape of hand.fingers)
+				expect(shape.folded, shape.finger).toBe(!used.has(shape.finger));
+		}
+	});
+
+	it.each(PROFILE_CASES)(
+		'keeps the knuckles and the palms of ten fingers in %s',
+		(_id, profile) => {
+			const hands = restingHands(geometry, profile);
+			expect(hands.map((hand) => hand.palm)).toEqual(tenHands.map((hand) => hand.palm));
+			for (const [index, hand] of hands.entries()) {
+				for (const shape of hand.fingers) {
+					const ten = tenHands[index]?.fingers.find((other) => other.finger === shape.finger);
+					if (ten !== undefined) expect(shape.base, shape.finger).toEqual(ten.base);
+				}
+			}
+		}
+	);
+
+	it('draws a folded finger short: its tip stays under the home row, towards the knuckle', () => {
+		const homeRow = boxes.get('KeyF')?.center.y ?? Infinity;
+		const [left, right] = restingHands(geometry, twoIndex);
+		for (const hand of [left, right]) {
+			const index = hand?.fingers.find((shape) => shape.finger.endsWith('index'));
+			const folded = hand?.fingers.filter((shape) => shape.folded) ?? [];
+			expect(folded.map((shape) => shape.finger.split('-')[1])).toEqual([
+				'pinky',
+				'ring',
+				'middle'
+			]);
+			for (const shape of folded) {
+				expect(shape.tip.y, shape.finger).toBeGreaterThan(homeRow);
+				expect(shape.tip.y, shape.finger).toBeLessThan(shape.base.y);
+				expect(length(shape), shape.finger).toBeLessThan((index ? length(index) : 0) / 2);
+			}
+		}
+	});
+
+	it('rests the index fingers on F and J and the ring fingers on S and L with six fingers', () => {
+		const tips = new Map(
+			restingHands(geometry, sixFingers).flatMap((hand) =>
+				hand.fingers.filter((shape) => !shape.folded).map((shape) => [shape.finger, shape.tip])
+			)
+		);
+		expect(tips.get('left-index')).toEqual(boxes.get('KeyF')?.center);
+		expect(tips.get('right-index')).toEqual(boxes.get('KeyJ')?.center);
+		expect(tips.get('left-ring')).toEqual(boxes.get('KeyS')?.center);
+		expect(tips.get('right-ring')).toEqual(boxes.get('KeyL')?.center);
+		expect(tips.has('left-pinky')).toBe(false);
+		expect(tips.has('right-pinky')).toBe(false);
 	});
 });
 
@@ -184,23 +277,51 @@ describe('fingerMoves', () => {
 		expect(fingerMoves(geometry, fingering, { code: 'Escape', level: 'base' })).toEqual([]);
 	});
 
-	it('always lands on the key it shows, starting from where the finger rests', () => {
-		const codes = Object.keys(fingering.fingers).filter((code) => boxes.has(code));
-		fc.assert(
-			fc.property(fc.constantFrom(...codes), fc.constantFrom(...LEVELS), (code, level) => {
-				const moves = fingerMoves(geometry, fingering, { code, level });
-				expect(moves[0]?.code).toBe(code);
-				for (const move of moves) {
-					const box = boxes.get(move.code);
-					expect(move.finger).toBe(fingering.fingers[move.code]);
-					expect(move.to.x).toBeGreaterThanOrEqual(box?.left ?? Infinity);
-					expect(move.to.x).toBeLessThanOrEqual(box?.right ?? -Infinity);
-					expect(Math.abs(move.to.y - (box?.center.y ?? Infinity))).toBeLessThan(0.5);
-					expect(move.to).not.toEqual(move.from);
-				}
-			})
-		);
+	it('moves the left index from F up to E with two index fingers, and the other index on Shift', () => {
+		const from = boxes.get('KeyF')?.center;
+		expect(fingerMoves(geometry, twoIndex, { code: 'KeyE', level: 'base' })).toEqual([
+			{ finger: 'left-index', code: 'KeyE', from, to: boxes.get('KeyE')?.center }
+		]);
+		const capital = fingerMoves(geometry, twoIndex, { code: 'KeyE', level: 'shift' });
+		expect(capital.map((move) => [move.finger, move.code])).toEqual([
+			['left-index', 'KeyE'],
+			['right-index', 'ShiftRight']
+		]);
 	});
+
+	it('moves the left ring finger from S to the key of the little finger with six fingers', () => {
+		const [move] = fingerMoves(geometry, sixFingers, { code: 'KeyA', level: 'base' });
+		expect(move?.finger).toBe('left-ring');
+		expect(move?.from).toEqual(boxes.get('KeyS')?.center);
+		expect(move?.to).toEqual(boxes.get('KeyA')?.center);
+	});
+
+	it.each(PROFILE_CASES)(
+		'always lands on the key it shows in %s, starting from where an unfolded finger rests',
+		(_id, profile) => {
+			const codes = Object.keys(profile.fingers).filter((code) => boxes.has(code));
+			const folded = new Set(
+				restingHands(geometry, profile).flatMap((hand) =>
+					hand.fingers.filter((shape) => shape.folded).map((shape) => shape.finger)
+				)
+			);
+			fc.assert(
+				fc.property(fc.constantFrom(...codes), fc.constantFrom(...LEVELS), (code, level) => {
+					const moves = fingerMoves(geometry, profile, { code, level });
+					expect(moves[0]?.code).toBe(code);
+					for (const move of moves) {
+						const box = boxes.get(move.code);
+						expect(move.finger).toBe(profile.fingers[move.code]);
+						expect(folded.has(move.finger)).toBe(false);
+						expect(move.to.x).toBeGreaterThanOrEqual(box?.left ?? Infinity);
+						expect(move.to.x).toBeLessThanOrEqual(box?.right ?? -Infinity);
+						expect(Math.abs(move.to.y - (box?.center.y ?? Infinity))).toBeLessThan(0.5);
+						expect(move.to).not.toEqual(move.from);
+					}
+				})
+			);
+		}
+	);
 });
 
 describe('tipAt', () => {

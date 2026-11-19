@@ -99,6 +99,8 @@
 			<li>{m.guide_tip_regular()}</li>
 			<li>{m.guide_tip_eyes()}</li>
 			<li>{m.guide_tip_fingers()}</li>
+			<li>{m.guide_tip_fingering()}</li>
+			<li>{m.guide_tip_sticky_keys()}</li>
 			<li>{m.guide_tip_effort()}</li>
 			<li>{m.guide_tip_choice()}</li>
 		</ul>

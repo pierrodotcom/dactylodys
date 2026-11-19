@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { LAYOUT_IDS } from '$lib/keyboard/layout-ids';
+import { FINGERING_PROFILE_IDS, LAYOUT_IDS } from '$lib/keyboard/layout-ids';
 import { loadLayout } from '$lib/keyboard/registry';
 import { progressionFor } from './content';
 import { chooseCheckSteps } from './keyboard-check';
-import { LAYOUT_LABELS } from './labels';
+import { FINGERING_LABELS, LAYOUT_LABELS } from './labels';
 import { PLAY_RULES } from './play-rules';
 
 describe('progressionFor', () => {
@@ -26,5 +26,14 @@ describe('layouts offered to the child', () => {
 		const steps = chooseCheckSteps(layout, PLAY_RULES.keyboardCheckCodes);
 
 		expect(steps).toHaveLength(PLAY_RULES.keyboardCheckCodes.length);
+	});
+});
+
+describe('fingerings offered to the adult', () => {
+	it.each(FINGERING_PROFILE_IDS)('names the fingering %s in words, each its own', (id) => {
+		const name = FINGERING_LABELS[id]().trim();
+		expect(name).not.toBe('');
+		const others = FINGERING_PROFILE_IDS.filter((other) => other !== id);
+		expect(others.map((other) => FINGERING_LABELS[other]())).not.toContain(name);
 	});
 });

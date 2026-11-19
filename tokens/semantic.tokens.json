@@ -2645,6 +2645,10 @@
 		"hand": {
 			"$value": 0.55
 		},
+		"hand-folded": {
+			"$description": "A finger a reduced fingering does not use, folded on the hand drawn: fainter than the hand itself, which keeps its shape (ADR-075, choice 6).",
+			"$value": 0.7
+		},
 		"star-almost": {
 			"$value": 0.4
 		},
