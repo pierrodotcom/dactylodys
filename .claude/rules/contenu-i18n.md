@@ -24,6 +24,8 @@ paths:
 6. Contenu non genré, sans stéréotype, sans marque, sans référence datée. Aucun prénom réel d'enfant stocké ailleurs que dans le profil local.
 7. Pour la dyslexie associée : mots réguliers et fréquents d'abord, syllabes avant mots, graphèmes complexes introduits explicitement.
 
+9. **Pas de mots de tout-petit pour les 10-12 ans** (audit C-16, ADR-094) : une bulle de jeu qui dit « coucou », « piou », « youpi », « tchou-tchou », « tut tut » ou « miam » a une variante `_older` (`withOlderVariant`, `games/shared/age-text.ts`), dite aux 10-12 ans ; un test le vérifie (`src/lib/games/texts.test.ts`). Le récit et les consignes, dits par une seule voix, n'en contiennent pas. Un texte à taper peut dire « Coucou » dans un message entre amis : c'est l'usage à tout âge.
+
 ## Règles i18n
 
 - Aucune chaîne visible dans le code. Pas de concaténation de fragments : une phrase = une clé, avec paramètres.
