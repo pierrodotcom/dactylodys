@@ -15,7 +15,10 @@
 		"handGuide": {
 			"everyKeyUntil": 2,
 			"newKeysUntil": 39,
-			"hesitationMs": 3000
+			"hesitationMs": 3000,
+			"hesitationFactor": 2,
+			"hesitationMinKeys": 5,
+			"hesitationMinCorrect": 10
 		},
 		"starAlmostMargin": 3,
 		"storyPhraseEvery": 2,

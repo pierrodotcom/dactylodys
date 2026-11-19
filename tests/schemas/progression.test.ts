@@ -191,7 +191,16 @@ describe('azerty-decouverte', () => {
 			newCharMinCount: 5,
 			recentCharWindow: 30,
 			lengthSlack: 12,
-			handGuide: { everyKeyUntil: 2, newKeysUntil: 39, hesitationMs: 3000 },
+			// The hand waits twice the time the child takes lately, 3 s at least (audit P-07); a key
+			// is measured, and the child with it, as the report of the adult space does (ADR-056).
+			handGuide: {
+				everyKeyUntil: 2,
+				newKeysUntil: 39,
+				hesitationMs: 3000,
+				hesitationFactor: 2,
+				hesitationMinKeys: ADULT_RULES.hesitation.minKeys,
+				hesitationMinCorrect: ADULT_RULES.hesitation.minCorrect
+			},
 			starAlmostMargin: 3,
 			storyPhraseEvery: 2,
 			textGroupLength: 24,

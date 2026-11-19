@@ -1,4 +1,5 @@
 import { findLesson, learnedChars } from '$lib/engine/progression/definition';
+import { hesitationDelayMs } from '$lib/engine/progression/hesitation';
 import { fadedKeys } from '$lib/engine/progression/keyboard-fade';
 import type { ProgressionDefinition, ProgressState } from '$lib/engine/progression/types';
 import type { ErrorPolicy } from '$lib/engine/types';
@@ -26,6 +27,21 @@ export function fadedKeysFor(
 	if (!settings.keyboardFade || rules === undefined) return [];
 	if (findLesson(progression, lessonId) === undefined) return [];
 	return fadedKeys(progress, learnedChars(progression, lessonId), charIndex, rules);
+}
+
+/**
+ * How long a game of this child waits, without a key, before it helps (audit P-07): the hand shows
+ * the key, a key that faded lights again. It follows the time this child takes lately; before the
+ * keys of the layout are loaded, the shortest wait of the progression.
+ */
+export function hesitationFor(
+	progression: ProgressionDefinition,
+	progress: ProgressState,
+	charIndex: CharIndex | undefined
+): number {
+	const rules = progression.rules.handGuide;
+	if (charIndex === undefined) return rules?.hesitationMs ?? 0;
+	return hesitationDelayMs(rules, progress, charIndex);
 }
 
 /**
