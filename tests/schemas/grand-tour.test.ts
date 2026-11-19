@@ -290,17 +290,14 @@ describe('a child already on the way when the grand tours come', () => {
 		);
 	});
 
-	it('finds the tours of the worlds it finished open, the others closed', () => {
+	it('finds the tours of the worlds it went through open, the others closed', () => {
 		fc.assert(
-			fc.property(progressArb, (progress) => {
+			fc.property(progressArb, openedArb, keptArb, (progress, opened, kept) => {
 				for (const { world, tour } of tours) {
 					const onTheWay = world.lessons.filter((lesson) => !isDetour(lesson));
 					const finished = isLessonPassed(rules, progress, onTheWay.at(-1)?.id ?? '');
-					const further = lessons
-						.slice(lessons.indexOf(tour))
-						.some((lesson) => isLessonPassed(rules, progress, lesson.id));
-					expect(isLessonUnlocked(progression, progress, tour.id), tour.id).toBe(
-						finished || further
+					expect(isLessonUnlocked(progression, progress, tour.id, opened, kept), tour.id).toBe(
+						finished
 					);
 				}
 			})

@@ -241,8 +241,11 @@ describe('a grand tour in the progression', () => {
 		expect(open(passing(FIRST))).toBe(false);
 		expect(open(passing(FIRST, SECOND))).toBe(true);
 		expect(open(passing(FIRST, SECOND, DETOUR))).toBe(true);
-		// A lesson passed further on opens the whole way up to it, the tour included.
-		expect(open(passing(AFTER))).toBe(true);
+		// It goes over a world the child went through: a lesson passed further on does not open it,
+		// though it opens the whole way up to it; once passed, it stays open.
+		expect(open(passing(AFTER))).toBe(false);
+		expect(isLessonUnlocked(PROGRESSION, passing(AFTER), SECOND)).toBe(true);
+		expect(open(passing(TOUR))).toBe(true);
 	});
 
 	it('holds nothing: the next world opens without it', () => {
