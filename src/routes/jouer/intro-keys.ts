@@ -1,3 +1,4 @@
+import { ERASE_CHAR } from '$lib/engine/progression/definition';
 import type { LessonDefinition } from '$lib/engine/progression/types';
 import { targetKeyPress } from '$lib/games/shared/target';
 import { fingerForKey, modifierCodes } from '$lib/keyboard/fingering';
@@ -14,8 +15,6 @@ const CAPITAL_PATTERN = /^\p{Lu}$/u;
 const HANDS: readonly Hand[] = ['left', 'right'];
 /** The key that erases, whatever the layout: `KeyboardEvent.code` names it the same everywhere. */
 const BACKSPACE: KeyPress = { code: 'Backspace', level: 'base' };
-/** Stands for the key that erases among the characters of the keys shown. */
-const BACKSPACE_CHAR = '\b';
 /** From this many keys of one hand on the same level, they are said on one line (« Maj + 1 2 3 4 5 »). */
 const ONE_LINE_FROM = 3;
 
@@ -79,8 +78,28 @@ export function introShown(
 	const practised =
 		lesson.repair === undefined
 			? keys
-			: [...keys, { char: BACKSPACE_CHAR, press: BACKSPACE, codes: [BACKSPACE.code] }];
+			: [...keys, { char: ERASE_CHAR, press: BACKSPACE, codes: [BACKSPACE.code] }];
 	return practised.length > 0 ? { kind: 'practice', keys: practised } : null;
+}
+
+/** A short sentence of the instruction, and the key the hand shows while it is said. */
+export interface IntroStep {
+	readonly char: string;
+	readonly text: string;
+	/** `null` when the keyboard shows no key for it: the hand then rests while it is said. */
+	readonly press: KeyPress | null;
+}
+
+/**
+ * The short sentences of the instruction of a lesson (audit P-13), each with its key among the keys
+ * the introduction shows (`introShown`), in the order they are said.
+ */
+export function introSteps(lesson: LessonDefinition, keys: readonly IntroKey[]): IntroStep[] {
+	return (lesson.steps ?? []).map((step) => ({
+		char: step.char,
+		text: step.text,
+		press: keys.find((key) => key.char === step.char)?.press ?? null
+	}));
 }
 
 /** How many keys the heading of the keyboard names: the new ones, else all those shown. */
