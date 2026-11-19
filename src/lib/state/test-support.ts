@@ -1,6 +1,6 @@
 import type { ProgressState } from '../engine/progression/types';
 import type { NoticeChannelFactory } from './profile-notices';
-import type { Profile, SessionRecord } from './types';
+import type { CharDay, Profile, SessionRecord } from './types';
 
 /**
  * Pages of the same device for a test: what one posts on a channel of the hub reaches all the
@@ -183,16 +183,40 @@ export function withNothingKeptOpen(profile: Profile): Profile {
 	return withWorldPolicy({ ...profile, keptOpenLessonIds: [] });
 }
 
-/** What a profile becomes once migrated from version 16 or older: every key keeps its colour. */
-export function withEveryKeyColoured(profile: Profile): Profile {
-	return { ...profile, settings: { ...profile.settings, keyboardColors: 'all' } };
+/**
+ * What a profile becomes once migrated from version 17 or older: the days of its keys are unknown,
+ * one day made of the recent plays of each key (P-17).
+ */
+export function withUndatedCharDays(profile: Profile): Profile {
+	const charDays: Record<string, readonly CharDay[]> = {};
+	for (const [char, stats] of Object.entries(profile.progress.chars)) {
+		const attempts = stats.recent.reduce((sum, sample) => sum + sample.attempts, 0);
+		const errors = stats.recent.reduce((sum, sample) => sum + sample.errors, 0);
+		if (attempts > 0) charDays[char] = [{ day: null, attempts, errors }];
+	}
+	return { ...profile, charDays };
 }
 
-/** The record version 16 of the app stored: the same profile without the colours of the keyboard. */
+/** What a profile becomes once migrated from version 16 or older: every key keeps its colour. */
+export function withEveryKeyColoured(profile: Profile): Profile {
+	return withUndatedCharDays({
+		...profile,
+		settings: { ...profile.settings, keyboardColors: 'all' }
+	});
+}
+
+/** The record version 17 of the app stored: the same profile without the days of its keys. */
+export function asVersion17(profile: Profile): Record<string, unknown> {
+	const stored: Record<string, unknown> = { ...profile, schemaVersion: 17 };
+	delete stored['charDays'];
+	return stored;
+}
+
+/** The record version 16 of the app stored: version 17 without the colours of the keyboard. */
 export function asVersion16(profile: Profile): Record<string, unknown> {
 	const settings: Record<string, unknown> = { ...profile.settings };
 	delete settings['keyboardColors'];
-	return { ...profile, schemaVersion: 16, settings };
+	return { ...asVersion17(profile), schemaVersion: 16, settings };
 }
 
 /**

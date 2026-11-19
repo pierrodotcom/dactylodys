@@ -35,6 +35,7 @@ import {
 	asVersion14,
 	asVersion15,
 	asVersion16,
+	asVersion17,
 	EMPTY_JOURNAL,
 	withEmptyHideout,
 	withEveryKeyColoured,
@@ -42,6 +43,7 @@ import {
 	withNothingKeptOpen,
 	withRetryPolicy,
 	withSensoryDefaults,
+	withUndatedCharDays,
 	withUnknownLatency,
 	withUnmarkedSessions,
 	withWorldPolicy,
@@ -233,7 +235,9 @@ function reasonOf(data: unknown): unknown {
 
 describe('migrateProfile', () => {
 	it('brings a version 1 profile to the current version with nothing lost', () => {
-		expect(parseProfile(migrateProfile(STORED_BY_VERSION_1))).toEqual(playedProfile());
+		expect(parseProfile(migrateProfile(STORED_BY_VERSION_1))).toEqual(
+			withUndatedCharDays(playedProfile())
+		);
 	});
 
 	it('gives a migrated profile a companion without a name, no chosen game, no ghost, and the voice on', () => {
@@ -280,7 +284,8 @@ describe('migrateProfile', () => {
 			helpQuest: null,
 			gamePlays: {},
 			...EMPTY_JOURNAL,
-			hideout: {}
+			hideout: {},
+			charDays: { f: [{ day: null, attempts: 30, errors: 6 }] }
 		});
 	});
 
@@ -306,7 +311,9 @@ describe('migrateProfile', () => {
 	});
 
 	it('brings a version 2 profile to the current version with nothing lost', () => {
-		expect(parseProfile(migrateProfile(STORED_BY_VERSION_2))).toEqual(profileOfVersion2());
+		expect(parseProfile(migrateProfile(STORED_BY_VERSION_2))).toEqual(
+			withUndatedCharDays(profileOfVersion2())
+		);
 	});
 
 	it.each<[string, number, number, { attempts: number; errors: number }[]]>([
@@ -366,12 +373,14 @@ describe('migrateProfile', () => {
 			helpQuest: null,
 			gamePlays: {},
 			...EMPTY_JOURNAL,
-			hideout: {}
+			hideout: {},
+			charDays: { f: [{ day: '2026-11-19', attempts: 30, errors: 6 }] }
 		});
 		expect(asVersion4(profileOfVersion4)).toEqual(STORED_BY_VERSION_4);
 		const withoutHideout: Record<string, unknown> = { ...profileOfVersion4 };
 		delete withoutHideout['hideout'];
 		delete withoutHideout['keptOpenLessonIds'];
+		delete withoutHideout['charDays'];
 		expect(asVersion7(profileOfVersion4)).toEqual({
 			...withoutHideout,
 			settings: STORED_BY_VERSION_4.settings,
@@ -409,26 +418,28 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion2(profile))));
-				expect(migrated).toEqual({
-					...profile,
-					settings: {
-						...profile.settings,
-						handGuide: 'auto',
-						keyboardColors: 'all',
-						errorPolicy: 'world',
-						sessionLength: 'normal',
-						keyboardFade: true,
-						effects: true,
-						ambience: 'none',
-						ageBand: '8-9'
-					},
-					progress: migratedProgress(profile.progress),
-					earnedRewardIds: [],
-					helpQuest: null,
-					...EMPTY_JOURNAL,
-					hideout: {},
-					keptOpenLessonIds: []
-				});
+				expect(migrated).toEqual(
+					withUndatedCharDays({
+						...profile,
+						settings: {
+							...profile.settings,
+							handGuide: 'auto',
+							keyboardColors: 'all',
+							errorPolicy: 'world',
+							sessionLength: 'normal',
+							keyboardFade: true,
+							effects: true,
+							ambience: 'none',
+							ageBand: '8-9'
+						},
+						progress: migratedProgress(profile.progress),
+						earnedRewardIds: [],
+						helpQuest: null,
+						...EMPTY_JOURNAL,
+						hideout: {},
+						keptOpenLessonIds: []
+					})
+				);
 				for (const [char, stats] of Object.entries(migrated.progress.chars)) {
 					expect(stats.recent.length).toBeLessThanOrEqual(1);
 					const kept = stats.recent[0];
@@ -447,25 +458,27 @@ describe('migrateProfile', () => {
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const migrated = parseProfile(migrateProfile(toJson(asVersion3(profile))));
-				expect(migrated).toEqual({
-					...withUnknownLatency(profile),
-					settings: {
-						...profile.settings,
-						handGuide: 'auto',
-						keyboardColors: 'all',
-						errorPolicy: 'world',
-						sessionLength: 'normal',
-						keyboardFade: true,
-						effects: true,
-						ambience: 'none',
-						ageBand: '8-9'
-					},
-					earnedRewardIds: [],
-					helpQuest: null,
-					...EMPTY_JOURNAL,
-					hideout: {},
-					keptOpenLessonIds: []
-				});
+				expect(migrated).toEqual(
+					withUndatedCharDays({
+						...withUnknownLatency(profile),
+						settings: {
+							...profile.settings,
+							handGuide: 'auto',
+							keyboardColors: 'all',
+							errorPolicy: 'world',
+							sessionLength: 'normal',
+							keyboardFade: true,
+							effects: true,
+							ambience: 'none',
+							ageBand: '8-9'
+						},
+						earnedRewardIds: [],
+						helpQuest: null,
+						...EMPTY_JOURNAL,
+						hideout: {},
+						keptOpenLessonIds: []
+					})
+				);
 			})
 		);
 	});
@@ -882,11 +895,17 @@ describe('readProfile', () => {
 	});
 
 	it('opens a version 1 profile as a profile of the current version', () => {
-		expect(readProfile(STORED_BY_VERSION_1)).toEqual({ ok: true, profile: playedProfile() });
+		expect(readProfile(STORED_BY_VERSION_1)).toEqual({
+			ok: true,
+			profile: withUndatedCharDays(playedProfile())
+		});
 	});
 
 	it('opens a version 2 profile as a profile of the current version', () => {
-		expect(readProfile(STORED_BY_VERSION_2)).toEqual({ ok: true, profile: profileOfVersion2() });
+		expect(readProfile(STORED_BY_VERSION_2)).toEqual({
+			ok: true,
+			profile: withUndatedCharDays(profileOfVersion2())
+		});
 	});
 
 	it('reports a profile of a later version with its id and its name', () => {
@@ -1015,7 +1034,9 @@ describe('version 15: the lessons changed order (ADR-075)', () => {
 			...base,
 			progress: stored['progress'],
 			earnedRewardIds: earned,
-			keptOpenLessonIds: ['fr.lesson.girafe-g-h']
+			keptOpenLessonIds: ['fr.lesson.girafe-g-h'],
+			// No key typed in this record: no day to keep (version 18).
+			charDays: {}
 		});
 	});
 
@@ -1203,7 +1224,7 @@ describe('version 17: the colours of the keyboard drawn (ADR-075, choice 14)', (
 
 	it('keeps every key in the colour of its finger, as before', () => {
 		const migrated = parseProfile(migrateProfile(asVersion16(base)));
-		expect(migrated.schemaVersion).toBe(17);
+		expect(migrated.schemaVersion).toBe(PROFILE_SCHEMA_VERSION);
 		expect(migrated.settings.keyboardColors).toBe('all');
 	});
 
@@ -1236,6 +1257,89 @@ describe('version 17: the colours of the keyboard drawn (ADR-075, choice 14)', (
 		fc.assert(
 			fc.property(profileArb, (profile) => {
 				const once = parseProfile(migrateProfile(toJson(asVersion16(profile))));
+				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
+			})
+		);
+	});
+});
+
+describe('version 18: the days of each key, for the adult (P-17)', () => {
+	const base = parseProfile(migrateProfile(STORED_BY_VERSION_4));
+	const played = withProgress(base, {
+		lessons: base.progress.lessons,
+		chars: {
+			f: {
+				attempts: 70,
+				errors: 6,
+				recent: [
+					{ attempts: 20, errors: 1, latencyMs: 300 },
+					{ attempts: 12, errors: 2, latencyMs: null }
+				]
+			},
+			j: { attempts: 0, errors: 0, recent: [] }
+		}
+	});
+
+	it('describes version 17 without the days of the keys', () => {
+		const stored = asVersion17(played);
+		expect(stored['schemaVersion']).toBe(17);
+		expect(stored).not.toHaveProperty('charDays');
+	});
+
+	it('keeps the recent plays the child reads as they were', () => {
+		const migrated = parseProfile(migrateProfile(toJson(asVersion17(played))));
+		expect(migrated.progress).toEqual(played.progress);
+	});
+
+	it('counts the recent plays of each key as one day, whose date is unknown', () => {
+		const migrated = parseProfile(migrateProfile(toJson(asVersion17(played))));
+		expect(migrated.charDays).toEqual({ f: [{ day: null, attempts: 32, errors: 3 }] });
+	});
+
+	it('keeps the days of a record that already holds them', () => {
+		const days = { f: [{ day: '2026-11-18', attempts: 12, errors: 0 }] };
+		const migrated = parseProfile(migrateProfile({ ...asVersion17(played), charDays: days }));
+		expect(migrated.charDays).toEqual(days);
+	});
+
+	it('passes on damaged days for the parser to refuse', () => {
+		const stored = asVersion17(played);
+		for (const charDays of [
+			'none',
+			{ f: 'none' },
+			{ f: [{ day: 'hier', attempts: 3, errors: 0 }] },
+			{ f: [{ day: null, attempts: 0, errors: 0 }] },
+			{ f: [{ day: null, attempts: 3, errors: 4 }] },
+			{
+				f: [
+					{ day: '2026-11-19', attempts: 3, errors: 0 },
+					{ day: '2026-11-18', attempts: 3, errors: 0 }
+				]
+			},
+			{
+				f: [
+					{ day: '2026-11-18', attempts: 3, errors: 0 },
+					{ day: null, attempts: 3, errors: 0 }
+				]
+			}
+		]) {
+			expect(readProfile({ ...stored, charDays }).ok, JSON.stringify(charDays)).toBe(false);
+		}
+	});
+
+	it('changes nothing else in any version 17 profile', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const migrated = parseProfile(migrateProfile(toJson(asVersion17(profile))));
+				expect(migrated).toEqual(withUndatedCharDays(profile));
+			})
+		);
+	});
+
+	it('gives the same profile from a backup of version 17 read again', () => {
+		fc.assert(
+			fc.property(profileArb, (profile) => {
+				const once = parseProfile(migrateProfile(toJson(asVersion17(profile))));
 				expect(parseProfile(migrateProfile(toJson(once)))).toEqual(once);
 			})
 		);

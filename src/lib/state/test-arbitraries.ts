@@ -15,6 +15,7 @@ import {
 	withProgress
 } from './profile';
 import type {
+	CharDay,
 	CompanionChoice,
 	HandwritingSample,
 	HelpQuestRecord,
@@ -186,6 +187,28 @@ export const practiceDaysArb: fc.Arbitrary<string[]> = fc
 			.map((day) => new Date(day * MS_PER_DAY).toISOString().slice(0, 10))
 	);
 
+const charDayCountsArb = fc
+	.record({ attempts: fc.integer({ min: 1, max: 200 }), errors: fc.nat({ max: 200 }) })
+	.map(({ attempts, errors }) => ({ attempts, errors: Math.min(attempts, errors) }));
+
+/** The days of one key: maybe the unknown day of version 17 first, then days sorted, each once. */
+const charDaysOfOneKeyArb: fc.Arbitrary<CharDay[]> = fc
+	.record({
+		unknown: fc.option(charDayCountsArb, { nil: null }),
+		days: practiceDaysArb,
+		counts: fc.array(charDayCountsArb, { minLength: 8, maxLength: 8 })
+	})
+	.map(({ unknown, days, counts }) => [
+		...(unknown === null ? [] : [{ day: null, ...unknown }]),
+		...days.map((day, index) => ({ day, ...(counts[index] ?? { attempts: 1, errors: 0 }) }))
+	]);
+
+export const charDaysArb: fc.Arbitrary<Record<string, CharDay[]>> = fc.dictionary(
+	fc.string({ maxLength: 4 }),
+	charDaysOfOneKeyArb,
+	{ maxKeys: 3 }
+);
+
 const handwritingSampleArb: fc.Arbitrary<HandwritingSample> = fc.record({
 	measuredAt: timestampArb,
 	wordsPerMinute: fc.double({ min: 0.5, max: 60, noNaN: true })
@@ -226,9 +249,10 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 			openedWorldIds: fc.uniqueArray(identifierArb, { maxLength: 3 }),
 			keptOpenLessonIds: fc.uniqueArray(identifierArb, { maxLength: 3 })
 		}),
-		hideout: fc.dictionary(fc.string({ maxLength: 12 }), identifierArb, { maxKeys: 4 })
+		hideout: fc.dictionary(fc.string({ maxLength: 12 }), identifierArb, { maxKeys: 4 }),
+		charDays: charDaysArb
 	})
-	.map(({ base, companion, games, ghosts, earned, helpQuest, journal, hideout }) => {
+	.map(({ base, companion, games, ghosts, earned, helpQuest, journal, hideout, charDays }) => {
 		let profile = withCompanion(base, companion);
 		for (const [worldId, gameId] of Object.entries(games)) {
 			profile = withLastGame(profile, worldId, gameId);
@@ -238,5 +262,5 @@ export const profileArb: fc.Arbitrary<Profile> = fc
 		}
 		profile = withEarnedRewards(profile, earned);
 		profile = helpQuest === null ? profile : withHelpQuest(profile, helpQuest);
-		return parseProfile({ ...profile, ...journal, hideout });
+		return parseProfile({ ...profile, ...journal, hideout, charDays });
 	});

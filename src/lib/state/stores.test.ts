@@ -3,13 +3,15 @@ import { describe, expect, it } from 'vitest';
 import {
 	createProfile,
 	PROFILE_SCHEMA_VERSION,
+	renameProfile,
 	updateSettings,
 	withAdultWords,
 	withGamePlayed,
-	withLastGame
+	withLastGame,
+	withProgress
 } from './profile';
 import { describeProfileStoreContract } from './profile-store-contract';
-import { createIndexedDbProfileStore, createMemoryProfileStore } from './stores';
+import { createIndexedDbProfileStore, createMemoryProfileStore, type StoreDay } from './stores';
 import { asVersion1 } from './test-support';
 import type { Profile } from './types';
 
@@ -199,5 +201,65 @@ describe('IndexedDB profile store', () => {
 		await store.save(profile);
 		store.close();
 		expect(await store.get('a')).toEqual(profile);
+	});
+});
+
+/** A play of `attempts` keystrokes of F, `errors` of them wrong, as the game adds it to a profile. */
+function playedF(attempts: number, errors: number) {
+	return (current: Profile): Profile => {
+		const before = current.progress.chars['f'];
+		return withProgress(current, {
+			lessons: current.progress.lessons,
+			chars: {
+				f: {
+					attempts: (before?.attempts ?? 0) + attempts,
+					errors: (before?.errors ?? 0) + errors,
+					recent: [...(before?.recent ?? []), { attempts, errors, latencyMs: null }]
+				}
+			}
+		});
+	};
+}
+
+describe.each([
+	['memory', (day: StoreDay) => createMemoryProfileStore([], { day })],
+	[
+		'IndexedDB',
+		(day: StoreDay) => createIndexedDbProfileStore({ databaseName: freshDatabaseName(), day })
+	]
+])('the %s store and the days of the keys (P-17)', (_label, storeOn) => {
+	const profile = createProfile({ id: 'a', name: 'Lou', now: 10, platform: 'pc' });
+
+	it('counts each keystroke a change adds on the day the change is stored', async () => {
+		let today = '2026-11-18';
+		const store = storeOn(() => today);
+		await store.save(profile);
+		await store.update('a', playedF(10, 1));
+		await store.update('a', playedF(4, 0));
+		today = '2026-11-19';
+		const stored = await store.update('a', playedF(5, 0));
+
+		expect(stored?.charDays).toEqual({
+			f: [
+				{ day: '2026-11-18', attempts: 14, errors: 1 },
+				{ day: '2026-11-19', attempts: 5, errors: 0 }
+			]
+		});
+		expect(await store.get('a')).toEqual(stored);
+	});
+
+	it('leaves the days as they are when a change types nothing', async () => {
+		const store = storeOn(() => '2026-11-18');
+		await store.save(profile);
+		const played = await store.update('a', playedF(10, 1));
+		const renamed = await store.update('a', (current) => renameProfile(current, 'Noa'));
+		expect(renamed?.charDays).toEqual(played?.charDays);
+	});
+
+	it('keeps the days of a profile saved whole, from a file', async () => {
+		const store = storeOn(() => '2026-11-19');
+		const saved = { ...profile, charDays: { f: [{ day: null, attempts: 30, errors: 2 }] } };
+		await store.save(saved);
+		expect(await store.get('a')).toEqual(saved);
 	});
 });
