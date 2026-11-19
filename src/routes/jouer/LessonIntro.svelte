@@ -133,7 +133,11 @@
 	<div class="lesson">
 		<div class="head">
 			<p class="number">
-				{number === null ? m.play_lesson_detour() : m.play_lesson_number({ number })}
+				{lesson.tour !== undefined
+					? m.play_lesson_tour()
+					: number === null
+						? m.play_lesson_detour()
+						: m.play_lesson_number({ number })}
 			</p>
 			<ListenButton text={lesson.intro} player={voice} />
 			{#if prize}
@@ -141,7 +145,13 @@
 					<div class="prize-picture" aria-hidden="true">
 						<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
 					</div>
-					<p>{m.play_reward_prize({ title: prize.title })}</p>
+					<div class="prize-text">
+						<p>{m.play_reward_prize({ title: prize.title })}</p>
+						<!-- A grand tour asks more than passing it: what to master is said beforehand. -->
+						{#if lesson.tour !== undefined}
+							<p class="prize-how">{prize.description}</p>
+						{/if}
+					</div>
 				</div>
 			{/if}
 		</div>
@@ -246,6 +256,16 @@
 	.prize-picture {
 		flex: none;
 		inline-size: var(--dd-size-touch-target-min);
+	}
+
+	.prize-text {
+		display: grid;
+		gap: var(--dd-space-xs);
+		max-inline-size: var(--dd-size-panel-max);
+	}
+
+	.prize-how {
+		font-weight: var(--dd-font-weight-regular);
 	}
 
 	.intro {

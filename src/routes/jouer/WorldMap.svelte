@@ -8,7 +8,9 @@
 	import Companion from '$lib/ui/components/Companion.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import Stars from '$lib/ui/components/Stars.svelte';
+	import TrophyArt from '$lib/ui/companion/TrophyArt.svelte';
 	import { isInView, revealInView } from '$lib/ui/focus';
+	import type { TourPrize } from './companion';
 	import { isMotionReduced } from './game-settings';
 	import {
 		companionSpot,
@@ -32,10 +34,21 @@
 		/** Opens the free practice of the words of the adult; absent without any word. */
 		onfree?: () => void;
 		onchangeplayer: () => void;
+		/** The stamp each grand tour gives, by lesson: announced beside the tour (`tourPrizes`). */
+		tourPrizes?: ReadonlyMap<string, TourPrize>;
 	}
 
-	let { profile, progression, helpKey, onopen, onhelp, onstory, onfree, onchangeplayer }: Props =
-		$props();
+	let {
+		profile,
+		progression,
+		helpKey,
+		onopen,
+		onhelp,
+		onstory,
+		onfree,
+		onchangeplayer,
+		tourPrizes = new Map()
+	}: Props = $props();
 
 	/** "Later" hides the bubble until the map is shown again. */
 	let helpLater = $state(false);
@@ -183,6 +196,7 @@
 								data-status={lesson.status}
 								data-side={lesson.side}
 								data-detour={lesson.detour || undefined}
+								data-tour={lesson.tour || undefined}
 								data-companion={lesson.id === companionId || undefined}
 								{@attach lesson.id === layout.focusId && !asking ? revealInView : undefined}
 							>
@@ -196,6 +210,7 @@
 											{@render label(lesson)}
 											<span class="name">{lesson.title}</span>
 											<span class="state">{m.play_lesson_locked()}</span>
+											{@render prize(lesson)}
 										</span>
 									</div>
 								{:else}
@@ -214,12 +229,15 @@
 											<span class="state">
 												{#if lesson.status === 'done'}
 													{m.play_lesson_done()}
+												{:else if lesson.tour}
+													{m.play_lesson_tour_open()}
 												{:else if lesson.detour}
 													{m.play_lesson_detour_open()}
 												{:else}
 													{m.play_lesson_current()}
 												{/if}
 											</span>
+											{@render prize(lesson)}
 										</span>
 										<Stars count={lesson.stars} />
 									</button>
@@ -251,10 +269,31 @@
 <!-- A detour has no number: it is not a step of the way, and no number is missing after it. -->
 {#snippet label(lesson: MapLesson)}
 	<span class="number">
-		{lesson.number === null
-			? m.play_lesson_detour()
-			: m.play_lesson_number({ number: lesson.number })}
+		{lesson.tour
+			? m.play_lesson_tour()
+			: lesson.number === null
+				? m.play_lesson_detour()
+				: m.play_lesson_number({ number: lesson.number })}
 	</span>
+{/snippet}
+
+<!-- The stamp a grand tour gives, known before it is won (ADR-075, choice 3): a picture in a button. -->
+{#snippet prize(lesson: MapLesson)}
+	{@const stamp = lesson.tour ? tourPrizes.get(lesson.id) : undefined}
+	{#if stamp}
+		<span class="prize" data-tour-prize={stamp.owned ? 'won' : 'to-win'}>
+			<svg
+				class="stamp"
+				viewBox="0 0 120 120"
+				aria-hidden="true"
+				focusable="false"
+				data-silhouette={stamp.owned ? undefined : ''}
+			>
+				<TrophyArt artId={stamp.reward.artId} />
+			</svg>
+			<span>{stamp.owned ? m.play_tour_prize_won() : m.play_tour_prize()}</span>
+		</span>
+	{/if}
 {/snippet}
 
 {#snippet arrow(direction: 'up' | 'down')}
@@ -514,10 +553,29 @@
 		border-style: dotted;
 	}
 
+	/* A grand tour closes its world: framed twice, apart from the detours that go further. */
+	.stop[data-tour]:not([data-status='locked']) .node {
+		border-style: double;
+		border-width: var(--dd-border-width-target);
+	}
+
 	.stop[data-status='locked'] .node {
 		border-style: dashed;
 		background-color: var(--dd-color-surface-sunken);
 		color: var(--dd-color-text-secondary);
+	}
+
+	.prize {
+		display: flex;
+		align-items: center;
+		gap: var(--dd-space-xs);
+		font-size: var(--dd-font-size-sm);
+	}
+
+	.stamp {
+		flex: none;
+		inline-size: var(--dd-size-star);
+		block-size: var(--dd-size-star);
 	}
 
 	.info {

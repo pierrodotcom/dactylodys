@@ -16,6 +16,7 @@ import {
 	recordHelpOutcome,
 	shouldAskName,
 	takeOffItem,
+	tourPrizes,
 	wearItem
 } from './companion';
 import { progressionFor } from './content';
@@ -225,6 +226,32 @@ describe('prizeOfLesson', () => {
 		expect(prizeOfLesson(catalogue, FIRST, new Set())?.id).toBe(itemOf(FIRST).id);
 		expect(prizeOfLesson(catalogue, FIRST, new Set([itemOf(FIRST).id]))).toBeNull();
 		expect(prizeOfLesson(undefined, FIRST, new Set())).toBeNull();
+	});
+
+	it('shows the stamp a grand tour gives before it is played (ADR-075, choice 3)', () => {
+		const tours = progression.worlds.flatMap((world) => world.lessons.filter((l) => l.tour));
+		expect(tours.length).toBeGreaterThan(0);
+		for (const tour of tours) {
+			const prize = prizeOfLesson(catalogue, tour.id, new Set());
+			expect(prize?.kind, tour.id).toBe('trophy');
+			expect(prize?.condition).toEqual({ kind: 'tour-mastered', lessonId: tour.id });
+		}
+	});
+});
+
+describe('tourPrizes', () => {
+	it('gives each grand tour its stamp, and says whether the child owns it', () => {
+		const tours = progression.worlds.flatMap((world) => world.lessons.filter((l) => l.tour));
+		const prizes = tourPrizes(catalogue, new Set());
+		expect([...prizes.keys()].sort()).toEqual(tours.map((tour) => tour.id).sort());
+		const [first] = tours;
+		const stamp = first ? prizes.get(first.id)?.reward : undefined;
+		expect(stamp?.artId).toMatch(/^stamp-/);
+		expect(prizes.get(first?.id ?? '')?.owned).toBe(false);
+		expect(tourPrizes(catalogue, new Set([stamp?.id ?? ''])).get(first?.id ?? '')?.owned).toBe(
+			true
+		);
+		expect(tourPrizes(undefined, new Set()).size).toBe(0);
 	});
 });
 

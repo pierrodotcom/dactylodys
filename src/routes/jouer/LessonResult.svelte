@@ -14,6 +14,8 @@
 		/** What the result knows of the play: its buttons and its sentence follow from it. */
 		facts: PlayFacts;
 		saveFailed: boolean;
+		/** This play opened the grand tour of its world: the result says so in one sentence. */
+		tourOpened?: boolean;
 		/** Which dance the companion does, in the order of the lessons. */
 		dance: number;
 		/** The day of the play, written under the souvenir photo. */
@@ -51,6 +53,7 @@
 		summary,
 		facts,
 		saveFailed,
+		tourOpened = false,
 		dance,
 		date,
 		worldLessons,
@@ -117,6 +120,7 @@
 			{facts}
 			{plan}
 			{saveFailed}
+			{tourOpened}
 			{dance}
 			{date}
 			{worldLessons}
