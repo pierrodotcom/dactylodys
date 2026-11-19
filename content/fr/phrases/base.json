@@ -5,11 +5,10 @@
 	"phrases": [
 		{ "text": "je lis le jeudi", "themes": [], "level": 1, "review": "human" },
 		{ "text": "il file sur ses skis", "themes": ["sport"], "level": 1, "review": "human" },
-		{ "text": "elle relie les fils", "themes": [], "level": 1, "review": "human" },
+		{ "text": "elle relie les fleurs", "themes": [], "level": 1, "review": "human" },
 		{ "text": "je fuis le feu", "themes": [], "level": 1, "review": "human" },
 		{ "text": "il jure de lire", "themes": [], "level": 1, "review": "human" },
 		{ "text": "je lui sers du jus", "themes": ["cuisine"], "level": 1, "review": "human" },
-		{ "text": "elle se rue sur le jus", "themes": ["cuisine"], "level": 1, "review": "human" },
 		{ "text": "je serre le fil de fer", "themes": [], "level": 1, "review": "human" },
 		{ "text": "je ris de ses ruses", "themes": [], "level": 1, "review": "human" },
 		{ "text": "je lui dis de fuir", "themes": [], "level": 1, "review": "human" },
@@ -142,7 +141,7 @@
 			"review": "human"
 		},
 		{
-			"text": "un cloporte sort de la marmite",
+			"text": "un caneton sort de la marmite",
 			"themes": ["animaux"],
 			"level": 2,
 			"review": "human"
@@ -200,7 +199,7 @@
 			"review": "human"
 		},
 		{
-			"text": "un cloporte a sauté dans mon café",
+			"text": "une sardine a sauté dans mon café",
 			"themes": ["animaux"],
 			"level": 2,
 			"review": "human"
@@ -441,7 +440,7 @@
 		},
 		{ "text": "Le lapin joue au football.", "themes": ["animaux"], "level": 1, "review": "human" },
 		{
-			"text": "L'astronaute a perdu sa pantoufle sur la lune.",
+			"text": "L'astronaute a perdu sa pantoufle sur la Lune.",
 			"themes": ["espace"],
 			"level": 2,
 			"review": "human"
@@ -453,7 +452,7 @@
 			"review": "human"
 		},
 		{
-			"text": "Combien de chaussettes a mangé la machine ?",
+			"text": "La machine a mangé combien de chaussettes ?",
 			"themes": [],
 			"level": 3,
 			"review": "human"
@@ -471,7 +470,7 @@
 			"level": 3,
 			"review": "human"
 		},
-		{ "text": "Le camion a un hoquet !", "themes": ["vehicules"], "level": 2, "review": "human" },
+		{ "text": "Le camion a le hoquet !", "themes": ["vehicules"], "level": 2, "review": "human" },
 		{
 			"text": "La tortue a gagné la course, quelle surprise !",
 			"themes": ["animaux"],
@@ -535,7 +534,7 @@
 			"review": "human"
 		},
 		{
-			"text": "Sur la lune, le robot plante des carottes.",
+			"text": "Sur la Lune, le robot plante des carottes.",
 			"themes": ["espace"],
 			"level": 2,
 			"review": "human"
@@ -634,7 +633,7 @@
 			"review": "human"
 		},
 		{
-			"text": "Qui a rangé la lune dans le placard ?",
+			"text": "Qui a rangé la Lune dans le placard ?",
 			"themes": ["espace"],
 			"level": 2,
 			"review": "human"
@@ -932,7 +931,7 @@
 		},
 		{ "text": "Où est ma pâte à modeler ?", "themes": [], "level": 2, "review": "human" },
 		{
-			"text": "Ce poêle chante, le gâteau danse !",
+			"text": "La forêt chante, le gâteau danse !",
 			"themes": ["cuisine"],
 			"level": 3,
 			"review": "human"
@@ -945,7 +944,7 @@
 			"ages": ["10-12"]
 		},
 		{
-			"text": "Le dinosaure a dîné sur la lune.",
+			"text": "Le dinosaure a dîné sur la Lune.",
 			"themes": ["espace"],
 			"level": 2,
 			"review": "human"

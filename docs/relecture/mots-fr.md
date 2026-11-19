@@ -58,9 +58,9 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] tyrannosaure
 - [ ] vélociraptor
 
-## Cuisine (132)
+## Cuisine (130)
 
-### Niveau 1 (37)
+### Niveau 1 (36)
 
 - [ ] ail
 - [ ] beurre
@@ -99,7 +99,7 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] verre
 - [ ] viande
 
-### Niveau 2 (65)
+### Niveau 2 (64)
 
 - [ ] amande
 - [ ] ananas
@@ -138,7 +138,6 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] gruyère
 - [ ] huître
 - [ ] jambon
-- [ ] kaki
 - [ ] ketchup
 - [ ] laitue
 - [ ] légume
@@ -367,14 +366,13 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] soucoupe
 - [ ] télescope
 
-## Véhicules (63)
+## Véhicules (62)
 
-### Niveau 1 (19)
+### Niveau 1 (18)
 
 - [ ] avion
 - [ ] bus
 - [ ] camion
-- [ ] car
 - [ ] métro
 - [ ] moteur
 - [ ] moto
@@ -441,9 +439,9 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] tramway
 - [ ] trottinette
 
-## Maison (62)
+## Maison (61)
 
-### Niveau 1 (26)
+### Niveau 1 (25)
 
 - [ ] bol
 - [ ] bureau
@@ -513,9 +511,9 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] pantoufle
 - [ ] passoire
 
-## Nature (59)
+## Nature (58)
 
-### Niveau 1 (29)
+### Niveau 1 (28)
 
 - [ ] arbre
 - [ ] brise
@@ -582,7 +580,7 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] trèfle
 - [ ] violette
 
-## Sport et jeux (42)
+## Sport et jeux (40)
 
 ### Niveau 1 (12)
 
@@ -599,7 +597,7 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] sport
 - [ ] stade
 
-### Niveau 2 (17)
+### Niveau 2 (16)
 
 - [ ] arbitre
 - [ ] basket
@@ -611,7 +609,6 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] hockey
 - [ ] jogging
 - [ ] joujou
-- [ ] polo
 - [ ] poupée
 - [ ] puzzle
 - [ ] rugby
@@ -619,10 +616,9 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] tennis
 - [ ] toupie
 
-### Niveau 3 (13)
+### Niveau 3 (12)
 
 - [ ] balançoire
-- [ ] belote
 - [ ] champion
 - [ ] dé
 - [ ] judo
@@ -728,9 +724,9 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] exercice
 - [ ] trousse
 
-## Mots de tous les jours (325)
+## Mots de tous les jours (328)
 
-### Niveau 1 (280)
+### Niveau 1 (283)
 
 - [ ] acheter
 - [ ] adresse
@@ -850,6 +846,7 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] frais
 - [ ] frère
 - [ ] gagner
+- [ ] garçon
 - [ ] gauche
 - [ ] génie
 - [ ] gens
@@ -916,6 +913,7 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] os
 - [ ] oublier
 - [ ] oui
+- [ ] papa
 - [ ] papier
 - [ ] pareil
 - [ ] parfois
@@ -950,6 +948,7 @@ Ce fichier est généré par `tools/content/build-words.js` ; reporter les déci
 - [ ] quitter
 - [ ] radio
 - [ ] rapide
+- [ ] reine
 - [ ] repas
 - [ ] repos
 - [ ] respect

@@ -51,16 +51,23 @@ export function repairToErase(view: GameView, spoken: (grapheme: string) => stri
 export interface ShellNotices {
 	/** The keys no longer reach the game: how to go on. */
 	readonly away: string | null;
+	/**
+	 * The reminder to look at the screen, while it is on screen and the recorded voice does not say
+	 * it (audit P-20): without a voice, a screen reader still hears it.
+	 */
+	readonly reminder?: string | null;
 	/** The help about Caps Lock, while it is on screen. */
 	readonly capsLock: string | null;
 }
 
 /**
  * Everything the one live region of a game says: what the game or the typing announces, then the
- * help about Caps Lock, each said once. While the keys do not reach the game, only how to go on.
- * The reminder to look at the screen is not in it: the recorded voice says it.
+ * reminder to look at the screen, then the help about Caps Lock, each said once. While the keys do
+ * not reach the game, only how to go on.
  */
 export function shellAnnouncement(base: string, notices: ShellNotices): string {
 	if (notices.away !== null) return notices.away;
-	return [base, notices.capsLock].filter((part) => part !== null && part !== '').join(' ');
+	return [base, notices.reminder ?? null, notices.capsLock]
+		.filter((part) => part !== null && part !== '')
+		.join(' ');
 }

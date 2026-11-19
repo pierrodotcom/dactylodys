@@ -27,12 +27,11 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 - [ ] Le dragon a brûlé le dîner du pilote.
 
-## Cuisine (28)
+## Cuisine (27)
 
-### Niveau 1 (7)
+### Niveau 1 (6)
 
 - [ ] je lui sers du jus
-- [ ] elle se rue sur le jus
 - [ ] le fruit est sur le lit
 - [ ] je sens le fruit et je ris
 - [ ] les nouilles dorent au soleil
@@ -64,7 +63,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] Recette du jour : une tarte aux chaussettes.
 - [ ] Une crêpe s'est enfuie par la fenêtre !
 - [ ] Le robot pâtissier a brûlé les crêpes.
-- [ ] Ce poêle chante, le gâteau danse !
+- [ ] La forêt chante, le gâteau danse !
 
 ## Animaux (95)
 
@@ -105,7 +104,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] le poulpe tricote trois pantalons
 - [ ] une taupe fait la course en pantoufles
 - [ ] le moustique joue de la clarinette
-- [ ] un cloporte sort de la marmite
+- [ ] un caneton sort de la marmite
 - [ ] la limonade coule de la trompette
 - [ ] l'ours a écrasé la tarte
 - [ ] le crocodile a croqué la pantoufle
@@ -114,7 +113,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] j'ai croisé un crocodile dans mon café
 - [ ] la souris a coupé la musique
 - [ ] c'est le poulpe qui a tricoté
-- [ ] un cloporte a sauté dans mon café
+- [ ] une sardine a sauté dans mon café
 - [ ] la marmotte a pris un ticket
 - [ ] mon canari a cassé le piano
 - [ ] le taureau a dansé sur une tarte
@@ -186,18 +185,18 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] l'étoile a sauté dans la marmite
 - [ ] la lune sait où va la comète
 - [ ] La fusée a un rhume.
-- [ ] L'astronaute a perdu sa pantoufle sur la lune.
+- [ ] L'astronaute a perdu sa pantoufle sur la Lune.
 - [ ] Une planète a éternué sur ma fusée.
-- [ ] Sur la lune, le robot plante des carottes.
+- [ ] Sur la Lune, le robot plante des carottes.
 - [ ] La fusée tousse, puis elle repart.
 - [ ] Ce matin, une comète a pris le bus.
 - [ ] Le robot porte un chapeau, une cravate.
 - [ ] Sur ma planète, la pluie sent la fraise.
-- [ ] Qui a rangé la lune dans le placard ?
+- [ ] Qui a rangé la Lune dans le placard ?
 - [ ] Ce soir, la lune prend son parapluie.
 - [ ] La fusée part ; le dino court derrière.
 - [ ] Nuit noire ; la lune a perdu sa lampe.
-- [ ] Le dinosaure a dîné sur la lune.
+- [ ] Le dinosaure a dîné sur la Lune.
 - [ ] La lune brille ; le loup chante.
 - [ ] Le robot dit "bip" puis il s'endort.
 
@@ -223,7 +222,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 - [ ] la marmotte conduit un camion de pommes
 - [ ] la souris conduit le tracteur
 - [ ] un papillon prend le train
-- [ ] Le camion a un hoquet !
+- [ ] Le camion a le hoquet !
 - [ ] Mon vélo parle avec un accent bizarre.
 - [ ] Le train a perdu ses roues !
 - [ ] Oh, mon vélo sait nager !
@@ -321,7 +320,7 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 ### Niveau 1 (26)
 
 - [ ] je lis le jeudi
-- [ ] elle relie les fils
+- [ ] elle relie les fleurs
 - [ ] je fuis le feu
 - [ ] il jure de lire
 - [ ] je serre le fil de fer
@@ -366,4 +365,4 @@ Ce fichier est généré par `tools/content/build-phrases.js` ; reporter les dé
 
 - [ ] le robot a mangé tous les boutons
 - [ ] mon hamster construit une pyramide
-- [ ] Combien de chaussettes a mangé la machine ?
+- [ ] La machine a mangé combien de chaussettes ?

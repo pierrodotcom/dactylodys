@@ -19,8 +19,11 @@
 		description: gameDescription(game.id)
 	}));
 
-	/** Often enough to see the reminder in the short sample exercise. */
-	const LOOK_REMINDER_EVERY = 2;
+	/**
+	 * Often enough to see both reminders in the short sample exercise: after its second group
+	 * (4 characters typed), then after its fourth (11).
+	 */
+	const LOOK_REMINDER = { firstAfterChars: 4, everyChars: 7 };
 
 	let { data }: PageProps = $props();
 
@@ -55,7 +58,7 @@
 			freshChars: [],
 			hesitationMs: 0
 		},
-		lookReminderEvery: LOOK_REMINDER_EVERY,
+		lookReminder: LOOK_REMINDER,
 		scenes: showScenes && effects ? (SCENE_SCHEDULE.games[gameId] ?? []) : [],
 		fadedKeys: fadeHomeRow ? homeRow : []
 	});

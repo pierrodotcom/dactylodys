@@ -2,8 +2,8 @@
 # Un texte : un en-tête « @ identifiant | leçon | niveau », puis ses lignes, une par ligne du fichier.
 # Chaque texte n'utilise que les touches apprises à sa leçon ; une ligne fait au plus 24 caractères.
 # Pas de « œ » ni de majuscule accentuée ; les chiffres et @ seulement à partir de leurs leçons.
-# Une adresse de courriel est toujours inventée, sur un domaine réservé à l'exemple (exemple.org,
-# exemple.com ou example.org) ; jamais de vrai nom de famille ni de vrai numéro de téléphone.
+# Une adresse de courriel est toujours inventée, sous « .test », un nom réservé aux essais que personne
+# ne peut acheter (RFC 6761) ; jamais de vrai nom de famille ni de vrai numéro de téléphone.
 # Relecture humaine : les identifiants validés vont dans validated-texts.txt.
 
 # La liste du pique-nique : la touche Entrée arrive, listes courtes.
@@ -76,7 +76,7 @@ sauf le photographe.
 # Une carte de la Lune : des cartes postales venues de l'espace.
 @ carte-lune | fr.lesson.carte-lune | 1
 Bonjour de la Lune !
-Ici, le café flotte.
+Ici, je saute très haut.
 Il fait froid mais beau.
 Bisous de l'espace !
 @ carte-comete | fr.lesson.carte-lune | 2
@@ -137,19 +137,19 @@ Lis la page 76
 du livre des dinos :
 le T-rex fait du vélo !
 
-# L'adresse du dino : l'arobase, dans des adresses inventées sur un domaine réservé à l'exemple.
+# L'adresse du dino : l'arobase, dans des adresses inventées sous « .test ».
 @ adresse-dino | fr.lesson.adresse-du-dino | 1
 Mon adresse :
-dino@exemple.org
+dino@poste.test
 Réponds-moi vite !
 @ club-yak | fr.lesson.adresse-du-dino | 1
 Club des amis du yak,
 écris-nous à :
-yak@exemple.org
+yak@zoo.test
 @ adresse-poste | fr.lesson.adresse-du-dino | 2
 La poste des dinos
 change d'adresse :
-poste@exemple.com
+poste@dinos.test
 Merci et à bientôt !
 
 # Réparer un message : une faute est déjà écrite au bout de certaines lignes, à effacer.

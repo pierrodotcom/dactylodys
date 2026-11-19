@@ -10,7 +10,7 @@ export const GREETINGS: readonly AgedText[] = [
 	withOlderVariant(m.game_rocket_greeting_5, m.game_rocket_greeting_5_older),
 	m.game_rocket_greeting_6,
 	m.game_rocket_greeting_7,
-	m.game_rocket_greeting_8,
+	withOlderVariant(m.game_rocket_greeting_8, m.game_rocket_greeting_8_older),
 	withOlderVariant(m.game_rocket_greeting_9, m.game_rocket_greeting_9_older),
 	m.game_rocket_greeting_10
 ];

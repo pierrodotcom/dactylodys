@@ -372,3 +372,7 @@ camionnette | vehicules
 bicyclette | vehicules
 skateboard | vehicules
 navette | espace,vehicules
+# People: both sides named, the choice of the project owner (ADR-075, choice 18; audit C-10)
+garçon | general | 1
+reine | general | 1
+papa | general | 1

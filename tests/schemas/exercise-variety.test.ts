@@ -129,9 +129,14 @@ describe('warm-ups written by hand, drawn from their reserve', () => {
 			const firsts = exercises.map((groups) => groups[0] as string);
 			const orders = new Set(exercises.map((groups) => groups.slice(0, written.length).join('|')));
 			if (reserve?.keepFirst === true) {
-				// Digits and @: the series already validated, the first one first, the others in turn.
+				// Digits and @: the series already validated, the first one first, the others in turn,
+				// as many orders as they allow (two series of digits have only one, F4).
 				expect(new Set(firsts)).toEqual(new Set([written[0]]));
-				expect(orders.size).toBeGreaterThanOrEqual(written.length);
+				const possible = Array.from({ length: written.length - 1 }, (_, i) => i + 1).reduce(
+					(product, factor) => product * factor,
+					1
+				);
+				expect(orders.size).toBeGreaterThanOrEqual(Math.min(written.length, possible));
 			} else {
 				expect(new Set(firsts).size).toBeGreaterThanOrEqual(5);
 				expect(topShare(firsts)).toBeLessThanOrEqual(0.35);

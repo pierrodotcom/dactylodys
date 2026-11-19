@@ -11,26 +11,14 @@
 	import HatchDecor from './HatchDecor.svelte';
 	import HatchEgg from './HatchEgg.svelte';
 	import { CRACK_COUNT } from './shapes';
-
-	const CRIES = [
-		m.game_hatching_cry_1,
-		m.game_hatching_cry_2,
-		m.game_hatching_cry_3,
-		m.game_hatching_cry_4,
-		m.game_hatching_cry_5,
-		m.game_hatching_cry_6,
-		m.game_hatching_cry_7,
-		m.game_hatching_cry_8,
-		m.game_hatching_cry_9,
-		m.game_hatching_cry_10
-	];
+	import { CRIES } from './texts';
 
 	const props: GameProps = $props();
 
 	const decor = $derived(decorFor('hatching', props.playCount));
 
 	function cryFor(view: GameView): string {
-		return pickCyclic(CRIES, view.rewardIndex)?.() ?? '';
+		return pickCyclic(CRIES, view.rewardIndex)?.(props.settings.ageBand) ?? '';
 	}
 
 	function crackStage(view: GameView): number {

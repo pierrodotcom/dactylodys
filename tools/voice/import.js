@@ -109,7 +109,7 @@ async function main() {
 	const { VOICE_RECORDINGS_FILE, parseVoiceRecordings } =
 		await import('../../src/lib/audio/voice-recordings.ts');
 	const { readWavHeader } = await import('../../src/lib/audio/voice-signal.ts');
-	const { LOOK_REMINDER_ID, LOOK_REMINDER_MESSAGE, voiceLocale, voiceTexts } =
+	const { lookReminders, voiceLocale, voiceTexts } =
 		await import('../../src/lib/audio/voice-texts.ts');
 	const { spokenMessages } = await import('../../src/lib/audio/voice-messages.ts');
 	const { updateAttributions } = await import('./lib/attributions.ts');
@@ -127,13 +127,10 @@ async function main() {
 		sounds.set(clip.key, wav);
 	}
 
-	// The reminder and the messages said by the games are listed by the page too: without them,
+	// The reminders and the messages said by the games are listed by the page too: without them,
 	// --prune would delete their clips.
 	const messages = readJson(join(REPO_ROOT, 'messages', `${recordings.locale}.json`));
-	const reminders =
-		typeof messages[LOOK_REMINDER_MESSAGE] === 'string'
-			? [{ id: LOOK_REMINDER_ID, text: messages[LOOK_REMINDER_MESSAGE] }]
-			: [];
+	const reminders = lookReminders(messages);
 	const spoken = spokenMessages(messages);
 	const texts = new Map();
 	for (const source of readJson(join(TOOL_DIR, 'config.json')).sources) {

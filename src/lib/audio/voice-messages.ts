@@ -42,7 +42,7 @@ export const SPOKEN_MESSAGE_GROUPS: readonly SpokenMessageGroup[] = [
 			'play_result_tour_open'
 		]
 	},
-	{ id: 'play.help', keys: ['play_help_ask_spoken', 'play_help_thanks'] },
+	{ id: 'play.help', keys: ['play_help_ask', 'play_help_thanks'] },
 	{
 		id: 'play.break',
 		keys: ['play_break_suggest', 'play_break_suggest_detail', 'play_break_text']

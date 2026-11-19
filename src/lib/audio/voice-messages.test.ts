@@ -63,9 +63,12 @@ describe('spokenMessages', () => {
 	});
 
 	it('gives the spoken sentence of a screen whose message has a parameter', () => {
-		expect(messages['play_help_ask']).toMatch(/\{key\}/);
-		expect(textsOf('play.help')).toContain(messages['play_help_ask_spoken']);
 		expect(messages['play_check_prompt']).toMatch(/\{key\}/);
 		expect(textsOf('play.check')).toContain(messages['play_check_prompt_spoken']);
+	});
+
+	it('says the request of the companion as it is written, the key being drawn beside it', () => {
+		expect(messages['play_help_ask']).not.toMatch(/\{\w+\}/);
+		expect(textsOf('play.help')).toEqual([messages['play_help_ask'], messages['play_help_thanks']]);
 	});
 });

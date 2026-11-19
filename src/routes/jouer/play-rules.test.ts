@@ -24,7 +24,7 @@ const VALID = {
 	maxWordLevel: 3,
 	bankLoadTimeoutMs: 3000,
 	ghostPaceFactor: 0.9,
-	lookReminderEveryGroups: 4,
+	lookReminder: { firstAfterChars: 20, everyChars: 40 },
 	keyboardCheckCodes: ['KeyQ', 'KeyW']
 };
 
@@ -43,7 +43,7 @@ describe('parsePlayRules', () => {
 			maxWordLevel: 3,
 			bankLoadTimeoutMs: 3000,
 			ghostPaceFactor: 0.9,
-			lookReminderEveryGroups: 4,
+			lookReminder: { firstAfterChars: 20, everyChars: 40 },
 			keyboardCheckCodes: ['KeyQ', 'KeyW']
 		});
 	});
@@ -71,10 +71,11 @@ describe('parsePlayRules', () => {
 		expect(lessonIds(progression)[(PLAY_RULES.shortWords?.beforeLesson ?? 0) - 1]).toBe(third);
 	});
 
-	it('can turn the reminder to look at the screen off', () => {
-		expect(parsePlayRules({ ...VALID, lookReminderEveryGroups: 0 }).lookReminderEveryGroups).toBe(
-			0
-		);
+	it('reminds to look at the screen after so many characters typed (audit P-20)', () => {
+		const lookReminder = { firstAfterChars: 4, everyChars: 7 };
+		expect(parsePlayRules({ ...VALID, lookReminder }).lookReminder).toEqual(lookReminder);
+		// Once in a play of the length of a lesson (35 characters), even in three or four groups.
+		expect(PLAY_RULES.lookReminder.firstAfterChars).toBeLessThan(35);
 	});
 
 	it('lets the ghost run at the pace of the child, but never faster', () => {
@@ -114,9 +115,20 @@ describe('parsePlayRules', () => {
 		['a ghost faster than the child was', { ...VALID, ghostPaceFactor: 1.1 }],
 		['a ghost pace that is not a number', { ...VALID, ghostPaceFactor: '0.9' }],
 		['no ghost pace', { ...VALID, ghostPaceFactor: undefined }],
-		['a negative reminder period', { ...VALID, lookReminderEveryGroups: -1 }],
-		['a fractional reminder period', { ...VALID, lookReminderEveryGroups: 2.5 }],
-		['no reminder period', { ...VALID, lookReminderEveryGroups: undefined }],
+		[
+			'a reminder before any character',
+			{ ...VALID, lookReminder: { firstAfterChars: 0, everyChars: 40 } }
+		],
+		[
+			'a fractional reminder period',
+			{ ...VALID, lookReminder: { firstAfterChars: 20, everyChars: 2.5 } }
+		],
+		[
+			'an unknown property of the reminder',
+			{ ...VALID, lookReminder: { firstAfterChars: 20, everyChars: 40, everyGroups: 4 } }
+		],
+		['no reminder', { ...VALID, lookReminder: undefined }],
+		['the old reminder counted in groups', { ...VALID, lookReminderEveryGroups: 4 }],
 		['no key to check', { ...VALID, keyboardCheckCodes: [] }],
 		['an invalid key code', { ...VALID, keyboardCheckCodes: ['q'] }],
 		['a duplicated key code', { ...VALID, keyboardCheckCodes: ['KeyQ', 'KeyQ'] }]

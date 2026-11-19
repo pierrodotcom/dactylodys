@@ -17,6 +17,7 @@
 		type VoiceTextKind
 	} from '$lib/audio/voice-texts';
 	import { parseProgression } from '$lib/engine/progression/definition';
+	import { LOOK_REMINDERS } from '$lib/games/shared/look-reminders';
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import Button from '$lib/ui/components/Button.svelte';
@@ -56,7 +57,7 @@
 		voiceTexts(
 			progression,
 			STORY.progressionId === progression.id ? STORY : undefined,
-			[{ id: LOOK_REMINDER_ID, text: m.game_shared_look_reminder() }],
+			LOOK_REMINDERS.map((reminder) => ({ id: LOOK_REMINDER_ID, text: reminder() })),
 			spokenMessages(messagesData)
 		)
 	);

@@ -3,7 +3,7 @@ import { hesitationDelayMs } from '$lib/engine/progression/hesitation';
 import { fadedKeys } from '$lib/engine/progression/keyboard-fade';
 import type { ProgressionDefinition, ProgressState } from '$lib/engine/progression/types';
 import type { ErrorPolicy } from '$lib/engine/types';
-import type { GameGuide, GameSettings } from '$lib/games/types';
+import type { GameGuide, GameSettings, LookReminderRule } from '$lib/games/types';
 import type { CharIndex, KeyCode } from '$lib/keyboard/types';
 import type { Settings } from '$lib/state/types';
 
@@ -53,7 +53,7 @@ export function toGameSettings(
 	settings: Settings,
 	systemPrefersReduced: boolean,
 	guide: GameGuide,
-	lookReminderEvery = 0,
+	lookReminder: LookReminderRule | undefined = undefined,
 	scenes: readonly string[] = [],
 	fadedKeys: readonly KeyCode[] = [],
 	errorPolicy: ErrorPolicy = settings.errorPolicy === 'backspace' ? 'backspace' : 'retry'
@@ -63,7 +63,7 @@ export function toGameSettings(
 		showKeyboard: settings.showKeyboard,
 		errorPolicy,
 		guide,
-		lookReminderEvery,
+		...(lookReminder === undefined ? {} : { lookReminder }),
 		// A surprise scene is a light effect (ADR-057): without effects, the plain entrance shows.
 		scenes: settings.effects ? scenes : [],
 		fadedKeys,

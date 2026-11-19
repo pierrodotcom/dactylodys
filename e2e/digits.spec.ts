@@ -203,7 +203,7 @@ test.describe('the digits and @', () => {
 
 		await expect(resultButton(page)).toBeVisible();
 		expectWarmUp(typed, AT_LESSON);
-		expect(typed.join('')).toMatch(/[a-z]+@exemple\.(org|com)/);
+		expect(typed.join('')).toMatch(/[a-z]+@[a-z]+\.test/);
 	});
 
 	test('has no axe violation on the game of the digits lesson', async ({ page }) => {
