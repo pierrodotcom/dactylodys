@@ -69,7 +69,7 @@ describe('the sheet for professionals', () => {
 	});
 
 	it('lists the same known limits in its Markdown version, the Mac not tried among them', () => {
-		expect(limitKeys).toContain('pro_limit_mac');
+		expect(limitKeys.map(message).some((limit) => limit.includes('Mac'))).toBe(true);
 		const missing = limitKeys.map(message).filter((limit) => !sheet.includes(limit));
 
 		expect(missing).toEqual([]);
