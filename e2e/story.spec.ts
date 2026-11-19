@@ -28,6 +28,8 @@ const PASSED_STARS: StarCount = 3;
 interface Lesson {
 	id: string;
 	title: string;
+	/** A grand tour tells nothing: the story is that of the other lessons (ADR-075, choice 3). */
+	tour?: unknown;
 }
 
 interface World {
@@ -39,7 +41,10 @@ interface World {
 const { message, templateRegex } = loadMessages();
 const worlds = readJson<{ worlds: World[] }>(
 	'content/fr/progression/azerty-decouverte.json'
-).worlds;
+).worlds.map((world) => ({
+	...world,
+	lessons: world.lessons.filter((lesson) => lesson.tour === undefined)
+}));
 const story = parseStory(readJson('content/fr/story/azerty-decouverte.json'));
 const [DINOS, KITCHEN] = worlds as [World, World];
 const [TOLD_DINOS, TOLD_KITCHEN] = story.worlds as [
