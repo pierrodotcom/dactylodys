@@ -71,6 +71,13 @@ describe('toGameSettings', () => {
 		expect(toGameSettings({ ...base, ageBand: '10-12' }, false, NO_GUIDE).ageBand).toBe('10-12');
 	});
 
+	it('passes the colours of the keyboard chosen by the child to the game', () => {
+		expect(toGameSettings(base, false, NO_GUIDE).keyboardColors).toBe('all');
+		expect(
+			toGameSettings({ ...base, keyboardColors: 'finger' }, false, NO_GUIDE).keyboardColors
+		).toBe('finger');
+	});
+
 	it('passes the guide of the lesson through', () => {
 		const guide: GameGuide = { mode: 'new-keys', freshChars: ['f', 'j'], hesitationMs: 3000 };
 		expect(toGameSettings(base, false, guide).guide).toBe(guide);

@@ -19,6 +19,12 @@ export type TextSpacing = 'normal' | 'wide' | 'wider';
 export type AmbiencePreference = 'none' | AmbienceId;
 /** How long a session lasts before a break is proposed (version 16). */
 export type SessionLength = 'short' | 'normal' | 'long';
+/**
+ * The colours of the keyboard drawn in the games (version 17, choice 14 of ADR-075): `all`, every
+ * key in the colour of its finger; `finger`, only the keys of the finger that types (and of the one
+ * on a modifier), the others plain.
+ */
+export type KeyboardColors = 'all' | 'finger';
 
 export interface Settings {
 	readonly layoutId: LayoutId;
@@ -35,6 +41,8 @@ export interface Settings {
 	readonly showKeyboard: boolean;
 	/** The hand drawn on the keyboard: as the lessons go, always, never. */
 	readonly handGuide: HandGuidePreference;
+	/** Chosen by the child (version 17): which keys of the keyboard drawn keep their colour. */
+	readonly keyboardColors: KeyboardColors;
 	/**
 	 * Chosen by the adult only (version 9, three choices since version 16): `world`, each world
 	 * says whether a mistake is erased (`errorPolicyFor`); `backspace`, a wrong key is always written
@@ -116,7 +124,7 @@ export interface HandwritingSample {
 
 /** One child on this device. Plain JSON, never leaves the device. */
 export interface Profile {
-	readonly schemaVersion: 16;
+	readonly schemaVersion: 17;
 	readonly id: string;
 	/** Nickname chosen by the child; shown only on this device. */
 	readonly name: string;

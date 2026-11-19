@@ -25,6 +25,7 @@ import type {
 	ErrorPolicyPreference,
 	HandwritingSample,
 	HelpQuestRecord,
+	KeyboardColors,
 	MotionPreference,
 	Profile,
 	SessionLength,
@@ -50,6 +51,7 @@ const DEFAULT_SETTINGS_COMMON = {
 	textSpacing: 'normal',
 	showKeyboard: true,
 	handGuide: 'auto',
+	keyboardColors: 'all',
 	errorPolicy: 'world',
 	sessionLength: 'normal',
 	keyboardFade: true,
@@ -61,6 +63,7 @@ const DEFAULT_SETTINGS_COMMON = {
 const THEMES = ['system', 'light', 'dark'] as const satisfies readonly ThemePreference[];
 const MOTIONS = ['system', 'reduced', 'full'] as const satisfies readonly MotionPreference[];
 const HAND_GUIDES = ['auto', 'always', 'off'] as const satisfies readonly HandGuidePreference[];
+export const KEYBOARD_COLORS = ['all', 'finger'] as const satisfies readonly KeyboardColors[];
 const ERROR_POLICIES = [
 	'world',
 	'backspace',
@@ -77,7 +80,7 @@ const AMBIENCES = ['none', ...AMBIENCE_IDS] as const satisfies readonly Ambience
 const STAR_COUNTS = [0, 1, 2, 3] as const satisfies readonly StarCount[];
 
 /** Version of the profiles this code writes; older ones go through `migrations.ts` first. */
-export const PROFILE_SCHEMA_VERSION = 16;
+export const PROFILE_SCHEMA_VERSION = 17;
 /** Bounds of a nickname, in graphemes. */
 export const MIN_NAME_LENGTH = 1;
 export const MAX_NAME_LENGTH = 20;
@@ -143,6 +146,7 @@ const SETTINGS_KEYS = [
 	'textSpacing',
 	'showKeyboard',
 	'handGuide',
+	'keyboardColors',
 	'errorPolicy',
 	'sessionLength',
 	'keyboardFade',
@@ -431,6 +435,11 @@ function parseSettings(data: unknown, path: string): Settings {
 		textSpacing: expectOneOf(record['textSpacing'], TEXT_SPACINGS, `${path}.textSpacing`),
 		showKeyboard: expectBoolean(record['showKeyboard'], `${path}.showKeyboard`),
 		handGuide: expectOneOf(record['handGuide'], HAND_GUIDES, `${path}.handGuide`),
+		keyboardColors: expectOneOf(
+			record['keyboardColors'],
+			KEYBOARD_COLORS,
+			`${path}.keyboardColors`
+		),
 		errorPolicy: expectOneOf(record['errorPolicy'], ERROR_POLICIES, `${path}.errorPolicy`),
 		sessionLength: expectOneOf(record['sessionLength'], SESSION_LENGTHS, `${path}.sessionLength`),
 		keyboardFade: expectBoolean(record['keyboardFade'], `${path}.keyboardFade`),

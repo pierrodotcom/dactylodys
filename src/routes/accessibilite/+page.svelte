@@ -75,6 +75,7 @@
 			</li>
 			<li>{m.a11y_setting_keyboard({ label: m.settings_keyboard_label() })}</li>
 			<li>{m.a11y_setting_hand({ label: m.settings_hand_label() })}</li>
+			<li>{m.a11y_setting_keyboard_colors({ label: m.settings_keyboard_colors_label() })}</li>
 			<li>{m.a11y_setting_age({ label: m.settings_age_label() })}</li>
 			<li>{m.a11y_setting_layout({ label: m.settings_layout_label() })}</li>
 			<li>{m.a11y_setting_session({ label: m.settings_session_label() })}</li>

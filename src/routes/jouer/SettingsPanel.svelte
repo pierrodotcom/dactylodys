@@ -7,12 +7,13 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { calmDown, type CalmChange } from '$lib/state/calm';
-	import { SESSION_LENGTHS } from '$lib/state/profile';
+	import { KEYBOARD_COLORS, SESSION_LENGTHS } from '$lib/state/profile';
 	import type {
 		AgeBand,
 		AmbiencePreference,
 		ErrorPolicyPreference,
 		HandGuidePreference,
+		KeyboardColors,
 		MotionPreference,
 		SessionLength,
 		Settings,
@@ -74,6 +75,14 @@
 		{ value: 'always', label: m.settings_hand_always() },
 		{ value: 'off', label: m.settings_hand_off() }
 	];
+	const COLORS_LABELS: Readonly<Record<KeyboardColors, () => string>> = {
+		all: m.settings_keyboard_colors_all,
+		finger: m.settings_keyboard_colors_finger
+	};
+	const COLORS_OPTIONS = KEYBOARD_COLORS.map((colors) => ({
+		value: colors,
+		label: COLORS_LABELS[colors]()
+	}));
 	const SCALE_OPTIONS = [
 		{ value: 'md', label: m.settings_scale_md() },
 		{ value: 'lg', label: m.settings_scale_lg() },
@@ -313,6 +322,15 @@
 				options={HAND_OPTIONS}
 				value={settings.handGuide}
 				onchange={(value) => change({ handGuide: value as HandGuidePreference })}
+			/>
+			<ChoiceGroup
+				layout="row"
+				legend={m.settings_keyboard_colors_label()}
+				name="setting-keyboard-colors"
+				options={COLORS_OPTIONS}
+				value={settings.keyboardColors}
+				hint={adult ? m.settings_keyboard_colors_hint() : undefined}
+				onchange={(value) => change({ keyboardColors: value as KeyboardColors })}
 			/>
 			{#if adult}
 				<ChoiceGroup

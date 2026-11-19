@@ -183,26 +183,42 @@ export function withNothingKeptOpen(profile: Profile): Profile {
 	return withWorldPolicy({ ...profile, keptOpenLessonIds: [] });
 }
 
+/** What a profile becomes once migrated from version 16 or older: every key keeps its colour. */
+export function withEveryKeyColoured(profile: Profile): Profile {
+	return { ...profile, settings: { ...profile.settings, keyboardColors: 'all' } };
+}
+
+/** The record version 16 of the app stored: the same profile without the colours of the keyboard. */
+export function asVersion16(profile: Profile): Record<string, unknown> {
+	const settings: Record<string, unknown> = { ...profile.settings };
+	delete settings['keyboardColors'];
+	return { ...profile, schemaVersion: 16, settings };
+}
+
 /**
  * What a profile becomes once migrated from version 15 or older: a session of the usual length,
  * and the worlds deciding how a mistake is handled, unless the adult had chosen Backspace.
  */
 export function withWorldPolicy(profile: Profile): Profile {
 	const errorPolicy = profile.settings.errorPolicy === 'backspace' ? 'backspace' : 'world';
-	return { ...profile, settings: { ...profile.settings, sessionLength: 'normal', errorPolicy } };
+	return withEveryKeyColoured({
+		...profile,
+		settings: { ...profile.settings, sessionLength: 'normal', errorPolicy }
+	});
 }
 
 /**
- * The record version 15 of the app stored: the same profile without the length of a session, and
- * with the two choices the adult had then for the mistakes (the game waits, or Backspace).
+ * The record version 15 of the app stored: version 16 without the length of a session, and with
+ * the two choices the adult had then for the mistakes (the game waits, or Backspace).
  */
 export function asVersion15(profile: Profile): Record<string, unknown> {
+	const stored = asVersion16(profile);
 	const settings: Record<string, unknown> = {
-		...profile.settings,
+		...(stored['settings'] as Record<string, unknown>),
 		errorPolicy: profile.settings.errorPolicy === 'backspace' ? 'backspace' : 'retry'
 	};
 	delete settings['sessionLength'];
-	return { ...profile, schemaVersion: 15, settings };
+	return { ...stored, schemaVersion: 15, settings };
 }
 
 /** The record version 14 of the app stored: version 15 without the lessons kept open. */

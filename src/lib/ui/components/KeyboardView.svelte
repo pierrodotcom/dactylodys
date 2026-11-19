@@ -8,6 +8,7 @@
 		KeyPress,
 		LayoutDefinition
 	} from '$lib/keyboard/types';
+	import type { KeyboardColors } from '$lib/state/types';
 	import type { Attachment } from 'svelte/attachments';
 	import HandGuide from './HandGuide.svelte';
 	import { homeKeyCodes, modifierCodes } from './key-labels';
@@ -20,6 +21,12 @@
 		target: KeyPress | null;
 		wrongCode: KeyCode | null;
 		showFingers: boolean;
+		/**
+		 * With `showFingers`, which keys keep the colour of their finger (ADR-075, choice 14): every
+		 * key, or only those of the finger that presses the key to type and of the one on its
+		 * modifier, the others plain. Their place and the hand still say the finger.
+		 */
+		colors?: KeyboardColors | undefined;
 		/** Further keys to highlight like the target, e.g. the new keys of a lesson. */
 		marked?: readonly KeyCode[];
 		/** Hands drawn over the keys, showing these presses in turn; `null`: no hands. */
@@ -53,6 +60,7 @@
 		target,
 		wrongCode,
 		showFingers,
+		colors = 'all',
 		marked = [],
 		hands = null,
 		still = false,
@@ -92,6 +100,12 @@
 	const fadedKeys = $derived(new Set(faded));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
 	const modifiers = $derived(new Set(target === null ? [] : modifierCodes(target, fingering)));
+	// The fingers whose keys keep their colour; `null`: every finger.
+	const colouredFingers = $derived.by(() => {
+		if (colors === 'all') return null;
+		const pressed = target === null ? [] : [target.code, ...modifiers];
+		return new Set(pressed.map((code) => fingerForKey(fingering, code)));
+	});
 	// The sign AltGr writes, on the key to press only: « @ » on the key « à » of a PC (E-06).
 	const extra = $derived(target === null ? null : extraSign(layout, target));
 	const rows = $derived(
@@ -126,7 +140,10 @@
 						class="key"
 						data-code={key.code}
 						data-width={key.width}
-						data-finger={(showFingers && key.finger) || undefined}
+						data-finger={(showFingers &&
+							(colouredFingers === null || colouredFingers.has(key.finger)) &&
+							key.finger) ||
+							undefined}
 						data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
 						data-modifier={modifiers.has(key.code) || undefined}
 						data-wrong={wrongCode === key.code || undefined}

@@ -11,6 +11,7 @@ import type {
 	KeyCode,
 	LayoutDefinition
 } from '../keyboard/types';
+import type { KeyboardColors } from '../state/types';
 
 /** What the hand drawn on the keyboard shows during the exercise, decided by the lesson. */
 export interface GameGuide {
@@ -41,6 +42,11 @@ export interface GameSettings {
 	 * children (`withOlderVariant`). Absent: the usual bubbles.
 	 */
 	readonly ageBand?: AgeBand;
+	/**
+	 * The colours of the keyboard drawn (ADR-075, choice 14): `finger`, only the keys of the finger
+	 * that types keep their colour. Absent: every key.
+	 */
+	readonly keyboardColors?: KeyboardColors;
 }
 
 export interface GameOutcome {
