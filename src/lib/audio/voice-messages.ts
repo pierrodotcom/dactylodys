@@ -4,8 +4,8 @@ import type { VoiceReminder } from './voice-texts';
  * The messages of the interface the voice says (audit P-12), in the order of their use to a child
  * who reads little: the questions of Floup and his answers, the result of a play, the request of the
  * companion, the break, the check of the keyboard, the help about Caps Lock. A message is said only
- * as it is written: one with a parameter cannot be recorded once for all, so its screen shows a
- * sentence of its own for the voice (`*_spoken`).
+ * as it is written: one with a parameter cannot be recorded once for all, so the voice says a
+ * sentence of its own beside it, without the parameter (`*_spoken`).
  *
  * `/dev/voix` and `tools/voice/import.js` read them here, from the messages of the language: what
  * the page asks to record, what the tool keeps and what the screens say are the same sentences.
