@@ -201,8 +201,8 @@ describe('azerty-decouverte', () => {
 			const picked = world.lessons.filter((lesson) => lesson !== tour).flatMap((l) => l.words);
 			expect([...(tour?.words ?? [])].sort()).toEqual([...new Set(picked)].sort());
 		}
-		// One sentence for every tour: a single recording for the voice.
-		expect(new Set(tours.map((tour) => tour.intro)).size).toBe(1);
+		// A sentence of its own for every tour: the voice records one text per lesson.
+		expect(new Set(tours.map((tour) => tour.intro)).size).toBe(tours.length);
 	});
 
 	it('reviews a key as weak exactly where the report of the adult space calls it fragile', () => {

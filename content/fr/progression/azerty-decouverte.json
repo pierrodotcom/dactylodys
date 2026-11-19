@@ -263,7 +263,7 @@
 				{
 					"id": "fr.lesson.grand-tour-dinosaures",
 					"title": "La balade des dinos",
-					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"intro": "Toutes les touches du pays des dinosaures reviennent, et plus souvent celles qui te résistent.",
 					"newChars": [],
 					"words": [
 						"je",
@@ -422,7 +422,7 @@
 				{
 					"id": "fr.lesson.grand-tour-cuisine",
 					"title": "Le grand festin",
-					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"intro": "Toutes les touches de la cuisine reviennent, et plus souvent celles qui te résistent.",
 					"newChars": [],
 					"words": [
 						"qui",
@@ -550,7 +550,7 @@
 				{
 					"id": "fr.lesson.grand-tour-espace",
 					"title": "La ronde des planètes",
-					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"intro": "Toutes les touches du voyage dans les étoiles reviennent, et plus souvent celles qui te résistent.",
 					"newChars": [],
 					"words": [
 						"à",
@@ -654,7 +654,7 @@
 				{
 					"id": "fr.lesson.grand-tour-animaux",
 					"title": "La visite du zoo",
-					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"intro": "Toutes les touches du zoo reviennent, et plus souvent celles qui te résistent.",
 					"newChars": [],
 					"words": ["garçon", "glaçon", "voilà", "kiwi", "clown", "wapiti", "zoo", "zéro", "onze"],
 					"mix": {
@@ -801,7 +801,7 @@
 				{
 					"id": "fr.lesson.grand-tour-vehicules",
 					"title": "Le tour de piste",
-					"intro": "Toutes les touches de ce monde reviennent, et plus souvent celles qui te résistent.",
+					"intro": "Toutes les touches du circuit reviennent, et plus souvent celles qui te résistent.",
 					"newChars": [],
 					"words": [],
 					"mix": {
