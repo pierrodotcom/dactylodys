@@ -3,7 +3,12 @@
 	import { AMBIENCE_IDS } from '$lib/audio/ambience';
 	import { AGE_BANDS } from '$lib/engine/progression/banks';
 	import { toGraphemes } from '$lib/engine/graphemes';
-	import { LAYOUT_IDS, type LayoutId } from '$lib/keyboard/layout-ids';
+	import {
+		FINGERING_PROFILE_IDS,
+		LAYOUT_IDS,
+		type FingeringProfileId,
+		type LayoutId
+	} from '$lib/keyboard/layout-ids';
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { calmDown, type CalmChange } from '$lib/state/calm';
@@ -25,7 +30,7 @@
 	import ChoiceGroup from '$lib/ui/components/ChoiceGroup.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import TargetText from '$lib/ui/components/TargetText.svelte';
-	import { AMBIENCE_LABELS, LAYOUT_LABELS } from './labels';
+	import { AMBIENCE_LABELS, FINGERING_LABELS, LAYOUT_LABELS } from './labels';
 	import { PLAY_RULES } from './play-rules';
 
 	interface Props {
@@ -36,8 +41,8 @@
 		backLabel?: string;
 		/**
 		 * The settings only the adult chooses (the length of a session, Backspace, the keys that fade,
-		 * the keyboard layout), shown in the adult space only: a child who clicks there changes how
-		 * the game teaches.
+		 * the keyboard layout, the fingering), shown in the adult space only: a child who clicks there
+		 * changes how the game teaches.
 		 */
 		adult?: boolean;
 		onchange: (patch: Partial<Settings>) => void;
@@ -133,6 +138,10 @@
 	};
 	const AGE_OPTIONS = AGE_BANDS.map((band) => ({ value: band, label: AGE_LABELS[band]() }));
 	const LAYOUT_OPTIONS = LAYOUT_IDS.map((id) => ({ value: id, label: LAYOUT_LABELS[id]() }));
+	const FINGERING_OPTIONS = FINGERING_PROFILE_IDS.map((id) => ({
+		value: id,
+		label: FINGERING_LABELS[id]()
+	}));
 	const sample = toGraphemes(m.settings_sample_text());
 	const CALM_BUTTON_ID = 'settings-calm-button';
 
@@ -143,6 +152,8 @@
 	/** The three settings as they were before "Calm everything", while they can be given back. */
 	let beforeCalm = $state.raw<Partial<Settings> | null>(null);
 	let restored = $state(false);
+	/** The adult changed the fingering on this screen: one sentence says what it does to the child. */
+	let fingeringChanged = $state(false);
 
 	function calmEverything() {
 		const { patch, changes } = calmDown(settings);
@@ -360,6 +371,29 @@
 					hint={m.settings_layout_hint()}
 					onchange={(value) => change({ layoutId: value as LayoutId })}
 				/>
+				<ChoiceGroup
+					layout="row"
+					legend={m.settings_fingering_label()}
+					name="setting-fingering"
+					options={FINGERING_OPTIONS}
+					value={settings.fingeringProfileId}
+					hint={m.settings_fingering_hint()}
+					onchange={(value) => {
+						fingeringChanged = true;
+						change({ fingeringProfileId: value as FingeringProfileId });
+					}}
+				/>
+				<!--
+					Right under the choice, where the adult acts: what a change of fingering does. Always on the
+					page, empty until then, so that a screen reader says it when it comes; the page keeps one
+					status, the one that says the setting is kept.
+				-->
+				<div class="line">
+					<div class="name"></div>
+					<p class="about note" aria-live="polite" data-fingering-changed>
+						{fingeringChanged ? m.settings_fingering_changed() : ''}
+					</p>
+				</div>
 			{/if}
 		</section>
 
@@ -464,9 +498,13 @@
 		color: var(--dd-color-text-secondary);
 	}
 
+	.status,
+	.note {
+		font-weight: var(--dd-font-weight-bold);
+	}
+
 	.status {
 		min-block-size: calc(var(--dd-font-size-base) * 1.6);
-		font-weight: var(--dd-font-weight-bold);
 	}
 
 	.error {
