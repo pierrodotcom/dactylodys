@@ -56,6 +56,7 @@ Il ne dit pas si un enfant doit passer au clavier : cette décision reste celle 
 ## Limites connues et suites prévues
 
 - Le jeu existe en français, pour les claviers AZERTY de France. D'autres langues et dispositions sont prévues.
+- Le clavier Mac n'a pas encore été vérifié sur un vrai Mac.
 - Seul le doigté à dix doigts est proposé. Un doigté simplifié, à quatre ou six doigts, est à l'étude.
 - Une dictée, pour taper sans avoir à lire le modèle, est à l'étude.
 - Il se joue avec un vrai clavier ; il n'est pas jouable sans la vue.

@@ -52,6 +52,12 @@ describe('what the accessibility page claims', () => {
 		}
 	});
 
+	it('says that the Mac keyboard was not tried on a real Mac, among the known limits', () => {
+		const limits = page.slice(page.indexOf('a11y-limits'), page.indexOf('a11y-ongoing'));
+		expect(messages['a11y_limit_mac'], 'a11y_limit_mac').toBeTruthy();
+		expect(limits).toContain('m.a11y_limit_mac()');
+	});
+
 	it('lists the known defects that are being corrected', () => {
 		for (const key of [
 			'a11y_limit_tab',
