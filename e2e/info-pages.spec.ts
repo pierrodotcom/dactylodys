@@ -275,11 +275,48 @@ test.describe('a page for adults opened from the adult space', () => {
 	test('meets the gate again once the adult has left the adult space', async ({ page }) => {
 		await openAdultSpace(page);
 		await adultLink(page, message('info_link_accessibility')).click();
+		// The way out of the page for adults, not the one of the adult space still on screen.
+		await expect(heading(page, message('info_link_accessibility'))).toBeVisible();
 		await wayOut(page).click();
 		await expect(page.locator('[data-adult-home]')).toBeVisible();
 
 		await wayOut(page).click();
 		await expect(page).toHaveURL(/\/jouer$/);
+		await page.goBack();
+		await expect(page).toHaveURL(/\/adulte$/);
+		await expect(page.locator('[data-gate-answer]')).toBeVisible();
+		await expect(page.locator('[data-adult-home]')).toHaveCount(0);
+	});
+
+	/*
+	 * A navigation started while another one is on its way runs no `beforeNavigate` (SvelteKit): an
+	 * adult who leaves while a page for adults is still opening (a slow machine) did not close the
+	 * space, and the Back button of the browser showed it again without the gate (ADR-087).
+	 */
+	test('meets the gate again when the adult left while a page for adults was still opening', async ({
+		page
+	}) => {
+		await openAdultSpace(page);
+		let release = () => {};
+		const held = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		let holding = true;
+		// The code of the first page to open next is held on its way, as on a slow machine.
+		await page.route('**/_app/immutable/nodes/**', async (route) => {
+			if (holding) {
+				holding = false;
+				await held;
+			}
+			await route.continue();
+		});
+		await adultLink(page, message('info_link_accessibility')).click();
+		await expect(page.locator('[data-adult-home]')).toBeVisible();
+		await expect(wayOut(page)).toHaveText(message('adult_back_to_players'));
+		await wayOut(page).click();
+		await expect(page).toHaveURL(/\/jouer$/);
+		release();
+
 		await page.goBack();
 		await expect(page).toHaveURL(/\/adulte$/);
 		await expect(page.locator('[data-gate-answer]')).toBeVisible();

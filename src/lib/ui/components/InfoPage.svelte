@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { navigating } from '$app/state';
 	import { m } from '$lib/paraglide/messages.js';
 	import { adultSpace, type InfoPageId } from '$lib/ui/info-pages';
 	import InfoLinks from './InfoLinks.svelte';
@@ -16,7 +17,9 @@
 	let { id, title, children }: Props = $props();
 
 	// Opened from the adult space, the page leads back to it; from anywhere else, to the home page.
-	const back = adultSpace.isOpen()
+	// The page is made while the navigation that brings it is on its way: `navigating` says where
+	// the visit comes from (nothing when the page is loaded).
+	const back = adultSpace.arrive(navigating.from?.route.id ?? null)
 		? { label: m.info_back(), onclick: () => void goto(resolve('/adulte')) }
 		: { label: m.info_back_home(), onclick: () => void goto(resolve('/')) };
 
