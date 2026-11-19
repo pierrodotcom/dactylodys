@@ -240,6 +240,11 @@ test.describe('adult space', () => {
 		await button(page, message('adult_back_to_players')).click();
 		await enterAdultSpace(page);
 		await expect(page.locator('[data-gate-words]')).toHaveCount(0);
+		// A password manager may fill it in: a way in without reading a number (E-09).
+		await expect(page.locator('[data-adult-code]')).toHaveAttribute(
+			'autocomplete',
+			'current-password'
+		);
 		await typeInto(page, '[data-adult-code]', '0000');
 		await expect(page.getByText(message('adult_code_wrong'))).toBeVisible();
 		await typeInto(page, '[data-adult-code]', CODE);
