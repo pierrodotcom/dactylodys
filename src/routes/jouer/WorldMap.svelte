@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
+	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { ProgressionDefinition } from '$lib/engine/progression/types';
 	import type { Profile } from '$lib/state/types';
 	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/ui/components/Button.svelte';
 	import Companion from '$lib/ui/components/Companion.svelte';
+	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
 	import Stars from '$lib/ui/components/Stars.svelte';
 	import TrophyArt from '$lib/ui/companion/TrophyArt.svelte';
@@ -27,6 +29,11 @@
 		progression: ProgressionDefinition;
 		/** The key the companion asks help for, as named to the child; `null`: no help quest. */
 		helpKey: string | null;
+		/**
+		 * Says the request of the companion, on demand, once it is recorded (audit P-12): its own
+		 * sentence, which names no key, so that one recording does for every key.
+		 */
+		voice: VoicePlayer;
 		onopen: (lessonId: string) => void;
 		onhelp: () => void;
 		/** Opens the travel notebook; absent when the progression has no story. */
@@ -42,6 +49,7 @@
 		profile,
 		progression,
 		helpKey,
+		voice,
 		onopen,
 		onhelp,
 		onstory,
@@ -154,6 +162,7 @@
 			{/if}
 			{#if asking && helpKey !== null}
 				<section class="help" aria-labelledby="help-ask" {@attach revealInView}>
+					<ListenButton text={m.play_help_ask_spoken()} player={voice} />
 					<p id="help-ask" class="ask">{m.play_help_ask({ key: helpKey })}</p>
 					<div class="help-actions">
 						<Button onclick={onhelp}>{m.play_help_yes()}</Button>

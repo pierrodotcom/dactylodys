@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SoundPlayer } from '$lib/audio';
+	import type { VoicePlayer } from '$lib/audio/voice-types';
 	import type { StarCount } from '$lib/engine/progression/types';
 	import type { RewardDefinition } from '$lib/engine/rewards';
 	import { resultPlan, resultSteps, type PlayFacts } from './lesson-outcome';
@@ -25,6 +26,8 @@
 		/** Calm motion: the stars fade in, no confetti. */
 		still: boolean;
 		sounds: SoundPlayer;
+		/** Says the sentences of the result, on demand, once they are recorded. */
+		voice: VoicePlayer;
 		/** What was just earned, in the order of the catalogue: one step each. */
 		rewards: readonly RewardDefinition[];
 		/** Identifiers of the items the companion wears now. */
@@ -59,6 +62,7 @@
 		worldLessons,
 		still,
 		sounds,
+		voice,
 		rewards,
 		wornIds,
 		askName,
@@ -126,6 +130,7 @@
 			{worldLessons}
 			{still}
 			{sounds}
+			{voice}
 			{onnext}
 			{onreplay}
 			{onmap}

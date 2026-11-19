@@ -51,5 +51,5 @@
 {/snippet}
 
 {#snippet scene(view: GameView)}
-	<Scene {view} {decor} />
+	<Scene {view} {decor} voice={props.voice} />
 {/snippet}
