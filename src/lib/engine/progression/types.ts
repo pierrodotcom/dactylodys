@@ -252,9 +252,9 @@ export interface HandGuideRules {
 	readonly newKeysUntil: number;
 	/**
 	 * Milliseconds without a key after which a child who hesitates is helped: in the new-keys mode
-	 * the hand shows the expected key anyway, in every mode a key that faded lights again (audit
-	 * P-07). The shortest wait when the three rules below follow the time of the child. Absent or
-	 * 0: never.
+	 * the hand shows the expected key anyway, and a key that faded lights again, with or without
+	 * the hand (audit P-07). The shortest wait when the three rules below follow the time of the
+	 * child. Absent or 0: never.
 	 */
 	readonly hesitationMs?: number;
 	/**
