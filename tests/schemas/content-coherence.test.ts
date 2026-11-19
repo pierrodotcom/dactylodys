@@ -45,8 +45,11 @@ const TEXTS_FILE = 'content/fr/texts/base.json';
 const LINE_BREAK = String.fromCharCode(10);
 const TEXT_LINES = { min: 2, max: 5 };
 const MIN_TEXTS_PER_LESSON = 2;
-/** The addresses of the texts are invented, on a domain reserved for examples. */
-const EXAMPLE_ADDRESS = /^[a-z0-9.-]+@(exemple\.org|exemple\.com|example\.org)$/;
+/**
+ * The addresses of the texts are invented, under `.test`: a name reserved for tests (RFC 6761),
+ * which nobody can own, read like a French word and asks no other key (audit C-11).
+ */
+const EXAMPLE_ADDRESS = /^[a-z0-9.-]+@[a-z0-9-]+\.test$/;
 const REWARDS_FILE = 'content/fr/rewards/azerty-decouverte.json';
 const HELP_QUEST_FILE = 'content/common/help-quest.json';
 const CONDITION_KINDS = [
@@ -511,7 +514,7 @@ describe('useful texts and progression together', () => {
 		HEAVY_PROPERTY_TIMEOUT_MS
 	);
 
-	it('writes every e-mail address on a domain reserved for examples, never a real one', () => {
+	it('writes every e-mail address under a name reserved for tests, never a real one', () => {
 		const addresses = texts.texts.flatMap((entry) =>
 			entry.lines.flatMap((line) => line.split(' ').filter((token) => token.includes('@')))
 		);

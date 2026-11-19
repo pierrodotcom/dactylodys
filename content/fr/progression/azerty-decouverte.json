@@ -375,7 +375,7 @@
 					"title": "Le gâteau farfelu",
 					"intro": "Ton auriculaire gauche, le plus petit doigt, se pose sur Q et monte sur A ; ton annulaire droit monte sur O.",
 					"steps": [
-						{ "char": "a", "text": "On se pose sur Q, tout à gauche." },
+						{ "char": "a", "text": "Q est tout à gauche, rangée du milieu." },
 						{ "char": "a", "text": "A est juste au-dessus de Q." },
 						{ "char": "o", "text": "O est juste au-dessus de L." }
 					],
@@ -958,7 +958,7 @@
 				{
 					"id": "fr.lesson.message-t-rex",
 					"title": "Un mot pour le T-rex",
-					"intro": "Après chaque Entrée, ramène ton auriculaire droit sur M, sa place.",
+					"intro": "Après chaque Entrée, ramène ta main droite à sa place.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -974,7 +974,7 @@
 				{
 					"id": "fr.lesson.recette-quiche",
 					"title": "La recette de la quiche",
-					"intro": "Une ligne, puis Entrée : ton auriculaire droit y va sans que tu regardes.",
+					"intro": "Une ligne, puis Entrée : ton doigt y va sans que tu regardes.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -1006,7 +1006,7 @@
 				{
 					"id": "fr.lesson.carte-lune",
 					"title": "Une carte de la Lune",
-					"intro": "Pour la majuscule d'une ligne, tiens Maj avec l'auriculaire de l'autre main.",
+					"intro": "Pour la majuscule d'une ligne, tiens Maj avec l'autre main.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -1054,7 +1054,7 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["12345", "54321", "123 45", "543 21", "12 345"],
+					"warmUp": ["12 21 123", "45 54 345"],
 					"warmUpReserve": {
 						"keepFirst": true
 					}
@@ -1075,7 +1075,7 @@
 					"groupCount": 8,
 					"targetLength": 35,
 					"groupLength": [4, 6],
-					"warmUp": ["67890", "09876", "678 90", "098 76", "67 890"],
+					"warmUp": ["67 76 678", "90 09 890"],
 					"warmUpReserve": {
 						"keepFirst": true
 					}
@@ -1107,7 +1107,7 @@
 				{
 					"id": "fr.lesson.reparer-message",
 					"title": "Réparer un message",
-					"intro": "Une faute est déjà écrite au bout : ton auriculaire droit l'efface avec Retour arrière, puis tu continues.",
+					"intro": "Une faute est déjà écrite au bout de la ligne : ton auriculaire droit l'efface avec Retour arrière, puis tu continues.",
 					"steps": [
 						{ "char": "\b", "text": "Retour arrière est en haut, tout à droite." },
 						{ "char": "\b", "text": "Il efface la faute, puis tu continues." }

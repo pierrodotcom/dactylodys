@@ -121,7 +121,7 @@
 			"lessonId": "fr.lesson.carte-lune",
 			"lines": [
 				"Bonjour de la Lune !",
-				"Ici, le café flotte.",
+				"Ici, je saute très haut.",
 				"Il fait froid mais beau.",
 				"Bisous de l'espace !"
 			],
@@ -233,14 +233,14 @@
 		{
 			"id": "fr.text.adresse-dino",
 			"lessonId": "fr.lesson.adresse-du-dino",
-			"lines": ["Mon adresse :", "dino@exemple.org", "Réponds-moi vite !"],
+			"lines": ["Mon adresse :", "dino@poste.test", "Réponds-moi vite !"],
 			"level": 1,
 			"review": "agent"
 		},
 		{
 			"id": "fr.text.club-yak",
 			"lessonId": "fr.lesson.adresse-du-dino",
-			"lines": ["Club des amis du yak,", "écris-nous à :", "yak@exemple.org"],
+			"lines": ["Club des amis du yak,", "écris-nous à :", "yak@zoo.test"],
 			"level": 1,
 			"review": "agent"
 		},
@@ -250,7 +250,7 @@
 			"lines": [
 				"La poste des dinos",
 				"change d'adresse :",
-				"poste@exemple.com",
+				"poste@dinos.test",
 				"Merci et à bientôt !"
 			],
 			"level": 2,

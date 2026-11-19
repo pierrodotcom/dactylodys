@@ -10,6 +10,8 @@
 [orthographe] oeil coeur soeur
 [adulte-sentiments] amoureux chéri amant désir amour baiser
 [marque-prenom] charlotte thermos jeep solex vespa diesel kleenex mobylette
+# « queue » is left out as a word alone: the texts and the story keep it, where a diplodocus or a comet
+# makes its sense plain (audit C-01).
 [homographe-gênant] queue
 [moqueur-age] gros vieux ridicule
 [violence-armes] couteau

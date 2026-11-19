@@ -173,7 +173,7 @@
 			"worldId": "fr.world.poste",
 			"opening": "Le carnet est plein. Ton dino ouvre une poste pour écrire à ses amis.",
 			"openingArt": "post-opening",
-			"ending": "Toutes les lettres sont parties. Les réponses, c'est toi qui les écris.",
+			"ending": "Toutes les lettres sont parties. Maintenant, tu sais écrire les tiennes.",
 			"endingArt": "post-ending",
 			"lessons": [
 				{
