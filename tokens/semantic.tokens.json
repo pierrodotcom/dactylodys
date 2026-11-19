@@ -2988,6 +2988,19 @@
 			"$value": "80rem"
 		}
 	},
+	"system-color": {
+		"$description": "The colours of the system in a forced-colours mode (the contrast themes of Windows): the palette the person chose, never a colour of the design. Read only under @media (forced-colors: active) (E-21).",
+		"$type": "systemColor",
+		"canvas": {
+			"$value": "Canvas"
+		},
+		"canvas-text": {
+			"$value": "CanvasText"
+		},
+		"highlight": {
+			"$value": "Highlight"
+		}
+	},
 	"print": {
 		"$description": "A printed page: the guide for adults fits on one A4 sheet, both sides.",
 		"page-margin": {

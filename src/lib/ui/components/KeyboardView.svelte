@@ -456,4 +456,12 @@
 		outline-color: var(--dd-color-oops-outline);
 		outline-offset: 0;
 	}
+
+	/* Forced colours of the system: the key to press keeps a frame in the colour of a selection (E-21). */
+	@media (forced-colors: active) {
+		.key[data-target],
+		.key[data-modifier] {
+			outline-color: var(--dd-system-color-highlight);
+		}
+	}
 </style>
