@@ -1,5 +1,5 @@
 import type { SessionMetrics } from '../types';
-import { isDetour, learnedChars } from './definition';
+import { isDetour, isTour, learnedChars } from './definition';
 import type {
 	CharProgress,
 	CharSample,
@@ -148,8 +148,10 @@ export function isLessonPassed(
 /**
  * The first lesson is always open. A lesson on the way opens once the lesson on the way before it
  * is passed: a detour (`LessonDefinition.optional`) never holds the way. A detour opens once the
- * lesson just before it is passed. A lesson passed further on opens the whole way up to it: nothing
- * is to play again to go on, whatever order the lessons were in when the child passed them.
+ * lesson just before it is passed; a grand tour (`LessonDefinition.tour`), once the last lesson on
+ * the way of its world is, whatever the detours before it. A lesson passed further on opens the
+ * whole way up to it: nothing is to play again to go on, whatever order the lessons were in when
+ * the child passed them.
  *
  * A world that the adult opened ahead (`openedWorldIds`) has its first lesson open, and only that
  * one; `keptOpenLessonIds` are the lessons that were open when the order of the lessons changed
@@ -171,11 +173,12 @@ export function isLessonUnlocked(
 	if (keptOpenLessonIds.includes(lessonId)) return true;
 	const passed = (lesson: LessonDefinition | undefined) =>
 		lesson !== undefined && isLessonPassed(progression.rules, progress, lesson.id);
-	if (passed(lessons[index - 1])) return true;
+	const lesson = lessons[index] as LessonDefinition;
+	if (!isTour(lesson) && passed(lessons[index - 1])) return true;
 	// The lesson itself, or one further on: a lesson passed once stays open, and so does the way to it.
 	if (lessons.slice(index).some(passed)) return true;
-	if (isDetour(lessons[index] as LessonDefinition)) return false;
-	return passed(lessons.slice(0, index).findLast((lesson) => !isDetour(lesson)));
+	if (isDetour(lesson) && !isTour(lesson)) return false;
+	return passed(lessons.slice(0, index).findLast((candidate) => !isDetour(candidate)));
 }
 
 /**

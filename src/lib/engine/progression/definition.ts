@@ -4,11 +4,14 @@ import type {
 	ExerciseMix,
 	HandGuideRules,
 	LessonDefinition,
+	LessonTour,
 	LessonUnlock,
 	MasteryRules,
 	ProgressionDefinition,
 	ProgressionRules,
 	RepairRules,
+	TourKeyMastery,
+	TourRules,
 	WarmUpReserve,
 	WeakCharRules,
 	WordWarmUpRules,
@@ -169,6 +172,7 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 			'weakChars',
 			'phraseEnd',
 			'wholePhraseMinCount',
+			'tour',
 			...PACED_LENGTH_RULES
 		],
 		path
@@ -275,6 +279,11 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		fail(`${path}.wholePhraseMinCount`, 'expected rules.phraseEnd: a whole phrase ends with it');
 	}
 	const pacedLength = parsePacedLength(record, path);
+	const tour =
+		record['tour'] === undefined ? undefined : parseTourRules(record['tour'], `${path}.tour`);
+	if (tour !== undefined && keyboardFade === undefined) {
+		fail(`${path}.tour`, 'expected rules.keyboardFade: the weights of a tour follow the mastery');
+	}
 	return {
 		unlockAccuracy,
 		starThresholds: [thresholds[0] ?? 0, thresholds[1] ?? 0, thresholds[2] ?? 0],
@@ -298,8 +307,57 @@ function parseRules(value: unknown, path: string): ProgressionRules {
 		...(weakChars === undefined ? {} : { weakChars }),
 		...(phraseEnd === undefined ? {} : { phraseEnd }),
 		...(wholePhraseMinCount === undefined ? {} : { wholePhraseMinCount }),
-		...pacedLength
+		...pacedLength,
+		...(tour === undefined ? {} : { tour })
 	};
+}
+
+const TOUR_KEY_MASTERIES: readonly TourKeyMastery[] = ['acquired', 'learning', 'fragile'];
+
+function parseTourRules(value: unknown, path: string): TourRules {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['minWorldKeystrokes', 'keyWeights', 'scoreShare'], path);
+	const weights = expectRecord(record['keyWeights'], `${path}.keyWeights`);
+	rejectUnknown(weights, TOUR_KEY_MASTERIES, `${path}.keyWeights`);
+	const [acquired, learning, fragile] = TOUR_KEY_MASTERIES.map((name) =>
+		expectAtLeastOne(weights[name], `${path}.keyWeights.${name}`)
+	) as [number, number, number];
+	const scoreShare = expectRate(record['scoreShare'], `${path}.scoreShare`);
+	if (scoreShare <= 0) fail(`${path}.scoreShare`, 'expected a number above 0 and up to 1');
+	return {
+		minWorldKeystrokes: expectAtLeastOne(
+			record['minWorldKeystrokes'],
+			`${path}.minWorldKeystrokes`
+		),
+		keyWeights: { acquired, learning, fragile },
+		scoreShare
+	};
+}
+
+/**
+ * A grand tour names the world it ends, is a detour that brings nothing (no key, no unlock, no
+ * warm-up, no repair), and is made of words and phrases only: never a suite.
+ */
+function parseTour(
+	value: unknown,
+	lesson: LessonDefinition,
+	worldId: string,
+	rules: ProgressionRules,
+	path: string
+): LessonTour {
+	const record = expectRecord(value, path);
+	rejectUnknown(record, ['worldId'], path);
+	const tourWorldId = expectString(record['worldId'], `${path}.worldId`);
+	if (tourWorldId !== worldId) fail(`${path}.worldId`, `expected "${worldId}", the world it ends`);
+	if (rules.tour === undefined) fail(path, 'expected rules.tour: they say how a tour is made');
+	if (lesson.optional !== true) fail(path, 'a tour is a detour: expected "optional": true');
+	if (lesson.newChars.length > 0) fail(path, 'a tour brings no new character');
+	if (lesson.warmUp !== undefined || lesson.repair !== undefined) {
+		fail(path, 'a tour has neither a warm-up nor repairs');
+	}
+	if (lesson.mix.drills > 0)
+		fail(path, 'a tour is made of words and phrases: expected mix.drills 0');
+	return { worldId: tourWorldId };
 }
 
 function parsePacedLength(record: Record<string, unknown>, path: string): PacedLengthRules {
@@ -702,6 +760,7 @@ function parseLesson(
 	lessonIds: Set<string>,
 	language: string,
 	rules: ProgressionRules,
+	worldId: string,
 	path: string
 ): LessonDefinition {
 	const record = expectRecord(value, path);
@@ -721,7 +780,8 @@ function parseLesson(
 			'warmUp',
 			'warmUpReserve',
 			'repair',
-			'optional'
+			'optional',
+			'tour'
 		],
 		path
 	);
@@ -730,6 +790,8 @@ function parseLesson(
 		fail(`${path}.optional`, 'expected true or false');
 	}
 	const isDetour = optional === true;
+	// A tour asks what a detour brought only of the child who passed it: it does not know it.
+	const knowsDetours = isDetour && record['tour'] === undefined;
 	const id = expectId(record['id'], 'lesson', language, `${path}.id`);
 	if (lessonIds.has(id)) fail(`${path}.id`, `duplicate lesson id "${id}"`);
 	lessonIds.add(id);
@@ -764,7 +826,7 @@ function parseLesson(
 	if (max < min) fail(`${path}.groupLength[1]`, 'expected a value not below the minimum');
 
 	const known = knownChars(introduced);
-	if (isDetour) for (const char of introduced.detours) known.add(char);
+	if (knowsDetours) for (const char of introduced.detours) known.add(char);
 	const words: string[] = [];
 	expectArray(record['words'], `${path}.words`).forEach((raw, i) => {
 		const word = parseWord(raw, known, `${path}.words[${i}]`);
@@ -812,7 +874,7 @@ function parseLesson(
 			? undefined
 			: parseRepair(record['repair'], min, `${path}.repair`);
 
-	const lesson: LessonDefinition = {
+	const parsed: LessonDefinition = {
 		id,
 		title,
 		intro,
@@ -828,6 +890,10 @@ function parseLesson(
 		...(repair === undefined ? {} : { repair }),
 		...(isDetour ? { optional: true as const } : {})
 	};
+	const lesson: LessonDefinition =
+		record['tour'] === undefined
+			? parsed
+			: { ...parsed, tour: parseTour(record['tour'], parsed, worldId, rules, `${path}.tour`) };
 	checkGeneratable(lesson, known, rules.newCharMinCount, path);
 	if (warmUp !== undefined && warmUp.length > groupCount) {
 		fail(`${path}.warmUp`, `expected at most ${groupCount} groups (groupCount)`);
@@ -873,11 +939,16 @@ function parseWorld(
 	const rawLessons = expectArray(record['lessons'], `${path}.lessons`);
 	if (rawLessons.length === 0) fail(`${path}.lessons`, 'expected at least one lesson');
 	const lessons = rawLessons.map((lesson, i) =>
-		parseLesson(lesson, introduced, lessonIds, language, rules, `${path}.lessons[${i}]`)
+		parseLesson(lesson, introduced, lessonIds, language, rules, id, `${path}.lessons[${i}]`)
 	);
 	if (lessons[0]?.optional === true) {
 		fail(`${path}.lessons[0].optional`, 'a world starts with a lesson on the way, not a detour');
 	}
+	lessons.forEach((lesson, i) => {
+		if (lesson.tour !== undefined && i !== lessons.length - 1) {
+			fail(`${path}.lessons[${i}].tour`, 'a tour ends its world: expected its last lesson');
+		}
+	});
 	return {
 		id,
 		title: expectString(record['title'], `${path}.title`),
@@ -978,6 +1049,32 @@ export function isDetour(lesson: LessonDefinition): boolean {
 	return lesson.optional === true;
 }
 
+/** A grand tour: the detour that ends a world and goes over its keys (`LessonDefinition.tour`). */
+export function isTour(lesson: LessonDefinition): boolean {
+	return lesson.tour !== undefined;
+}
+
+/** The grand tour of a world, when it has one. */
+export function tourOfWorld(
+	progression: ProgressionDefinition,
+	worldId: string
+): LessonDefinition | undefined {
+	return progression.worlds
+		.find((world) => world.id === worldId)
+		?.lessons.find((lesson) => lesson.tour?.worldId === worldId);
+}
+
+/**
+ * The keys a world brings on the way, in their order: the new characters of its lessons that are
+ * not detours. What every child of the world has learned there, whatever the detours taken.
+ */
+export function wayCharsOfWorld(progression: ProgressionDefinition, worldId: string): string[] {
+	const world = progression.worlds.find((candidate) => candidate.id === worldId);
+	return (world?.lessons ?? [])
+		.filter((lesson) => !isDetour(lesson))
+		.flatMap((lesson) => lesson.newChars);
+}
+
 /**
  * Rank of a lesson among those on the way, from 1: the number the child reads. `null` for a
  * detour, which has none, and for a lesson the progression does not have.
@@ -996,7 +1093,8 @@ export function lessonNumber(progression: ProgressionDefinition, lessonId: strin
 /**
  * Characters known up to this lesson, in the order they are brought. `detours`: whether the
  * characters of the detours before it count; those of a detour always count in that detour and in
- * the ones after it.
+ * the ones after it, except in a grand tour, which counts on them only for a child who passed
+ * them (`detourChars`).
  */
 function charsUpTo(
 	progression: ProgressionDefinition,
@@ -1010,8 +1108,9 @@ function charsUpTo(
 			for (const char of lesson.newChars) brought.push({ char, detour: isDetour(lesson) });
 			if (lesson.unlocks.includes('uppercase')) uppercase = true;
 			if (lesson.id === lessonId) {
+				const inDetour = isDetour(lesson) && !isTour(lesson);
 				const learned = brought
-					.filter((entry) => detours || isDetour(lesson) || !entry.detour)
+					.filter((entry) => detours || inDetour || !entry.detour)
 					.map((entry) => entry.char);
 				if (!uppercase) return learned;
 				const present = new Set(learned);
@@ -1024,7 +1123,8 @@ function charsUpTo(
 
 /**
  * Characters every child knows at this lesson, this lesson included. What a detour brings is
- * known in that detour and in the detours after it only: a lesson on the way never counts on it.
+ * known in that detour and in the detours after it only: a lesson on the way never counts on it,
+ * and neither does a grand tour.
  */
 export function learnedChars(progression: ProgressionDefinition, lessonId: string): string[] {
 	return charsUpTo(progression, lessonId, false);

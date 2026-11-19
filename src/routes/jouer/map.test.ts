@@ -432,6 +432,79 @@ describe('detours on the map', () => {
 	});
 });
 
+describe('grand tours on the map (ADR-075, choice 3)', () => {
+	/** The second world ends with a detour x, then its grand tour t. */
+	const WITH_TOUR: ProgressionDefinition = {
+		...MANY_WORLDS,
+		worlds: MANY_WORLDS.worlds.map((world, index) =>
+			index !== 1
+				? world
+				: {
+						...world,
+						lessons: [
+							...world.lessons,
+							{ ...lessonOf('xx.lesson.2x'), optional: true as const },
+							{
+								...lessonOf('xx.lesson.2t'),
+								newChars: [],
+								optional: true as const,
+								tour: { worldId: world.id }
+							}
+						]
+					}
+		)
+	};
+	const flat = (layout: WorldMapLayout) => layout.worlds.flatMap((world) => world.lessons);
+	const TOUR = 'xx.lesson.2t';
+
+	it('places the tour at the end of its world, without a number, apart from the detours', () => {
+		const lessons = flat(layoutMap(WITH_TOUR, emptyProgress(), []));
+		expect(lessons.map((lesson) => lesson.number)).toEqual([1, 2, 3, 4, null, null, 5, 6]);
+		expect(lessons.map((lesson) => lesson.tour)).toEqual([
+			false,
+			false,
+			false,
+			false,
+			false,
+			true,
+			false,
+			false
+		]);
+		expect(lessons.find((lesson) => lesson.id === TOUR)?.detour).toBe(true);
+	});
+
+	it('opens once the way of its world is passed, its detour left aside', () => {
+		expect(lessonStatus(WITH_TOUR, passed(3), TOUR, [])).toBe('locked');
+		expect(lessonStatus(WITH_TOUR, passed(4), TOUR, [])).toBe('current');
+		expect(lessonStatus(WITH_TOUR, passed(4), 'xx.lesson.2x', [])).toBe('current');
+	});
+
+	it('is never proposed: neither by the companion, nor by "next lesson"', () => {
+		const wayDone = passedLessons(...MANY_IDS);
+		expect(layoutMap(WITH_TOUR, passed(4), []).focusId).toBe('xx.lesson.3a');
+		expect(layoutMap(WITH_TOUR, wayDone, []).focusId).toBe('xx.lesson.3b');
+		expect(nextLessonId(WITH_TOUR, 'xx.lesson.2b')).toBe('xx.lesson.3a');
+		// After the detour before it, the way goes on.
+		expect(nextLessonId(WITH_TOUR, 'xx.lesson.2x')).toBe('xx.lesson.3a');
+		expect(
+			followingLessonId(
+				WITH_TOUR,
+				passedLessons(...MANY_IDS.slice(0, 4), 'xx.lesson.2x'),
+				'xx.lesson.2x',
+				[]
+			)
+		).toBe('xx.lesson.3a');
+		// After the tour itself, the next world.
+		expect(nextLessonId(WITH_TOUR, TOUR)).toBe('xx.lesson.3a');
+	});
+
+	it('can be played again and again: once passed, it stays open, and done', () => {
+		const after = passedLessons(...MANY_IDS.slice(0, 4), TOUR);
+		expect(lessonStatus(WITH_TOUR, after, TOUR, [])).toBe('done');
+		expect(isOpenOnMap(layoutMap(WITH_TOUR, after, []), TOUR)).toBe(true);
+	});
+});
+
 describe('a world opened by the adult', () => {
 	const OPENED = ['xx.world.3'];
 
@@ -481,6 +554,7 @@ function mapOf(statuses: readonly (readonly LessonStatus[])[]): WorldMapLayout {
 					title: `Lesson ${number}`,
 					number,
 					detour: false,
+					tour: false,
 					status,
 					stars: 0,
 					side: 0

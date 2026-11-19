@@ -1,4 +1,4 @@
-import { isDetour } from '$lib/engine/progression/definition';
+import { isDetour, isTour } from '$lib/engine/progression/definition';
 import { isLessonUnlocked } from '$lib/engine/progression/progress';
 import type {
 	LessonDefinition,
@@ -47,9 +47,10 @@ function lessonsOf(progression: ProgressionDefinition): readonly LessonDefinitio
 
 /**
  * The lesson "next lesson" leads to: after a lesson on the way, the next one on the way (a detour
- * is never where the way goes on); after a detour, the lesson that follows it. A detour never
- * holds the child either: when the detour after it is still closed (`isOpen` says so), the way
- * goes on. `null` after the last one.
+ * is never where the way goes on); after a detour, the lesson that follows it, unless it is a
+ * grand tour, which is never proposed: the way goes on. A detour never holds the child either:
+ * when the detour after it is still closed (`isOpen` says so), the way goes on. `null` after the
+ * last one.
  */
 export function nextLessonId(
 	progression: ProgressionDefinition,
@@ -65,6 +66,7 @@ export function nextLessonId(
 	const next =
 		isDetour(lessons[index] as LessonDefinition) &&
 		following !== undefined &&
+		!isTour(following) &&
 		(!isDetour(following) || isOpen(following.id))
 			? following
 			: onTheWay;
@@ -153,6 +155,11 @@ export interface MapLesson {
 	readonly number: number | null;
 	/** A lesson nothing waits for (`LessonDefinition.optional`): shown as a way to go further. */
 	readonly detour: boolean;
+	/**
+	 * The grand tour of its world (`LessonDefinition.tour`), a detour too: shown at the end of its
+	 * world as a tour of the world, apart from the detours that go further.
+	 */
+	readonly tour: boolean;
 	readonly status: LessonStatus;
 	readonly stars: StarCount;
 	/** Which side of the path the lesson sits on; they alternate along the whole path. */
@@ -193,6 +200,7 @@ export function layoutMap(
 				title: lesson.title,
 				number: detour ? null : number,
 				detour,
+				tour: isTour(lesson),
 				status: lessonStatus(progression, progress, lesson.id, openedWorldIds, keptOpenLessonIds),
 				stars: lessonStars(progress, lesson.id),
 				side: place % 2 === 0 ? 1 : 0

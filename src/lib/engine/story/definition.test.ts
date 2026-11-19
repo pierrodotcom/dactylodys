@@ -332,4 +332,42 @@ describe('validateStory', () => {
 		});
 		expect(validateStory(story, PROGRESSION)).toHaveLength(6);
 	});
+
+	describe('a grand tour (ADR-075, choice 3)', () => {
+		const [one, two] = PROGRESSION.worlds as [
+			(typeof PROGRESSION.worlds)[number],
+			(typeof PROGRESSION.worlds)[number]
+		];
+		const tour = {
+			...(one.lessons[0] as (typeof one.lessons)[number]),
+			id: 'fr.lesson.tour',
+			newChars: [],
+			optional: true as const,
+			tour: { worldId: one.id }
+		};
+		const withTour = { ...PROGRESSION, worlds: [{ ...one, lessons: [...one.lessons, tour] }, two] };
+
+		it('tells nothing: it needs no line of its own', () => {
+			expect(validateStory(STORY, withTour)).toEqual([]);
+		});
+
+		it('reports a line given to it: it goes over a world already told', () => {
+			const story = storyWith((s) => {
+				const [first, second] = s.worlds as [
+					StoryDefinition['worlds'][number],
+					StoryDefinition['worlds'][number]
+				];
+				s.worlds = [
+					{
+						...first,
+						lessons: [...first.lessons, { lessonId: tour.id, line: 'Line t.', art: 'line-t' }]
+					},
+					second
+				];
+			});
+			expect(validateStory(story, withTour)).toEqual([
+				'lesson "fr.lesson.tour" is a grand tour: it has no line in the story'
+			]);
+		});
+	});
 });

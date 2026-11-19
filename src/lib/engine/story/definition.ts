@@ -177,8 +177,13 @@ export function validateStory(
 			problems.push(`world "${world.id}" has no opening and no ending in the story`);
 		}
 		for (const lesson of world.lessons) {
-			if (!toldLessons.has(lesson.id)) {
+			// A grand tour tells nothing (ADR-075, choice 3): it goes over a world already told.
+			const tour = lesson.tour !== undefined;
+			if (!tour && !toldLessons.has(lesson.id)) {
 				problems.push(`lesson "${lesson.id}" has no line in the story`);
+			}
+			if (tour && toldLessons.has(lesson.id)) {
+				problems.push(`lesson "${lesson.id}" is a grand tour: it has no line in the story`);
 			}
 		}
 	}

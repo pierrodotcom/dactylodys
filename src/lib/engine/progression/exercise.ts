@@ -12,6 +12,7 @@ import { pacedTargetLength } from './pace';
 import { detourChars, recentErrorRate } from './progress';
 import { repairStarts } from './repair';
 import { buildPatternSuite } from './suites';
+import { generateTourExercise } from './tour';
 import type {
 	DrillPatternRules,
 	Exercise,
@@ -361,6 +362,8 @@ export function generateExercise(
 ): Exercise {
 	const lesson = findLesson(progression, lessonId);
 	if (lesson === undefined) throw new RangeError(`Unknown lesson: ${lessonId}`);
+	// A grand tour goes over the keys of its world with words and phrases only (ADR-075, choice 3).
+	if (lesson.tour !== undefined) return generateTourExercise(progression, lesson, rng, context);
 
 	const { progress } = context;
 	// What a detour brought is asked of the child who passed it, and of no other.
