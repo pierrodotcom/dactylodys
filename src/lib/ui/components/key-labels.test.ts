@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadFingeringProfile, loadLayout } from '$lib/keyboard/registry';
-import { homeKeyCodes, keyLabel, modifierCodes, pressLabel } from './key-labels';
+import { colouredFingers, homeKeyCodes, keyLabel, modifierCodes, pressLabel } from './key-labels';
 
 const layout = await loadLayout('fr-fr-azerty-pc');
 const fingering = await loadFingeringProfile('ten-fingers-iso');
@@ -67,6 +67,35 @@ describe('modifierCodes', () => {
 
 	it('falls back to the left Shift key when the key has no finger', () => {
 		expect(modifierCodes({ code: 'Unknown', level: 'shift' }, fingering)).toEqual(['ShiftLeft']);
+	});
+});
+
+describe('colouredFingers', () => {
+	it('colours every key when the child keeps all the colours', () => {
+		expect(colouredFingers('all', { code: 'KeyF', level: 'base' }, fingering)).toBeNull();
+		expect(colouredFingers('all', null, fingering)).toBeNull();
+	});
+
+	it('colours only the keys of the finger that types with the soberer keyboard', () => {
+		expect(colouredFingers('finger', { code: 'KeyF', level: 'base' }, fingering)).toEqual(
+			new Set(['left-index'])
+		);
+		expect(colouredFingers('finger', { code: 'Space', level: 'base' }, fingering)).toEqual(
+			new Set(['right-thumb'])
+		);
+	});
+
+	it('adds the finger on Shift or AltGr, which presses too', () => {
+		expect(colouredFingers('finger', { code: 'KeyF', level: 'shift' }, fingering)).toEqual(
+			new Set(['left-index', 'right-pinky'])
+		);
+		expect(colouredFingers('finger', { code: 'Digit0', level: 'altgr' }, fingering)).toEqual(
+			new Set(['right-pinky', 'right-thumb'])
+		);
+	});
+
+	it('colours no key between two keys to type', () => {
+		expect(colouredFingers('finger', null, fingering)).toEqual(new Set());
 	});
 });
 

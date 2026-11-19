@@ -154,7 +154,7 @@ test.describe('game river', CHROMIUM_ONLY, () => {
 		await button(page, message('game_shared_resume')).click();
 
 		await expect(docked(page)).toHaveAttribute('data-art', OBJECT_ARTS[0]?.id ?? '');
-		await expect(docked(page).locator('.typed')).toHaveText(FIRST_CHAR);
+		await expect(scene(page)).toHaveAttribute('data-probe', '1');
 		await page.keyboard.type(FIRST_GROUP.slice(FIRST_CHAR.length));
 		await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 	});
@@ -263,7 +263,7 @@ test(
 
 		await expect(docked(page)).toHaveAttribute('data-art', OBJECT_ARTS[0]?.id ?? '');
 		await expect(docked(page)).toHaveAttribute('transform', AT_THE_DOCK);
-		await expect(docked(page).locator('.typed')).toHaveText(FIRST_CHAR);
+		await expect(scene(page)).toHaveAttribute('data-probe', '1');
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(
 			page.locator('.floater[data-role="caught"], .floater[data-role="collected"]')

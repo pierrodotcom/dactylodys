@@ -1,6 +1,13 @@
-import { modifierCodes } from '$lib/keyboard/fingering';
+import { fingerForKey, modifierCodes } from '$lib/keyboard/fingering';
 import { keyLegend, pressSign } from '$lib/keyboard/legend';
-import type { FingeringProfile, KeyCode, KeyPress, LayoutDefinition } from '$lib/keyboard/types';
+import type {
+	Finger,
+	FingeringProfile,
+	KeyCode,
+	KeyPress,
+	LayoutDefinition
+} from '$lib/keyboard/types';
+import type { KeyboardColors } from '$lib/state/types';
 
 const INDEX_FINGERS = ['left-index', 'right-index'] as const;
 
@@ -19,6 +26,22 @@ export function pressLabel(layout: LayoutDefinition, press: KeyPress): string | 
 }
 
 export { modifierCodes };
+
+/**
+ * The fingers whose keys keep their colour on the keyboard drawn (ADR-075, choice 14): every finger
+ * (`null`) with `all`; with `finger`, the one that presses the key to type and those on its
+ * modifiers, none between two keys.
+ */
+export function colouredFingers(
+	colors: KeyboardColors,
+	target: KeyPress | null,
+	fingering: FingeringProfile
+): ReadonlySet<Finger> | null {
+	if (colors === 'all') return null;
+	if (target === null) return new Set();
+	const pressed = [target.code, ...modifierCodes(target, fingering)];
+	return new Set(pressed.flatMap((code) => fingerForKey(fingering, code) ?? []));
+}
 
 /** Home keys marked on a real keyboard: the ones under the two index fingers (F and J on AZERTY). */
 export function homeKeyCodes(fingering: FingeringProfile): KeyCode[] {

@@ -11,7 +11,7 @@
 	import type { KeyboardColors } from '$lib/state/types';
 	import type { Attachment } from 'svelte/attachments';
 	import HandGuide from './HandGuide.svelte';
-	import { homeKeyCodes, modifierCodes } from './key-labels';
+	import { colouredFingers, homeKeyCodes, modifierCodes } from './key-labels';
 	import { keyName } from './names';
 
 	interface Props {
@@ -100,12 +100,7 @@
 	const fadedKeys = $derived(new Set(faded));
 	const homeKeys = $derived(new Set(homeKeyCodes(fingering)));
 	const modifiers = $derived(new Set(target === null ? [] : modifierCodes(target, fingering)));
-	// The fingers whose keys keep their colour; `null`: every finger.
-	const colouredFingers = $derived.by(() => {
-		if (colors === 'all') return null;
-		const pressed = target === null ? [] : [target.code, ...modifiers];
-		return new Set(pressed.map((code) => fingerForKey(fingering, code)));
-	});
+	const coloured = $derived(colouredFingers(colors, target, fingering));
 	// The sign AltGr writes, on the key to press only: « @ » on the key « à » of a PC (E-06).
 	const extra = $derived(target === null ? null : extraSign(layout, target));
 	const rows = $derived(
@@ -141,7 +136,8 @@
 						data-code={key.code}
 						data-width={key.width}
 						data-finger={(showFingers &&
-							(colouredFingers === null || colouredFingers.has(key.finger)) &&
+							key.finger !== null &&
+							(coloured === null || coloured.has(key.finger)) &&
 							key.finger) ||
 							undefined}
 						data-target={target?.code === key.code || markedKeys.has(key.code) || undefined}
@@ -439,10 +435,10 @@
 		background-color: var(--dd-color-finger-right-pinky);
 	}
 
-	/* Above the hand that shows them: the finger never hides the sign asked for (E-06). */
 	/*
-	 * A frame of two tones, a line and a thin edge of the opposite lightness between it and the key:
-	 * it shows on every colour of finger, in both themes (E-07).
+	 * Above the hand that shows them: the finger never hides the sign asked for (E-06). A frame of
+	 * two tones, a line and a thin edge of the opposite lightness between it and the key: it shows on
+	 * every colour of finger, in both themes (E-07).
 	 */
 	.key[data-target],
 	.key[data-modifier] {
