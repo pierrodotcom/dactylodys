@@ -68,6 +68,7 @@ export function toGameSettings(
 		scenes: settings.effects ? scenes : [],
 		fadedKeys,
 		ageBand: settings.ageBand,
-		keyboardColors: settings.keyboardColors
+		keyboardColors: settings.keyboardColors,
+		handDrawing: settings.handDrawing
 	};
 }

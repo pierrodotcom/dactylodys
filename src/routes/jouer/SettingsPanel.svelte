@@ -12,11 +12,12 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { calmDown, type CalmChange } from '$lib/state/calm';
-	import { KEYBOARD_COLORS, SESSION_LENGTHS } from '$lib/state/profile';
+	import { HAND_DRAWINGS, KEYBOARD_COLORS, SESSION_LENGTHS } from '$lib/state/profile';
 	import type {
 		AgeBand,
 		AmbiencePreference,
 		ErrorPolicyPreference,
+		HandDrawing,
 		HandGuidePreference,
 		KeyboardColors,
 		MotionPreference,
@@ -80,6 +81,14 @@
 		{ value: 'always', label: m.settings_hand_always() },
 		{ value: 'off', label: m.settings_hand_off() }
 	];
+	const DRAWING_LABELS: Readonly<Record<HandDrawing, () => string>> = {
+		filled: m.settings_hand_drawing_filled,
+		outline: m.settings_hand_drawing_outline
+	};
+	const DRAWING_OPTIONS = HAND_DRAWINGS.map((drawing) => ({
+		value: drawing,
+		label: DRAWING_LABELS[drawing]()
+	}));
 	const COLORS_LABELS: Readonly<Record<KeyboardColors, () => string>> = {
 		all: m.settings_keyboard_colors_all,
 		finger: m.settings_keyboard_colors_finger
@@ -333,6 +342,15 @@
 				options={HAND_OPTIONS}
 				value={settings.handGuide}
 				onchange={(value) => change({ handGuide: value as HandGuidePreference })}
+			/>
+			<ChoiceGroup
+				layout="row"
+				legend={m.settings_hand_drawing_label()}
+				name="setting-hand-drawing"
+				options={DRAWING_OPTIONS}
+				value={settings.handDrawing}
+				hint={adult ? m.settings_hand_drawing_hint() : undefined}
+				onchange={(value) => change({ handDrawing: value as HandDrawing })}
 			/>
 			<ChoiceGroup
 				layout="row"

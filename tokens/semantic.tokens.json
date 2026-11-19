@@ -540,6 +540,10 @@
 				"$description": "What a mask cuts out: the inside of the hands at rest, so that they are a contour. Shade of the mask, never themed.",
 				"$value": "{color.mono.black}"
 			},
+			"fill": {
+				"$description": "The inside of the hands at rest when the child draws them filled, the default (version 20), under their contour.",
+				"$value": "{color.cream.50}"
+			},
 			"outline": {
 				"$value": "{color.brown.900}"
 			},

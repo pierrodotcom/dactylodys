@@ -523,6 +523,7 @@
 				showFingers={true}
 				colors={settings.keyboardColors}
 				{hands}
+				handDrawing={settings.handDrawing}
 				still={settings.reducedMotion}
 				{noteCode}
 				{faded}

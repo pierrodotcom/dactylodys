@@ -1,6 +1,6 @@
 import { expect as baseExpect, test, type Locator, type Page } from '@playwright/test';
-import { updateSettings } from '../src/lib/state/profile';
-import type { KeyboardColors, Profile } from '../src/lib/state/types';
+import { HAND_DRAWINGS, updateSettings } from '../src/lib/state/profile';
+import type { HandDrawing, Profile, Settings } from '../src/lib/state/types';
 import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
@@ -18,7 +18,8 @@ import {
 /*
  * A drawn keyboard that helps without crowding (audit E-06, E-07, E-11, E-21, E-22, E-24): the key
  * lit carries the sign asked for, shows in both themes and in the forced colours of the system,
- * the hand at rest is a contour, and a soberer keyboard can be chosen.
+ * the hand at rest is filled or a contour as the child chooses (version 20), and a soberer keyboard
+ * can be chosen.
  */
 
 /** WebKit is slow when two workers run at once: give the page time to react. */
@@ -56,8 +57,8 @@ function groupLabel(page: Page): Locator {
 	return page.locator('.target-text > .dd-visually-hidden').first();
 }
 
-function child(colors: KeyboardColors = 'all'): Profile {
-	return updateSettings(advancedProfile({ name: NAME, passed: {} }), { keyboardColors: colors });
+function child(settings: Partial<Settings> = {}): Profile {
+	return updateSettings(advancedProfile({ name: NAME, passed: {} }), settings);
 }
 
 /** A game of the trial page, its first group on screen. */
@@ -80,12 +81,13 @@ async function reachMapAs(page: Page, profile: Profile) {
 	await expect(map).toBeVisible();
 }
 
-/** From the map to the game of the first lesson, at the keyboard. */
-async function startFirstLesson(page: Page) {
+/** From the map to the game of the first lesson, at the keyboard; `before` looks at the lesson first. */
+async function startFirstLesson(page: Page, before?: () => Promise<void>) {
 	const lesson = page.getByRole('button', { name: FIRST.title });
 	await lesson.focus();
 	await page.keyboard.press('Enter');
 	await throughStory(page, heading(page, FIRST.title), { keyboard: true });
+	await before?.();
 	await page.locator('button[data-proposed]').focus();
 	await page.keyboard.press('Enter');
 	await expect(page.locator('#game-input')).toBeFocused();
@@ -94,6 +96,49 @@ async function startFirstLesson(page: Page) {
 async function currentGroup(page: Page): Promise<string> {
 	await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 	return GROUP_LABEL.exec((await groupLabel(page).textContent()) ?? '')?.groups?.['text'] ?? '';
+}
+
+/**
+ * Types every group of the game up to the result of the lesson, after `check` looked at each one;
+ * gives the number of groups typed.
+ */
+async function playToResult(page: Page, check: () => Promise<void>): Promise<number> {
+	const result = button(page, message('play_result_map'));
+	const finale = button(page, message('game_shared_finale_continue'));
+	let groups = 0;
+	for (;;) {
+		const group = await currentGroup(page);
+		await check();
+		await page.keyboard.type(group);
+		groups += 1;
+		const over = { value: false };
+		await expect(async () => {
+			over.value = (await result.isVisible()) || (await finale.isVisible());
+			const shown = (await groupLabel(page).allTextContents()).some((text) =>
+				GROUP_LABEL.test(text)
+			);
+			expect(over.value || shown).toBe(true);
+		}).toPass({ timeout: STEP_TIMEOUT });
+		if (over.value) break;
+	}
+	if (await finale.isVisible()) {
+		await finale.focus();
+		await page.keyboard.press('Enter');
+	}
+	await expect(result).toBeVisible();
+	return groups;
+}
+
+/**
+ * The hands on the keyboard of the screen rest as drawn: filled under their contour, or the contour
+ * alone; the finger that shows the key is filled either way.
+ */
+async function expectHands(page: Page, drawing: HandDrawing) {
+	const hands = page.locator('.keyboard [data-hand-guide]');
+	await expect(hands).toHaveAttribute('data-hand-drawing', drawing);
+	await expect(hands.locator('[data-hand-fill]')).toHaveCount(drawing === 'filled' ? 2 : 0);
+	await expect(hands.locator('g[mask] [data-finger]')).not.toHaveCount(0);
+	await expect(hands.locator('[data-active] .active-fill')).not.toHaveCount(0);
 }
 
 /** The fingers whose keys keep their colour on the keyboard drawn. */
@@ -219,35 +264,109 @@ test('lets the child choose « Le doigt qui tape » at the keyboard, then plays 
 	await expect(heading(page, message('play_map_title'))).toBeVisible();
 
 	await startFirstLesson(page);
-	const result = button(page, message('play_result_map'));
-	const finale = button(page, message('game_shared_finale_continue'));
-	let groups = 0;
-	for (;;) {
-		const group = await currentGroup(page);
+	const groups = await playToResult(page, async () => {
 		// Only the keys of the finger that types keep their colour; the others are plain.
 		const target = page.locator('.keyboard .key[data-target]');
 		await expect(target).toHaveCount(1);
 		const typing = await target.getAttribute('data-finger');
 		expect(typing).not.toBeNull();
 		expect(await colouredFingers(page)).toEqual([typing]);
-		await page.keyboard.type(group);
-		groups += 1;
-		const over = { value: false };
-		await expect(async () => {
-			over.value = (await result.isVisible()) || (await finale.isVisible());
-			const shown = (await groupLabel(page).allTextContents()).some((text) =>
-				GROUP_LABEL.test(text)
-			);
-			expect(over.value || shown).toBe(true);
-		}).toPass({ timeout: STEP_TIMEOUT });
-		if (over.value) break;
-	}
-	if (await finale.isVisible()) {
-		await finale.focus();
-		await page.keyboard.press('Enter');
-	}
-	await expect(result).toBeVisible();
+	});
 	expect(groups).toBeGreaterThan(1);
+});
+
+test('lets the child choose the hand « En contour » at the keyboard, then plays with it', async ({
+	page
+}) => {
+	const profile = child();
+	await reachMapAs(page, profile);
+	const settings = button(page, message('play_settings_open'));
+	await settings.focus();
+	await page.keyboard.press('Enter');
+	await expect(heading(page, message('settings_title'))).toBeVisible();
+
+	const drawing = page.getByRole('group', { name: message('settings_hand_drawing_label') });
+	const filled = drawing.getByRole('radio', { name: message('settings_hand_drawing_filled') });
+	const outline = drawing.getByRole('radio', { name: message('settings_hand_drawing_outline') });
+	await expect(filled).toBeChecked();
+	// Its explanation is for the adult space: the child reads only the choices.
+	await expect(page.getByText(message('settings_hand_drawing_hint'))).toHaveCount(0);
+	await filled.focus();
+	await page.keyboard.press('ArrowRight');
+	await expect(outline).toBeChecked();
+	await expect(page.getByRole('status')).toHaveText(message('settings_saved'));
+	await expect
+		.poll(async () => (await storedRecord(page, profile))?.['settings'])
+		.toMatchObject({ handDrawing: 'outline' });
+	await page.keyboard.press('Escape');
+	await expect(heading(page, message('play_map_title'))).toBeVisible();
+
+	await startFirstLesson(page, () => expectHands(page, 'outline'));
+	await expectHands(page, 'outline');
+	await page.keyboard.type(await currentGroup(page));
+	await currentGroup(page);
+	await expectHands(page, 'outline');
+});
+
+// The drawing does not depend on the engine: the choice at the keyboard is played on all three.
+for (const drawing of HAND_DRAWINGS) {
+	test(
+		`draws the hand ${drawing} before the lesson and through a whole game`,
+		CHROMIUM_ONLY,
+		async ({ page }) => {
+			await reachMapAs(page, child({ handDrawing: drawing }));
+			await startFirstLesson(page, () => expectHands(page, drawing));
+			const groups = await playToResult(page, () => expectHands(page, drawing));
+			expect(groups).toBeGreaterThan(1);
+		}
+	);
+}
+
+test(
+	'keeps the contour, the inside and the finger lit apart under forced colours, filled or in contour',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		for (const drawing of HAND_DRAWINGS) {
+			await page.emulateMedia({ forcedColors: 'none' });
+			await reachMapAs(page, child({ handDrawing: drawing }));
+			await startFirstLesson(page);
+			await currentGroup(page);
+			await page.emulateMedia({ forcedColors: 'active' });
+			await expectHands(page, drawing);
+			const paints = await page.locator('.keyboard [data-hand-guide]').evaluate((hands) => {
+				const stroke = (selector: string) => {
+					const element = hands.querySelector(selector);
+					return element ? getComputedStyle(element).stroke : null;
+				};
+				return {
+					contour: stroke('g.outline line'),
+					inside: stroke('[data-hand-fill="resting"] line'),
+					finger: stroke('.active-fill')
+				};
+			});
+			expect(paints.contour).not.toBeNull();
+			expect(paints.finger).not.toBe(paints.contour);
+			if (drawing === 'filled') {
+				expect(paints.inside).not.toBe(paints.contour);
+				expect(paints.inside).not.toBe(paints.finger);
+			} else {
+				expect(paints.inside).toBeNull();
+			}
+		}
+	}
+);
+
+test('has no axe violation before a lesson and in a game with the hand filled, light and dark', async ({
+	page
+}) => {
+	await reachMapAs(page, child());
+	await startFirstLesson(page, async () => {
+		await expectHands(page, 'filled');
+		await expectNoAxeViolation(page);
+	});
+	await currentGroup(page);
+	await expectHands(page, 'filled');
+	await expectNoAxeViolation(page);
 });
 
 test(
@@ -255,7 +374,7 @@ test(
 	CHROMIUM_ONLY,
 	async ({ page }) => {
 		for (const colors of ['all', 'finger'] as const) {
-			await reachMapAs(page, child(colors));
+			await reachMapAs(page, child({ keyboardColors: colors }));
 			await startFirstLesson(page);
 			await currentGroup(page);
 			const fingers = await colouredFingers(page);
