@@ -249,9 +249,6 @@
 			}
 		},
 		"hand": {
-			"fill": {
-				"$value": "{color.charcoal.700}"
-			},
 			"outline": {
 				"$value": "{color.brown.50}"
 			},

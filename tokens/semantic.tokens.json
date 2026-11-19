@@ -515,8 +515,13 @@
 			}
 		},
 		"hand": {
-			"fill": {
-				"$value": "{color.cream.50}"
+			"mask-keep": {
+				"$description": "What a mask keeps: the outline of the hands, around their inside (E-11). Light of the mask, never themed.",
+				"$value": "{color.mono.white}"
+			},
+			"mask-cut": {
+				"$description": "What a mask cuts out: the inside of the hands at rest, so that they are a contour. Shade of the mask, never themed.",
+				"$value": "{color.mono.black}"
 			},
 			"outline": {
 				"$value": "{color.brown.900}"

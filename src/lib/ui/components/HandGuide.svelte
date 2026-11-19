@@ -34,6 +34,8 @@
 
 	let { geometry, fingering, presses, trigger, still, repeat = false }: Props = $props();
 
+	const uid = $props.id();
+	const maskId = `hands-inside-${uid}`;
 	const hands = $derived(restingHands(geometry, fingering));
 	const size = $derived(keyboardSize(geometry));
 	let moves = $state.raw<readonly FingerMove[]>([]);
@@ -119,8 +121,43 @@
 		focusable="false"
 		aria-hidden="true"
 	>
-		{#each hands as hand (hand.hand)}
-			<g class="outline">
+		<!--
+			The hands at rest are a contour, nothing inside: the letters of the home row stay as legible
+			as the others (E-11). The inside of the hands is cut out of their outline, whole, so that no
+			seam shows where a finger meets the palm.
+		-->
+		<mask
+			id={maskId}
+			maskUnits="userSpaceOnUse"
+			x="0"
+			y="0"
+			width={size.width}
+			height={size.height}
+		>
+			<rect class="keep" x="0" y="0" width={size.width} height={size.height} />
+			{#each hands as hand (hand.hand)}
+				<g class="cut">
+					<polygon
+						points={pointsOf(hand.palm)}
+						stroke-width={HAND_STROKES.finger}
+						stroke-linejoin="round"
+					/>
+					{#each hand.fingers as shape (shape.finger)}
+						{@const tip = tipOf(shape)}
+						<line
+							x1={shape.base.x}
+							y1={shape.base.y}
+							x2={tip.x}
+							y2={tip.y}
+							stroke-width={HAND_STROKES.finger}
+							stroke-linecap="round"
+						/>
+					{/each}
+				</g>
+			{/each}
+		</mask>
+		<g class="outline" mask="url(#{maskId})">
+			{#each hands as hand (hand.hand)}
 				<polygon
 					points={pointsOf(hand.palm)}
 					stroke-width={OUTLINE_WIDTH}
@@ -135,29 +172,36 @@
 						y2={tip.y}
 						stroke-width={OUTLINE_WIDTH}
 						stroke-linecap="round"
+						data-finger={shape.finger}
 					/>
 				{/each}
-			</g>
-			<g class="fill">
-				<polygon
-					points={pointsOf(hand.palm)}
-					stroke-width={HAND_STROKES.finger}
-					stroke-linejoin="round"
-				/>
-				{#each hand.fingers as shape (shape.finger)}
-					{@const tip = tipOf(shape)}
+			{/each}
+		</g>
+		<!-- Only the finger that shows a key is filled. -->
+		{#each hands as hand (hand.hand)}
+			{#each hand.fingers.filter(isActive) as shape (shape.finger)}
+				{@const tip = tipOf(shape)}
+				<g class="active" data-active>
 					<line
+						class="active-outline"
+						x1={shape.base.x}
+						y1={shape.base.y}
+						x2={tip.x}
+						y2={tip.y}
+						stroke-width={OUTLINE_WIDTH}
+						stroke-linecap="round"
+					/>
+					<line
+						class="active-fill"
 						x1={shape.base.x}
 						y1={shape.base.y}
 						x2={tip.x}
 						y2={tip.y}
 						stroke-width={HAND_STROKES.finger}
 						stroke-linecap="round"
-						data-finger={shape.finger}
-						data-active={isActive(shape) || undefined}
 					/>
-				{/each}
-			</g>
+				</g>
+			{/each}
 		{/each}
 	</svg>
 </div>
@@ -179,19 +223,29 @@
 		overflow: hidden;
 	}
 
+	/* Light and shade of a mask, never a colour on screen: the theme and the system leave them. */
+	mask {
+		forced-color-adjust: none;
+	}
+
+	.keep {
+		fill: var(--dd-color-hand-mask-keep);
+	}
+
+	.cut polygon,
+	.cut line {
+		fill: var(--dd-color-hand-mask-cut);
+		stroke: var(--dd-color-hand-mask-cut);
+	}
+
 	.outline polygon,
-	.outline line {
+	.outline line,
+	.active-outline {
 		fill: var(--dd-color-hand-outline);
 		stroke: var(--dd-color-hand-outline);
 	}
 
-	.fill polygon,
-	.fill line {
-		fill: var(--dd-color-hand-fill);
-		stroke: var(--dd-color-hand-fill);
-	}
-
-	.fill line[data-active] {
+	.active-fill {
 		stroke: var(--dd-color-hand-active);
 	}
 </style>

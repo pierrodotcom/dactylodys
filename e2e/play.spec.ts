@@ -1353,6 +1353,12 @@ test.describe('play route', () => {
 			).homeKeys;
 			await expect(hands.locator('[data-finger]')).toHaveCount(Object.keys(homeKeys).length);
 			await expect(hands.locator('[data-active]')).toHaveCount(1);
+			// At rest, a contour: the inside of the hands is cut out, the home letters stay clear; only
+			// the finger that shows the key is filled (E-11).
+			await expect(hands.locator('g[mask] [data-finger]')).toHaveCount(
+				Object.keys(homeKeys).length
+			);
+			await expect(hands.locator('[data-active] .active-fill')).toHaveCount(1);
 			await page.keyboard.type(await currentGroup(page));
 			await expect(groupLabel(page)).toHaveText(GROUP_DONE);
 		}
