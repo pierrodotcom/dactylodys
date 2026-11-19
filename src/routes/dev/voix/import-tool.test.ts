@@ -4,11 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { voiceKey } from '$lib/audio/voice-key';
+import { spokenMessages } from '$lib/audio/voice-messages';
 import { parseVoiceManifest } from '$lib/audio/voice-player';
 import { encodeWav, readWavHeader } from '$lib/audio/voice-signal';
 import {
 	LOOK_REMINDER_ID,
 	LOOK_REMINDER_MESSAGE,
+	parseVoiceOrigin,
 	voiceTexts,
 	type VoiceText
 } from '$lib/audio/voice-texts';
@@ -34,15 +36,21 @@ const TEXTS = voiceTexts(
 	readProgression(),
 	parseStory(JSON.parse(readFileSync('content/fr/story/azerty-decouverte.json', 'utf8')))
 );
+const MESSAGES = JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>;
 /** The reminder to look at the screen, as the page lists it: read from the messages. */
 const REMINDER: VoiceText = voiceTexts(readProgression(), undefined, [
-	{
-		id: LOOK_REMINDER_ID,
-		text: (JSON.parse(readFileSync('messages/fr.json', 'utf8')) as Record<string, string>)[
-			LOOK_REMINDER_MESSAGE
-		] as string
-	}
+	{ id: LOOK_REMINDER_ID, text: MESSAGES[LOOK_REMINDER_MESSAGE] as string }
 ]).at(-1) as VoiceText;
+/** The messages of the interface the voice says (audit P-12), as the page lists them. */
+const SPOKEN = voiceTexts(readProgression(), undefined, [], spokenMessages(MESSAGES)).filter(
+	(text) => parseVoiceOrigin(text.origin)?.kind === 'message'
+);
+/** A short sentence of an instruction (P-13) and an instruction for the Mac (P-09). */
+function textOfKind(kind: string): VoiceText {
+	const found = TEXTS.find((text) => parseVoiceOrigin(text.origin)?.kind === kind);
+	if (found === undefined) throw new Error(`No text of the kind ${kind}`);
+	return found;
+}
 const STALE: VoiceText = {
 	key: voiceKey('Une consigne qui a été réécrite.'),
 	text: 'Une consigne qui a été réécrite.',
@@ -128,14 +136,23 @@ describe('tools/voice/import.js', { timeout: TOOL_TEST_TIMEOUT_MS }, () => {
 		expect(attributions).toContain('Police Atkinson Hyperlegible Next');
 		expect(report).toContain('2 enregistrements importés dans static/voice/fr.');
 		expect(report).toContain('Format : WAV.');
-		// Every text of the page: those of the lessons, and the reminder of the games.
-		expect(report).toContain(`Textes sans enregistrement : ${TEXTS.length + 1 - 2}`);
+		// Every text of the page: those of the lessons, the reminder and the messages of the games.
+		expect(report).toContain(
+			`Textes sans enregistrement : ${TEXTS.length + 1 + SPOKEN.length - 2}`
+		);
 		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");
 	});
 
 	it('knows the reminder of the games, so that pruning never removes its clip', () => {
 		const report = runImport(writeArchive([REMINDER], ''), '--prune');
 		expect(Object.keys(manifest().clips)).toEqual([REMINDER.key]);
+		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");
+	});
+
+	it('knows the messages, the short sentences and the instructions of a Mac, and keeps them', () => {
+		const kept = [SPOKEN[0]!, SPOKEN.at(-1)!, textOfKind('step'), textOfKind('intro-mac')];
+		const report = runImport(writeArchive(kept, ''), '--prune');
+		expect(Object.keys(manifest().clips).sort()).toEqual(kept.map((text) => text.key).sort());
 		expect(report).toContain("Enregistrements dont le texte n'existe plus : 0");
 	});
 

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseProgression } from '../engine/progression/definition';
-import type { ProgressionDefinition } from '../engine/progression/types';
+import { findLesson, parseProgression } from '../engine/progression/definition';
+import type { LessonDefinition, ProgressionDefinition } from '../engine/progression/types';
 import type { StoryDefinition } from '../engine/story/types';
 import { voiceKey } from './voice-key';
 import {
@@ -16,8 +16,11 @@ const shipped = parseProgression(
 	JSON.parse(readFileSync('content/fr/progression/azerty-decouverte.json', 'utf8'))
 );
 
-function lesson(id: string, intro: string) {
-	return { ...shipped.worlds[0]!.lessons[0]!, id, intro };
+/** A lesson said in one sentence, without short ones: only its intro matters here. */
+const PLAIN = findLesson(shipped, 'fr.lesson.message-t-rex')!;
+
+function lesson(id: string, intro: string): LessonDefinition {
+	return { ...PLAIN, id, intro };
 }
 
 /** Two worlds of two and one lessons; only what `voiceTexts` reads matters. */
@@ -177,12 +180,131 @@ describe('voiceTexts', () => {
 		expect(texts).toEqual([]);
 	});
 
-	it('finds one text per lesson of the shipped progression, without two identical keys', () => {
+	it('finds every sentence of the instructions of the shipped progression, once each', () => {
 		const texts = voiceTexts(shipped);
-		const lessonCount = shipped.worlds.reduce((total, world) => total + world.lessons.length, 0);
+		const lessons = shipped.worlds.flatMap((world) => world.lessons);
+		const sentences = lessons.flatMap((item) => [
+			item.intro,
+			...Object.values(item.introByPlatform ?? {}),
+			...(item.steps ?? []).map((step) => step.text)
+		]);
 
-		expect(texts).toHaveLength(lessonCount);
-		expect(new Set(texts.map((item) => item.key)).size).toBe(lessonCount);
+		expect(texts.map((item) => item.text).sort()).toEqual([...new Set(sentences)].sort());
+		expect(new Set(texts.map((item) => item.key)).size).toBe(texts.length);
+	});
+});
+
+describe('voiceTexts and the instruction said in short sentences (audit P-13)', () => {
+	function stepped(): ProgressionDefinition {
+		const base = progression();
+		const [first, second] = base.worlds[0]!.lessons;
+		return {
+			...base,
+			worlds: [
+				{
+					...base.worlds[0]!,
+					lessons: [
+						{
+							...first!,
+							introByPlatform: { mac: 'Intro A, Mac.' },
+							steps: [
+								{ char: 'f', text: 'F est à gauche.' },
+								{ char: 'j', text: 'J est à droite.' }
+							]
+						},
+						second!
+					]
+				},
+				base.worlds[1]!
+			]
+		};
+	}
+
+	it('lists the short sentences of a lesson first, then its whole instruction as a fallback', () => {
+		const texts = voiceTexts(stepped());
+
+		expect(texts.slice(0, 5)).toEqual([
+			{ key: voiceKey('F est à gauche.'), text: 'F est à gauche.', origin: 'fr.lesson.a#step' },
+			{ key: voiceKey('J est à droite.'), text: 'J est à droite.', origin: 'fr.lesson.a#step' },
+			{ key: voiceKey('Intro A.'), text: 'Intro A.', origin: 'fr.lesson.a#intro', fallback: true },
+			{
+				key: voiceKey('Intro A, Mac.'),
+				text: 'Intro A, Mac.',
+				origin: 'fr.lesson.a#intro-mac',
+				fallback: true
+			},
+			{ key: voiceKey('Intro B.'), text: 'Intro B.', origin: 'fr.lesson.b#intro' }
+		]);
+	});
+
+	it('lists the instruction of a platform of a lesson without short sentences as needed', () => {
+		const base = progression();
+		const lessons = base.worlds[0]!.lessons;
+		const withMac: ProgressionDefinition = {
+			...base,
+			worlds: [
+				{ ...base.worlds[0]!, lessons: [{ ...lessons[0]!, introByPlatform: { mac: 'Mac A.' } }] }
+			]
+		};
+
+		expect(voiceTexts(withMac)).toEqual([
+			{ key: voiceKey('Intro A.'), text: 'Intro A.', origin: 'fr.lesson.a#intro' },
+			{ key: voiceKey('Mac A.'), text: 'Mac A.', origin: 'fr.lesson.a#intro-mac' }
+		]);
+		expect(parseVoiceOrigin('fr.lesson.a#intro-mac')).toEqual({
+			id: 'fr.lesson.a',
+			kind: 'intro-mac'
+		});
+	});
+
+	it('records the whole instructions told in short sentences last, after the messages', () => {
+		const texts = inRecordingOrder(
+			voiceTexts(stepped(), story(), [], [{ id: 'game.dialogue', text: 'Floup ?' }])
+		);
+		const fallbacks = texts.filter((item) => item.fallback === true);
+
+		expect(fallbacks.map((item) => item.text)).toEqual(['Intro A.', 'Intro A, Mac.']);
+		expect(texts.slice(-2)).toEqual(fallbacks);
+		expect(texts.at(-3)?.origin).toBe('game.dialogue#message');
+	});
+});
+
+describe('voiceTexts and the messages of the interface (audit P-12)', () => {
+	it('lists them after the reminders, once each, said where their place says', () => {
+		const reminder = { id: 'game.look-reminder', text: 'Regarde.' };
+		const asked = { id: 'game.dialogue', text: 'Que dit une chaussette ?' };
+		const texts = voiceTexts(progression(), undefined, [reminder], [asked, asked]);
+
+		expect(texts.slice(-2)).toEqual([
+			{ key: voiceKey('Regarde.'), text: 'Regarde.', origin: 'game.look-reminder#reminder' },
+			{
+				key: voiceKey(asked.text),
+				text: asked.text,
+				origin: 'game.dialogue#message'
+			}
+		]);
+		expect(parseVoiceOrigin('game.dialogue#message')).toEqual({
+			id: 'game.dialogue',
+			kind: 'message'
+		});
+	});
+
+	it('records them after the lines of the story, in the order given', () => {
+		const texts = inRecordingOrder(
+			voiceTexts(
+				progression(),
+				story(),
+				[],
+				[
+					{ id: 'play.result', text: 'Bien essayé !' },
+					{ id: 'game.dialogue', text: 'Floup ?' }
+				]
+			)
+		);
+		const kinds = texts.map((item) => parseVoiceOrigin(item.origin)?.kind);
+
+		expect(kinds.lastIndexOf('line')).toBeLessThan(kinds.indexOf('message'));
+		expect(texts.slice(-2).map((item) => item.text)).toEqual(['Bien essayé !', 'Floup ?']);
 	});
 });
 
