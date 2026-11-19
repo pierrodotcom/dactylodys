@@ -25,6 +25,11 @@ import {
 const expect = baseExpect.configure({ timeout: 15_000 });
 
 const LAPTOP = { width: 1280, height: 720 } as const;
+/** A 1366 × 768 laptop once the task bar and the bars of the browser are taken (ADR-085). */
+const SHORT_LAPTOP = { width: 1366, height: 625 } as const;
+/** `font-size-lg`: what Floup says is never the smallest text of the screen (E-22). */
+const FLOUP_SIZE_MIN = 24;
+const FLOUP_LINES_MAX = 3;
 const NAME = 'Lou';
 const STEP_TIMEOUT = 15_000;
 
@@ -33,7 +38,7 @@ interface Lesson {
 	title: string;
 }
 
-const { message, templateRegex } = loadMessages();
+const { message, numbered, templateRegex } = loadMessages();
 const GROUP_LABEL = templateRegex('ui_target_text_label');
 const FIRST = readJson<{ worlds: { lessons: Lesson[] }[] }>(
 	'content/fr/progression/azerty-decouverte.json'
@@ -141,6 +146,51 @@ test(
 		expect(colours.current).toBe(colours.highlight);
 		expect(colours.currentOutline).toBe(colours.highlight);
 		expect(colours.key).toBe(colours.highlight);
+	}
+);
+
+test(
+	'writes what Floup says in large letters, on three lines at most, on the screens children play on',
+	CHROMIUM_ONLY,
+	async ({ page }) => {
+		const said = [...numbered('game_dialogue_question_'), ...numbered('game_dialogue_quip_')].map(
+			(key) => message(key)
+		);
+		for (const screen of [LAPTOP, SHORT_LAPTOP]) {
+			await page.setViewportSize(screen);
+			await startDevGame(page, 'dialogue');
+			await page.evaluate(() => document.fonts.ready);
+			// Every sentence of Floup in turn in the bubble of the game, measured where it is drawn.
+			const measures = await page
+				.locator('.dialogue-scene .host-line .speech')
+				.evaluate((bubble, sentences) => {
+					const text = [...bubble.childNodes].find(
+						(node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
+					);
+					if (!text) throw new Error('No sentence in the bubble of Floup');
+					const style = getComputedStyle(bubble);
+					const frame = [
+						style.paddingTop,
+						style.paddingBottom,
+						style.borderTopWidth,
+						style.borderBottomWidth
+					]
+						.map((value) => Number.parseFloat(value))
+						.reduce((sum, value) => sum + value, 0);
+					const line = Number.parseFloat(style.lineHeight);
+					return sentences.map((sentence) => {
+						text.textContent = sentence;
+						const lines = (bubble.getBoundingClientRect().height - frame) / line;
+						return { sentence, size: Number.parseFloat(style.fontSize), lines: Math.round(lines) };
+					});
+				}, said);
+			for (const { sentence, size, lines } of measures) {
+				expect(size, sentence).toBeGreaterThanOrEqual(FLOUP_SIZE_MIN);
+				expect(lines, `${sentence} (${screen.width} × ${screen.height})`).toBeLessThanOrEqual(
+					FLOUP_LINES_MAX
+				);
+			}
+		}
 	}
 );
 

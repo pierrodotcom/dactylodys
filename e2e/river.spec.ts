@@ -94,32 +94,29 @@ test.describe('game river', CHROMIUM_ONLY, () => {
 		await openPage(page, PAGE_URL);
 	});
 
-	test('writes the group on the object at the dock and keeps the text to type in its own place', async ({
+	test('brings an object to the dock and leaves the text to type to its own place only', async ({
 		page
 	}) => {
 		await startRiver(page);
 
 		await expect(docked(page)).toHaveCount(1);
-		await expect(docked(page).locator('.tag-text')).toHaveText(FIRST_GROUP);
 		await expect(docked(page)).toHaveAttribute('data-art', OBJECT_ARTS[0]?.id ?? '');
+		// The group is not written again on the object, in small letters (E-22).
+		await expect(scene(page).locator('svg text')).toHaveCount(0);
 		await expect(page.locator('.target-text')).toBeVisible();
 		await expect(page.locator('.floater[data-role="waiting"]')).toHaveCount(2);
 	});
 
-	test('does not move on a wrong key, flags it, and echoes the good keys on the object', async ({
-		page
-	}) => {
+	test('does not move on a wrong key, flags it, and counts the good keys', async ({ page }) => {
 		await startRiver(page);
 
 		await page.keyboard.press(WRONG_KEY ?? '');
 		await expect(page.locator('.target-text [data-error]')).toHaveCount(1);
 		await expect(scene(page)).toHaveAttribute('data-probe', '0');
-		await expect(docked(page).locator('.typed')).toHaveText('');
 
 		await page.keyboard.type(FIRST_CHAR);
 		await expect(scene(page)).toHaveAttribute('data-probe', '1');
-		await expect(docked(page).locator('.typed')).toHaveText(FIRST_CHAR);
-		await expect(docked(page).locator('.pending')).toHaveText(FIRST_GROUP.slice(1));
+		await expect(docked(page)).toHaveAttribute('data-art', OBJECT_ARTS[0]?.id ?? '');
 	});
 
 	test('fishes the object out into the crate, says which one, and brings the next to the dock', async ({
@@ -141,7 +138,7 @@ test.describe('game river', CHROMIUM_ONLY, () => {
 		await passReward(page);
 		await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
 		await expect(page.locator('.floater[data-role="collected"]')).toHaveCount(1);
-		await expect(docked(page).locator('.tag-text')).toHaveText(GROUPS[1] ?? '');
+		await expect(docked(page)).toHaveAttribute('data-art', OBJECT_ARTS[1]?.id ?? '');
 	});
 
 	test('pauses with Escape and takes up the same object, with the keys already typed', async ({

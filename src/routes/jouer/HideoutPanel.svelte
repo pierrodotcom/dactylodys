@@ -419,11 +419,9 @@
 		font-size: var(--dd-font-size-sm);
 	}
 
-	/* One line under the name of the place: the whole name of the object is in the button's name. */
+	/* The name of the object under the name of the place, whole, on two lines if needed (E-22). */
 	.place-object {
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
+		overflow-wrap: anywhere;
 	}
 
 	.place[data-filled] {

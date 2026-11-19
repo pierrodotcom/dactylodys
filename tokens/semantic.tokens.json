@@ -1616,18 +1616,6 @@
 			"crate-plank": {
 				"$value": "{color.brown.600}"
 			},
-			"label-surface": {
-				"$value": "{color.cream.50}"
-			},
-			"label-text": {
-				"$value": "{color.brown.900}"
-			},
-			"label-pending": {
-				"$value": "{color.brown.550}"
-			},
-			"label-border": {
-				"$value": "{color.brown.900}"
-			},
 			"leaf": {
 				"$value": "{color.green.300}"
 			},

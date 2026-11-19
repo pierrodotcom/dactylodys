@@ -11,7 +11,6 @@ import {
 	collectionPlace,
 	frontIndex,
 	isInFrame,
-	labelShift,
 	objectOf,
 	probeOf,
 	riverObjects,
@@ -193,26 +192,6 @@ describe('probeOf', () => {
 		expect(probeOf(viewAt(press(stateAfter(GROUPS, 0), 'x', 100)))).toBe(0);
 		expect(probeOf(viewAt(stateAfter(GROUPS, 0, 'f')))).toBe(1);
 		expect(probeOf(viewAt(stateAfter(GROUPS, 0, 'fj')))).toBe(2);
-	});
-});
-
-describe('labelShift', () => {
-	it('leaves a label that fits where it is', () => {
-		expect(labelShift(DOCK.x, 100, 6)).toBe(0);
-	});
-
-	it('moves a label back inside the scene near an edge', () => {
-		const shift = labelShift(40, 120, 6);
-
-		expect(40 + shift - 60).toBeGreaterThanOrEqual(6);
-		const right = SCENE.width - 20;
-		expect(right + labelShift(right, 120, 6) + 60).toBeLessThanOrEqual(SCENE.width - 6);
-	});
-
-	it('centres a label wider than the scene', () => {
-		const width = SCENE.width + 40;
-
-		expect(DOCK.x + labelShift(DOCK.x, width, 6)).toBe(SCENE.width / 2);
 	});
 });
 
