@@ -42,7 +42,7 @@
 		"Pistache",
 		"Gribouille",
 		"Biscotte",
-		"Tic-Tac",
+		"Pompon",
 		"Zigzag",
 		"Croquette",
 		"Bidule"
@@ -99,7 +99,7 @@
 		{
 			"id": "fr.reward.magnifier",
 			"kind": "item",
-			"title": "La loupe d'explorateur",
+			"title": "La loupe pour explorer",
 			"description": "Réussis la leçon « Les mots du raptor ».",
 			"artId": "magnifier",
 			"slot": "hand",
@@ -111,7 +111,7 @@
 		{
 			"id": "fr.reward.crown",
 			"kind": "item",
-			"title": "La couronne du roi des dinos",
+			"title": "La couronne des dinos",
 			"description": "Réussis la leçon « Le rugissement du T-rex ».",
 			"artId": "crown",
 			"slot": "head",
@@ -291,7 +291,7 @@
 		{
 			"id": "fr.reward.train-cap",
 			"kind": "item",
-			"title": "La casquette de conducteur de train",
+			"title": "La casquette du train",
 			"description": "Réussis la leçon « Le train aux wagons accrochés ».",
 			"artId": "train-cap",
 			"slot": "head",
@@ -303,7 +303,7 @@
 		{
 			"id": "fr.reward.aviator-goggles",
 			"kind": "item",
-			"title": "Les lunettes d'aviateur",
+			"title": "Les lunettes de vol",
 			"description": "Réussis la leçon « Le chapeau du pilote ».",
 			"artId": "aviator-goggles",
 			"slot": "face",

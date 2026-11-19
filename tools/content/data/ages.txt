@@ -36,7 +36,6 @@ mot | gigantesque | 10-12
 mot | combinaison | 10-12
 mot | poésie | 10-12
 mot | escrime | 10-12
-mot | belote | 10-12
 mot | canicule | 10-12
 mot | carburant | 10-12
 mot | éruption | 10-12
