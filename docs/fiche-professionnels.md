@@ -56,7 +56,7 @@ Il ne dit pas si un enfant doit passer au clavier : cette décision reste celle 
 
 - Le jeu ne voit pas les doigts : il juge la lettre écrite, pas le doigté. Cacher les mains, coller des gommettes ou des repères en relief sont des pratiques courantes, à l'effet non démontré (Lefévère, 2007) : le jeu marche avec ou sans.
 - Le jeu existe en français, pour les claviers AZERTY de France (Mac pas encore vérifié sur un vrai Mac). D'autres langues et dispositions sont prévues.
-- Seul le doigté à dix doigts est proposé. Un doigté simplifié, à quatre ou six doigts, est à l'étude.
+- Deux doigtés réduits sont proposés, six doigts et deux index : leur répartition des touches attend la relecture d'un ergothérapeute.
 - Une dictée, pour taper sans avoir à lire le modèle, est à l'étude.
 - Il se joue avec un vrai clavier ; il n'est pas jouable sans la vue.
 - Aucune étude n'a encore évalué le jeu lui-même.
