@@ -135,6 +135,11 @@ function tourExercise(
 	});
 }
 
+/** A whole sentence: several words, a capital first, a mark that ends a sentence last. */
+function isSentence(text: string): boolean {
+	return /^\p{Lu}/u.test(text) && text.includes(' ') && !/[\p{L}\p{N}\n]$/u.test(text);
+}
+
 function countIn(groups: readonly string[], chars: readonly string[]): number {
 	return groups.flatMap((group) => toGraphemes(group)).filter((char) => chars.includes(char))
 		.length;
@@ -151,7 +156,7 @@ describe.each(tours.map(({ world, tour }) => [tour.id, world, tour] as const))(
 		] as const;
 
 		it.each(AGE_BANDS)(
-			`asks words and phrases of what the child knows only, enough keys of the world, the same each time, over ${SEEDS} seeds (%s)`,
+			`asks words and phrases of what the child knows only, enough keys of the world, a whole sentence once there are some, the same each time, over ${SEEDS} seeds (%s)`,
 			(ageBand) => {
 				const known = new Set(learnedChars(progression, tour.id));
 				const limits = wordLimits(PLAY_RULES, progression, tour.id, ageBand);
@@ -159,28 +164,39 @@ describe.each(tours.map(({ world, tour }) => [tour.id, world, tour] as const))(
 					...tour.words,
 					...usableWords(words, [...known], { ...limits, ageBand }).map((entry) => entry.text)
 				]);
+				const bankPhrases = usablePhrases(phrases, [...known], {
+					maxLevel: limits.maxLevel,
+					ageBand
+				}).map((phrase) => completePhrase(phrase.text, known, rules.phraseEnd ?? '.'));
 				// A phrase of the bank, or a warm-up written by hand for a lesson of the world.
-				const whole = new Set([
-					...usablePhrases(phrases, [...known], { maxLevel: limits.maxLevel, ageBand }).map(
-						(phrase) => completePhrase(phrase.text, known, rules.phraseEnd ?? '.')
-					),
-					...writtenGroupsOf(progression, tour, known)
-				]);
+				const whole = new Set([...bankPhrases, ...writtenGroupsOf(progression, tour, known)]);
+				// Once the bank has whole sentences there, a tour holds one, like any play (F1).
+				const sentences = new Set(tour.mix.phrases > 0 ? bankPhrases.filter(isSentence) : []);
+				const mostGroups = Math.max(tour.groupCount, rules.maxGroupCount ?? 0);
 				for (const [, weak] of profiles) {
 					const progress = childAt(tour, weak);
 					for (let seed = 0; seed < SEEDS; seed++) {
 						const { groups } = tourExercise(world, tour, ageBand, progress, seed);
 						const shown = groups.join(' | ');
 						expect(groups.length, shown).toBeGreaterThan(0);
-						for (const group of groups) {
+						expect(groups.length, shown).toBeLessThanOrEqual(mostGroups);
+						groups.forEach((group, i) => {
 							for (const char of toGraphemes(group)) expect(known.has(char), shown).toBe(true);
 							// Never a suite: a phrase of the bank, or words side by side.
 							const made = whole.has(group) || group.split(' ').every((part) => usable.has(part));
 							expect(made, `${group} in ${shown}`).toBe(true);
-						}
+							expect(group, shown).toMatch(/^\S+( \S+)*$/u);
+							expect(group, shown).not.toBe(groups[i - 1]);
+						});
 						expect(countIn(groups, keys), shown).toBeGreaterThanOrEqual(
 							tourRules.minWorldKeystrokes
 						);
+						if (sentences.size > 0) {
+							expect(
+								groups.filter((group) => sentences.has(group)).length,
+								shown
+							).toBeGreaterThanOrEqual(rules.wholePhraseMinCount ?? 0);
+						}
 						if (seed % 20 === 0) {
 							expect(tourExercise(world, tour, ageBand, progress, seed).groups).toEqual(groups);
 						}

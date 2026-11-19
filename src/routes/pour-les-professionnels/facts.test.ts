@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lessonIds, parseProgression } from '$lib/engine/progression/definition';
+import { isTour, lessonIds, parseProgression } from '$lib/engine/progression/definition';
 import progressionData from '../../../content/fr/progression/azerty-decouverte.json';
 import playRules from '../../../content/common/play-rules.json';
 import { professionalFacts } from './facts';
@@ -10,8 +10,11 @@ describe('professionalFacts', () => {
 	it('reads every figure of the sheet from the data', () => {
 		const facts = professionalFacts(progression, playRules);
 
+		// The grand tours teach nothing new: the sheet counts the lessons that teach (ADR-075).
+		const tours = progression.worlds.flatMap((world) => world.lessons).filter(isTour).length;
+		expect(tours).toBeGreaterThan(0);
 		expect(facts).toEqual({
-			lessons: lessonIds(progression).length,
+			lessons: lessonIds(progression).length - tours,
 			worlds: progression.worlds.length,
 			unlockAccuracy: progressionData.rules.unlockAccuracy,
 			pause: {

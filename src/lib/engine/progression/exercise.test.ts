@@ -246,6 +246,15 @@ function allLessons(): (readonly [ProgressionDefinition, LessonDefinition, Exerc
 	];
 }
 
+/**
+ * Every lesson but the grand tours (ADR-075, choice 3): a tour has a generator of its own, which
+ * also plays the warm-ups written for its world, shuffles its groups and keeps room for its whole
+ * phrase; its properties are in `tour.test.ts` and `tests/schemas/grand-tour.test.ts`.
+ */
+function lessonsButTours(): ReturnType<typeof allLessons> {
+	return allLessons().filter(([, lesson]) => lesson.tour === undefined);
+}
+
 function graphemesOfGroups(exercise: Exercise): string[] {
 	return exercise.groups.flatMap((group) => toGraphemes(group));
 }
@@ -1228,7 +1237,7 @@ describe('generateExercise', () => {
 		});
 
 		it.each(
-			allLessons().map(([progression, l, context]) => [l.id, progression, l, context] as const)
+			lessonsButTours().map(([progression, l, context]) => [l.id, progression, l, context] as const)
 		)(
 			'%s: respects the constraints for any seed and any minimum',
 			(_id, progression, lessonDefinition, context) => {
@@ -1253,7 +1262,7 @@ describe('generateExercise', () => {
 
 	describe('properties on every lesson', () => {
 		it.each(
-			allLessons().map(([progression, l, context]) => [l.id, progression, l, context] as const)
+			lessonsButTours().map(([progression, l, context]) => [l.id, progression, l, context] as const)
 		)(
 			'%s: respects the constraints for any seed',
 			(_id, progression, lessonDefinition, context) => {
@@ -1292,7 +1301,7 @@ describe('generateExercise', () => {
 		});
 
 		it.each(
-			allLessons().map(([progression, l, context]) => [l.id, progression, l, context] as const)
+			lessonsButTours().map(([progression, l, context]) => [l.id, progression, l, context] as const)
 		)(
 			'%s: keeps to the maximum level and to the learned characters with a weak-character history',
 			(_id, progression, lessonDefinition, context) => {
@@ -1358,7 +1367,7 @@ describe('a whole phrase on top of the lesson (F1)', () => {
 		group.includes(SPACE) &&
 		!group.endsWith(LINE_BREAK) &&
 		!/[\p{L}\p{N}]$/u.test(group);
-	const shippedLessons = allLessons().filter(([progression]) =>
+	const shippedLessons = lessonsButTours().filter(([progression]) =>
 		SHIPPED.some((shipped) => shipped.progression === progression)
 	);
 
