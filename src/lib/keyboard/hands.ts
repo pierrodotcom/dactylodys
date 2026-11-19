@@ -77,7 +77,7 @@ const SHAPE = {
 	/** How close to the edge of a wide key the finger goes. */
 	edgeMargin: 0.5,
 	/** The part of its length a folded finger shows, from its knuckle towards where it would rest. */
-	fold: 0.3
+	fold: 0.4
 } as const;
 
 const FINGER_ORDER: readonly Exclude<FingerName, 'thumb'>[] = ['pinky', 'ring', 'middle', 'index'];
