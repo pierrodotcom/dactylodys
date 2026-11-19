@@ -12,6 +12,8 @@ const MIN_PHRASES_FULL_ALPHABET = 15;
 const MIN_PHRASES_CAPITALS = 30;
 const MIN_PHRASES_CIRCUMFLEX = 10;
 const PHRASE_WORDS = [3, 8];
+/** Names that keep their capital in the middle of a sentence (« sur la Lune », audit C-04). */
+const PROPER_NOUNS = ['Lune', 'Terre', 'Saturne', 'Jupiter'];
 
 const errors = [];
 const fail = (message) => errors.push(message);
@@ -145,7 +147,11 @@ function checkPhrases() {
 		if (tier >= step('majuscules') && tier <= step('tiret-deux-points') && !/^[A-Z]/.test(text)) {
 			fail(`phrase "${text}": punctuation without initial capital`);
 		}
-		if (/\b[A-Z]/.test(text.slice(1)) && !/[.?!] [A-Z]/.test(text))
+		const unnamed = PROPER_NOUNS.reduce(
+			(rest, name) => rest.replaceAll(new RegExp(`\\b${name}\\b`, 'g'), name.toLowerCase()),
+			text
+		);
+		if (/\b[A-Z]/.test(unnamed.slice(1)) && !/[.?!] [A-Z]/.test(unnamed))
 			fail(`phrase "${text}": stray capital`);
 		const key = phraseTier(text);
 		perTier[key] = (perTier[key] ?? 0) + 1;

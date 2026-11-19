@@ -1,10 +1,9 @@
 je lis le jeudi
 il file sur ses skis
-elle relie les fils
+elle relie les fleurs
 je fuis le feu
 il jure de lire
 je lui sers du jus
-elle se rue sur le jus
 je serre le fil de fer
 je ris de ses ruses
 je lui dis de fuir
@@ -51,7 +50,7 @@ le pirate a perdu sa casserole
 la souris conduit le tracteur
 une taupe fait la course en pantoufles
 le moustique joue de la clarinette
-un cloporte sort de la marmite
+un caneton sort de la marmite
 un papillon prend le train
 la limonade coule de la trompette
 le capitaine ronfle sur son tapis
@@ -64,7 +63,7 @@ j'ai croisé un crocodile dans mon café
 la souris a coupé la musique
 le pirate a dessiné une pantoufle
 c'est le poulpe qui a tricoté
-un cloporte a sauté dans mon café
+une sardine a sauté dans mon café
 l'ours a écrit une carte pour la lune
 la marmotte a pris un ticket
 l'étoile a sauté dans la marmite
@@ -119,13 +118,13 @@ Le hibou range ses chaussettes par couleur.
 Mon sandwich a pris la fuite !
 Hier, le poulpe a tricoté huit chaussettes.
 Le lapin joue au football.
-L'astronaute a perdu sa pantoufle sur la lune.
+L'astronaute a perdu sa pantoufle sur la Lune.
 Le diplodocus passe sous la porte !
-Combien de chaussettes a mangé la machine ?
+La machine a mangé combien de chaussettes ?
 La soupe a pris un bain de soleil.
 Le poisson rit sous l'eau.
 Pourquoi le zèbre porte-t-il un pyjama ?
-Le camion a un hoquet !
+Le camion a le hoquet !
 La tortue a gagné la course, quelle surprise !
 Mon chapeau a disparu dans le frigo.
 Le canard a avalé un xylophone, quel boucan !
@@ -138,7 +137,7 @@ Le chien ronfle comme un tracteur.
 Le gâteau a sauté par la fenêtre.
 Un escargot gagne le marathon !
 Le crocodile a enfin des dents propres !
-Sur la lune, le robot plante des carottes.
+Sur la Lune, le robot plante des carottes.
 La fusée tousse, puis elle repart.
 Dans ma fusée, je range une vache.
 Ce matin, une comète a pris le bus.
@@ -156,7 +155,7 @@ Attention, la trottinette a mangé du piment !
 Oh, mon vélo sait nager !
 Où va ce bateau à roulettes ?
 Un tracteur dans la baignoire, quel bazar !
-Qui a rangé la lune dans le placard ?
+Qui a rangé la Lune dans le placard ?
 Tu as vu ce lapin bleu ?
 Mon sous-marin a peur de l'eau.
 Le chasse-neige part en vacances au soleil.
@@ -212,9 +211,9 @@ Le maïs chante sous la pluie.
 Le crocodile naïf a avalé une ancre.
 Le canoë du pirate fait des bulles.
 Où est ma pâte à modeler ?
-Ce poêle chante, le gâteau danse !
+La forêt chante, le gâteau danse !
 La vache a une voix aiguë.
-Le dinosaure a dîné sur la lune.
+Le dinosaure a dîné sur la Lune.
 Une tête de chou prend le bateau.
 Le canard dîne avec un chapeau.
 Le castor range sa bûche dans le frigo.
