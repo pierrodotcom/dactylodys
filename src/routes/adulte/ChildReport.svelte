@@ -238,10 +238,13 @@
 
 	/*
 	 * A long nickname without a space is cut rather than wider than the page (320 pixels), in every
-	 * sentence and every button of the report that names the child.
+	 * sentence, title, link and button of the report that names the child (« Où en est … »).
 	 */
 	.report :global(p),
-	.report :global(button) {
+	.report :global(button),
+	.report :global(h2),
+	.report :global(a),
+	.report :global(li) {
 		overflow-wrap: anywhere;
 	}
 
