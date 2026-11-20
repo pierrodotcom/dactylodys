@@ -434,6 +434,8 @@ const SCREENS = {
 } as const;
 /** A tall screen: the game sits in the middle of it, and its scene grows (E-20). */
 const TALL_SCREEN = { width: 1920, height: 1080 } as const;
+/** A large screen, where the pictures of the games reach their largest. */
+const LARGE_SCREEN = { width: 2560, height: 1440 } as const;
 /** A laptop of 1280 × 720 at 200 % zoom (WCAG 1.4.4). */
 const ZOOMED_LAPTOP = { width: 640, height: 360 } as const;
 /** 1280 pixels at 400 % zoom (WCAG 1.4.10). */
@@ -630,11 +632,18 @@ async function expectGameInSight(page: Page, what: string, options: { keyboard?:
 	await expectInSight(page, page.locator('.keyboard'), `${what}: keyboard`);
 }
 
-async function startDevGame(page: Page, gameId: string, options: { keyboard?: boolean } = {}) {
+async function startDevGame(
+	page: Page,
+	gameId: string,
+	options: { keyboard?: boolean; scenes?: boolean } = {}
+) {
 	await openPage(page, '/dev/jeux');
 	await page.getByRole('radio', { name: message(`game_${gameId}_title`) }).check();
 	if (options.keyboard === false) {
 		await page.getByRole('checkbox', { name: message('dev_games_keyboard_label') }).uncheck();
+	}
+	if (options.scenes) {
+		await page.getByRole('checkbox', { name: message('dev_games_scenes_label') }).check();
 	}
 	await button(page, message('dev_games_play')).click();
 	await expectGroup(page);
@@ -1016,5 +1025,179 @@ test.describe('on the screens children play on', CHROMIUM_ONLY, () => {
 		await expectGroup(page);
 		await settle(page);
 		await expectNoAxeViolation(page);
+	});
+});
+
+/** Points of a bubble looked at, as fractions of its box: inside its rounded corners. */
+const BUBBLE_POINTS = [0.2, 0.5, 0.8];
+
+/**
+ * What is seen at nine points of the bubble, its centre among them, wherever it is not the bubble:
+ * nothing when the bubble is in front of the picture and whole on the screen.
+ */
+function coveredPointsOf(bubble: Locator): Promise<string[]> {
+	return bubble.evaluate((node, fractions) => {
+		const box = node.getBoundingClientRect();
+		return fractions.flatMap((across) =>
+			fractions.flatMap((down) => {
+				const seen = document.elementFromPoint(
+					box.left + box.width * across,
+					box.top + box.height * down
+				);
+				if (seen !== null && node.contains(seen)) return [];
+				const name =
+					seen === null
+						? 'off the screen'
+						: `${seen.tagName.toLowerCase()} ${seen.getAttribute('class') ?? ''}`;
+				return [`${across} × ${down}: ${name}`];
+			})
+		);
+	}, BUBBLE_POINTS);
+}
+
+/** Types the first group of the game on screen; its reward shows its bubble, held (`hold`). */
+async function reachFirstBubble(page: Page): Promise<Locator> {
+	await expect(groupLabel(page)).toHaveText(GROUP_LABEL);
+	const label = (await groupLabel(page).textContent()) ?? '';
+	await page.keyboard.type(GROUP_LABEL.exec(label)?.groups?.['text'] ?? '');
+	const bubble = page.locator('.bubble');
+	await expect(bubble).toBeVisible();
+	return bubble;
+}
+
+/** Holds every animation of the page that ends at this fraction of its length, its delay included. */
+async function holdAnimationsAt(page: Page, fraction: number) {
+	await page.evaluate((at) => {
+		for (const animation of document.getAnimations()) {
+			const end = Number(animation.effect?.getComputedTiming().endTime);
+			if (!Number.isFinite(end)) continue;
+			animation.pause();
+			animation.currentTime = end * at;
+		}
+	}, fraction);
+}
+
+/*
+ * The bubble of a reward is in front of the picture of its game (2026-11-19): on a tall screen the
+ * picture grows and reaches beyond its frame, and it never covers the bubble, whole and readable.
+ */
+test.describe('reward bubbles', CHROMIUM_ONLY, () => {
+	const BUBBLE_SCREENS = [SCREENS.laptop, SCREENS['short laptop'], TALL_SCREEN, LARGE_SCREEN];
+	/** The size of the text to type: as the settings start, then the largest. */
+	const TEXT_SCALES = [undefined, 'xl'] as const;
+	/** Moments of the reward held still, as fractions of each of its animations: start to end. */
+	const MOMENTS = [0, 0.25, 0.5, 0.75, 1];
+	/** Longer than any test: an entrance that has ended is no longer among the animations to hold. */
+	const SLOW_ENTRANCE = ':root{--dd-duration-reward:600000ms}';
+
+	test.use({ reducedMotion: 'no-preference' });
+
+	test.beforeEach(async ({ page }) => {
+		await setRewards(page, 'hold');
+	});
+
+	for (const game of GAMES) {
+		test(`keeps the bubble of the first reward of ${game.id} in front of its picture, whole, on every screen`, async ({
+			page
+		}) => {
+			await page.setViewportSize(SCREENS.laptop);
+			await startDevGame(page, game.id);
+			const bubble = await reachFirstBubble(page);
+
+			for (const screen of BUBBLE_SCREENS) {
+				for (const scale of TEXT_SCALES) {
+					await page.setViewportSize(screen);
+					await page.evaluate((value) => {
+						if (value === undefined) delete document.documentElement.dataset['textScale'];
+						else document.documentElement.dataset['textScale'] = value;
+					}, scale);
+					await settle(page);
+					await expect
+						.poll(() => coveredPointsOf(bubble), {
+							message: `${game.id}, ${screen.width} × ${screen.height}, text ${scale ?? 'as set'}`
+						})
+						.toEqual([]);
+				}
+			}
+		});
+
+		test(`keeps the bubble of ${game.id} in front while it comes in and the first scene plays`, async ({
+			page
+		}) => {
+			await page.setViewportSize(SCREENS.laptop);
+			await startDevGame(page, game.id, { scenes: true });
+			// The bubble comes in slowly enough to be held anywhere on its way.
+			await page.addStyleTag({ content: SLOW_ENTRANCE });
+			const bubble = await reachFirstBubble(page);
+			await expect(page.locator('[data-scene]')).not.toHaveCount(0);
+
+			// Moment after moment: an entrance held at its end is over, it cannot be held again.
+			for (const moment of MOMENTS) {
+				await holdAnimationsAt(page, moment);
+				for (const screen of BUBBLE_SCREENS) {
+					await page.setViewportSize(screen);
+					await settle(page);
+					expect(
+						await coveredPointsOf(bubble),
+						`${game.id}, ${screen.width} × ${screen.height}, at ${moment} of the animations`
+					).toEqual([]);
+				}
+			}
+		});
+	}
+});
+
+/** How many lines a block of text takes, in lines of its own height. */
+function linesOf(text: Locator): Promise<number> {
+	return text.evaluate((node) => {
+		const line = Number.parseFloat(getComputedStyle(node).lineHeight);
+		return Math.round(node.getBoundingClientRect().height / line);
+	});
+}
+
+/*
+ * The finger of each key of the lesson, « Touche F — index gauche », is never cut (2026-11-19): on
+ * one line as long as the page has room, and on a narrow page it may wrap, never past the page.
+ */
+test.describe('the fingers of the keys on the lesson screen', CHROMIUM_ONLY, () => {
+	const hints = (page: Page) => page.locator('[data-intro-keys] .hints .finger-hint');
+
+	for (const screen of [SCREENS.laptop, SCREENS['short laptop'], TALL_SCREEN, LARGE_SCREEN]) {
+		test(`writes the finger of each key of the first lesson on one line at ${screen.width} × ${screen.height}`, async ({
+			page
+		}) => {
+			await page.setViewportSize(screen);
+			await reachMapAs(page, childBefore(FIRST));
+			await openIntro(page, FIRST);
+			await settle(page);
+
+			await expect(hints(page)).not.toHaveCount(0);
+			for (const hint of await hints(page).all()) {
+				expect(await linesOf(hint), (await hint.textContent()) ?? '').toBe(1);
+			}
+		});
+	}
+
+	test('lets the finger of a key go to the line at 320 pixels, never past the page', async ({
+		page
+	}) => {
+		await page.setViewportSize(NARROW);
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		await settle(page);
+
+		await expect(hints(page)).not.toHaveCount(0);
+		for (const hint of await hints(page).all()) {
+			const box = await hint.evaluate((node) => {
+				const rect = node.getBoundingClientRect();
+				return { left: rect.left, right: rect.right, width: innerWidth };
+			});
+			expect(box.left, (await hint.textContent()) ?? '').toBeGreaterThanOrEqual(-SUBPIXEL);
+			expect(box.right, (await hint.textContent()) ?? '').toBeLessThanOrEqual(box.width + SUBPIXEL);
+		}
+		const sideways = await page.evaluate(
+			() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+		);
+		expect(sideways, 'nothing scrolls sideways').toBeLessThanOrEqual(SUBPIXEL);
 	});
 });
