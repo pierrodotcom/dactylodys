@@ -425,6 +425,7 @@
 	"play_intro_hand_keys_altgr": "Alt Gr + {keys} — {hand}",
 	"play_intro_hand_keys_shift_altgr": "Maj + Alt Gr + {keys} — {hand}",
 	"play_intro_back": "Retour à la carte",
+	"play_intro_instruction_heading": "Consigne",
 	"play_intro_erasing": "Dans ce monde, quand tu te trompes, efface ta faute avec la touche Retour arrière, puis continue.",
 	"play_intro_race": "Faire la course avec mon fantôme copieur",
 	"play_intro_race_hint": "Il copie ta dernière partie réussie, un peu plus lentement.",

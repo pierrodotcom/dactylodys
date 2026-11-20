@@ -2497,6 +2497,10 @@
 			"$description": "Width of the title of the game proposed, when a world offers three games or more: the three games stay on one row.",
 			"$value": "15rem"
 		},
+		"game-tile-min": {
+			"$description": "Narrowest tile of a game before a lesson, its picture beside its title: the games of a world share one row on a laptop, one under the other on a narrow page.",
+			"$value": "14rem"
+		},
 		"top-bar-name-min": {
 			"$description": "Narrowest room for the nickname in the bar of the player: below it, the buttons keep only their pictures.",
 			"$value": "6rem"
@@ -2594,6 +2598,10 @@
 		"$type": "number",
 		"target": {
 			"$value": 1.12
+		},
+		"tile": {
+			"$description": "A wide tile pointed or focused grows less than a key or a small card: it stays clear of the tiles beside it.",
+			"$value": 1.04
 		},
 		"press": {
 			"$value": 0.97

@@ -2,8 +2,8 @@
 	import { untrack } from 'svelte';
 	import { lessonIntro } from '$lib/engine/progression/definition';
 	import type { GuideMode, LessonDefinition } from '$lib/engine/progression/types';
-	import { isReducedFingering } from '$lib/keyboard/fingering';
-	import type { Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
+	import { fingerForKey, isReducedFingering } from '$lib/keyboard/fingering';
+	import type { Finger, Hand, KeyPress, ModifierLevel } from '$lib/keyboard/types';
 	import type { HandDrawing } from '$lib/state/types';
 	import { sayInTurn } from '$lib/audio/voice-sequence';
 	import type { VoicePlayer } from '$lib/audio/voice-types';
@@ -11,6 +11,7 @@
 	import RewardPicture from '$lib/ui/companion/RewardPicture.svelte';
 	import { m } from '$lib/paraglide/messages.js';
 	import FingerHint from '$lib/ui/components/FingerHint.svelte';
+	import { pressLabel } from '$lib/ui/components/key-labels';
 	import KeyboardView from '$lib/ui/components/KeyboardView.svelte';
 	import ListenButton from '$lib/ui/components/ListenButton.svelte';
 	import ScreenFrame from '$lib/ui/components/ScreenFrame.svelte';
@@ -174,6 +175,17 @@
 			hand: HAND_NAMES[line.hand]()
 		});
 	}
+
+	/**
+	 * The little key before the line of a key: its sign, in the colour of its finger on the keyboard.
+	 * The line names the finger: the colour only links it to the keyboard. `null` for a key printed
+	 * without a sign (Space, Backspace): its name is in the line.
+	 */
+	function keycapOf(press: KeyPress): { label: string; finger: Finger } | null {
+		const label = pressLabel(assets.layout, press);
+		const finger = fingerForKey(assets.fingering, press.code);
+		return label && finger !== null ? { label, finger } : null;
+	}
 </script>
 
 <ScreenFrame
@@ -182,56 +194,69 @@
 	wide
 	back={{ label: m.play_intro_back(), onclick: onback }}
 >
-	<!--
-		One column, tight: the instruction, the keys and the games hold together on a laptop screen;
-		the screen opens on them, the instruction first (the bar of the player stays above).
-	-->
-	<div class="lesson">
-		<div class="head">
-			<p class="number">
-				{lesson.tour !== undefined
-					? m.play_lesson_tour()
-					: number === null
-						? m.play_lesson_detour()
-						: m.play_lesson_number({ number })}
-			</p>
-			<ListenButton text={intro} player={speaker} />
-			{#if prize}
-				<div class="prize" data-prize={prize.id}>
-					<div class="prize-picture" aria-hidden="true">
-						<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
-					</div>
-					<div class="prize-text">
-						<p>{m.play_reward_prize({ title: prize.title })}</p>
-						<!-- A grand tour asks more than passing it: what to master is said beforehand. -->
-						{#if lesson.tour !== undefined}
-							<p class="prize-how">{prize.description}</p>
-						{/if}
-					</div>
+	<!-- On the row of the way out, at its right: what passing the lesson earns. -->
+	{#snippet aside()}
+		{#if prize}
+			<div class="prize" data-prize={prize.id} data-tour={lesson.tour !== undefined || undefined}>
+				<div class="prize-picture" aria-hidden="true">
+					<RewardPicture artId={prize.artId} kind={prize.kind} owned={true} label={prize.title} />
 				</div>
-			{/if}
-		</div>
-		{#if written.kind === 'steps'}
-			<!-- One short sentence a line, as the voice says them. -->
-			<ul class="intro intro-steps" bind:this={instruction} data-intro-steps>
-				{#each written.sentences as sentence (sentence)}
-					<li>{sentence}</li>
-				{/each}
-			</ul>
-		{:else}
-			<p class="intro" bind:this={instruction} data-intro>{written.text}</p>
+				<div class="prize-text">
+					<p>{m.play_reward_prize({ title: prize.title })}</p>
+					<!-- A grand tour asks more than passing it: what to master is said beforehand. -->
+					{#if lesson.tour !== undefined}
+						<p class="prize-how">{prize.description}</p>
+					{/if}
+				</div>
+			</div>
 		{/if}
+	{/snippet}
+
+	<p class="number">
+		{lesson.tour !== undefined
+			? m.play_lesson_tour()
+			: number === null
+				? m.play_lesson_detour()
+				: m.play_lesson_number({ number })}
+	</p>
+
+	<!--
+		Three cards, one under the other: the instruction, the keys, the games. On a laptop screen the
+		page opens on the instruction, the top of the games in view (the bar of the player stays above).
+	-->
+	<div class="cards">
+		<section
+			class="card instruction"
+			aria-labelledby="intro-instruction-heading"
+			bind:this={instruction}
+		>
+			<h2 id="intro-instruction-heading" class="dd-visually-hidden">
+				{m.play_intro_instruction_heading()}
+			</h2>
+			<ListenButton text={intro} player={speaker} />
+			{#if written.kind === 'steps'}
+				<!-- One short sentence a line, as the voice says them. -->
+				<ul class="intro intro-steps" data-intro-steps>
+					{#each written.sentences as sentence (sentence)}
+						<li>{sentence}</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="intro" data-intro>{written.text}</p>
+			{/if}
+		</section>
 
 		{#if shown}
 			<section
-				class="keys"
+				class="card keys"
 				aria-labelledby="intro-keys-heading"
 				data-intro-keys={shown.kind}
 				data-intro-step={stepChar}
 			>
+				<h2 id="intro-keys-heading">{heading}</h2>
 				<!--
-					Beside the keyboard: the title of the keys, the fingers, and the sentence of the world under
-					them. The keyboard is a picture only (screen readers skip it): the title comes first for them.
+					The keyboard, and beside it how to press the keys; one under the other on a narrow page.
+					The keyboard is a picture only (screen readers skip it): the lines say the same.
 				-->
 				<div class="keys-row">
 					<div class="board">
@@ -249,11 +274,16 @@
 						/>
 					</div>
 					<div class="beside">
-						<h2 id="intro-keys-heading">{heading}</h2>
 						<ul class="hints">
 							{#each lines as line, index (index)}
 								<li>
 									{#if line.kind === 'key'}
+										{@const keycap = keycapOf(line.key.press)}
+										{#if keycap}
+											<span class="keycap" data-finger={keycap.finger} aria-hidden="true">
+												{keycap.label}
+											</span>
+										{/if}
 										<FingerHint
 											target={line.key.press}
 											layout={assets.layout}
@@ -271,16 +301,24 @@
 					</div>
 				</div>
 			</section>
-		{:else if erasingNew}
-			<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
-			<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
 		{/if}
 
-		<div class="choice" {@attach revealBelow(() => instruction)}>
+		<section
+			class="card choice"
+			aria-labelledby="intro-games-heading"
+			{@attach revealBelow(() => instruction)}
+		>
+			<h2 id="intro-games-heading">{m.play_game_choice_legend()}</h2>
+			{#if shown === null && erasingNew}
+				<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
+				<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
+			{/if}
+
 			<GamePicker
 				{games}
 				proposed={gameId}
 				reveal={null}
+				tiles
 				onplay={(id) => onplay(id, canRace && race)}
 			/>
 
@@ -291,27 +329,18 @@
 			{#if loadFailed}
 				<p class="problem" role="alert">{m.play_game_load_error()}</p>
 			{/if}
-		</div>
+		</section>
 	</div>
 </ScreenFrame>
 
 <style>
-	.lesson {
-		display: grid;
-		gap: var(--dd-space-sm);
-		justify-items: center;
-		inline-size: 100%;
-	}
-
-	.head {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: var(--dd-space-md);
-	}
-
+	/*
+	 * Small, above the title (it is read after it): the frame sets its rows far apart, this one stays
+	 * close to the title.
+	 */
 	.number {
+		order: -1;
+		margin-block-end: calc(var(--dd-space-md) * -1);
 		color: var(--dd-color-text-secondary);
 		font-weight: var(--dd-font-weight-bold);
 	}
@@ -320,8 +349,19 @@
 		display: flex;
 		align-items: center;
 		gap: var(--dd-space-sm);
+		padding: var(--dd-space-xs) var(--dd-space-md) var(--dd-space-xs) var(--dd-space-xs);
+		border-width: var(--dd-border-width-thin);
+		border-style: solid;
+		border-color: var(--dd-color-border-subtle);
+		border-radius: var(--dd-radius-pill);
+		background-color: var(--dd-color-surface-sunken);
 		color: var(--dd-color-text-secondary);
 		font-weight: var(--dd-font-weight-bold);
+	}
+
+	/* What a grand tour asks takes two lines or three: a rounded box rather than a pill. */
+	.prize[data-tour] {
+		border-radius: var(--dd-radius-lg);
 	}
 
 	.prize-picture {
@@ -339,15 +379,45 @@
 		font-weight: var(--dd-font-weight-regular);
 	}
 
-	.intro {
+	.cards {
+		display: grid;
+		gap: var(--dd-space-md);
+		min-inline-size: 0;
+	}
+
+	/* A border, not only a background: the cards stay apart in forced colours. */
+	.card {
+		display: grid;
+		gap: var(--dd-space-sm);
+		min-inline-size: 0;
+		padding: var(--dd-space-md) var(--dd-space-lg);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-border-subtle);
+		border-radius: var(--dd-radius-lg);
+		background-color: var(--dd-color-surface-raised);
+	}
+
+	.card h2 {
 		font-size: var(--dd-font-size-lg);
-		text-align: center;
+	}
+
+	/* Listen at the left of the instruction; above it on a narrow page. */
+	.instruction {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--dd-space-sm) var(--dd-space-lg);
+	}
+
+	.intro {
+		flex: 1 1 var(--dd-size-text-zone-side-min);
+		font-size: var(--dd-font-size-lg);
 	}
 
 	.intro-steps {
 		display: grid;
 		gap: var(--dd-space-xs);
-		justify-items: center;
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -360,35 +430,18 @@
 		border-color: var(--dd-color-typing-current-frame);
 		border-radius: var(--dd-radius-md);
 		font-weight: var(--dd-font-weight-bold);
-		text-align: center;
 	}
 
-	/*
-	 * Smaller keys, so that the games below stay in view on a laptop screen. Never wider than the
-	 * page, however long the line of a finger (`.hints`).
-	 */
+	/* Smaller keys, so that the games below stay in view on a laptop screen. */
 	.keys {
 		--dd-size-key-unit: var(--dd-size-key-unit-compact);
-		display: grid;
-		justify-self: stretch;
-		gap: var(--dd-space-sm);
-		justify-items: center;
-		min-inline-size: 0;
 	}
 
-	.keys h2 {
-		font-size: var(--dd-font-size-lg);
-		color: var(--dd-color-text-secondary);
-	}
-
-	/* The keyboard and, beside it, how to press the keys; one under the other on a narrow page. */
 	.keys-row {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		justify-content: center;
 		gap: var(--dd-space-md) var(--dd-space-xl);
-		inline-size: 100%;
 		min-inline-size: 0;
 	}
 
@@ -403,7 +456,7 @@
 		flex: 1 1 var(--dd-size-text-zone-side-min);
 		flex-direction: column;
 		gap: var(--dd-space-sm);
-		align-items: center;
+		align-items: start;
 		max-inline-size: 100%;
 	}
 
@@ -413,14 +466,77 @@
 	 */
 	.hints {
 		display: grid;
-		gap: var(--dd-space-xs);
-		justify-items: center;
+		gap: var(--dd-space-sm);
 		inline-size: var(--dd-size-hint-line);
 		max-inline-size: 100%;
 		margin: 0;
 		padding: 0;
 		list-style: none;
-		text-align: center;
+	}
+
+	.hints li {
+		display: flex;
+		align-items: center;
+		gap: var(--dd-space-sm);
+	}
+
+	/* A key of the keyboard beside, in the colour of its finger; in forced colours, its frame. */
+	.keycap {
+		display: grid;
+		flex: none;
+		place-items: center;
+		min-inline-size: var(--dd-size-key-unit);
+		block-size: var(--dd-size-key-unit);
+		padding-inline: var(--dd-space-xs);
+		border-width: var(--dd-border-width-thick);
+		border-style: solid;
+		border-color: var(--dd-color-key-border);
+		border-radius: var(--dd-radius-md);
+		background-color: var(--dd-color-key-surface);
+		color: var(--dd-color-key-text-on-finger);
+		font-size: var(--dd-font-size-key);
+		font-weight: var(--dd-font-weight-bold);
+		line-height: var(--dd-line-height-tight);
+	}
+
+	.keycap[data-finger='left-pinky'] {
+		background-color: var(--dd-color-finger-left-pinky);
+	}
+
+	.keycap[data-finger='left-ring'] {
+		background-color: var(--dd-color-finger-left-ring);
+	}
+
+	.keycap[data-finger='left-middle'] {
+		background-color: var(--dd-color-finger-left-middle);
+	}
+
+	.keycap[data-finger='left-index'] {
+		background-color: var(--dd-color-finger-left-index);
+	}
+
+	.keycap[data-finger='left-thumb'] {
+		background-color: var(--dd-color-finger-left-thumb);
+	}
+
+	.keycap[data-finger='right-thumb'] {
+		background-color: var(--dd-color-finger-right-thumb);
+	}
+
+	.keycap[data-finger='right-index'] {
+		background-color: var(--dd-color-finger-right-index);
+	}
+
+	.keycap[data-finger='right-middle'] {
+		background-color: var(--dd-color-finger-right-middle);
+	}
+
+	.keycap[data-finger='right-ring'] {
+		background-color: var(--dd-color-finger-right-ring);
+	}
+
+	.keycap[data-finger='right-pinky'] {
+		background-color: var(--dd-color-finger-right-pinky);
 	}
 
 	/* Several keys of one hand: written like the hint of a single key (`FingerHint`). */
@@ -431,14 +547,8 @@
 		line-height: var(--dd-line-height-tight);
 	}
 
-	.choice {
-		display: grid;
-		gap: var(--dd-space-sm);
-		justify-items: center;
-		inline-size: 100%;
-	}
-
 	.problem {
+		justify-self: start;
 		padding: var(--dd-space-sm) var(--dd-space-md);
 		border-width: var(--dd-border-width-thick);
 		border-style: solid;
