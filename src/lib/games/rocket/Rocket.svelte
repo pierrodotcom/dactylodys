@@ -97,7 +97,7 @@
 		top: 0;
 		left: 0;
 		translate: var(--dd-greeting-x) var(--dd-greeting-y);
-		z-index: var(--dd-z-index-raised);
+		z-index: var(--dd-z-index-bubble);
 		padding: var(--dd-space-sm);
 		white-space: nowrap;
 	}

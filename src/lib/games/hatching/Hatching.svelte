@@ -110,7 +110,10 @@
 		position: relative;
 	}
 
+	/* In front of the egg: the baby that hatches out of a tall egg reaches up over the bubble. */
 	.bubble-row {
+		position: relative;
+		z-index: var(--dd-z-index-bubble);
 		display: grid;
 		align-items: end;
 		min-block-size: calc(var(--dd-font-size-xl) * 2);

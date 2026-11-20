@@ -76,7 +76,7 @@
 		position: absolute;
 		inset-block-start: var(--dd-space-sm);
 		inset-inline-start: var(--dd-space-sm);
-		z-index: var(--dd-z-index-raised);
+		z-index: var(--dd-z-index-bubble);
 	}
 
 	h2 {

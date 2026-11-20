@@ -123,9 +123,11 @@
 	/*
 	 * Three lines of room for what Floup says, in large letters: it is the heart of the game, never
 	 * the smallest text of the screen (E-22), and nothing below moves from one question to the next.
+	 * In front of Floup and the companion, whatever their scenes draw.
 	 */
 	.host-line {
 		position: relative;
+		z-index: var(--dd-z-index-bubble);
 		display: grid;
 		align-items: end;
 		min-block-size: calc(
