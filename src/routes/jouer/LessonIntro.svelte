@@ -379,9 +379,10 @@
 		font-weight: var(--dd-font-weight-regular);
 	}
 
+	/* Close together, so that the three hold on a short laptop screen: the borders keep them apart. */
 	.cards {
 		display: grid;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm);
 		min-inline-size: 0;
 	}
 
@@ -390,7 +391,7 @@
 		display: grid;
 		gap: var(--dd-space-sm);
 		min-inline-size: 0;
-		padding: var(--dd-space-md) var(--dd-space-lg);
+		padding: var(--dd-space-card-block) var(--dd-space-lg);
 		border-width: var(--dd-border-width-thick);
 		border-style: solid;
 		border-color: var(--dd-color-border-subtle);
@@ -399,7 +400,7 @@
 	}
 
 	.card h2 {
-		font-size: var(--dd-font-size-lg);
+		font-size: var(--dd-font-size-base);
 	}
 
 	/* Listen at the left of the instruction; above it on a narrow page. */
@@ -445,15 +446,16 @@
 		min-inline-size: 0;
 	}
 
+	/* The keyboard takes the room the lines of the fingers leave it, smaller rather than above them. */
 	.board {
-		flex: 2 1 var(--dd-size-text-zone-min);
+		flex: 1 1 var(--dd-size-keyboard-intro-min);
 		min-inline-size: 0;
 	}
 
 	/* A column, not a grid: the list of the fingers is held to its width on a narrow page. */
 	.beside {
 		display: flex;
-		flex: 1 1 var(--dd-size-text-zone-side-min);
+		flex: 0 1 var(--dd-size-text-zone-side-min);
 		flex-direction: column;
 		gap: var(--dd-space-sm);
 		align-items: start;

@@ -164,8 +164,9 @@
 	}
 
 	/*
-	 * Tiles: the games share the row, each one at least as wide as a tile, the picture at the left of
-	 * its title; one under the other on a narrow page. They grow less when pointed: they are wide.
+	 * Tiles: the games share the row, each one at least as wide as a tile, one under the other on a
+	 * narrow page. The picture is at the left of the title, above it when the tile is too narrow for
+	 * the longest word of the title beside it. They grow less when pointed: they are wide.
 	 */
 	.games[data-tiles] {
 		align-items: stretch;
@@ -179,12 +180,22 @@
 	}
 
 	.games[data-tiles] .game {
-		grid-template-columns: auto minmax(0, 1fr);
+		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		justify-items: start;
-		gap: var(--dd-space-md);
+		gap: var(--dd-space-sm) var(--dd-space-md);
 		inline-size: 100%;
+		padding-block: var(--dd-space-sm);
 		text-align: start;
+	}
+
+	.games[data-tiles] .picture {
+		flex: none;
+	}
+
+	.games[data-tiles] .title {
+		flex: 1 1 0;
+		min-inline-size: var(--dd-size-game-tile-title-min);
 	}
 
 	.games[data-tiles] .game:hover,

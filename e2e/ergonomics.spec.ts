@@ -1201,3 +1201,187 @@ test.describe('the fingers of the keys on the lesson screen', CHROMIUM_ONLY, () 
 		expect(sideways, 'nothing scrolls sideways').toBeLessThanOrEqual(SUBPIXEL);
 	});
 });
+
+/*
+ * The screen before a lesson in three cards (maquette A, chosen by the owner on 2026-11-20): the
+ * instruction, the keys, the games, each a named region; on a large screen they fill the width of
+ * the page instead of a column of loose pieces in its middle.
+ */
+test.describe('the screen before a lesson, in three cards', CHROMIUM_ONLY, () => {
+	const cards = (page: Page) => page.getByRole('region');
+	const CARD_NAMES = [
+		message('play_intro_instruction_heading'),
+		message('play_intro_keys_other'),
+		message('play_game_choice_legend')
+	];
+
+	test('names its three cards in reading order, after the title and the prize', async ({
+		page
+	}) => {
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		await expect(cards(page)).toHaveCount(CARD_NAMES.length);
+		for (const [index, name] of CARD_NAMES.entries()) {
+			await expect(cards(page).nth(index)).toHaveAccessibleName(name);
+		}
+		await expect(page.locator('[data-prize]')).toBeVisible();
+		const inOrder = await page.evaluate(() => {
+			const read = [
+				document.querySelector('h1'),
+				document.querySelector('[data-prize]'),
+				...document.querySelectorAll('section[aria-labelledby]')
+			];
+			return read.every(
+				(node, index) =>
+					index === 0 ||
+					Boolean(
+						(read[index - 1]?.compareDocumentPosition(node as Node) ?? 0) &
+						Node.DOCUMENT_POSITION_FOLLOWING
+					)
+			);
+		});
+		expect(inOrder, 'title, prize, instruction, keys, games').toBe(true);
+	});
+
+	test('puts the prize on the row of the way out, the number of the lesson above the title', async ({
+		page
+	}) => {
+		await page.setViewportSize(TALL_SCREEN);
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		await settle(page);
+		const boxes = await page.evaluate(() => {
+			const box = (selector: string) => {
+				const rect = document.querySelector(selector)?.getBoundingClientRect();
+				return { top: rect?.top ?? 0, bottom: rect?.bottom ?? 0, left: rect?.left ?? 0 };
+			};
+			return {
+				back: box('[data-screen-back]'),
+				prize: box('[data-prize]'),
+				number: box('.number'),
+				title: box('h1')
+			};
+		});
+		expect(boxes.prize.top, 'prize beside the way out').toBeLessThan(boxes.back.bottom);
+		expect(boxes.prize.left, 'prize at the right of the way out').toBeGreaterThan(boxes.back.left);
+		expect(boxes.number.bottom, 'number above the title').toBeLessThanOrEqual(
+			boxes.title.top + SUBPIXEL
+		);
+		expect(Math.abs(boxes.title.left - boxes.back.left), 'title at the left').toBeLessThanOrEqual(
+			SUBPIXEL
+		);
+	});
+
+	test('spreads the three cards over the width of the page on a large screen', async ({ page }) => {
+		await page.setViewportSize(TALL_SCREEN);
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		await settle(page);
+		const layout = await page.evaluate(() => {
+			const frame = document.querySelector('[data-screen-back]')?.closest('section');
+			const style = frame ? getComputedStyle(frame) : null;
+			const box = frame?.getBoundingClientRect();
+			const sections = [...document.querySelectorAll('section[aria-labelledby]')].map((node) =>
+				node.getBoundingClientRect()
+			);
+			return {
+				left: (box?.left ?? 0) + Number.parseFloat(style?.paddingLeft ?? '0'),
+				right: (box?.right ?? 0) - Number.parseFloat(style?.paddingRight ?? '0'),
+				cards: sections.map((rect) => ({ left: rect.left, right: rect.right, top: rect.top })),
+				bottoms: sections.map((rect) => rect.bottom)
+			};
+		});
+		expect(layout.cards).toHaveLength(3);
+		for (const [index, card] of layout.cards.entries()) {
+			expect(Math.abs(card.left - layout.left), `card ${index}: left`).toBeLessThanOrEqual(
+				SUBPIXEL
+			);
+			expect(Math.abs(card.right - layout.right), `card ${index}: right`).toBeLessThanOrEqual(
+				SUBPIXEL
+			);
+			if (index > 0) {
+				expect(card.top, `card ${index} under the one before`).toBeGreaterThan(
+					layout.bottoms[index - 1] ?? 0
+				);
+			}
+		}
+		// Not a column in the middle of the screen: the cards take the width of the wide page.
+		expect(layout.right - layout.left).toBeGreaterThan(TALL_SCREEN.width / 2);
+	});
+
+	test('opens on a laptop with the instruction at the top and the games in view', async ({
+		page
+	}) => {
+		await page.setViewportSize(SCREENS.laptop);
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		await settle(page);
+		await expectInSight(page, cards(page).nth(0), 'card of the instruction');
+		await expectInSight(page, cards(page).nth(1), 'card of the keys');
+		const proposed = page.locator('button[data-proposed]');
+		await expectInSight(page, proposed.locator('xpath=..'), 'game proposed');
+		await expect(proposed).toBeFocused();
+	});
+
+	test('sets the cards one under the other at 320 pixels, the keyboard above the fingers', async ({
+		page
+	}) => {
+		await page.setViewportSize(NARROW);
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		await settle(page);
+		const layout = await page.evaluate(() => ({
+			sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+			cards: [...document.querySelectorAll('section[aria-labelledby]')].map((node) => {
+				const rect = node.getBoundingClientRect();
+				return { top: rect.top, bottom: rect.bottom, right: rect.right };
+			}),
+			keyboard:
+				document.querySelector('[data-intro-keys] .keyboard')?.getBoundingClientRect().bottom ?? 0,
+			hints: document.querySelector('[data-intro-keys] .hints')?.getBoundingClientRect().top ?? 0,
+			width: innerWidth
+		}));
+		expect(layout.sideways, 'nothing scrolls sideways').toBeLessThanOrEqual(SUBPIXEL);
+		expect(layout.cards).toHaveLength(3);
+		for (const [index, card] of layout.cards.entries()) {
+			expect(card.right, `card ${index}: right`).toBeLessThanOrEqual(layout.width + SUBPIXEL);
+			if (index > 0) expect(card.top).toBeGreaterThan(layout.cards[index - 1]?.bottom ?? 0);
+		}
+		expect(layout.keyboard, 'the keyboard above the fingers').toBeLessThanOrEqual(
+			layout.hints + SUBPIXEL
+		);
+	});
+
+	test('keeps a border around each card and each little key in forced colours', async ({
+		page
+	}) => {
+		await page.emulateMedia({ forcedColors: 'active' });
+		await reachMapAs(page, childBefore(FIRST));
+		await openIntro(page, FIRST);
+		const borders = await page.evaluate(() =>
+			[...document.querySelectorAll('section[aria-labelledby], .keycap')].map((node) => {
+				const style = getComputedStyle(node);
+				return `${style.borderTopStyle} ${Number.parseFloat(style.borderTopWidth) > 0}`;
+			})
+		);
+		// The three cards, and the little keys of F and J before their lines.
+		expect(borders).toEqual(Array.from({ length: 5 }, () => 'solid true'));
+	});
+
+	test('has no axe violation on the three cards, wide and narrow, light and dark', async ({
+		page
+	}) => {
+		test.slow();
+		for (const [screen, lesson] of [
+			[TALL_SCREEN, FIRST],
+			[NARROW, FIRST],
+			[SCREENS.laptop, firstOfEachWorld[5] as Lesson]
+		] as const) {
+			await page.setViewportSize(screen);
+			await reachMapAs(page, childBefore(lesson));
+			await openIntro(page, lesson);
+			await settle(page);
+			await expectNoAxeViolation(page);
+		}
+	});
+});

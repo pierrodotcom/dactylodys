@@ -35,7 +35,6 @@
 		align-items: center;
 		gap: var(--dd-space-md);
 		justify-self: start;
-		max-inline-size: var(--dd-size-panel-max);
 		min-block-size: var(--dd-size-touch-target-min);
 		padding: var(--dd-space-sm) var(--dd-space-md);
 		border-width: var(--dd-border-width-thick);

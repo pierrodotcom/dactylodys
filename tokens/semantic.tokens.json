@@ -2307,6 +2307,10 @@
 		},
 		"3xl": {
 			"$value": "{dimension.64}"
+		},
+		"card-block": {
+			"$description": "Above and below the content of a card of the screen before a lesson: its three cards hold together on a short laptop screen.",
+			"$value": "{dimension.12}"
 		}
 	},
 	"size": {
@@ -2496,6 +2500,15 @@
 		"game-title-proposed-max": {
 			"$description": "Width of the title of the game proposed, when a world offers three games or more: the three games stay on one row.",
 			"$value": "15rem"
+		},
+		"keyboard-intro-min": {
+			"$description": "Least room for the keyboard of the screen before a lesson beside the lines of the fingers: with less, it goes above them. Narrower than the keyboard, which shrinks to fit, so that the longest line of a finger stays beside it on a laptop.",
+			"$value": "24rem"
+		},
+		"game-tile-title-min": {
+			"$description": "The title of a game in its tile is never narrower than its longest word: with less room beside the picture, it goes under it. A keyword of CSS, passed as it is.",
+			"$type": "sizeKeyword",
+			"$value": "min-content"
 		},
 		"game-tile-min": {
 			"$description": "Narrowest tile of a game before a lesson, its picture beside its title: the games of a world share one row on a laptop, one under the other on a narrow page.",
