@@ -2435,6 +2435,11 @@
 		"text-zone-side-min": {
 			"$value": "16rem"
 		},
+		"hint-line": {
+			"$description": "A line of help that is never cut, « Touche F — index gauche »: as wide as its text, so that the column that holds it is never narrower; a maximum of the whole width lets it wrap on a narrow page only (2026-11-19). A keyword of CSS, passed as it is.",
+			"$type": "sizeKeyword",
+			"$value": "max-content"
+		},
 		"choice-card-min": {
 			"$value": "14rem"
 		},
@@ -2972,6 +2977,10 @@
 		"target": {
 			"$description": "The key to press and its modifiers, above the hand that shows them: the finger never hides the sign asked for (E-06).",
 			"$value": 30
+		},
+		"bubble": {
+			"$description": "The bubble of a reward, in front of the picture of its game, which may draw beyond its frame: whole and readable, never behind the drawing (2026-11-19).",
+			"$value": 40
 		},
 		"sticky": {
 			"$value": 100

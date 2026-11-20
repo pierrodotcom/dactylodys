@@ -363,13 +363,17 @@
 		text-align: center;
 	}
 
-	/* Smaller keys, so that the games below stay in view on a laptop screen. */
+	/*
+	 * Smaller keys, so that the games below stay in view on a laptop screen. Never wider than the
+	 * page, however long the line of a finger (`.hints`).
+	 */
 	.keys {
 		--dd-size-key-unit: var(--dd-size-key-unit-compact);
 		display: grid;
 		justify-self: stretch;
 		gap: var(--dd-space-sm);
 		justify-items: center;
+		min-inline-size: 0;
 	}
 
 	.keys h2 {
@@ -385,6 +389,7 @@
 		justify-content: center;
 		gap: var(--dd-space-md) var(--dd-space-xl);
 		inline-size: 100%;
+		min-inline-size: 0;
 	}
 
 	.board {
@@ -392,17 +397,26 @@
 		min-inline-size: 0;
 	}
 
+	/* A column, not a grid: the list of the fingers is held to its width on a narrow page. */
 	.beside {
-		display: grid;
+		display: flex;
 		flex: 1 1 var(--dd-size-text-zone-side-min);
+		flex-direction: column;
 		gap: var(--dd-space-sm);
-		justify-items: center;
+		align-items: center;
+		max-inline-size: 100%;
 	}
 
+	/*
+	 * The finger of a key is never cut: the list is as wide as its longest line, which widens the
+	 * column beside the keyboard when it must; only a page narrower than that line makes it wrap.
+	 */
 	.hints {
 		display: grid;
 		gap: var(--dd-space-xs);
 		justify-items: center;
+		inline-size: var(--dd-size-hint-line);
+		max-inline-size: 100%;
 		margin: 0;
 		padding: 0;
 		list-style: none;
