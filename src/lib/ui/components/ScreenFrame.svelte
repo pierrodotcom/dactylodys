@@ -14,10 +14,15 @@
 		 * that a child never has to scroll down to leave; Escape takes it too.
 		 */
 		back?: { label: string; onclick: () => void };
+		/**
+		 * Shown on the row of the way out, at its right (what the screen can earn, for instance). The
+		 * screen then reads from the left, like a page under its header: its title starts at the left.
+		 */
+		aside?: Snippet;
 		children: Snippet;
 	}
 
-	let { title, focusHeading = true, wide = false, back, children }: Props = $props();
+	let { title, focusHeading = true, wide = false, back, aside, children }: Props = $props();
 
 	function leaveOnEscape(event: KeyboardEvent) {
 		if (event.key !== 'Escape' || event.defaultPrevented || !back) return;
@@ -38,13 +43,24 @@
 		Shown above the title, but after it for the keyboard: from the title the screen opens on,
 		Tab reaches the way out first (Firefox does not wrap Tab around to the top of the page).
 	-->
-	{#if back}
-		<div class="back" data-screen-back>
-			<Button variant="secondary" onclick={back.onclick}>{back.label}</Button>
+	{#if aside}
+		<div class="top">
+			{#if back}
+				{@render wayOut(back)}
+			{/if}
+			<div class="aside">{@render aside()}</div>
 		</div>
+	{:else if back}
+		{@render wayOut(back)}
 	{/if}
 	{@render children()}
 </section>
+
+{#snippet wayOut(leave: { label: string; onclick: () => void })}
+	<div class="back" data-screen-back>
+		<Button variant="secondary" onclick={leave.onclick}>{leave.label}</Button>
+	</div>
+{/snippet}
 
 <style>
 	/* One column no wider than the page: at 320 pixels or 400 % zoom, nothing scrolls sideways. */
@@ -74,6 +90,25 @@
 	.back {
 		order: -1;
 		justify-self: start;
+	}
+
+	/* The way out at the left, the aside at the right; on a narrow page, the aside goes under it. */
+	.frame:has(> .top) {
+		align-content: start;
+		justify-items: stretch;
+		text-align: start;
+	}
+
+	.top {
+		order: -1;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--dd-space-md);
+	}
+
+	.aside {
+		margin-inline-start: auto;
 	}
 
 	h1 {

@@ -16,9 +16,11 @@
 		 * itself. By default, only when they are not in view already.
 		 */
 		reveal?: Attachment<HTMLElement> | null;
+		/** Wide tiles that share the width of the row, each picture beside its title. */
+		tiles?: boolean;
 	}
 
-	let { games, proposed, onplay, reveal = revealInView }: Props = $props();
+	let { games, proposed, onplay, reveal = revealInView, tiles = false }: Props = $props();
 
 	const ordered = $derived([
 		...games.filter((game) => game.value === proposed),
@@ -31,6 +33,7 @@
 	class="games"
 	aria-label={m.play_game_choice_legend()}
 	data-many={games.length > 2 || undefined}
+	data-tiles={tiles || undefined}
 	{@attach reveal ?? undefined}
 >
 	{#each ordered as game (game.value)}
@@ -158,6 +161,46 @@
 	.games[data-many] .game:not([data-proposed]) .picture {
 		inline-size: var(--dd-size-game-picture-small-many);
 		block-size: var(--dd-size-game-picture-small-many);
+	}
+
+	/*
+	 * Tiles: the games share the row, each one at least as wide as a tile, one under the other on a
+	 * narrow page. The picture is at the left of the title, above it when the tile is too narrow for
+	 * the longest word of the title beside it. They grow less when pointed: they are wide.
+	 */
+	.games[data-tiles] {
+		align-items: stretch;
+		justify-content: start;
+	}
+
+	.games[data-tiles] > li {
+		display: flex;
+		flex: 1 1 var(--dd-size-game-tile-min);
+		min-inline-size: 0;
+	}
+
+	.games[data-tiles] .game {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--dd-space-sm) var(--dd-space-md);
+		inline-size: 100%;
+		padding-block: var(--dd-space-sm);
+		text-align: start;
+	}
+
+	.games[data-tiles] .picture {
+		flex: none;
+	}
+
+	.games[data-tiles] .title {
+		flex: 1 1 0;
+		min-inline-size: var(--dd-size-game-tile-title-min);
+	}
+
+	.games[data-tiles] .game:hover,
+	.games[data-tiles] .game:focus-visible {
+		scale: var(--dd-scale-tile);
 	}
 
 	@keyframes bob {

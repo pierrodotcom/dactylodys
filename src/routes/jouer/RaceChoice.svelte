@@ -34,8 +34,7 @@
 		grid-template-columns: auto auto minmax(0, 1fr);
 		align-items: center;
 		gap: var(--dd-space-md);
-		justify-self: center;
-		max-inline-size: var(--dd-size-panel-max);
+		justify-self: start;
 		min-block-size: var(--dd-size-touch-target-min);
 		padding: var(--dd-space-sm) var(--dd-space-md);
 		border-width: var(--dd-border-width-thick);
