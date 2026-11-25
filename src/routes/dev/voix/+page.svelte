@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { parseVoiceConfig } from '$lib/audio/voice-config';
 	import {
 		SPOKEN_MESSAGE_GROUPS,
 		spokenMessages,
 		type SpokenMessageGroupId
 	} from '$lib/audio/voice-messages';
+	import { loadVoiceManifest } from '$lib/audio/voice-player';
 	import { VOICE_CREDIT_MAX_LENGTH } from '$lib/audio/voice-recordings';
 	import { processTake } from '$lib/audio/voice-signal';
 	import {
@@ -39,6 +41,17 @@
 		type ActiveRecording,
 		type MicrophoneProblem
 	} from './microphone';
+	import {
+		firstMissingIndex,
+		isPublished,
+		positionOf,
+		publishedKeys,
+		recordingProgress,
+		textState,
+		textsToGoThrough,
+		type PublishedKeys,
+		type TextState
+	} from './recording-list';
 	import {
 		createIndexedDbTakeStore,
 		createMemoryTakeStore,
@@ -83,7 +96,7 @@
 
 	const MS_PER_SECOND = 1000;
 	const REVOKE_DELAY_MS = 10_000;
-	const MARKS = { missing: '○', recorded: '✓' } as const;
+	const MARKS: Readonly<Record<TextState, string>> = { missing: '○', online: '●', recorded: '✓' };
 	const RECORD_BUTTON_ID = 'voix-record';
 	const CLEAR_BUTTON_ID = 'voix-clear';
 	const CANCEL_CLEAR_BUTTON_ID = 'voix-clear-cancel';
@@ -113,6 +126,9 @@
 	let ready = $state(false);
 	let position = $state(0);
 	let takes = $state.raw<ReadonlyMap<string, Take>>(new Map());
+	/** `undefined` while the manifest of the published voice is being read. */
+	let published = $state.raw<PublishedKeys | undefined>(undefined);
+	let showPublished = $state(false);
 	let phase = $state<Phase>('idle');
 	let playing = $state(false);
 	let notice = $state('');
@@ -133,11 +149,21 @@
 	let autoStop: ReturnType<typeof setTimeout> | undefined;
 	let playback: { audio: HTMLAudioElement; url: string } | undefined;
 
-	const current = $derived(texts[position]);
+	/** The texts the buttons go through: by default, those without a published voice. */
+	const list = $derived(textsToGoThrough(texts, published ?? null, showPublished));
+	const current = $derived(list[position]);
 	const currentTake = $derived(current ? takes.get(current.key) : undefined);
-	const recorded = $derived(recordedTexts(texts, takes).length);
-	const remaining = $derived(texts.length - recorded);
-	const firstMissing = $derived(texts.findIndex((text) => !takes.has(text.key)));
+	const currentOnline = $derived(current !== undefined && isPublished(current, published ?? null));
+	const currentState = $derived<TextState>(
+		current ? textState(current, takes, published ?? null) : 'missing'
+	);
+	const progress = $derived(recordingProgress(list, takes, published ?? null));
+	const publishedCount = $derived(
+		texts.filter((text) => isPublished(text, published ?? null)).length
+	);
+	/** Every take of this browser goes in the archive, a text already online included. */
+	const taken = $derived(recordedTexts(texts, takes).length);
+	const firstMissing = $derived(firstMissingIndex(list, takes, published ?? null));
 	const isIdle = $derived(phase === 'idle');
 	const canRecord = $derived(ready && !isLasting(problem));
 	const recordLabel = $derived(
@@ -260,10 +286,21 @@
 	}
 
 	function goTo(target: number) {
-		if (!isIdle || target < 0 || target >= texts.length) return;
+		if (!isIdle || target < 0 || target >= list.length) return;
 		stopPlayback();
 		notice = '';
 		position = target;
+	}
+
+	/** The list grows or shrinks around the text on screen: it stays there, or on the next one listed. */
+	function changeShowPublished(event: Event & { currentTarget: HTMLInputElement }) {
+		const shown = current?.key;
+		showPublished = event.currentTarget.checked;
+		position = positionOf(list, texts, shown);
+		if (current?.key !== shown) {
+			stopPlayback();
+			notice = '';
+		}
 	}
 
 	function download(bytes: Uint8Array<ArrayBuffer>, fileName: string) {
@@ -280,7 +317,7 @@
 	function exportArchive() {
 		exportedName = '';
 		exportError = '';
-		exportIssue = !consent ? 'consent' : recorded === 0 ? 'take' : null;
+		exportIssue = !consent ? 'consent' : taken === 0 ? 'take' : null;
 		if (exportIssue !== null) return;
 		try {
 			const archive = buildVoiceArchive({
@@ -335,6 +372,11 @@
 	onMount(() => {
 		let left = false;
 		problem = findSupportProblem(readMicrophoneSupport());
+		// Read as the game reads it, through the site (and its offline copy): `null` when it cannot be.
+		const manifest = loadVoiceManifest(
+			fetch,
+			`${resolve('/')}voice/${voiceLocale(progression)}/`
+		).catch(() => null);
 		void (async () => {
 			let opened: TakeStore;
 			let kept: readonly Take[];
@@ -346,12 +388,14 @@
 				kept = [];
 				storageNotice = m.dev_voix_storage_volatile();
 			}
+			const found = await manifest;
 			if (left) {
 				opened.close();
 				return;
 			}
 			store = opened;
 			takes = new Map(kept.map((take) => [take.key, take]));
+			published = publishedKeys(found);
 			position = Math.max(0, firstMissing);
 			ready = true;
 		})();
@@ -378,22 +422,33 @@
 		<p class="hint">{m.dev_voix_privacy_note()}</p>
 	</header>
 
-	{#if current}
-		<section class="recorder" aria-labelledby="voix-text-heading">
+	<section class="recorder" aria-labelledby={current ? 'voix-text-heading' : undefined}>
+		{#if current}
 			<div class="card" data-phase={phase} aria-live="polite" aria-atomic="true">
 				<h2 id="voix-text-heading">
-					{m.dev_voix_position({ position: position + 1, total: texts.length })}
+					{m.dev_voix_position({ position: position + 1, total: list.length })}
 				</h2>
 				<p class="origin">{originLabel(current.origin)}</p>
 				{#if current.fallback}
 					<p class="origin" data-testid="voice-fallback">{m.dev_voix_fallback_note()}</p>
 				{/if}
 				<p class="text" lang={progression.locale} data-testid="voice-text">{current.text}</p>
-				<p class="take" data-testid="take-status" data-recorded={currentTake !== undefined}>
-					<span aria-hidden="true">{currentTake ? MARKS.recorded : MARKS.missing}</span>
-					{currentTake
-						? m.dev_voix_take_done({ duration: formatDuration(currentTake.durationMs) })
-						: m.dev_voix_take_none()}
+				<p
+					class="take"
+					data-testid="take-status"
+					data-recorded={currentTake !== undefined}
+					data-state={currentState}
+				>
+					<span aria-hidden="true">{MARKS[currentState]}</span>
+					{#if currentTake}
+						{(currentOnline ? m.dev_voix_take_done_online : m.dev_voix_take_done)({
+							duration: formatDuration(currentTake.durationMs)
+						})}
+					{:else if currentOnline}
+						{m.dev_voix_take_online()}
+					{:else}
+						{m.dev_voix_take_none()}
+					{/if}
 				</p>
 			</div>
 
@@ -438,7 +493,7 @@
 				</Button>
 				<Button
 					variant="secondary"
-					disabled={!isIdle || position === texts.length - 1}
+					disabled={!isIdle || position === list.length - 1}
 					onclick={() => goTo(position + 1)}
 				>
 					{m.dev_voix_next()}
@@ -451,19 +506,44 @@
 					{m.dev_voix_first_missing()}
 				</Button>
 			</nav>
+		{/if}
 
-			<p data-testid="voice-progress">
-				{m.dev_voix_progress({ recorded, total: texts.length })}
-				{#if remaining === 0}
+		<p data-testid="voice-progress">
+			{#if progress.total === 0}
+				{m.dev_voix_all_published()}
+			{:else}
+				{m.dev_voix_progress({ recorded: progress.recorded, total: progress.total })}
+				{#if progress.remaining === 0}
 					{m.dev_voix_remaining_none()}
-				{:else if isOne(remaining)}
-					{m.dev_voix_remaining_one({ count: remaining })}
+				{:else if isOne(progress.remaining)}
+					{m.dev_voix_remaining_one({ count: progress.remaining })}
 				{:else}
-					{m.dev_voix_remaining_other({ count: remaining })}
+					{m.dev_voix_remaining_other({ count: progress.remaining })}
 				{/if}
+			{/if}
+		</p>
+
+		{#if published}
+			<label class="check">
+				<input
+					type="checkbox"
+					checked={showPublished}
+					disabled={!isIdle}
+					aria-describedby="voix-published-hint"
+					data-testid="show-published"
+					onchange={changeShowPublished}
+				/>
+				<span>{m.dev_voix_show_published()}</span>
+			</label>
+			<p id="voix-published-hint" class="hint">
+				{isOne(publishedCount)
+					? m.dev_voix_published_one({ count: publishedCount })
+					: m.dev_voix_published_other({ count: publishedCount })}
 			</p>
-		</section>
-	{/if}
+		{:else if published === null}
+			<p class="hint" data-testid="voice-published-unknown">{m.dev_voix_published_unknown()}</p>
+		{/if}
+	</section>
 
 	<section aria-labelledby="voix-export-heading">
 		<h2 id="voix-export-heading">{m.dev_voix_export_heading()}</h2>
