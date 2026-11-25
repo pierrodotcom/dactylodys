@@ -8,6 +8,8 @@ Un texte = un fichier, nommé par l'empreinte du texte (`voiceKey`). Un texte r�
 
 Ouvrir la page `/dev/voix` du site (en HTTPS, ou sur `localhost` pendant le développement), de préférence sur un téléphone. Lire chaque texte, puis télécharger l'archive `voix-fr__<date>.zip`. Les prises restent dans le navigateur tant qu'on ne les efface pas : on peut s'y reprendre en plusieurs fois.
 
+La page lit le manifeste publié (`static/voice/fr/manifest.json`), comme le jeu : par défaut, elle ne montre que les textes **sans voix en ligne**, et ses boutons, sa position (« Texte 3 sur … ») et son compte ne portent que sur eux. Chaque texte dit son état : « À enregistrer », « Déjà en ligne » ou « Enregistré » (une prise est dans ce navigateur). La case « Montrer aussi les textes déjà en ligne » rend la liste entière, pour refaire un texte : la nouvelle prise remplacera l'ancienne à l'import. Si le manifeste ne se charge pas (page ouverte sans réseau avant toute visite, ou fichier absent), la page le dit et montre tous les textes. L'archive contient toutes les prises du navigateur, celles des textes déjà en ligne comprises.
+
 ## 2. Importer
 
 Déposer l'archive dans le projet (par exemple dans `docs\voix\`), puis, depuis l'invite de commandes Windows :

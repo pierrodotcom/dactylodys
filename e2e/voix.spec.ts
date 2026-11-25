@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { voiceKey } from '../src/lib/audio/voice-key';
 import { spokenMessages } from '../src/lib/audio/voice-messages';
+import { parseVoiceManifest } from '../src/lib/audio/voice-player';
 import { parseVoiceRecordings } from '../src/lib/audio/voice-recordings';
 import { readWavHeader } from '../src/lib/audio/voice-signal';
 import {
@@ -31,6 +32,7 @@ import {
  */
 
 const PAGE_URL = '/dev/voix';
+const MANIFEST_URL = '**/voice/fr/manifest.json';
 const FILE_NAME = /^voix-fr__\d{4}-\d{2}-\d{2}\.zip$/;
 const MIN_TARGET_PIXELS = 48;
 /** Seconds of sound the simulated microphone must have produced before a take is stopped. */
@@ -47,20 +49,51 @@ const TEXTS = inRecordingOrder(
 		spokenMessages(readJson<Record<string, string>>('messages/fr.json'))
 	)
 );
-const TOTAL = TEXTS.length;
-const FIRST = TEXTS[0]!;
-const SECOND = TEXTS[1]!;
+/**
+ * The texts the tests say are online: one in three, the first of the list among them. Never the
+ * manifest the site publishes: once every text is recorded, none would be left to record (L-195).
+ */
+const PUBLISHED = new Set(TEXTS.filter((_, index) => index % 3 === 0).map((text) => text.key));
+const TEST_MANIFEST = parseVoiceManifest({
+	schemaVersion: 1,
+	locale: 'fr',
+	voice: { name: 'test', source: 'test', license: 'CC BY-SA 4.0' },
+	clips: Object.fromEntries(
+		[...PUBLISHED].map((key) => [key, { file: `${key}.mp3`, durationMs: 1000 }])
+	)
+});
+
+// Registered first: a test that serves no manifest registers its own route after it, which wins.
+test.beforeEach(async ({ page }) => {
+	await page.route(MANIFEST_URL, (route) => route.fulfill({ json: TEST_MANIFEST }));
+});
+
+const ONLINE = TEXTS.filter((text) => PUBLISHED.has(text.key));
+const TO_RECORD = TEXTS.filter((text) => !PUBLISHED.has(text.key));
+const TOTAL = TO_RECORD.length;
+const FIRST = TO_RECORD[0]!;
+const SECOND = TO_RECORD[1]!;
 
 function button(page: Page, key: string) {
 	return page.getByRole('button', { name: message(key), exact: true });
 }
 
-function positionHeading(page: Page, position: number) {
+function positionHeading(page: Page, position: number, total = TOTAL) {
 	return page.getByRole('heading', {
 		level: 2,
-		name: message('dev_voix_position', { position, total: TOTAL }),
+		name: message('dev_voix_position', { position, total }),
 		exact: true
 	});
+}
+
+function showPublishedBox(page: Page) {
+	return page.getByRole('checkbox', { name: message('dev_voix_show_published') });
+}
+
+/** Presses a button that keeps the focus, once per text, from one place of the list to another. */
+async function walk(page: Page, from: number, to: number) {
+	await button(page, to < from ? 'dev_voix_previous' : 'dev_voix_next').focus();
+	for (let step = 0; step < Math.abs(to - from); step++) await page.keyboard.press('Enter');
 }
 
 function exportIssue(page: Page) {
@@ -194,12 +227,81 @@ test.describe('voice recording page', CHROMIUM_ONLY, () => {
 		await expect(consentBox(page)).toBeChecked();
 	});
 
-	test('offers the openings and endings of the story first (ADR-042)', async ({ page }) => {
+	test('shows every text, the openings and endings of the story first (ADR-042), when it cannot tell which are online', async ({
+		page
+	}) => {
+		await page.route(MANIFEST_URL, (route) => route.fulfill({ status: 404, body: '' }));
 		await openRecorder(page);
+
+		await expect(page.getByTestId('voice-published-unknown')).toHaveText(
+			message('dev_voix_published_unknown')
+		);
+		await expect(showPublishedBox(page)).toHaveCount(0);
+		await expect(positionHeading(page, 1, TEXTS.length)).toBeVisible();
+		await expect(page.getByTestId('voice-progress')).toContainText(
+			message('dev_voix_remaining_other', { count: TEXTS.length })
+		);
 		const first = story.worlds[0];
 		await expect(page.getByTestId('voice-text')).toHaveText(first?.opening ?? '');
 		await button(page, 'dev_voix_next').click();
 		await expect(page.getByTestId('voice-text')).toHaveText(first?.ending ?? '');
+	});
+
+	test('counts the texts without a published voice, and shows the others on demand', async ({
+		page
+	}) => {
+		// The manifest of the tests publishes some of the texts, and not all of them.
+		expect(ONLINE.length).toBeGreaterThan(0);
+		expect(TOTAL).toBeGreaterThan(0);
+		const progress = page.getByTestId('voice-progress');
+		await openRecorder(page);
+
+		await expect(positionHeading(page, 1)).toBeVisible();
+		await expect(page.getByTestId('voice-text')).toHaveText(FIRST.text);
+		await expect(progress).toContainText(
+			message('dev_voix_progress', { recorded: 0, total: TOTAL })
+		);
+		await expect(progress).toContainText(message('dev_voix_remaining_other', { count: TOTAL }));
+		await expect(
+			page.getByText(message('dev_voix_published_other', { count: ONLINE.length }))
+		).toBeVisible();
+		await expect(page.getByTestId('voice-published-unknown')).toHaveCount(0);
+
+		await showPublishedBox(page).focus();
+		await page.keyboard.press('Space');
+
+		// The whole list, on the same text; as many are left to record.
+		const from = TEXTS.indexOf(FIRST);
+		await expect(showPublishedBox(page)).toBeChecked();
+		await expect(page.getByTestId('voice-text')).toHaveText(FIRST.text);
+		await expect(positionHeading(page, from + 1, TEXTS.length)).toBeVisible();
+		await expect(progress).toContainText(
+			message('dev_voix_progress', { recorded: 0, total: TEXTS.length })
+		);
+		await expect(progress).toContainText(message('dev_voix_remaining_other', { count: TOTAL }));
+
+		const online = ONLINE[0]!;
+		const to = TEXTS.indexOf(online);
+		await walk(page, from, to);
+		await expect(positionHeading(page, to + 1, TEXTS.length)).toBeVisible();
+		await expect(page.getByTestId('voice-text')).toHaveText(online.text);
+		await expect(page.getByTestId('take-status')).toHaveAttribute('data-state', 'online');
+		await expect(page.getByTestId('take-status')).toContainText(message('dev_voix_take_online'));
+		await expect(page.getByTestId('record-button')).toBeEnabled();
+
+		// « Aller au premier texte sans enregistrement » skips the texts already online.
+		await button(page, 'dev_voix_first_missing').click();
+		await expect(page.getByTestId('voice-text')).toHaveText(FIRST.text);
+		await walk(page, from, to);
+		await expect(page.getByTestId('voice-text')).toHaveText(online.text);
+
+		// Hidden again, the text online leaves the list: the page goes on to the next one to record.
+		await showPublishedBox(page).uncheck();
+		const next = TEXTS.slice(to).find((text) => !PUBLISHED.has(text.key))!;
+		await expect(page.getByTestId('voice-text')).toHaveText(next.text);
+		await expect(positionHeading(page, TO_RECORD.indexOf(next) + 1)).toBeVisible();
+		await expect(page.getByTestId('take-status')).toHaveAttribute('data-state', 'missing');
+		await expect(page.getByTestId('take-status')).toContainText(message('dev_voix_take_none'));
 	});
 
 	test('stops at both ends of the list of texts, the optional whole instructions last', async ({
@@ -211,17 +313,17 @@ test.describe('voice recording page', CHROMIUM_ONLY, () => {
 		expect(kinds).toContain('intro-mac');
 		expect(kinds.indexOf('message')).toBeGreaterThan(kinds.lastIndexOf('line'));
 		expect(TEXTS.at(-1)?.fallback).toBe(true);
+		const last = TO_RECORD.at(-1)!;
 		await openRecorder(page);
 
 		await expect(button(page, 'dev_voix_previous')).toBeDisabled();
-		await expect(page.getByTestId('voice-fallback')).toHaveCount(0);
-		// Some two hundred texts: Enter on « Texte suivant », which keeps the focus, goes through them.
-		await button(page, 'dev_voix_next').focus();
-		for (let position = 2; position <= TOTAL; position++) await page.keyboard.press('Enter');
+		await expect(page.getByTestId('voice-fallback')).toHaveCount(FIRST.fallback ? 1 : 0);
+		// Over a hundred texts: Enter on « Texte suivant », which keeps the focus, goes through them.
+		await walk(page, 0, TOTAL - 1);
 		await expect(positionHeading(page, TOTAL)).toBeVisible();
 		await expect(button(page, 'dev_voix_next')).toBeDisabled();
-		await expect(page.getByTestId('voice-text')).toHaveText(TEXTS[TOTAL - 1]!.text);
-		await expect(page.getByTestId('voice-fallback')).toHaveText(message('dev_voix_fallback_note'));
+		await expect(page.getByTestId('voice-text')).toHaveText(last.text);
+		await expect(page.getByTestId('voice-fallback')).toHaveCount(last.fallback ? 1 : 0);
 	});
 
 	test('gives every control a touch target of at least 48 pixels', async ({ page }) => {
@@ -405,11 +507,63 @@ test.describe('voice recording page, with a microphone', CHROMIUM_ONLY, () => {
 			message('dev_voix_progress', { recorded: 0, total: TOTAL })
 		);
 	});
+
+	test('records again a text already online, counts it only in the whole list and exports it', async ({
+		page
+	}) => {
+		const online = ONLINE[0]!;
+		const progress = page.getByTestId('voice-progress');
+		await simulateMicrophone(page);
+		await openRecorder(page);
+		await showPublishedBox(page).check();
+		await walk(page, TEXTS.indexOf(FIRST), TEXTS.indexOf(online));
+
+		await recordTake(page);
+
+		await expect(page.getByTestId('take-status')).toHaveAttribute('data-state', 'recorded');
+		await expect(page.getByTestId('take-status')).toContainText(
+			message('dev_voix_take_done_online', { duration: '' }).split(')').at(-1)!
+		);
+		await expect(progress).toContainText(
+			message('dev_voix_progress', { recorded: 1, total: TEXTS.length })
+		);
+		await showPublishedBox(page).uncheck();
+		await expect(progress).toContainText(
+			message('dev_voix_progress', { recorded: 0, total: TOTAL })
+		);
+
+		await consentBox(page).check();
+		const downloadPromise = page.waitForEvent('download');
+		await page.getByTestId('export-button').click();
+		const archive = readFileSync(await (await downloadPromise).path());
+		const recordings = parseVoiceRecordings(
+			JSON.parse(new TextDecoder().decode(await readZipEntry(archive, 'enregistrements.json')))
+		);
+		expect(recordings.clips.map((clip) => clip.key)).toEqual([online.key]);
+	});
 });
 
 test.describe('voice recording page, light and dark themes', () => {
 	test('has no axe violation for WCAG A and AA', async ({ page }) => {
 		await openRecorder(page);
+
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation with every text shown, on a text already online', async ({ page }) => {
+		const online = ONLINE[0]!;
+		await openRecorder(page);
+		await showPublishedBox(page).check();
+		await walk(page, TEXTS.indexOf(FIRST), TEXTS.indexOf(online));
+		await expect(page.getByTestId('take-status')).toHaveAttribute('data-state', 'online');
+
+		await expectNoAxeViolation(page);
+	});
+
+	test('has no axe violation when it cannot tell which texts are online', async ({ page }) => {
+		await page.route(MANIFEST_URL, (route) => route.fulfill({ status: 404, body: '' }));
+		await openRecorder(page);
+		await expect(page.getByTestId('voice-published-unknown')).toBeVisible();
 
 		await expectNoAxeViolation(page);
 	});
