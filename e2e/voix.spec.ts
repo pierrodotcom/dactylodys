@@ -49,10 +49,25 @@ const TEXTS = inRecordingOrder(
 		spokenMessages(readJson<Record<string, string>>('messages/fr.json'))
 	)
 );
-/** The texts whose voice the site publishes: the page leaves them out unless asked to show them. */
-const PUBLISHED = new Set(
-	Object.keys(parseVoiceManifest(readJson('static/voice/fr/manifest.json')).clips)
-);
+/**
+ * The texts the tests say are online: one in three, the first of the list among them. Never the
+ * manifest the site publishes: once every text is recorded, none would be left to record (L-195).
+ */
+const PUBLISHED = new Set(TEXTS.filter((_, index) => index % 3 === 0).map((text) => text.key));
+const TEST_MANIFEST = parseVoiceManifest({
+	schemaVersion: 1,
+	locale: 'fr',
+	voice: { name: 'test', source: 'test', license: 'CC BY-SA 4.0' },
+	clips: Object.fromEntries(
+		[...PUBLISHED].map((key) => [key, { file: `${key}.mp3`, durationMs: 1000 }])
+	)
+});
+
+// Registered first: a test that serves no manifest registers its own route after it, which wins.
+test.beforeEach(async ({ page }) => {
+	await page.route(MANIFEST_URL, (route) => route.fulfill({ json: TEST_MANIFEST }));
+});
+
 const ONLINE = TEXTS.filter((text) => PUBLISHED.has(text.key));
 const TO_RECORD = TEXTS.filter((text) => !PUBLISHED.has(text.key));
 const TOTAL = TO_RECORD.length;
@@ -235,7 +250,7 @@ test.describe('voice recording page', CHROMIUM_ONLY, () => {
 	test('counts the texts without a published voice, and shows the others on demand', async ({
 		page
 	}) => {
-		// The manifest of today publishes some of the texts, and not all of them.
+		// The manifest of the tests publishes some of the texts, and not all of them.
 		expect(ONLINE.length).toBeGreaterThan(0);
 		expect(TOTAL).toBeGreaterThan(0);
 		const progress = page.getByTestId('voice-progress');
