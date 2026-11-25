@@ -57,5 +57,19 @@ jobs:
         with:
           path: build/
 
-      - id: deployment
+      # GitHub sometimes lists the package of the site a few seconds after it is sent: the first try
+      # then finds none (L-196). One more try after a short wait, in this same job: re-running the
+      # whole run would send the package twice, which deploy-pages refuses.
+      - id: first-try
+        continue-on-error: true
         uses: actions/deploy-pages@v5
+
+      - if: steps.first-try.outcome == 'failure'
+        run: sleep 30
+
+      - id: second-try
+        if: steps.first-try.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+
+      - id: deployment
+        run: echo "page_url=${{ steps.first-try.outputs.page_url || steps.second-try.outputs.page_url }}" >> "$GITHUB_OUTPUT"
