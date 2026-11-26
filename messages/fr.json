@@ -591,6 +591,7 @@
 	"dev_voix_message_break": "la pause",
 	"dev_voix_message_check": "la vérification du clavier",
 	"dev_voix_message_caps_lock": "la touche Verr. Maj allumée",
+	"dev_voix_message_intro": "l'écran avant une leçon du monde où l'on efface ses fautes",
 	"dev_voix_fallback_note": "Facultatif : cette consigne entière n'est dite que tant que les phrases courtes de sa leçon ne sont pas toutes enregistrées.",
 	"dev_voix_reminder_look": "regarder l'écran",
 	"dev_voix_take_none": "À enregistrer",
