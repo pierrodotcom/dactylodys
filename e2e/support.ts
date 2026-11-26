@@ -372,10 +372,11 @@ async function snapshotOfRealStore(profile: Profile): Promise<DatabaseSnapshot> 
 /**
  * `version-1`, `version-2`, `version-4`, `version-14`: the record as that version of the app stored
  * it, before any migration (version 14: the last one of the former order of the lessons);
- * `later-version`: as a more recent app would store it, which this one cannot open.
+ * `later-version`: as a more recent app would store it, which this one cannot open; `damaged`: of
+ * this version, but its settings lost, which no version can open.
  */
 export type StoredFormat =
-	'current' | 'version-1' | 'version-2' | 'version-4' | 'version-14' | 'later-version';
+	'current' | 'version-1' | 'version-2' | 'version-4' | 'version-14' | 'later-version' | 'damaged';
 
 const STORED_FORMATS = {
 	'version-1': asVersion1,
@@ -386,7 +387,8 @@ const STORED_FORMATS = {
 		...profile,
 		schemaVersion: profile.schemaVersion + 1,
 		addedLater: true
-	})
+	}),
+	damaged: (profile: Profile) => ({ ...profile, settings: null })
 } as const;
 
 function inFormat(snapshot: DatabaseSnapshot, profile: Profile, format: StoredFormat) {

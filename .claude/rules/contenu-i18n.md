@@ -33,6 +33,7 @@ paths:
 - Toute clé ajoutée l'est dans **toutes les langues actives** dans le même commit ; un test échoue sinon.
 - Nombres, durées et pluriels passent par les API `Intl`.
 - Le français est la langue source.
+- **Caractères invisibles** (L-156, L-186, L-191, L-197) : une espace insécable (` `, ` `) ou une apostrophe courbe (`’`) ne s'écrit jamais par les outils Write ou Edit, qui décodent l'échappement en vrai caractère, dans le JSON comme dans le `.ts` et le `.js` ; passer par un script (Python ou Node) qui écrit l'échappement. Les textes que l'enfant tape n'en contiennent jamais.
 
 ## Pages imprimables (L-160, L-178)
 

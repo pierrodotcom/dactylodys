@@ -14,7 +14,7 @@ Il est pensé pour les enfants de 8 à 12 ans, en particulier ceux qui ont un TD
 
 L'objectif : taper au moins aussi vite que l'enfant écrit à la main, de façon lisible et sans regarder ses mains, soit souvent 10 à 15 mots par minute. La cible est propre à chaque enfant : l'adulte mesure sa vitesse à la main en une minute.
 
-C'est la condition retenue en ergothérapie pour que le clavier allège l'écriture au lieu d'ajouter une tâche (Freeman et al., 2005). Il y faut au moins 25 à 30 heures de pratique, dont le parcours des leçons ne couvre que quelques-unes.
+C'est la condition retenue en ergothérapie pour que le clavier allège l'écriture au lieu d'ajouter une tâche (Freeman et al., 2005). Il y faut environ 25 à 30 heures d'enseignement, puis un à deux ans de pratique pour que le geste devienne automatique. Le parcours des leçons n'en couvre qu'une partie.
 
 Le parcours compte 34 leçons en 6 mondes : F et J, les voyelles tôt pour de vrais mots, les lettres courantes, les accents fréquents, les majuscules et la ponctuation pour de vraies phrases, de petits textes utiles, les chiffres et l'arobase, jusqu'à réparer un message. Deux leçons sont facultatives : les accents rares (î, ô, û, ë, ï).
 

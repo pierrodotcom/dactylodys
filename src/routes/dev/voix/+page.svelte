@@ -80,7 +80,8 @@
 		'play.help': m.dev_voix_message_help,
 		'play.break': m.dev_voix_message_break,
 		'play.check': m.dev_voix_message_check,
-		'game.caps-lock': m.dev_voix_message_caps_lock
+		'game.caps-lock': m.dev_voix_message_caps_lock,
+		'play.intro': m.dev_voix_message_intro
 	};
 	const titles = new Map([
 		...progression.worlds.flatMap((world): [string, string][] => [

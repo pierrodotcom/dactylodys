@@ -90,11 +90,11 @@
 			<ul class="records">
 				{#each unreadable as record, index (record.id ?? `no-id-${index}`)}
 					<li class="record">
-						<p>
-							<strong>{labelOf(record)}</strong> —
+						<!-- One sentence, the name of the player in it: « Lou : abîmé, … ». -->
+						<p data-unreadable-reason={record.reason}>
 							{record.reason === 'newer-version'
-								? m.play_unreadable_newer({ appName: m.app_name() })
-								: m.play_unreadable_invalid()}
+								? m.play_unreadable_newer({ name: labelOf(record), appName: m.app_name() })
+								: m.play_unreadable_invalid({ name: labelOf(record) })}
 						</p>
 						{#if record.id !== null}
 							{@const id = record.id}

@@ -3,9 +3,10 @@ import type { VoiceReminder } from './voice-texts';
 /*
  * The messages of the interface the voice says (audit P-12), in the order of their use to a child
  * who reads little: the questions of Floup and his answers, the result of a play, the request of the
- * companion, the break, the check of the keyboard, the help about Caps Lock. A message is said only
- * as it is written: one with a parameter cannot be recorded once for all, so the voice says a
- * sentence of its own beside it, without the parameter (`*_spoken`).
+ * companion, the break, the check of the keyboard, the help about Caps Lock, and the sentence of the
+ * world where a mistake is erased, said before its lessons after their instruction. A message is
+ * said only as it is written: one with a parameter cannot be recorded once for all, so the voice
+ * says a sentence of its own beside it, without the parameter (`*_spoken`).
  *
  * `/dev/voix` and `tools/voice/import.js` read them here, from the messages of the language: what
  * the page asks to record, what the tool keeps and what the screens say are the same sentences.
@@ -13,7 +14,13 @@ import type { VoiceReminder } from './voice-texts';
 
 /** Where a message is said, as the page of the recordings names it. */
 export type SpokenMessageGroupId =
-	'game.dialogue' | 'play.result' | 'play.help' | 'play.break' | 'play.check' | 'game.caps-lock';
+	| 'game.dialogue'
+	| 'play.result'
+	| 'play.help'
+	| 'play.break'
+	| 'play.check'
+	| 'game.caps-lock'
+	| 'play.intro';
 
 export interface SpokenMessageGroup {
 	readonly id: SpokenMessageGroupId;
@@ -59,7 +66,8 @@ export const SPOKEN_MESSAGE_GROUPS: readonly SpokenMessageGroup[] = [
 			'play_check_diff_adult'
 		]
 	},
-	{ id: 'game.caps-lock', keys: ['game_shared_caps_lock'] }
+	{ id: 'game.caps-lock', keys: ['game_shared_caps_lock'] },
+	{ id: 'play.intro', keys: ['play_intro_erasing'] }
 ];
 
 const PARAMETER = /\{\w+\}/;

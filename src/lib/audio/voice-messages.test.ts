@@ -29,11 +29,16 @@ describe('spokenMessages', () => {
 			'play.help',
 			'play.break',
 			'play.check',
-			'game.caps-lock'
+			'game.caps-lock',
+			'play.intro'
 		]);
 		expect(textsOf('play.result')).toContain(messages['play_result_headline_0']);
 		expect(textsOf('play.result')).toContain(messages['play_result_retry']);
 		expect(textsOf('game.caps-lock')).toEqual([messages['game_shared_caps_lock']]);
+	});
+
+	it('says the sentence of the world where a mistake is erased, shown before its lessons', () => {
+		expect(textsOf('play.intro')).toEqual([messages['play_intro_erasing']]);
 	});
 
 	it('takes every series in the order of its numbers, not of the file', () => {

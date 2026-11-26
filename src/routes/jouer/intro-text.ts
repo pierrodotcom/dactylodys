@@ -48,3 +48,55 @@ export function silencing(voice: VoicePlayer, text: string): VoicePlayer {
 		dispose: () => voice.stop()
 	};
 }
+
+/** The voice of the screen before a lesson, which says its texts once as the screen opens. */
+export interface OpeningVoice extends VoicePlayer {
+	/**
+	 * Says `texts` one after the other, each once the one before is said: the instruction, then the
+	 * sentence of a world where a mistake is erased. A text without a recording says nothing, the
+	 * next one still comes. Anything asked of the voice meanwhile (a « Listen » button, a stop, the
+	 * screen closing) ends the opening: what was left of it is not said. Resolves once it is over.
+	 */
+	open(texts: readonly string[]): Promise<void>;
+}
+
+/**
+ * `voice`, which can also open a screen (`open`). Stopping or disposing of it only stops `voice`,
+ * which belongs to whoever gave it.
+ */
+export function withOpening(voice: VoicePlayer): OpeningVoice {
+	/** Numbers the openings; `current` is the one being said, 0 when none is. */
+	let openings = 0;
+	let current = 0;
+
+	function interrupt() {
+		current = 0;
+	}
+
+	return {
+		has: (text) => voice.has(text),
+		prepare: (text) => voice.prepare(text),
+		speak(text) {
+			interrupt();
+			return voice.speak(text);
+		},
+		stop() {
+			interrupt();
+			voice.stop();
+		},
+		dispose() {
+			interrupt();
+			voice.stop();
+		},
+		async open(texts) {
+			openings += 1;
+			const mine = openings;
+			current = mine;
+			for (const text of texts) {
+				if (current !== mine) return;
+				if ((await voice.speak(text)) === 'disabled') break;
+			}
+			if (current === mine) interrupt();
+		}
+	};
+}

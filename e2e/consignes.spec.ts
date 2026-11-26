@@ -4,6 +4,7 @@ import type { Profile } from '../src/lib/state/types';
 import { CHROMIUM_ONLY } from './engines';
 import {
 	advancedProfile,
+	type AdvancedProfileInput,
 	expectNoAxeViolation,
 	installProfile,
 	loadMessages,
@@ -33,27 +34,46 @@ interface Lesson {
 	intro: string;
 	steps?: { char: string; text: string }[];
 }
-const lessons = readJson<{ worlds: { lessons: Lesson[] }[] }>(
+const worlds = readJson<{ worlds: { lessons: Lesson[] }[] }>(
 	'content/fr/progression/azerty-decouverte.json'
-).worlds.flatMap((world) => world.lessons);
+).worlds;
+const lessons = worlds.flatMap((world) => world.lessons);
 /** « Les œufs de dinosaure »: F, then J. */
 const FIRST = lessons[0]!;
+/** The first lesson of the world where a mistake is erased with Backspace: the last world. */
+const ERASING_LESSON = worlds.at(-1)!.lessons[0]!;
+const ERASING = message('play_intro_erasing');
 const STEPS = FIRST.steps ?? [];
 const manifest = readJson<{ clips: Record<string, { file: string; durationMs: number }> }>(
 	'static/voice/fr/manifest.json'
 );
 
+/** A clip for each of these sentences. */
+function clipsOf(texts: readonly string[]) {
+	return Object.fromEntries(
+		texts.map((text) => {
+			const key = voiceKey(text);
+			return [key, { file: `${key}.mp3`, durationMs: 1000 }] as const;
+		})
+	);
+}
+
 /** The published voice, and a clip for each of these sentences besides. */
 function voiceWith(texts: readonly string[]) {
-	const added = texts.map((text) => {
-		const key = voiceKey(text);
-		return [key, { file: `${key}.mp3`, durationMs: 1000 }] as const;
-	});
-	return { ...manifest, clips: { ...manifest.clips, ...Object.fromEntries(added) } };
+	return { ...manifest, clips: { ...manifest.clips, ...clipsOf(texts) } };
 }
 
 async function recordAlso(page: Page, texts: readonly string[]) {
 	const served = voiceWith(texts);
+	await page.route(MANIFEST_URL, (route) => route.fulfill({ json: served }));
+}
+
+/**
+ * A voice that has these sentences and no other: what the site publishes never changes what the
+ * test hears (L-195).
+ */
+async function recordOnly(page: Page, texts: readonly string[]) {
+	const served = { ...manifest, clips: clipsOf(texts) };
 	await page.route(MANIFEST_URL, (route) => route.fulfill({ json: served }));
 }
 
@@ -106,9 +126,15 @@ function heading(page: Page, name: string) {
 	return page.getByRole('heading', { level: 1, name });
 }
 
-function child(name: string): Profile {
-	const profile = advancedProfile({ name, passed: {} });
+function child(name: string, passed: AdvancedProfileInput['passed'] = {}): Profile {
+	const profile = advancedProfile({ name, passed });
 	return { ...profile, settings: { ...profile.settings, voiceEnabled: true } };
+}
+
+/** A child who passed every lesson of the first worlds: the world where mistakes are erased is open. */
+function childAtTheTexts(name: string): Profile {
+	const before = worlds.slice(0, -1).flatMap((world) => world.lessons);
+	return child(name, Object.fromEntries(before.map((lesson) => [lesson.id, 2 as const])));
 }
 
 async function reachMapAs(page: Page, profile: Profile) {
@@ -179,6 +205,66 @@ test.describe('the instruction said in short sentences (audit P-13)', () => {
 		await expect(listen(page)).toBeVisible();
 		expect(await playedOf(page, [STEPS[0]!.text])).toEqual([]);
 		await expect(sentence(page)).not.toHaveAttribute('data-intro-step');
+	});
+});
+
+test.describe('the sentence of the world where a mistake is erased, said after the instruction', () => {
+	const erasing = (page: Page) => page.locator('[data-erasing]');
+
+	async function openErasingIntro(page: Page, name: string) {
+		await reachMapAs(page, childAtTheTexts(name));
+		await openIntro(page, ERASING_LESSON);
+		await expect(page.locator('[data-erasing-notice]')).toHaveText(ERASING);
+	}
+
+	test('says it once the instruction is said, once, and again with the Listen beside it', async ({
+		page
+	}) => {
+		const texts = [ERASING_LESSON.intro, ERASING];
+		await noteVoice(page);
+		await recordOnly(page, texts);
+		await openErasingIntro(page, 'Lison');
+
+		await expect.poll(() => playedOf(page, texts)).toEqual([voiceKey(ERASING_LESSON.intro)]);
+		await endVoice(page);
+		await expect.poll(() => playedOf(page, texts)).toEqual(texts.map(voiceKey));
+		await endVoice(page);
+
+		await erasing(page)
+			.getByRole('button', { name: message('ui_listen_start') })
+			.click();
+		await expect
+			.poll(() => playedOf(page, texts))
+			.toEqual([...texts.map(voiceKey), voiceKey(ERASING)]);
+	});
+
+	test('says nothing of it and shows no Listen beside it while it is not recorded', async ({
+		page
+	}) => {
+		await noteVoice(page);
+		await recordOnly(page, [ERASING_LESSON.intro]);
+		await openErasingIntro(page, 'Loïs');
+
+		await expect
+			.poll(() => playedOf(page, [ERASING_LESSON.intro]))
+			.toEqual([voiceKey(ERASING_LESSON.intro)]);
+		await expect(erasing(page).getByRole('button')).toHaveCount(0);
+		await endVoice(page);
+		// Listen says the instruction again: the sentence of the world never came between.
+		await page.locator('.instruction').getByRole('button').click();
+		await expect
+			.poll(() => playedOf(page, [ERASING_LESSON.intro, ERASING]))
+			.toEqual([voiceKey(ERASING_LESSON.intro), voiceKey(ERASING_LESSON.intro)]);
+	});
+
+	test('has no axe violation with the Listen beside the sentence of the world', async ({
+		page
+	}) => {
+		await recordOnly(page, [ERASING_LESSON.intro, ERASING]);
+		await openErasingIntro(page, 'Lilou');
+		await expect(erasing(page).getByRole('button')).toBeVisible();
+
+		await expectNoAxeViolation(page);
 	});
 });
 

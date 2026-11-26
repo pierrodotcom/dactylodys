@@ -22,7 +22,7 @@
 	import type { GameOption } from './game-choice';
 	import GamePicker from './GamePicker.svelte';
 	import { headingCount, introLines, introShown, introSteps, type IntroLine } from './intro-keys';
-	import { introText, silencing } from './intro-text';
+	import { introText, silencing, withOpening } from './intro-text';
 	import RaceChoice from './RaceChoice.svelte';
 
 	interface Props {
@@ -52,7 +52,7 @@
 		canRace: boolean;
 		/**
 		 * The child enters a world where a mistake is erased with Backspace and has not played there
-		 * yet: one written sentence says so.
+		 * yet: one sentence says so, written, and said after the instruction once it is recorded.
 		 */
 		erasingNew?: boolean;
 		/** `race`: the child switched the race on before taking a game. */
@@ -149,12 +149,17 @@
 	const stepPress = $derived(step === null ? null : (steps[step]?.press ?? null));
 	const stepChar = $derived(step === null ? undefined : steps[step]?.char);
 
-	// The child does not read: the instruction is said once as the lesson opens. What the sentences
-	// change on screen while they are said never says them again.
+	/** The sentence of a world where a mistake is erased, shown and said after the instruction. */
+	const erasing = m.play_intro_erasing();
+	const opening = $derived(withOpening(speaker));
+
+	// The child does not read: the instruction is said once as the lesson opens, then the sentence of
+	// the world, if it is shown. What the sentences change on screen while they are said never says
+	// them again.
 	$effect(() => {
-		const said = intro;
-		const saying = speaker;
-		untrack(() => void saying.speak(said));
+		const said = erasingNew ? [intro, erasing] : [intro];
+		const saying = opening;
+		untrack(() => void saying.open(said));
 		return () => saying.stop();
 	});
 
@@ -187,6 +192,14 @@
 		return label && finger !== null ? { label, finger } : null;
 	}
 </script>
+
+<!-- Listen beside it, as for the instruction: only once it is recorded. -->
+{#snippet erasingNotice()}
+	<div class="erasing" data-erasing>
+		<ListenButton text={erasing} player={opening} />
+		<p class="notice" data-erasing-notice>{erasing}</p>
+	</div>
+{/snippet}
 
 <ScreenFrame
 	title={lesson.title}
@@ -233,7 +246,7 @@
 			<h2 id="intro-instruction-heading" class="dd-visually-hidden">
 				{m.play_intro_instruction_heading()}
 			</h2>
-			<ListenButton text={intro} player={speaker} />
+			<ListenButton text={intro} player={opening} />
 			{#if written.kind === 'steps'}
 				<!-- One short sentence a line, as the voice says them. -->
 				<ul class="intro intro-steps" data-intro-steps>
@@ -296,7 +309,7 @@
 							{/each}
 						</ul>
 						{#if erasingNew}
-							<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
+							{@render erasingNotice()}
 						{/if}
 					</div>
 				</div>
@@ -311,7 +324,7 @@
 			<h2 id="intro-games-heading">{m.play_game_choice_legend()}</h2>
 			{#if shown === null && erasingNew}
 				<!-- Right above the games, where the screen settles: the child reads it before choosing. -->
-				<p class="notice" data-erasing-notice>{m.play_intro_erasing()}</p>
+				{@render erasingNotice()}
 			{/if}
 
 			<GamePicker
@@ -422,6 +435,20 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
+	}
+
+	/* Listen at the left of the sentence of the world, above it when the room is short. */
+	.erasing {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--dd-space-sm);
+		min-inline-size: 0;
+	}
+
+	/* Alone, the sentence keeps the width it had without the button: that of its card or column. */
+	.erasing .notice {
+		flex: 1 1 auto;
 	}
 
 	.notice {
