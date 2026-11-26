@@ -97,6 +97,23 @@ describe('the sheet for professionals', () => {
 		expect(sheet).toContain(path);
 	});
 
+	it('writes in its Markdown version every sentence of the page that has no figure to fill in', () => {
+		// The labels of the links are not sentences: the Markdown gives the addresses themselves.
+		const keys = [...new Set(keysOf(/m\.(pro_\w+)\(\)/g, source))].filter(
+			(key) => !key.endsWith('_link')
+		);
+		const missing = keys.filter((key) => !sheet.includes(message(key)));
+
+		expect(keys.length).toBeGreaterThan(MIN_SECTIONS * 4);
+		expect(missing).toEqual([]);
+	});
+
+	it('tells the hours of teaching, then the years of practice that make the gesture automatic', () => {
+		expect(message('pro_audience_why')).toContain(
+			"environ 25 à 30 heures d'enseignement, puis un à deux ans de pratique pour que le geste devienne automatique."
+		);
+	});
+
 	it('never writes the name of the app in the page itself', () => {
 		const appName = messages['app_name'] ?? '';
 
