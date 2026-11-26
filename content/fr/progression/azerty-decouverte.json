@@ -120,7 +120,7 @@
 					"title": "Les œufs de dinosaure",
 					"intro": "Pose tes deux index sur les touches F et J, celles qui ont un petit trait.",
 					"steps": [
-						{ "char": "f", "text": "F, à gauche, a un petit trait : sens-le." },
+						{ "char": "f", "text": "F, à gauche, a un petit trait : sens-le." },
 						{ "char": "j", "text": "J, à droite, a le même trait." }
 					],
 					"newChars": ["f", "j"],
@@ -138,7 +138,7 @@
 				{
 					"id": "fr.lesson.saut-espace",
 					"title": "Le saut du diplodocus",
-					"intro": "Appuie avec un pouce sur la grande barre du bas, la barre d'espace : elle sépare les mots.",
+					"intro": "Appuie avec un pouce sur la grande barre du bas, la barre d'espace : elle sépare les mots.",
 					"steps": [{ "char": " ", "text": "L'espace, c'est la grande barre du bas." }],
 					"newChars": [" "],
 					"words": [],
@@ -175,7 +175,7 @@
 				{
 					"id": "fr.lesson.mare-s-l",
 					"title": "La mare du stégosaure",
-					"intro": "Pose tes annulaires, les doigts juste après les majeurs : S à gauche et L à droite.",
+					"intro": "Pose tes annulaires, les doigts juste après les majeurs : S à gauche et L à droite.",
 					"steps": [
 						{ "char": "s", "text": "S est juste à gauche de D." },
 						{ "char": "l", "text": "L est juste à droite de K." }
@@ -355,8 +355,8 @@
 					"title": "La tartine toquée",
 					"intro": "Ton index gauche monte jusqu'à T et ton index droit descend jusqu'à N, puis ils reviennent sur F et J.",
 					"steps": [
-						{ "char": "t", "text": "T : monte au-dessus de F, vers la droite." },
-						{ "char": "n", "text": "N : descends sous J, vers la gauche." }
+						{ "char": "t", "text": "T : monte au-dessus de F, vers la droite." },
+						{ "char": "n", "text": "N : descends sous J, vers la gauche." }
 					],
 					"newChars": ["t", "n"],
 					"words": [],
@@ -373,7 +373,7 @@
 				{
 					"id": "fr.lesson.gateau-a-o",
 					"title": "Le gâteau farfelu",
-					"intro": "Ton auriculaire gauche, le plus petit doigt, se pose sur Q et monte sur A ; ton annulaire droit monte sur O.",
+					"intro": "Ton auriculaire gauche, le plus petit doigt, se pose sur Q et monte sur A ; ton annulaire droit monte sur O.",
 					"steps": [
 						{ "char": "a", "text": "Q est tout à gauche, rangée du milieu." },
 						{ "char": "a", "text": "A est juste au-dessus de Q." },
@@ -556,7 +556,7 @@
 					"title": "Les géantes de la galaxie",
 					"intro": "Pour une majuscule, tiens Maj avec l'auriculaire de l'autre main, puis tape la lettre.",
 					"steps": [
-						{ "char": "F", "text": "Une majuscule : tiens Maj de l'autre côté." },
+						{ "char": "F", "text": "Une majuscule : tiens Maj de l'autre côté." },
 						{ "char": "J", "text": "Pour J, c'est la touche Maj de gauche." }
 					],
 					"newChars": [],
@@ -583,7 +583,7 @@
 				{
 					"id": "fr.lesson.virgule-point",
 					"title": "Pause sur la planète Virgule",
-					"intro": "Ton index droit tape la virgule, à droite de N, et ton majeur droit le point-virgule ; avec Maj, le point.",
+					"intro": "Ton index droit tape la virgule, à droite de N, et ton majeur droit le point-virgule ; avec Maj, le point.",
 					"steps": [
 						{ "char": ",", "text": "La virgule est juste à droite de N." },
 						{ "char": ";", "text": "Le point-virgule est juste à côté." },
@@ -765,7 +765,7 @@
 						"mac": "Maj et la virgule donnent le point d'interrogation, le point d'exclamation est sur le 8, les guillemets sur le 3."
 					},
 					"steps": [
-						{ "char": "?", "text": "Le point d'interrogation : Maj et la virgule." },
+						{ "char": "?", "text": "Le point d'interrogation : Maj et la virgule." },
 						{ "char": "!", "text": "Le point d'exclamation se tape sans Maj." },
 						{ "char": "\"", "text": "Les guillemets sont sur la touche du 3." }
 					],
@@ -822,11 +822,11 @@
 				{
 					"id": "fr.lesson.chapeau-circonflexe",
 					"title": "Le chapeau du pilote",
-					"intro": "Tape d'abord la touche ^, à droite de P, puis la voyelle : elle apparaît avec son chapeau.",
+					"intro": "Tape d'abord la touche ^, à droite de P, puis la voyelle : elle apparaît avec son chapeau.",
 					"steps": [
 						{ "char": "ê", "text": "L'accent circonflexe est juste à droite de P." },
-						{ "char": "ê", "text": "Tape-le, puis E : voilà Ê." },
-						{ "char": "â", "text": "Tape-le, puis A : voilà Â." }
+						{ "char": "ê", "text": "Tape-le, puis E : voilà Ê." },
+						{ "char": "â", "text": "Tape-le, puis A : voilà Â." }
 					],
 					"newChars": ["ê", "â"],
 					"words": [],
@@ -851,11 +851,11 @@
 				{
 					"id": "fr.lesson.casque-circonflexe",
 					"title": "Le casque du copilote",
-					"intro": "Tape d'abord la touche ^, à droite de P, puis I, O ou U : la lettre apparaît avec son chapeau.",
+					"intro": "Tape d'abord la touche ^, à droite de P, puis I, O ou U : la lettre apparaît avec son chapeau.",
 					"steps": [
-						{ "char": "î", "text": "Accent circonflexe, puis I : voilà Î." },
-						{ "char": "ô", "text": "Accent circonflexe, puis O : voilà Ô." },
-						{ "char": "û", "text": "Accent circonflexe, puis U : voilà Û." }
+						{ "char": "î", "text": "Accent circonflexe, puis I : voilà Î." },
+						{ "char": "ô", "text": "Accent circonflexe, puis O : voilà Ô." },
+						{ "char": "û", "text": "Accent circonflexe, puis U : voilà Û." }
 					],
 					"newChars": ["î", "ô", "û"],
 					"words": [],
@@ -880,11 +880,11 @@
 				{
 					"id": "fr.lesson.trema",
 					"title": "Le camion aux deux yeux",
-					"intro": "Tiens Maj, tape la touche ^, à droite de P, puis la voyelle : elle apparaît avec deux points.",
+					"intro": "Tiens Maj, tape la touche ^, à droite de P, puis la voyelle : elle apparaît avec deux points.",
 					"steps": [
-						{ "char": "ë", "text": "Le tréma : Maj et l'accent circonflexe." },
-						{ "char": "ë", "text": "Puis E : voilà Ë." },
-						{ "char": "ï", "text": "Même geste, puis I : voilà Ï." }
+						{ "char": "ë", "text": "Le tréma : Maj et l'accent circonflexe." },
+						{ "char": "ë", "text": "Puis E : voilà Ë." },
+						{ "char": "ï", "text": "Même geste, puis I : voilà Ï." }
 					],
 					"newChars": ["ë", "ï"],
 					"words": [],
@@ -938,7 +938,7 @@
 				{
 					"id": "fr.lesson.liste-pique-nique",
 					"title": "La liste du pique-nique",
-					"intro": "Ton auriculaire droit appuie sur Entrée, la grande touche à droite : le texte passe à la ligne.",
+					"intro": "Ton auriculaire droit appuie sur Entrée, la grande touche à droite : le texte passe à la ligne.",
 					"steps": [
 						{ "char": "\n", "text": "Entrée, c'est la grande touche à droite." },
 						{ "char": "\n", "text": "Elle fait passer le texte à la ligne." }
@@ -974,7 +974,7 @@
 				{
 					"id": "fr.lesson.recette-quiche",
 					"title": "La recette de la quiche",
-					"intro": "Une ligne, puis Entrée : ton doigt y va sans que tu regardes.",
+					"intro": "Une ligne, puis Entrée : ton doigt y va sans que tu regardes.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -990,7 +990,7 @@
 				{
 					"id": "fr.lesson.legende-dessin",
 					"title": "La légende du dessin",
-					"intro": "Sous un dessin, on écrit une légende : tape-la ligne par ligne, avec Entrée.",
+					"intro": "Sous un dessin, on écrit une légende : tape-la ligne par ligne, avec Entrée.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -1022,7 +1022,7 @@
 				{
 					"id": "fr.lesson.invitation-fete",
 					"title": "L'invitation à la fête",
-					"intro": "Une idée par ligne : quand la ligne est finie, Entrée, et on continue.",
+					"intro": "Une idée par ligne : quand la ligne est finie, Entrée, et on continue.",
 					"newChars": [],
 					"words": [],
 					"mix": {
@@ -1038,7 +1038,7 @@
 				{
 					"id": "fr.lesson.score-du-match",
 					"title": "Le score du match",
-					"intro": "Les chiffres sont tout en haut du clavier : tiens Maj avec l'auriculaire droit, puis tape 1, 2, 3, 4 ou 5.",
+					"intro": "Les chiffres sont tout en haut du clavier : tiens Maj avec l'auriculaire droit, puis tape 1, 2, 3, 4 ou 5.",
 					"steps": [
 						{ "char": "1", "text": "Les chiffres sont tout en haut du clavier." },
 						{ "char": "2", "text": "Tiens Maj de l'autre côté, puis tape-les." }
@@ -1083,9 +1083,9 @@
 				{
 					"id": "fr.lesson.adresse-du-dino",
 					"title": "L'adresse du dino",
-					"intro": "Sur un PC, tiens Alt Gr avec le pouce droit, puis tape la touche du à : l'arobase apparaît.",
+					"intro": "Sur un PC, tiens Alt Gr avec le pouce droit, puis tape la touche du à : l'arobase apparaît.",
 					"introByPlatform": {
-						"mac": "Sur un Mac, l'arobase @ a sa propre touche, tout à gauche : ton auriculaire gauche la tape."
+						"mac": "Sur un Mac, l'arobase @ a sa propre touche, tout à gauche : ton auriculaire gauche la tape."
 					},
 					"steps": [{ "char": "@", "text": "L'arobase est sur la rangée des chiffres." }],
 					"newChars": ["@"],
@@ -1107,7 +1107,7 @@
 				{
 					"id": "fr.lesson.reparer-message",
 					"title": "Réparer un message",
-					"intro": "Une faute est déjà écrite au bout de la ligne : ton auriculaire droit l'efface avec Retour arrière, puis tu continues.",
+					"intro": "Une faute est déjà écrite au bout de la ligne : ton auriculaire droit l'efface avec Retour arrière, puis tu continues.",
 					"steps": [
 						{ "char": "\b", "text": "Retour arrière est en haut, tout à droite." },
 						{ "char": "\b", "text": "Il efface la faute, puis tu continues." }

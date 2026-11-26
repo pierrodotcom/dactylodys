@@ -47,7 +47,7 @@
 			"id": "fr.trace-prompt.altgr-dead-keys",
 			"title": "Tilde et accent grave (touches mortes avec Alt Gr)",
 			"text": "~`",
-			"instruction": "Sur PC : Alt Gr+2 puis la barre d'espace, puis Alt Gr+7 puis la barre d'espace. Sur Mac : Option+N puis espace, puis la touche ` puis espace."
+			"instruction": "Sur PC : Alt Gr+2 puis la barre d'espace, puis Alt Gr+7 puis la barre d'espace. Sur Mac : Option+N puis espace, puis la touche ` puis espace."
 		},
 		{
 			"id": "fr.trace-prompt.altgr-symbols",
@@ -77,13 +77,13 @@
 			"id": "fr.trace-prompt.backspace",
 			"title": "Retour arrière",
 			"text": "chat",
-			"instruction": "Tape « chaz », appuie sur Retour arrière, puis termine en tapant « t »."
+			"instruction": "Tape « chaz », appuie sur Retour arrière, puis termine en tapant « t »."
 		},
 		{
 			"id": "fr.trace-prompt.enter",
 			"title": "Entrée",
 			"text": "un\ndeux",
-			"instruction": "Tape « un », appuie sur Entrée, puis tape « deux »."
+			"instruction": "Tape « un », appuie sur Entrée, puis tape « deux »."
 		}
 	]
 }

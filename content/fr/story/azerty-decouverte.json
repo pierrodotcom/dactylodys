@@ -8,7 +8,7 @@
 			"worldId": "fr.world.dinosaures",
 			"opening": "Ton dino part en voyage. Son carnet est encore tout vide.",
 			"openingArt": "dino-opening",
-			"ending": "Première page du carnet : remplie. Prochaine étape, la cuisine.",
+			"ending": "Première page du carnet : remplie. Prochaine étape, la cuisine.",
 			"endingArt": "dino-ending",
 			"lessons": [
 				{
@@ -33,7 +33,7 @@
 				},
 				{
 					"lessonId": "fr.lesson.mots-e-i",
-					"line": "Le raptor écrit son tout premier mot : miam.",
+					"line": "Le raptor écrit son tout premier mot : miam.",
 					"art": "dino-raptor"
 				},
 				{
@@ -47,7 +47,7 @@
 			"worldId": "fr.world.cuisine",
 			"opening": "Ton dino arrive en cuisine. Il a faim, comme toujours.",
 			"openingArt": "kitchen-opening",
-			"ending": "Ton dino a tout goûté. Deux fois. Page deux : remplie.",
+			"ending": "Ton dino a tout goûté. Deux fois. Page deux : remplie.",
 			"endingArt": "kitchen-ending",
 			"lessons": [
 				{
@@ -81,7 +81,7 @@
 			"worldId": "fr.world.espace",
 			"opening": "Trois, deux, un… Ton dino décolle, son carnet bien serré.",
 			"openingArt": "space-opening",
-			"ending": "Page trois : la Terre vue d'en haut. Prochain arrêt, le zoo.",
+			"ending": "Page trois : la Terre vue d'en haut. Prochain arrêt, le zoo.",
 			"endingArt": "space-ending",
 			"lessons": [
 				{
@@ -110,7 +110,7 @@
 			"worldId": "fr.world.animaux",
 			"opening": "Au zoo, les animaux regardent les visiteurs. Aujourd'hui, c'est ton dino.",
 			"openingArt": "zoo-opening",
-			"ending": "Page quatre du carnet : les animaux ont signé. Direction le circuit.",
+			"ending": "Page quatre du carnet : les animaux ont signé. Direction le circuit.",
 			"endingArt": "zoo-ending",
 			"lessons": [
 				{
@@ -137,9 +137,9 @@
 		},
 		{
 			"worldId": "fr.world.vehicules",
-			"opening": "Ton dino veut piloter. Petit détail : il n'a pas le permis.",
+			"opening": "Ton dino veut piloter. Petit détail : il n'a pas le permis.",
 			"openingArt": "circuit-opening",
-			"ending": "Dernière page du carnet : remplie. La suite, c'est toi qui l'écris.",
+			"ending": "Dernière page du carnet : remplie. La suite, c'est toi qui l'écris.",
 			"endingArt": "circuit-ending",
 			"lessons": [
 				{
@@ -159,7 +159,7 @@
 				},
 				{
 					"lessonId": "fr.lesson.casque-circonflexe",
-					"line": "Le copilote a un casque trop grand : il ne voit rien.",
+					"line": "Le copilote a un casque trop grand : il ne voit rien.",
 					"art": "circuit-helmet"
 				},
 				{
@@ -183,7 +183,7 @@
 				},
 				{
 					"lessonId": "fr.lesson.message-t-rex",
-					"line": "Le T-rex répond tout de suite : il veut sa casquette.",
+					"line": "Le T-rex répond tout de suite : il veut sa casquette.",
 					"art": "post-trex"
 				},
 				{
@@ -203,7 +203,7 @@
 				},
 				{
 					"lessonId": "fr.lesson.invitation-fete",
-					"line": "Tout le monde dit oui pour la fête. Même le klaxon : pouet.",
+					"line": "Tout le monde dit oui pour la fête. Même le klaxon : pouet.",
 					"art": "post-invite"
 				},
 				{
@@ -213,17 +213,17 @@
 				},
 				{
 					"lessonId": "fr.lesson.train-huit-heures",
-					"line": "Le train répond : il arrivera à huit heures. Enfin, il croit.",
+					"line": "Le train répond : il arrivera à huit heures. Enfin, il croit.",
 					"art": "post-train"
 				},
 				{
 					"lessonId": "fr.lesson.adresse-du-dino",
-					"line": "Ton dino a une adresse avec un petit escargot dedans : l'arobase.",
+					"line": "Ton dino a une adresse avec un petit escargot dedans : l'arobase.",
 					"art": "post-at"
 				},
 				{
 					"lessonId": "fr.lesson.reparer-message",
-					"line": "Le yak a écrit « bonjoir ». Ton dino efface la faute : bonjour, le yak !",
+					"line": "Le yak a écrit « bonjoir ». Ton dino efface la faute : bonjour, le yak !",
 					"art": "post-repair"
 				}
 			]

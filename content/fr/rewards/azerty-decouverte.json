@@ -52,7 +52,7 @@
 			"id": "fr.reward.egg-necklace",
 			"kind": "item",
 			"title": "Le collier de petits œufs",
-			"description": "Réussis la leçon « Les œufs de dinosaure ».",
+			"description": "Réussis la leçon « Les œufs de dinosaure ».",
 			"artId": "egg-necklace",
 			"slot": "neck",
 			"condition": {
@@ -64,7 +64,7 @@
 			"id": "fr.reward.springs",
 			"kind": "item",
 			"title": "Les ressorts sous les pattes",
-			"description": "Réussis la leçon « Le saut du diplodocus ».",
+			"description": "Réussis la leçon « Le saut du diplodocus ».",
 			"artId": "springs",
 			"slot": "feet",
 			"condition": {
@@ -76,7 +76,7 @@
 			"id": "fr.reward.nest-backpack",
 			"kind": "item",
 			"title": "Le sac à dos en forme de nid",
-			"description": "Réussis la leçon « Le nid du tricératops ».",
+			"description": "Réussis la leçon « Le nid du tricératops ».",
 			"artId": "nest-backpack",
 			"slot": "back",
 			"condition": {
@@ -88,7 +88,7 @@
 			"id": "fr.reward.rain-boots",
 			"kind": "item",
 			"title": "Les bottes de pluie",
-			"description": "Réussis la leçon « La mare du stégosaure ».",
+			"description": "Réussis la leçon « La mare du stégosaure ».",
 			"artId": "rain-boots",
 			"slot": "feet",
 			"condition": {
@@ -100,7 +100,7 @@
 			"id": "fr.reward.magnifier",
 			"kind": "item",
 			"title": "La loupe pour explorer",
-			"description": "Réussis la leçon « Les mots du raptor ».",
+			"description": "Réussis la leçon « Les mots du raptor ».",
 			"artId": "magnifier",
 			"slot": "hand",
 			"condition": {
@@ -112,7 +112,7 @@
 			"id": "fr.reward.crown",
 			"kind": "item",
 			"title": "La couronne des dinos",
-			"description": "Réussis la leçon « Le rugissement du T-rex ».",
+			"description": "Réussis la leçon « Le rugissement du T-rex ».",
 			"artId": "crown",
 			"slot": "head",
 			"condition": {
@@ -124,7 +124,7 @@
 			"id": "fr.reward.chef-hat",
 			"kind": "item",
 			"title": "La toque de chef",
-			"description": "Réussis la leçon « La tartine toquée ».",
+			"description": "Réussis la leçon « La tartine toquée ».",
 			"artId": "chef-hat",
 			"slot": "head",
 			"condition": {
@@ -136,7 +136,7 @@
 			"id": "fr.reward.cream-moustache",
 			"kind": "item",
 			"title": "La moustache en chantilly",
-			"description": "Réussis la leçon « Le gâteau farfelu ».",
+			"description": "Réussis la leçon « Le gâteau farfelu ».",
 			"artId": "cream-moustache",
 			"slot": "face",
 			"condition": {
@@ -148,7 +148,7 @@
 			"id": "fr.reward.checked-apron",
 			"kind": "item",
 			"title": "Le tablier à carreaux",
-			"description": "Réussis la leçon « La quiche qui rigole ».",
+			"description": "Réussis la leçon « La quiche qui rigole ».",
 			"artId": "checked-apron",
 			"slot": "body",
 			"condition": {
@@ -160,7 +160,7 @@
 			"id": "fr.reward.ladle-mic",
 			"kind": "item",
 			"title": "La louche-micro",
-			"description": "Réussis la leçon « La casserole qui chante ».",
+			"description": "Réussis la leçon « La casserole qui chante ».",
 			"artId": "ladle-mic",
 			"slot": "hand",
 			"condition": {
@@ -172,7 +172,7 @@
 			"id": "fr.reward.chili-nose",
 			"kind": "item",
 			"title": "Le nez rouge piment",
-			"description": "Réussis la leçon « Les épices surprises ».",
+			"description": "Réussis la leçon « Les épices surprises ».",
 			"artId": "chili-nose",
 			"slot": "face",
 			"condition": {
@@ -184,7 +184,7 @@
 			"id": "fr.reward.star-glasses",
 			"kind": "item",
 			"title": "Les lunettes en étoiles",
-			"description": "Réussis la leçon « Le café de la Lune ».",
+			"description": "Réussis la leçon « Le café de la Lune ».",
 			"artId": "star-glasses",
 			"slot": "face",
 			"condition": {
@@ -196,7 +196,7 @@
 			"id": "fr.reward.comet-cape",
 			"kind": "item",
 			"title": "La cape de comète",
-			"description": "Réussis la leçon « La comète pressée ».",
+			"description": "Réussis la leçon « La comète pressée ».",
 			"artId": "comet-cape",
 			"slot": "back",
 			"condition": {
@@ -208,7 +208,7 @@
 			"id": "fr.reward.astronaut-helmet",
 			"kind": "item",
 			"title": "Le casque d'astronaute",
-			"description": "Réussis la leçon « Les géantes de la galaxie ».",
+			"description": "Réussis la leçon « Les géantes de la galaxie ».",
 			"artId": "astronaut-helmet",
 			"slot": "head",
 			"condition": {
@@ -220,7 +220,7 @@
 			"id": "fr.reward.ring-float",
 			"kind": "item",
 			"title": "La bouée anneau de planète",
-			"description": "Réussis la leçon « Pause sur la planète Virgule ».",
+			"description": "Réussis la leçon « Pause sur la planète Virgule ».",
 			"artId": "ring-float",
 			"slot": "body",
 			"condition": {
@@ -232,7 +232,7 @@
 			"id": "fr.reward.giraffe-bow-tie",
 			"kind": "item",
 			"title": "Le nœud papillon à taches de girafe",
-			"description": "Réussis la leçon « La girafe au long cou ».",
+			"description": "Réussis la leçon « La girafe au long cou ».",
 			"artId": "giraffe-bow-tie",
 			"slot": "neck",
 			"condition": {
@@ -244,7 +244,7 @@
 			"id": "fr.reward.ball-shoes",
 			"kind": "item",
 			"title": "Les chaussures de bal",
-			"description": "Réussis la leçon « Le bal de la vache ».",
+			"description": "Réussis la leçon « Le bal de la vache ».",
 			"artId": "ball-shoes",
 			"slot": "feet",
 			"condition": {
@@ -256,7 +256,7 @@
 			"id": "fr.reward.yak-beanie",
 			"kind": "item",
 			"title": "Le bonnet en laine de yak",
-			"description": "Réussis la leçon « Le yak mystère ».",
+			"description": "Réussis la leçon « Le yak mystère ».",
 			"artId": "yak-beanie",
 			"slot": "head",
 			"condition": {
@@ -268,7 +268,7 @@
 			"id": "fr.reward.striped-sweater",
 			"kind": "item",
 			"title": "Le pull à rayures",
-			"description": "Réussis la leçon « Le zèbre à rayures ».",
+			"description": "Réussis la leçon « Le zèbre à rayures ».",
 			"artId": "striped-sweater",
 			"slot": "body",
 			"condition": {
@@ -280,7 +280,7 @@
 			"id": "fr.reward.bulb-horn",
 			"kind": "item",
 			"title": "Le klaxon à poire",
-			"description": "Réussis la leçon « Le klaxon rigolo ».",
+			"description": "Réussis la leçon « Le klaxon rigolo ».",
 			"artId": "bulb-horn",
 			"slot": "hand",
 			"condition": {
@@ -292,7 +292,7 @@
 			"id": "fr.reward.train-cap",
 			"kind": "item",
 			"title": "La casquette du train",
-			"description": "Réussis la leçon « Le train aux wagons accrochés ».",
+			"description": "Réussis la leçon « Le train aux wagons accrochés ».",
 			"artId": "train-cap",
 			"slot": "head",
 			"condition": {
@@ -304,7 +304,7 @@
 			"id": "fr.reward.aviator-goggles",
 			"kind": "item",
 			"title": "Les lunettes de vol",
-			"description": "Réussis la leçon « Le chapeau du pilote ».",
+			"description": "Réussis la leçon « Le chapeau du pilote ».",
 			"artId": "aviator-goggles",
 			"slot": "face",
 			"condition": {
@@ -316,7 +316,7 @@
 			"id": "fr.reward.pilot-scarf",
 			"kind": "item",
 			"title": "L'écharpe de pilote",
-			"description": "Réussis la leçon « Le casque du copilote ».",
+			"description": "Réussis la leçon « Le casque du copilote ».",
 			"artId": "pilot-scarf",
 			"slot": "neck",
 			"condition": {
@@ -328,7 +328,7 @@
 			"id": "fr.reward.roller-skates",
 			"kind": "item",
 			"title": "Les patins à roulettes",
-			"description": "Réussis la leçon « Le camion aux deux yeux ».",
+			"description": "Réussis la leçon « Le camion aux deux yeux ».",
 			"artId": "roller-skates",
 			"slot": "feet",
 			"condition": {
@@ -340,7 +340,7 @@
 			"id": "fr.reward.picnic-basket",
 			"kind": "item",
 			"title": "Le panier de pique-nique",
-			"description": "Réussis la leçon « La liste du pique-nique ».",
+			"description": "Réussis la leçon « La liste du pique-nique ».",
 			"artId": "picnic-basket",
 			"slot": "hand",
 			"condition": {
@@ -352,7 +352,7 @@
 			"id": "fr.reward.mail-bag",
 			"kind": "item",
 			"title": "La sacoche du courrier",
-			"description": "Réussis la leçon « Un mot pour le T-rex ».",
+			"description": "Réussis la leçon « Un mot pour le T-rex ».",
 			"artId": "mail-bag",
 			"slot": "body",
 			"condition": {
@@ -364,7 +364,7 @@
 			"id": "fr.reward.napkin-bib",
 			"kind": "item",
 			"title": "La serviette nouée au cou",
-			"description": "Réussis la leçon « La recette de la quiche ».",
+			"description": "Réussis la leçon « La recette de la quiche ».",
 			"artId": "napkin-bib",
 			"slot": "neck",
 			"condition": {
@@ -376,7 +376,7 @@
 			"id": "fr.reward.artist-beret",
 			"kind": "item",
 			"title": "Le béret d'artiste",
-			"description": "Réussis la leçon « La légende du dessin ».",
+			"description": "Réussis la leçon « La légende du dessin ».",
 			"artId": "artist-beret",
 			"slot": "head",
 			"condition": {
@@ -388,7 +388,7 @@
 			"id": "fr.reward.reading-glasses",
 			"kind": "item",
 			"title": "Les lunettes de lecture",
-			"description": "Réussis la leçon « Une carte de la Lune ».",
+			"description": "Réussis la leçon « Une carte de la Lune ».",
 			"artId": "reading-glasses",
 			"slot": "face",
 			"condition": {
@@ -400,7 +400,7 @@
 			"id": "fr.reward.party-balloons",
 			"kind": "item",
 			"title": "Les ballons de la fête",
-			"description": "Réussis la leçon « L'invitation à la fête ».",
+			"description": "Réussis la leçon « L'invitation à la fête ».",
 			"artId": "party-balloons",
 			"slot": "back",
 			"condition": {
@@ -412,7 +412,7 @@
 			"id": "fr.reward.referee-whistle",
 			"kind": "item",
 			"title": "Le sifflet d'arbitre",
-			"description": "Réussis la leçon « Le score du match ».",
+			"description": "Réussis la leçon « Le score du match ».",
 			"artId": "referee-whistle",
 			"slot": "neck",
 			"condition": {
@@ -424,7 +424,7 @@
 			"id": "fr.reward.alarm-clock",
 			"kind": "item",
 			"title": "Le réveil à sonnette",
-			"description": "Réussis la leçon « Le train de huit heures ».",
+			"description": "Réussis la leçon « Le train de huit heures ».",
 			"artId": "alarm-clock",
 			"slot": "hand",
 			"condition": {
@@ -436,7 +436,7 @@
 			"id": "fr.reward.snail-slippers",
 			"kind": "item",
 			"title": "Les chaussons escargots",
-			"description": "Réussis la leçon « L'adresse du dino ».",
+			"description": "Réussis la leçon « L'adresse du dino ».",
 			"artId": "snail-slippers",
 			"slot": "feet",
 			"condition": {
@@ -448,7 +448,7 @@
 			"id": "fr.reward.eraser-pencil",
 			"kind": "item",
 			"title": "Le crayon à gomme",
-			"description": "Réussis la leçon « Réparer un message ».",
+			"description": "Réussis la leçon « Réparer un message ».",
 			"artId": "eraser-pencil",
 			"slot": "hand",
 			"condition": {
@@ -598,7 +598,7 @@
 			"id": "fr.reward.stamp-dinosaurs",
 			"kind": "trophy",
 			"title": "Le tampon des dinosaures",
-			"description": "Réussis le grand tour des dinosaures, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Réussis le grand tour des dinosaures, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "stamp-dinosaurs",
 			"condition": {
 				"kind": "tour-mastered",
@@ -609,7 +609,7 @@
 			"id": "fr.reward.stamp-kitchen",
 			"kind": "trophy",
 			"title": "Le tampon des gourmands",
-			"description": "Réussis le grand tour de la cuisine, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Réussis le grand tour de la cuisine, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "stamp-kitchen",
 			"condition": {
 				"kind": "tour-mastered",
@@ -620,7 +620,7 @@
 			"id": "fr.reward.stamp-stars",
 			"kind": "trophy",
 			"title": "Le tampon des étoiles",
-			"description": "Réussis le grand tour des étoiles, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Réussis le grand tour des étoiles, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "stamp-stars",
 			"condition": {
 				"kind": "tour-mastered",
@@ -631,7 +631,7 @@
 			"id": "fr.reward.stamp-zoo",
 			"kind": "trophy",
 			"title": "Le tampon du zoo",
-			"description": "Réussis le grand tour du zoo, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Réussis le grand tour du zoo, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "stamp-zoo",
 			"condition": {
 				"kind": "tour-mastered",
@@ -642,7 +642,7 @@
 			"id": "fr.reward.stamp-racing",
 			"kind": "trophy",
 			"title": "Le tampon des bolides",
-			"description": "Réussis le grand tour des bolides, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Réussis le grand tour des bolides, toutes ses touches presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "stamp-racing",
 			"condition": {
 				"kind": "tour-mastered",
@@ -653,7 +653,7 @@
 			"id": "fr.reward.keys-home-row",
 			"kind": "trophy",
 			"title": "La rangée du milieu apprivoisée",
-			"description": "Tape les touches de la rangée du milieu presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Tape les touches de la rangée du milieu presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "keys-home-row",
 			"condition": {
 				"kind": "chars-mastered",
@@ -666,7 +666,7 @@
 			"id": "fr.reward.keys-top-row",
 			"kind": "trophy",
 			"title": "La rangée du haut apprivoisée",
-			"description": "Tape les touches de la rangée du haut presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Tape les touches de la rangée du haut presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "keys-top-row",
 			"condition": {
 				"kind": "chars-mastered",
@@ -679,7 +679,7 @@
 			"id": "fr.reward.keys-bottom-row",
 			"kind": "trophy",
 			"title": "La rangée du bas apprivoisée",
-			"description": "Tape les touches de la rangée du bas presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Tape les touches de la rangée du bas presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "keys-bottom-row",
 			"condition": {
 				"kind": "chars-mastered",
@@ -692,7 +692,7 @@
 			"id": "fr.reward.keys-accents",
 			"kind": "trophy",
 			"title": "Les accents apprivoisés",
-			"description": "Tape les touches à accent presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Tape les touches à accent presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "keys-accents",
 			"condition": {
 				"kind": "chars-mastered",
@@ -705,7 +705,7 @@
 			"id": "fr.reward.keys-punctuation",
 			"kind": "trophy",
 			"title": "La ponctuation apprivoisée",
-			"description": "Tape les touches de ponctuation presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Tape les touches de ponctuation presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "keys-punctuation",
 			"condition": {
 				"kind": "chars-mastered",
@@ -718,7 +718,7 @@
 			"id": "fr.reward.keys-digits",
 			"kind": "trophy",
 			"title": "Les chiffres apprivoisés",
-			"description": "Tape les dix chiffres presque sans erreur : au plus 1 erreur sur 10.",
+			"description": "Tape les dix chiffres presque sans erreur : au plus 1 erreur sur 10.",
 			"artId": "keys-digits",
 			"condition": {
 				"kind": "chars-mastered",
