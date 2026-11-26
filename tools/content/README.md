@@ -33,6 +33,10 @@ node tools/content/check.js
 5. **apply-ages** : reporte les tranches d'âge de `data/ages.txt` dans les trois banques telles qu'elles sont (la banque de mots se reconstruit sinon depuis Lexique, pas toujours téléchargé). Les trois constructeurs appliquent les mêmes marques : reconstruire une banque redonne le même résultat.
 6. **check** : contrôle les deux fichiers (doublons, caractères de l'ordre d'apprentissage, nombre de mots et de phrases par palier de lettres) et affiche les chiffres réels.
 
+## Typographie des textes affichés
+
+`node tools/content/apply-typography.js` applique aux textes que `content/fr/` montre ou fait dire (consignes, phrases courtes, récit, récompenses, consignes des traces) la typographie de l'interface (ADR-094) : espace insécable avant « : ; ! ? » et « » », après « « », entre un nombre et « % », apostrophe droite. Il ne remplace qu'une espace déjà là, si bien qu'aucune voix enregistrée ne se perd, et ne touche jamais un texte tapé. Les champs affichés, tapés ou de notes de chaque fichier sont dans `lib/typography.js` (`TEXT_FIELDS`) ; un champ nouveau qui porte une phrase s'y ajoute, sinon `tests/i18n/content-typography.test.ts` échoue. Le relancer ne change rien.
+
 ## Rapports (hors dépôt)
 
 Dans `.cache/report/` : `kept.tsv` (mots retenus avec fréquence et notoriété), `excluded.tsv` (mots écartés et motif), `flagged.tsv` (mots signalés par une catégorie), `review-pool.txt` (mots retenus par thème, pour la relecture) et `summary.txt`.
